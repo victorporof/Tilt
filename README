@@ -1,12 +1,6 @@
-Email: victor.porof@gmail.com
+Tilt: a WebGL-based 3D visualization of a Webpage.
 
-Short description: Tilt represents a new way of visualizing a web page. This
-tool creates a 3D representation of the document, with the purpose of
-displaying, understanding and easily analyzing the DOM. It will take advantage
-of the great tools Firefox has to offer, as it is an extension which contains
-a WebGL implementation, providing rich user-experience, fun interaction and
-useful information, while taking full advantage of 3D hardware acceleration,
-GLSL shaders and what OpenGL ES 2.0 has to offer.
+Short description: Tilt represents a new way of visualizing a web page. This tool creates a 3D representation of the document, with the purpose of displaying, understanding and easily analyzing the DOM. It will take advantage of the great tools Firefox has to offer, as it is an extension which contains a WebGL implementation, providing rich user-experience, fun interaction and useful information, while taking full advantage of 3D hardware acceleration, GLSL shaders and what OpenGL ES 2.0 has to offer.
 
 Additional info: http://bit.ly/gsoc-mozilla-application
 
@@ -21,27 +15,27 @@ UTC/GMT +2 hours
 
 Project Proposal
 
-I propose implementing a Firefox extension containing a 3D representation of a web page, as both a fun visualization tool and a developer-friendly environment for debugging the document’s structure, contents and nesting of the DOM tree. Various information besides the actual contents will be displayed on request, regarding each node’s type, class, id, and other attributes if available. The rendering will be dynamic, in-browser, using WebGL and GLSL shaders.
+I propose implementing a Firefox extension containing a 3D representation of a web page, as both a fun visualization tool and a developer-friendly environment for debugging the document‚Äôs structure, contents and nesting of the DOM tree. Various information besides the actual contents will be displayed on request, regarding each node‚Äôs type, class, id, and other attributes if available. The rendering will be dynamic, in-browser, using WebGL and GLSL shaders.
 
 Principles
 
-Before submitting this proposal, I’ve experimented with various techniques of achieving the desired visualization results and polished user experience, by implementing a few of the required features and asking for feedback from knowledgeable people working in the domain. As a result, some key aspects must be pointed out:
+Before submitting this proposal, I‚Äôve experimented with various techniques of achieving the desired visualization results and polished user experience, by implementing a few of the required features and asking for feedback from knowledgeable people working in the domain. As a result, some key aspects must be pointed out:
 
-    Building an internal representation of the DOM shall be achieved by creating an iFrame overlay in XUL as a Firefox extension. From experience, other techniques like injecting code into a web page, using already existing extensions (like Firebug), or depending on cloud services or CGI scripts are all bad ideas, as they are not scalable, deliver inconsistent user experience and don’t leave the original DOM intact.
-    Each node will be rendered as a stack element, roughly described as representing a “box”, having the X and Y positions grabbed from the object’s off-screen rendered coordinates using HTML5 canvas functions (therefore avoiding manually redrawing the entire web-page), and distributed on the Z depth axis based on the actual node depth in the DOM tree.
+    Building an internal representation of the DOM shall be achieved by creating an iFrame overlay in XUL as a Firefox extension. From experience, other techniques like injecting code into a web page, using already existing extensions (like Firebug), or depending on cloud services or CGI scripts are all bad ideas, as they are not scalable, deliver inconsistent user experience and don‚Äôt leave the original DOM intact.
+    Each node will be rendered as a stack element, roughly described as representing a ‚Äúbox‚Äù, having the X and Y positions grabbed from the object‚Äôs off-screen rendered coordinates using HTML5 canvas functions (therefore avoiding manually redrawing the entire web-page), and distributed on the Z depth axis based on the actual node depth in the DOM tree.
     The base node will be represented by the BODY, upon which the child elements are layered to form a 3D stack of platforms. These platforms shall be build at the addition of DIVS, ULs or other nodes containing children.
     Some elements are positioned in absolute or floating manners; these could be graphically represented in different ways, like a shadowing plane, or by graphically adding a floating animation.
-    Various other minimal information, characteristics or attributes will be visually attached to each stack representation of a node, with the possibility of displaying these properties more in depth at the user’s interaction with the visualization. Therefore, it’s a good idea to implement features that help understanding and analyzing the DOM, not just displaying it.
-    If required, a useful “map” of the DOM tree will be available, used for rapid navigation/ orientation through the visualization.
+    Various other minimal information, characteristics or attributes will be visually attached to each stack representation of a node, with the possibility of displaying these properties more in depth at the user‚Äôs interaction with the visualization. Therefore, it‚Äôs a good idea to implement features that help understanding and analyzing the DOM, not just displaying it.
+    If required, a useful ‚Äúmap‚Äù of the DOM tree will be available, used for rapid navigation/ orientation through the visualization.
     The display will require intuitive controls, therefore an arcball controlled camera will be used, from the papers of Ken Shoemake, describing general purpose 3D rotation. Moreover, panning will be required for navigation, and other yaw, pitch and roll controls could be implemented.
     Sliders or other UI elements could be used for modifying or setting the visualization parameters, like the distance between node layers, auto-rotation, and other effects.
-    The tool will be used as part of a web-page inspector, therefore a clean visualization will be more suited. A polished representation, not a bloated one, with subtle screen space ambient occlusion, a bit of lighting and shadowing is more appropriate and visually pleasing, adding a “stark” feel to it, thus focusing on the beauty of the web page itself and the DOM, and not on the achievable effects.
+    The tool will be used as part of a web-page inspector, therefore a clean visualization will be more suited. A polished representation, not a bloated one, with subtle screen space ambient occlusion, a bit of lighting and shadowing is more appropriate and visually pleasing, adding a ‚Äústark‚Äù feel to it, thus focusing on the beauty of the web page itself and the DOM, and not on the achievable effects.
     Ways of exporting the visualization to other WebGL compatible browsers should be implemented, for cross-platform and cross-browser user experience. This can be done by saving the representation parameters and passing them to other browsers. In the end, the export feature will actually be an URL.
     As Tilt is designed to also be fun, a few easter-eggs could be implemented :)
 
 Schedule of Deliverables
 
-As May 23rd is the date on which the student proposals are announced on the GSoC site, I can start dedicating my time for this project immediately. I don’t have any other projects, work or freelance commitments for this summer, except maybe at the end of July, when I’m invited to be a jury member of a national competition (as I’ve been attending this event every time for the past 5 years).
+As May 23rd is the date on which the student proposals are announced on the GSoC site, I can start dedicating my time for this project immediately. I don‚Äôt have any other projects, work or freelance commitments for this summer, except maybe at the end of July, when I‚Äôm invited to be a jury member of a national competition (as I‚Äôve been attending this event every time for the past 5 years).
 
 Therefore I can safely work around 4 hours each day on average for this GSoC project. My planned schedule is:
 
@@ -57,7 +51,7 @@ Therefore I can safely work around 4 hours each day on average for this GSoC pro
     July 23rd - July 31st (one week) Adding new GUI elements, based on the community feedback, especially display properties sliders, new camera features and ways of interacting with the visualization.
     August 1st - August 7th (one week) Implementing exporting the visualization to other WebGL capable browsers.
     August 8th - August 15th (one week) Handling unforeseen incompatibilities, thoroughly testing the capabilities of the tool, doing stress-tests and experimenting with various hardware to fix any minor problems.
-    August 16th - August 21st (final days) Refactoring and tidying up code, finishing writing documentation, creating example demos and placing the code on Google Code and Mozilla repositories, final talks with my mentor and the community before the “pencils-down” date.
+    August 16th - August 21st (final days) Refactoring and tidying up code, finishing writing documentation, creating example demos and placing the code on Google Code and Mozilla repositories, final talks with my mentor and the community before the ‚Äúpencils-down‚Äù date.
 
 I think this is a very organized and carefully planned schedule, leaving room for unforeseen problems and thoroughly taking in consideration each of the planned visualization features. Most of all, in takes the community feedback in consideration, so that the final product is rich in user experience, ergonomic, useful and fun to use.
 
@@ -69,34 +63,34 @@ The final deliverables would consist of:
 
 Open Source Development Experience
 
-Mostly for personal purposes, I’ve implemented various 3D graphics engines which would suit my needs for work and freelancing. My latest one is the ChameleonTouch engine, a very optimized and advanced cross-platform graphics engine, designed to facilitate rapid and complex 3D game development on mobile platforms like iOS, Android and various Qt supporting devices. As this is my currently active pet project, I plan on open-sourcing the engine this month, or sometime in October this year if I will not be satisfied with the completeness percentage in the next couple of weeks.
+Mostly for personal purposes, I‚Äôve implemented various 3D graphics engines which would suit my needs for work and freelancing. My latest one is the ChameleonTouch engine, a very optimized and advanced cross-platform graphics engine, designed to facilitate rapid and complex 3D game development on mobile platforms like iOS, Android and various Qt supporting devices. As this is my currently active pet project, I plan on open-sourcing the engine this month, or sometime in October this year if I will not be satisfied with the completeness percentage in the next couple of weeks.
 
 Also, two years ago I started porting the Processing graphics programming language to WebGL and held a few public speeches about this, but I ended this initiative once I saw that Processing.js has been released before I planned to finish my WebGL engine.
 
-I’ve contributed to the jMonkeyEngine (a very well known open-source 3D game engine written in java) by creating a better TrueType text rendering technique which takes advantage of kerning and other typography properties. Also, I had a work-in-progress vegetation effect class and terrain editor tool which was very well received by the community. A few years ago I have also forked this open source project, modified its core and created my own java engine, called GEN, which won numerous competitions regarding software and graphics development.
+I‚Äôve contributed to the jMonkeyEngine (a very well known open-source 3D game engine written in java) by creating a better TrueType text rendering technique which takes advantage of kerning and other typography properties. Also, I had a work-in-progress vegetation effect class and terrain editor tool which was very well received by the community. A few years ago I have also forked this open source project, modified its core and created my own java engine, called GEN, which won numerous competitions regarding software and graphics development.
 
-Some demos of my work can be found on my Youtube page, here: http://www.youtube.com/user/victorporof. I am mostly proud of my “Massive Procedural Terrain Generator” and “Nature and Ocean Scene”, both videos being featured on Youtube on the day they were launched.
+Some demos of my work can be found on my Youtube page, here: http://www.youtube.com/user/victorporof. I am mostly proud of my ‚ÄúMassive Procedural Terrain Generator‚Äù and ‚ÄúNature and Ocean Scene‚Äù, both videos being featured on Youtube on the day they were launched.
 
 Preferred Programming Language(s)
 
-For desktop or embedded devices, I mostly enjoy programming in C, as it gives me great low level control it’s truly cross-platform, an area which 3D games require if to achieve fantastic rendering speeds and ingenious optimizations. When getting “closer to the metal” is mandatory, I enjoy implementing most math functions in Assembler. Aside from that, I use Java, C# or Objective-C for some of my freelancing tasks, as it makes developing apps quite fast, with the cost of a little performance.
+For desktop or embedded devices, I mostly enjoy programming in C, as it gives me great low level control it‚Äôs truly cross-platform, an area which 3D games require if to achieve fantastic rendering speeds and ingenious optimizations. When getting ‚Äúcloser to the metal‚Äù is mandatory, I enjoy implementing most math functions in Assembler. Aside from that, I use Java, C# or Objective-C for some of my freelancing tasks, as it makes developing apps quite fast, with the cost of a little performance.
 
 As a hobby, I love functional programming, starting with Haskell and ending with Javascript, the latter making me a passionate Ajax developer.
 
 Work/Internship Experience
 
-After an internship at MobileTouch, I have been a full-time iOS programmer the last year at this company, responsible with OpenGL programming for iPad, iPhone and iPod Touch, and also team leading and source control management, as I quickly got promoted to being a team-lead. Therefore, I have a firm grasp of OpenGL ES and graphics programming. You can find more about my work experience on my CV (I’ve implemented it entirely in WebGL) here: http://students.info.uaic.ro/~victor.porof/
+After an internship at MobileTouch, I have been a full-time iOS programmer the last year at this company, responsible with OpenGL programming for iPad, iPhone and iPod Touch, and also team leading and source control management, as I quickly got promoted to being a team-lead. Therefore, I have a firm grasp of OpenGL ES and graphics programming. You can find more about my work experience on my CV (I‚Äôve implemented it entirely in WebGL) here: http://students.info.uaic.ro/~victor.porof/
 
 Other experience
 
-I enjoy learning new programming languages, as it is great to use the exact tool needed for the job and not forget the purpose of development and application. I think that programming languages should be perceived as tools, each specialized on creating specific products. Mostly I love programming shaders, either GLSL, HLSL or Cg, as they are as “close to metal” I can get when programming a GPU. I am fascinated about the many ingenious algorithms in the 3D development industry, and I wish to learn as many of them as I can.
+I enjoy learning new programming languages, as it is great to use the exact tool needed for the job and not forget the purpose of development and application. I think that programming languages should be perceived as tools, each specialized on creating specific products. Mostly I love programming shaders, either GLSL, HLSL or Cg, as they are as ‚Äúclose to metal‚Äù I can get when programming a GPU. I am fascinated about the many ingenious algorithms in the 3D development industry, and I wish to learn as many of them as I can.
 
 Academic Experience
 
-I’m currently a student at the Faculy of Computer Science in Iasi, Romania, second year. I have already decided on my bachelor degree thesis: I will create a collaborative online IDE for passionate graphics developers, with the purpose of developing, creating or just modifying visualizations or painting experiments by coding only GLSL shaders and instantly previewing the result. I will also probably take advantage or extend Ace - http://ace.ajax.org/.
+I‚Äôm currently a student at the Faculy of Computer Science in Iasi, Romania, second year. I have already decided on my bachelor degree thesis: I will create a collaborative online IDE for passionate graphics developers, with the purpose of developing, creating or just modifying visualizations or painting experiments by coding only GLSL shaders and instantly previewing the result. I will also probably take advantage or extend Ace - http://ace.ajax.org/.
 
 Why Mozilla
 
-Graphics development is one of my greatest passions when it comes to programming, and when I first found out about the WebGL implementation I was thrilled. To be able to achieve such fantastic rendering speeds in the browser, using hardware-accelerated techniques and shaders was one of my “wow” moments.
+Graphics development is one of my greatest passions when it comes to programming, and when I first found out about the WebGL implementation I was thrilled. To be able to achieve such fantastic rendering speeds in the browser, using hardware-accelerated techniques and shaders was one of my ‚Äúwow‚Äù moments.
 
-Mozilla always did a fantastic job in getting the web to move further, and being amongst the first to enable OpenGL ES 2.0 in the browser without plugins is definite proof. I’d like to take advantage of this, and it would make me proud to help create the next-gen web tools that are fun and useful, using this technology and the capabilities Firefox has to offer.
+Mozilla always did a fantastic job in getting the web to move further, and being amongst the first to enable OpenGL ES 2.0 in the browser without plugins is definite proof. I‚Äôd like to take advantage of this, and it would make me proud to help create the next-gen web tools that are fun and useful, using this technology and the capabilities Firefox has to offer.
