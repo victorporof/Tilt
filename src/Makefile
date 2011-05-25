@@ -20,18 +20,18 @@ xpi_file := $(bin_dir)/$(extension_name).xpi
 os_type := $(patsubst darwin%,darwin,$(shell echo $(OSTYPE)))
 
 # The location of the extension profile.
-#ifeq ($(os_type), darwin)
+ifeq ($(os_type), darwin)
   profile_location := \
     ~/Library/Application\ Support/Firefox/Profiles/$(profile_dir)/extensions/$(extension_uuid)
-#else
-#  ifeq ($(os_type), linux-gnu)
-#    profile_location := \
-#      ~/.mozilla/firefox/$(profile_dir)/extensions/$(extension_uuid)
-#  else
-#    profile_location := \
-#      "$(subst #\,\\,$(APPDATA))\\Mozilla\\Firefox\\Profiles\\$(profile_dir)\\extensions\\$(e#xtension_uuid)"
-#  endif
-#endif
+else
+  ifeq ($(os_type), linux-gnu)
+    profile_location := \
+      ~/.mozilla/firefox/$(profile_dir)/extensions/$(extension_uuid)
+  else
+    profile_location := \
+      "$(subst #\,\\,$(APPDATA))\\Mozilla\\Firefox\\Profiles\\$(profile_dir)\\extensions\\$(e#xtension_uuid)"
+  endif
+endif
 
 # The temporary location where the extension tree will be copied and built.
 build_dir := $(bin_dir)/build
