@@ -5,7 +5,7 @@ extension_name := Tilt
 extension_uuid := tilt@mozilla.com
 
 # The name of the profile dir where the extension can be installed.
-profile_dir := ugepufps.default # change me
+profile_dir := ugepufps.default # change me please
 
 # The zip application to be used.
 ZIP := zip
