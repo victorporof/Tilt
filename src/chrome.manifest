@@ -1,0 +1,5 @@
+content tilt             jar:chrome/Tilt.jar!/content/
+skin    tilt classic/1.0 jar:chrome/Tilt.jar!/skin/
+locale  tilt en-US       jar:chrome/Tilt.jar!/locale/en-US/
+
+overlay chrome://browser/content/browser.xul chrome://tilt/content/browserOverlay.xul

@@ -1,0 +1,64 @@
+<?xml version="1.0"?>
+
+<?xml-stylesheet type="text/css"
+                 href="chrome://global/skin/"?>
+
+<?xml-stylesheet type="text/css"
+                 href="chrome://tilt/skin/browserOverlay.css"?>
+
+<!DOCTYPE overlay SYSTEM
+  "chrome://tilt/locale/browserOverlay.dtd">
+  
+<overlay id="tilt-browser-overlay"
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  
+  <script type="application/x-javascript"
+          src="chrome://tilt/content/engine/webgl-utils.js"/>
+  <script type="application/x-javascript"
+          src="chrome://tilt/content/engine/glMatrix-0.9.5.js"/>
+  <script type="application/x-javascript"
+          src="chrome://tilt/content/engine/jTiltEngine.js"/>
+  <script type="application/x-javascript"
+          src="chrome://tilt/content/engine/jTiltDraw.js"/>
+  <script type="application/x-javascript"
+          src="chrome://tilt/content/engine/jTiltVisualization.js"/>
+  <script type="application/x-javascript"
+          src="chrome://tilt/content/browserOverlay.js"/>
+  
+  <stringbundleset id="tilt-stringbundleset">
+    <stringbundle id="tilt-string-bundle"
+                  src="chrome://tilt/locale/browserOverlay.properties"/>
+  </stringbundleset>
+  
+  <menupopup id="menu_ToolsPopup">
+    <menu class="menu-iconic"
+          id="tilt-menu"
+          label="&tilt.menu.label;"
+          accesskey="&tilt.menu.accesskey;"
+          insertafter="devToolsSeparator">
+      <menupopup>
+        <menuitem id="tilt-menuItemInitialize"
+                  label="&tilt.menuItemInitialize.label;"
+                  accesskey="&tilt.menuItemInitialize.accesskey;"
+                  oncommand="TiltChrome.BrowserOverlay.initialize(event);"/>
+        <menu id="tilt-menuItemOptions"
+              label="&tilt.menuItemOptions.label;"
+              accesskey="&tilt.menuItemOptions.accesskey;">
+          <menupopup>
+            <menuitem id="tilt-menuItemOptionsOption1"
+                      label="&tilt.menuItemOptionsOption1.label;"
+                      type="checkbox"
+                      checked="true"/>
+            <menuitem id="tilt-menuItemOptionsOption2"
+                      label="&tilt.menuItemOptionsOption2.label;"
+                      type="checkbox"/>
+            <menuitem id="tilt-menuItemOptionsOption3"
+                      label="&tilt.menuItemOptionsOption3.label;"
+                      type="checkbox"/>
+          </menupopup>
+        </menu>
+      </menupopup>
+    </menu>
+  </menupopup>
+  
+</overlay>
