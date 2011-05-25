@@ -29,7 +29,7 @@ else
       ~/.mozilla/firefox/$(profile_dir)/extensions/$(extension_uuid)
   else
     profile_location := \
-      "$(subst #\,\\,$(APPDATA))\\Mozilla\\Firefox\\Profiles\\$(profile_dir)\\extensions\\$(e#xtension_uuid)"
+      "$(subst \,\\,$(APPDATA))\\Mozilla\\Firefox\\Profiles\\$(profile_dir)\\extensions\\$(extension_uuid)"
   endif
 endif
 
