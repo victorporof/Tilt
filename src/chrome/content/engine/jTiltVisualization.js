@@ -53,7 +53,7 @@ function TiltVisualization(canvas, width, height) {
     var texturePath = "http://bit.ly/khwMvF";
     var npotPath = "http://bit.ly/jsEMaP";
     
-    engine.initTexture(texturePath, function ready(texure) {
+    engine.initTexture(npotPath, function ready(texure) {
       someTexture = texure;
     });
   }
