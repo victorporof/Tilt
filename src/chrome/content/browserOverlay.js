@@ -47,16 +47,28 @@ TiltChrome.BrowserOverlay = {
    */
   initialize: function(aEvent) {
     Components.utils.forceGC();
+        
+    if (this.iframe) {
+      var label = "Initialize Tilt";
+      document.getElementById("tilt-menuItemInitialize").label = label
 
+      return this.destroy();
+    }
+    else {
+      var label = "Hide visualization";
+      document.getElementById("tilt-menuItemInitialize").label = label;
+    }
+    
+    var that = this;
     TiltIframe.Utils.initCanvas(function loadCallback(iframe, canvas) {
-      this.iframe = iframe;
+      that.iframe = iframe;
       
       canvas.width = iframe.contentWindow.innerWidth;
       canvas.height = iframe.contentWindow.innerHeight;
       
-      this.visualization = new TiltVisualization(canvas);
-      this.visualization.setup();
-      this.visualization.loop();
+      that.visualization = new TiltVisualization(canvas);
+      that.visualization.setup();
+      that.visualization.loop();
     }, true);
   },
   
@@ -64,7 +76,10 @@ TiltChrome.BrowserOverlay = {
    * Destroys Tilt, removing the iframe from the stack.
    */
   destroy: function() {
+    TiltIframe.Utils.removeFromStack(this.iframe);
+    this.iframe = undefined;
+    this.visualization = undefined;
+    
     Components.utils.forceGC();
-    // TODO
   }
 };

@@ -4,6 +4,9 @@
 <!ENTITY tilt.menuItemInitialize.label     "Initialize Tilt">
 <!ENTITY tilt.menuItemInitialize.accesskey "I">
 
+<!ENTITY tilt.menuItemHide.label     "Hide visualization">
+<!ENTITY tilt.menuItemHide.accesskey "H">
+
 <!ENTITY tilt.menuItemOptions.label     "Options">
 <!ENTITY tilt.menuItemOptions.accesskey "O">
 
