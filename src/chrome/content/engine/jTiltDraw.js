@@ -285,7 +285,7 @@ function TiltDraw(aCanvas, width, height, successCallback, failCallback) {
   /**
    * Resets the modelview matrix to identity.
    */
-  function origin() {
+  this.origin = function() {
     mat4.identity(mvMatrix);
   }
   
