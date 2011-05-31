@@ -47,36 +47,17 @@ TiltChrome.BrowserOverlay = {
    */
   initialize: function(aEvent) {
     Components.utils.forceGC();
-    
-    var iframe_id = "tilt-iframe";
-    var canvas_id = "tilt-canvas";
-    
-    var iframe = document.createElement("iframe");
-    iframe.id = iframe_id;
-    iframe.setAttribute("transparent", "true");
-    iframe.flex = 1;
-    
-    iframe.addEventListener("load", function loadCallback() {
-      iframe.removeEventListener("load", loadCallback, true);
+
+    TiltIframe.Utils.initCanvas(function loadCallback(iframe, canvas) {
+      this.iframe = iframe;
       
-      var canvas = iframe.contentDocument.getElementById(canvas_id);
-      var width = iframe.contentWindow.innerWidth;
-      var height = iframe.contentWindow.innerHeight;
+      canvas.width = iframe.contentWindow.innerWidth;
+      canvas.height = iframe.contentWindow.innerHeight;
       
-      this.visualization = new TiltVisualization(canvas, width, height);
+      this.visualization = new TiltVisualization(canvas);
       this.visualization.setup();
       this.visualization.loop();
     }, true);
-    
-    iframe.setAttribute("src", 'data:text/html,\
-    <html>\
-      <body style="margin: 0px 0px 0px 0px;">\
-        <canvas id="' + canvas_id + '"/>\
-      </body>\
-    </html>');
-    
-    window.gBrowser.selectedBrowser.parentNode.appendChild(iframe);
-    this.iframe = iframe;
   },
   
   /**

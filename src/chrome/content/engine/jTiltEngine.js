@@ -43,9 +43,12 @@ function TiltEngine() {
     
     var gl = WebGLUtils.create3DContext(canvas);
     if (gl) {
-      canvas.width = width;
-      canvas.height = height;
-      
+      if (width) {
+        canvas.width = width;
+      }
+      if (height) {
+        canvas.height = height;
+      }
       if (successCallback) {
         successCallback();
       }
@@ -221,7 +224,7 @@ function TiltEngine() {
     var that = this;
     var gl = this.gl;
     var texture = gl.createTexture();
-
+    
     if ("object" === typeof(textureSource)) {
       texture.image = textureSource;
       applyTextureImage();
@@ -233,31 +236,33 @@ function TiltEngine() {
         applyTextureImage();
       }
     }
-
+    
     function applyTextureImage() {
-      Image.resizeToPowerOfTwo(texture.image, function resizeCallback() {
+      Image.resizeToPowerOfTwo(texture.image, function resizeCallback(img) {
+        texture.image = img;
+        
         gl.bindTexture(gl.TEXTURE_2D, texture);
         
         if (flipY) {
           gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
         }
-
+        
         gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, 
                       texture.image);
-
+                      
         that.setTextureParams(minFilter, magFilter, mipmap,
                               wrapS, wrapT, flipY);
-
+        
         if (mipmap) {
           gl.generateMipmap(gl.TEXTURE_2D);
         }
         
         gl.bindTexture(gl.TEXTURE_2D, null);
-
+        
         if (readyCallback) {
           readyCallback(texture);
         }
-      });
+      }, true);
     }
   }
   
@@ -348,7 +353,7 @@ function TiltEngine() {
                                 textureSampler, texture,
                                 indexBuffer, drawMode) {
     var gl = this.gl;
-
+    
     gl.uniformMatrix4fv(mvMatrixUniform, false, mvMatrix);
     gl.uniformMatrix4fv(projMatrixUniform, false, projMatrix);
     
@@ -434,9 +439,9 @@ function TiltEngine() {
 /**
  * Scales an image to power of two width and height.
  */
-Image.resizeToPowerOfTwo = function(image, readyCallback) {
-  if (!Math.isPowerOfTwo(image.width) ||
-      !Math.isPowerOfTwo(image.height)) {
+Image.resizeToPowerOfTwo = function(image, readyCallback, forceResize) {
+  if (Math.isPowerOfTwo(image.width) &&
+      Math.isPowerOfTwo(image.height) && !forceResize) {
 
     if (readyCallback) {
       readyCallback(image);
@@ -447,15 +452,7 @@ Image.resizeToPowerOfTwo = function(image, readyCallback) {
   var iframe_id = "tilt-iframe-" + image.src;
   var canvas_id = "tilt-canvas-" + image.src;
 
-  var iframe = document.createElement("iframe");
-  iframe.id = iframe_id;
-  iframe.setAttribute("transparent", "false");
-  iframe.flex = 1;
-  
-  iframe.addEventListener("load", function loadCallback() {
-    iframe.removeEventListener("load", loadCallback, true);
-
-    var canvas = iframe.contentDocument.getElementById(canvas_id);
+  TiltIframe.Utils.initCanvas(function loadCallback(iframe, canvas) {
     canvas.width = Math.nextPowerOfTwo(image.width);
     canvas.height = Math.nextPowerOfTwo(image.height);
 
@@ -464,21 +461,10 @@ Image.resizeToPowerOfTwo = function(image, readyCallback) {
       0, 0, image.width, image.height,
       0, 0, canvas.width, canvas.height);
 
-    window.gBrowser.selectedBrowser.parentNode.removeChild(iframe);
-
     if (readyCallback) {
       readyCallback(image = canvas);
     }
-  }, true);
-
-  iframe.setAttribute("src", 'data:text/html,\
-  <html>\
-    <body style="margin: 0px 0px 0px 0px;">\
-      <canvas id="' + canvas_id + '"/>\
-    </body>\
-  </html>');
-  
-  window.gBrowser.selectedBrowser.parentNode.appendChild(iframe);
+  }, false, iframe_id, canvas_id);
 }
 
 /**
