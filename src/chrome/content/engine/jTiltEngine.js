@@ -78,7 +78,9 @@ function TiltEngine() {
     var vertShader;
     var fragShader;
     
-    this.requests([vertShaderURL, fragShaderURL], function finished(http) {
+    this.requests([vertShaderURL, fragShaderURL], 
+                  function finishedCallback(http) {
+                    
       vertShader = that.compileShader(http[0].responseText,
                                       "x-shader/x-vertex");
       
@@ -142,8 +144,15 @@ function TiltEngine() {
         vertShader.src + "\n\n" +
         fragShader.src);
     }
-    else gl.useProgram(program);
+    else this.useShader(program);
     return program;
+  }
+  
+  /**
+   * Uses the shader program as current for the gl context.
+   */
+  this.useShader = function(program) {
+    this.gl.useProgram(this.shader = program);
   }
   
   /**
@@ -204,13 +213,6 @@ function TiltEngine() {
     buffer.numItems = elementsArray.length;
     
     return buffer;
-  }
-  
-  /**
-   * Uses the shader program as current for the gl context.
-   */
-  this.useShader = function(program) {
-    this.gl.useProgram(this.shader = program);
   }
 
   /**
