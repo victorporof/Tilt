@@ -8,16 +8,16 @@
 
 <!DOCTYPE overlay SYSTEM
   "chrome://tilt/locale/browserOverlay.dtd">
-  
+
 <overlay id="tilt-browser-overlay"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
-  
+
   <script type="application/x-javascript"
           src="chrome://tilt/content/engine/webgl-utils.js"/>
   <script type="application/x-javascript"
           src="chrome://tilt/content/engine/glMatrix-0.9.5.js"/>
   <script type="application/x-javascript"
-          src="chrome://tilt/content/engine/jTiltIframeUtils.js"/>
+          src="chrome://tilt/content/engine/jTiltUtils.js"/>
   <script type="application/x-javascript"
           src="chrome://tilt/content/engine/jTiltEngine.js"/>
   <script type="application/x-javascript"
@@ -26,12 +26,12 @@
           src="chrome://tilt/content/engine/jTiltVisualization.js"/>
   <script type="application/x-javascript"
           src="chrome://tilt/content/browserOverlay.js"/>
-  
-  <stringbundleset id="tilt-stringbundleset">
+
+  <stringbundleset id="stringbundleset">
     <stringbundle id="tilt-string-bundle"
                   src="chrome://tilt/locale/browserOverlay.properties"/>
   </stringbundleset>
-  
+
   <menupopup id="menu_ToolsPopup">
     <menu class="menu-iconic"
           id="tilt-menu"
@@ -42,9 +42,24 @@
         <menuitem id="tilt-menuItemInitialize"
                   label="&tilt.menuItemInitialize.label;"
                   accesskey="&tilt.menuItemInitialize.accesskey;"
-                  oncommand="TiltChrome.BrowserOverlay.initialize(event);"/>        
+                  oncommand="TiltChrome.BrowserOverlay.initialize(event);"/>
       </menupopup>
     </menu>
   </menupopup>
-  
+
+  <!-- <menupopup id="menuWebDeveloperPopup">
+    <menu class="menu-iconic"
+          id="tilt-menu"
+          label="&tilt.menu.label;"
+          accesskey="&tilt.menu.accesskey;"
+          insertafter="devToolsSeparator;">
+      <menupopup>
+        <menuitem id="tilt-menuItemInitialize"
+                  label="&tilt.menuItemInitialize.label;"
+                  accesskey="&tilt.menuItemInitialize.accesskey;"
+                  oncommand="TiltChrome.BrowserOverlay.initialize(event);"/>
+      </menupopup>
+    </menu>
+  </menupopup> -->
+
 </overlay>
