@@ -41,7 +41,7 @@ function TiltVisualization(canvas, width, height) {
   /**
    * Random texture used for testing.
    */
-  var someTexture = undefined;
+  var someTexture = null;
   
   /**
    * The initialization logic.
@@ -76,7 +76,7 @@ function TiltVisualization(canvas, width, height) {
       
       draw.perspective();
       draw.translate(width / 2, height / 2, 0);
-      draw.rotateY(Math.radians(timeCount / 10));
+      draw.rotateY(TiltUtils.Math.radians(timeCount / 10));
       draw.translate(-150, -150, 0);
       
       if (someTexture != undefined) {
