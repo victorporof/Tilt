@@ -64,8 +64,8 @@ function TiltVisualization(canvas, width, height) {
   this.loop = function() {
     draw.requestAnimFrame(that.loop);
     
-    var width = draw.getCanvasWidth();
-    var height = draw.getCanvasHeight();
+    var width = draw.getCanvas().width;
+    var height = draw.getCanvas().height;
     var timeCount = draw.getTimeCount();
     var frameCount = draw.getFrameCount();
     var frameRate = draw.getFrameRate();

@@ -101,6 +101,7 @@ function TiltDraw(aCanvas, width, height, successCallback, failCallback) {
   /**
    * Performs mandatory initialization of shaders and other objects required
    * for drawing, like vertex buffers and primitives.
+   * @return {object} the TiltDraw initialized object
    */
   this.initialize = function() {
     var colorShaderPath =
@@ -109,6 +110,7 @@ function TiltDraw(aCanvas, width, height, successCallback, failCallback) {
     var textureShaderPath =
       "chrome://tilt/content/engine/shaders/shader-texture";
 
+    // initializing a color shader
     engine.initShader(colorShaderPath, function ready(p) {
       colorShader = p;
       colorShader.vertexPosition = engine.shaderIO(p, "vertexPosition");
@@ -118,6 +120,7 @@ function TiltDraw(aCanvas, width, height, successCallback, failCallback) {
       colorShader.color = engine.shaderIO(p, "color");
     });
 
+    // initializing a texture shader
     engine.initShader(textureShaderPath, function ready(p) {
       textureShader = p;
       textureShader.vertexPosition = engine.shaderIO(p, "vertexPosition");
@@ -129,32 +132,43 @@ function TiltDraw(aCanvas, width, height, successCallback, failCallback) {
       textureShader.sampler = engine.shaderIO(p, "sampler");
     });
 
+    // modelview and projection matrices used for transformations
     mat4.identity(mvMatrix = mat4.create());
     mat4.identity(projMatrix = mat4.create());
 
+    // buffer of 2-component vertices (x, y) as the corners of a rectangle
     rectangleVertices = engine.initBuffer([
       0, 0, 1, 0, 0, 1, 1, 1], 2);
     
+    // buffers of 3-component vertices (x, y, z) as the corners of a cube
     cubeVertices = engine.initBuffer([
-      -1.0, -1.0, 1.0, 1.0,
-      -1.0, 1.0, 1.0, 1.0,
-      1.0, -1.0, 1.0, 1.0,
-      -1.0, -1.0, -1.0, -1.0,
-      1.0, -1.0, 1.0, 1.0,
-      -1.0, 1.0, -1.0, -1.0,
-      -1.0, 1.0, -1.0, -1.0,
-      1.0, 1.0, 1.0, 1.0,
-      1.0, 1.0, 1.0, -1.0,
-      -1.0, -1.0, -1.0, 1.0,
-      -1.0, -1.0, 1.0, -1.0,
-      1.0, -1.0, -1.0, 1.0,
-      1.0, -1.0, -1.0, 1.0,
-      1.0, -1.0, 1.0, 1.0,
-      1.0, 1.0, -1.0, 1.0,
-      -1.0, -1.0, -1.0, -1.0,
-      -1.0, 1.0, -1.0, 1.0,
-      1.0, -1.0, 1.0, -1.0], 3);
+      -1.0, -1.0, 1.0, 
+      1.0, -1.0, 1.0, 
+      1.0, 1.0, 1.0, 
+      -1.0, 1.0, 1.0,
+      -1.0, -1.0, -1.0,
+      -1.0, 1.0, -1.0,
+      1.0, 1.0, -1.0,
+      1.0, -1.0, -1.0,
+      -1.0, 1.0, -1.0,
+      -1.0, 1.0, 1.0,
+      1.0, 1.0, 1.0,
+      1.0, 1.0, -1.0,
+      -1.0, -1.0, -1.0,
+      1.0, -1.0, -1.0,
+      1.0, -1.0, 1.0,
+      -1.0, -1.0, 1.0,
+      1.0, -1.0, -1.0,
+      1.0, 1.0, -1.0,
+      1.0, 1.0, 1.0,
+      1.0, -1.0, 1.0,
+      -1.0, -1.0, -1.0,
+      -1.0, -1.0, 1.0,
+      -1.0, 1.0, 1.0,
+      -1.0, 1.0, -1.0], 3);
       
+    // vertex indices for the cube vertices, defining the order for which
+    // these points can create a cube, using a triangle strip
     cubeVertices.indices = engine.initIndexBuffer([
       0, 1, 2, 0, 2, 3,
       4, 5, 6, 4, 6, 7,
@@ -167,7 +181,9 @@ function TiltDraw(aCanvas, width, height, successCallback, failCallback) {
   }
 
   /**
-   * Returns true if the initialization is complete.
+   * Returns true if the initialization is complete (currently, this means 
+   * that both the color and the texture shader are loaded).
+   * @return {boolean} true if the initialization is complete
    */
   this.isInitialized = function() {
     return colorShader && textureShader;
@@ -175,6 +191,7 @@ function TiltDraw(aCanvas, width, height, successCallback, failCallback) {
 
   /**
    * Returns the engine.
+   * return {object} the engine
    */
    this.getEngine = function() {
      return engine;
@@ -182,27 +199,16 @@ function TiltDraw(aCanvas, width, height, successCallback, failCallback) {
 
   /**
    * Returns the canvas.
+   * return {object} the canvas
    */
   this.getCanvas = function() {
     return canvas;
   }
 
   /**
-   * Returns the canvas width.
-   */
-  this.getCanvasWidth = function() {
-    return canvas.width;
-  }
-
-  /**
-   * Returns the canvas height.
-   */
-  this.getCanvasHeight = function() {
-    return canvas.height;
-  }
-
-  /**
    * Returns the time count.
+   * This represents the total time passed since initialization.
+   * return {number} the time count
    */
   this.getTimeCount = function() {
     return timeCount;
@@ -210,6 +216,8 @@ function TiltDraw(aCanvas, width, height, successCallback, failCallback) {
 
   /**
    * Returns the frame count.
+   * This is a counter for the number of frames passed since initialization.
+   * return {number} the frame count
    */
   this.getFrameCount = function() {
     return frameCount;
@@ -217,6 +225,8 @@ function TiltDraw(aCanvas, width, height, successCallback, failCallback) {
 
   /**
    * Returns the framerate.
+   * This is a variable retaining the current frame rate.
+   * return {number} the framerate
    */
   this.getFrameRate = function() {
     return frameRate;
@@ -224,6 +234,8 @@ function TiltDraw(aCanvas, width, height, successCallback, failCallback) {
 
   /**
    * Returns the frame delta time.
+   * Represents the delta time elapsed between frames.
+   * return {number} the frame delta time
    */
   this.getFrameDelta = function() {
     return frameDelta;
@@ -231,6 +243,7 @@ function TiltDraw(aCanvas, width, height, successCallback, failCallback) {
 
   /**
    * Helpers for managing variables like frameCount, frameRate, frameDelta.
+   * Used internally, in the requestAnimFrame function.
    */
   var currentTime = 0;
   var lastTime = 0;
@@ -238,6 +251,17 @@ function TiltDraw(aCanvas, width, height, successCallback, failCallback) {
   /**
    * Requests the next animation frame in an efficient way.
    * Also handles variables like frameCount, frameRate, frameDelta internally.
+   * Use this at the beginning of your loop function, like this:
+   *
+   *       function loop() {
+   *         window.requestAnimFrame(loop, canvas);
+   *
+   *         // do rendering
+   *         ...
+   *       }
+   *       loop();
+   *
+   * @param {function} loop: the function to be called each frame
    */
   this.requestAnimFrame = function(loop) {
     window.requestAnimFrame(loop, canvas);
@@ -255,6 +279,9 @@ function TiltDraw(aCanvas, width, height, successCallback, failCallback) {
 
   /**
    * Sets up the WebGL context viewport.
+   * This defines the width and height of the gl drawing canvas context.
+   * @param {number} width: the width of the drawing area
+   * @param {number} height: the height of the drawing area
    */
   this.viewport = function(width, height) {
     gl.viewport(0, 0, width, height);
@@ -284,15 +311,28 @@ function TiltDraw(aCanvas, width, height, successCallback, failCallback) {
 
   /**
    * Sets a default orthographic projection.
+   * This is recommended for 2d rendering.
    */
   this.ortho = function() {
     this.viewport(canvas.width, canvas.height);
     mat4.ortho(0, canvas.width, canvas.height, 0, -100, 100, projMatrix);
     mat4.identity(mvMatrix);
   }
+  
+  /**
+   * Sets a custom projection matrix.
+   * @param {Float32Array} matrix the custom projection matrix to be used
+   */
+   this.projection = function(matrix) {
+     this.viewport(canvas.width, canvas.height);
+     mat4.set(matrix, projMatrix);
+     mat4.identity(mvMatrix);
+   }
 
   /**
    * Pushes the current modelview matrix on a stack, to be popped out later.
+   * This can be used, for example, to create complex animations and be able 
+   * to revert back to the current modelview later.
    */
   this.pushMatrix = function() {
     var copy = mat4.create();
@@ -302,6 +342,7 @@ function TiltDraw(aCanvas, width, height, successCallback, failCallback) {
 
   /**
    * Pops an existing model view matrix from stack.
+   * Use this only after pushMatrix() has been previously called.
    */
   this.popMatrix = function() {
     if (mvMatrixStack.length > 0) {
@@ -311,6 +352,7 @@ function TiltDraw(aCanvas, width, height, successCallback, failCallback) {
 
   /**
    * Resets the modelview matrix to identity.
+   * This is a default matrix with no rotation, no scaling, at (0, 0, 0);
    */
   this.origin = function() {
     mat4.identity(mvMatrix);
@@ -318,6 +360,9 @@ function TiltDraw(aCanvas, width, height, successCallback, failCallback) {
 
   /**
    * Translates the modelview by the x, y and z coordinates.
+   * @param {number} x: the x ammount of translation
+   * @param {number} y: the y ammount of translation
+   * @param {number} z: the z ammount of translation
    */
   this.translate = function(x, y, z) {
     mat4.translate(mvMatrix, [x, y, z]);
@@ -325,6 +370,10 @@ function TiltDraw(aCanvas, width, height, successCallback, failCallback) {
 
   /**
    * Rotates the modelview by a specified angle on the x, y and z axis.
+   * @param {number} x: the x axis of the rotation
+   * @param {number} y: the y axis of the rotation
+   * @param {number} z: the z axis of the rotation
+   * @param {number} angle: the angle expressed in radians
    */
   this.rotate = function(x, y, z, angle) {
     mat4.rotate(mvMatrix, angle, [x, y, z]);
@@ -332,6 +381,7 @@ function TiltDraw(aCanvas, width, height, successCallback, failCallback) {
 
   /**
    * Rotates the modelview by a specified angle on the x axis.
+   * @param {number} angle: the angle expressed in radians
    */
   this.rotateX = function(angle) {
     mat4.rotateX(mvMatrix, angle);
@@ -339,6 +389,7 @@ function TiltDraw(aCanvas, width, height, successCallback, failCallback) {
 
   /**
    * Rotates the modelview by a specified angle on the y axis.
+   * @param {number} angle: the angle expressed in radians
    */
   this.rotateY = function(angle) {
     mat4.rotateY(mvMatrix, angle);
@@ -346,6 +397,7 @@ function TiltDraw(aCanvas, width, height, successCallback, failCallback) {
 
   /**
    * Rotates the modelview by a specified angle on the z axis.
+   * @param {number} angle: the angle expressed in radians
    */
   this.rotateZ = function(angle) {
     mat4.rotateZ(mvMatrix, angle);
@@ -353,6 +405,9 @@ function TiltDraw(aCanvas, width, height, successCallback, failCallback) {
 
   /**
    * Scales the modelview by the x, y and z coordinates.
+   * @param {number} x: the x ammount of scaling
+   * @param {number} y: the y ammount of scaling
+   * @param {number} z: the z ammount of scaling
    */
   this.scale = function(x, y, z) {
     mat4.scale(mvMatrix, [x, y, z]);
@@ -360,6 +415,8 @@ function TiltDraw(aCanvas, width, height, successCallback, failCallback) {
 
   /**
    * Clears the canvas context (usually at the beginning of each frame).
+   * If the color is undefined, it will default to opaque black.
+   * @param {string} color: the color, defined in hex or as rgb() or rgba()
    */
   this.background = function(color) {
     if (!color) {
@@ -375,6 +432,11 @@ function TiltDraw(aCanvas, width, height, successCallback, failCallback) {
 
   /**
    * Draws a rectangle using the specified parameters.
+   * @param {number} x: the x position of the object
+   * @param {number} y: the y position of the object
+   * @param {number} width: the width of the object
+   * @param {number} height: the height of the object
+   * @param {string} color: the color, defined in hex or as rgb() or rgba()
    */
   this.rect = function(x, y, width, height, color) {
     engine.useShader(colorShader);
@@ -392,8 +454,14 @@ function TiltDraw(aCanvas, width, height, successCallback, failCallback) {
 
   /**
    * Draws an image using the specified parameters.
+   * @param {object} texture: the texture to be used
+   * @param {number} x: the x position of the object
+   * @param {number} y: the y position of the object
+   * @param {number} width: the width of the object
+   * @param {number} height: the height of the object
+   * @param {string} tint: the tint, defined in hex or as rgb() or rgba()
    */
-  this.image = function(texture, x, y, width, height, color) {
+  this.image = function(texture, x, y, width, height, tint) {
     if (width == undefined || height == undefined) {
       width = texture.image.width;
       height = texture.image.height;
@@ -407,8 +475,8 @@ function TiltDraw(aCanvas, width, height, successCallback, failCallback) {
     engine.drawVertices(mvMatrix, projMatrix,
                         rectangleVertices,                    // vertices
                         rectangleVertices,                    // texture coord
-                        color == undefined ?
-                        [1, 1, 1, 1] : TiltUtils.Math.hex2rgba(color),
+                        tint == undefined ?
+                        [1, 1, 1, 1] : TiltUtils.Math.hex2rgba(tint),
                         texture);
     this.popMatrix();
   }

@@ -31,12 +31,18 @@ function TiltEngine() {
   this.gl = undefined;
 
   /**
-   * The current shader used by the gl context.
+   * The current shader used by the WebGL context.
    */
   this.shader = undefined;
 
   /**
    * Initializes a WebGL context, and runs fail or success callback functions.
+   * @param {object} canvas: the canvas to create the WebGL context with
+   * @param {number} width: the width of the canvas
+   * @param {number} height: the height of the canvas
+   * @param {function} successCallback: to be called if initialization worked
+   * @param {function} failCallback: to be called if initialization failed
+   * @return {object} the created gl context if successful, null otherwise
    */
   this.initWebGL = function(canvas, width, height,
                             successCallback, failCallback) {
@@ -63,6 +69,11 @@ function TiltEngine() {
 
   /**
    * Initializes a shader program, using sources located at a specific url.
+   * If only two params are specified (the shader name and the readyCallback 
+   * function), then ".fs" and ".vs" extensions will be automatically used).
+   * @param {string} vertShaderURL: the vertex shader resource
+   * @param {string} fragShaderURL: the fragment shader resource
+   * @param {function} readyCallback: the function called when loading is done
    */
   this.initShader = function(vertShaderURL, fragShaderURL, readyCallback) {
     if (arguments.length < 2) {
@@ -98,6 +109,9 @@ function TiltEngine() {
 
   /**
    * Compiles a shader source of pecific type, either x-vertex or x-fragment.
+   * @param {string} shaderSource: the source code for the shader
+   * @param {string} shaderType: the shader type (vertex or fragment)
+   * @return {object} the compiled shader
    */
   this.compileShader = function(shaderSource, shaderType) {
     var gl = this.gl;
@@ -135,6 +149,9 @@ function TiltEngine() {
 
   /**
    * Links two compiled vertex/fragment shaders together to form a program.
+   * @param {object} vertShader: the compiled vertex shader
+   * @param {object} fragShader: the compiled fragment shader
+   * @return {object} the newly created and linked shader program
    */
   this.linkProgram = function(vertShader, fragShader) {
     var gl = this.gl;
@@ -153,6 +170,7 @@ function TiltEngine() {
 
   /**
    * Uses the shader program as current for the gl context.
+   * @param {object} program: the shader program to be used by the engine
    */
   this.useShader = function(program) {
     this.gl.useProgram(this.shader = program);
@@ -160,6 +178,9 @@ function TiltEngine() {
 
   /**
    * Gets a shader attribute location from a program.
+   * @param {object} program: the shader program to obtain the attribute from
+   * @param {string} attribute: the attribute name
+   * @return {number} the attribute location from the program
    */
   this.shaderAttribute = function(program, attribute) {
     return this.gl.getAttribLocation(program, attribute);
@@ -167,6 +188,9 @@ function TiltEngine() {
 
   /**
    * Gets a shader uniform location from a program.
+   * @param {object} program: the shader program to obtain the uniform from
+   * @param {string} uniform: the uniform name
+   * @return {object} the uniform object from the program
    */
   this.shaderUniform = function(program, uniform) {
     return this.gl.getUniformLocation(program, uniform);
@@ -174,6 +198,11 @@ function TiltEngine() {
 
   /**
    * Gets a generic shader variable (attribute or uniform) from a program.
+   * If an attribute is found, the attribute location will be returned.
+   * Otherwise, the uniform will be searched and returned if found.
+   * @param {object} program: the shader program to obtain the uniform from
+   * @param {string} variable: the attribute or uniform name
+   * @return {number} or {object} the attribute or uniform from the program
    */
   this.shaderIO = function(program, variable) {
     var location = this.shaderAttribute(program, variable);
@@ -186,6 +215,10 @@ function TiltEngine() {
   /**
    * Initializes buffer data to be used for drawing, using an array of floats.
    * The 'numItems' can be specified to use only a portion of the array.
+   * @param {array} elementsArray: an array of floats
+   * @param {number} itemSize: how many items create a block
+   * @param {number} numItems: how mahy items to use from the array
+   * @return {object} the buffer
    */
   this.initBuffer = function(elementsArray, itemSize, numItems) {
     if (!numItems) numItems = elementsArray.length / itemSize;
@@ -204,6 +237,8 @@ function TiltEngine() {
 
   /**
    * Initializez a buffer of vertex indices, using an array of unsigned ints.
+   * @param {array} elementsArray: an array of unsigned integers
+   * @return {object} the index buffer
    */
   this.initIndexBuffer = function(elementsArray) {
     var gl = this.gl;
@@ -222,6 +257,14 @@ function TiltEngine() {
    * Initializes a texture from a source, calls a callback function when
    * ready; the source may be an url or a pre-existing image or canvas; if the
    * source is an already loaded image, the texture is immediately created.
+   * @param {object} or {string} textureSource: the texture source
+   * @param {function} readyCallback: function called when loading is finished
+   * @param {string} minFilter: either 'nearest' or 'linear'
+   * @param {string} magFilter: either 'nearest' or 'linear'
+   * @param {object} mipmap: either 'mipmap' or null
+   * @param {string} wrapS: either 'repeat' or undefined
+   * @param {string} wrapT: either 'repeat' or undefined
+   * @param {object} flipY: either 'flipY' or null
    */
   this.initTexture = function(textureSource, readyCallback,
                               minFilter, magFilter, mipmap,
@@ -248,12 +291,10 @@ function TiltEngine() {
                                          function resizeCallback(image) {
         texture.image = image;
 
-        gl.bindTexture(gl.TEXTURE_2D, texture);
-
         if (flipY) {
           gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
         }
-
+        gl.bindTexture(gl.TEXTURE_2D, texture);
         gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE,
                       texture.image);
 
@@ -263,7 +304,6 @@ function TiltEngine() {
         if (mipmap) {
           gl.generateMipmap(gl.TEXTURE_2D);
         }
-
         gl.bindTexture(gl.TEXTURE_2D, null);
 
         if (readyCallback) {
@@ -274,11 +314,23 @@ function TiltEngine() {
   }
 
   /**
-   * Sets texture parameters for the current binding.
+   * Sets texture parameters for the current texture binding.
+   * Optionally, you can also set the current texture manually.
+   * @param {string} minFilter: either 'nearest' or 'linear'
+   * @param {string} magFilter: either 'nearest' or 'linear'
+   * @param {object} mipmap: either 'mipmap' or null
+   * @param {string} wrapS: either 'repeat' or undefined
+   * @param {string} wrapT: either 'repeat' or undefined
+   * @param {object} texture: optional texture to replace the current binding
    */
   this.setTextureParams = function(minFilter, magFilter, mipmap,
-                                   wrapS, wrapT) {
+                                   wrapS, wrapT,
+                                   texture) {
     var gl = this.gl;
+    
+    if (texture) {
+      gl.bindTexture(gl.TEXTURE_2D, texture);
+    }
 
     if (minFilter == "nearest") {
       gl.texParameteri(gl.TEXTURE_2D,
@@ -329,6 +381,16 @@ function TiltEngine() {
    * Draws specified vertex buffers, for a custom modelview and projection;
    * This function implies that default uniforms & attributes are embedded in
    * the shader program variable. Some buffer parameters can be omitted.
+   * Used internally, you probably shouldn't call this function directly.
+   *
+   * @param {Float32Array} mvMatrix: the modelview matrix
+   * @param {Float32Array} projMatrix: the projection matrix
+   * @param {object} verticesBuffer: the vertices buffer (x, y and z coords)
+   * @param {object} texcoordBuffer: the texture coordinates (u, v)
+   * @param {string} color: the tint color to be used by the shader
+   * @param {object} texture: the texture to be used by the shader if required
+   * @param {UInt16Array} indexBuffer: indices for the passed vertices
+   * @param {number} drawMode: gl context enum, like gl.TRIANGLES or gl.LINES
    */
   this.drawVertices = function(mvMatrix, projMatrix,
                                verticesBuffer,
@@ -350,7 +412,22 @@ function TiltEngine() {
   /**
    * Draws specified vertex buffers, for a custom modelview and projection;
    * This function does not imply anything. Buffer parameters can be omitted.
-   * You probably shouldn't use this function.
+   * Also used internally, you probably shouldn't call this function directly.
+   *
+   * @param {object} mvMatrixUniform: the uniform to store the modelview
+   * @param {Float32Array} mvMatrix: the modelview matrix
+   * @param {object} projMatrixUniform: the uniform to store the projection
+   * @param {Float32Array} projMatrix: the projection matrix
+   * @param {object} verticesAttribute: the attribute to store the vertices
+   * @param {object} verticesBuffer: the vertices buffer (x, y and z coords)
+   * @param {object} texcoordAttribute: the attribute to store the texcoords
+   * @param {object} texcoordBuffer: the texture coordinates (u, v)
+   * @param {object} colorUniform: the uniform to store the tint color
+   * @param {string} color: the tint color to be used by the shader
+   * @param {object} textureSampler: the sampler to store the texture
+   * @param {object} texture: the texture to be used by the shader if required
+   * @param {UInt16Array} indexBuffer: indices for the passed vertices
+   * @param {number} drawMode: gl context enum, like gl.TRIANGLES or gl.LINES
    */
   this.drawVertices_ = function(mvMatrixUniform, mvMatrix,
                                 projMatrixUniform, projMatrix,
@@ -399,8 +476,11 @@ function TiltEngine() {
 
   /**
    * Handles a generic get request, performed on a specified url. When done,
-   * it fires the ready callback function if it exists, & passes an optional
-   * auxiliary parameter to it.
+   * it fires the ready callback function if it exists, & passes the http
+   * request object and also an optional auxiliary parameter if available.
+   * @param {string} url: the url to perform the GET to
+   * @param {function} readyCallback: function to be called when request ready
+   * @param {object} auxParam: optional parameter passed to readyCallback
    */
   this.request = function(url, readyCallback, auxParam) {
     var http = new XMLHttpRequest();
@@ -418,8 +498,12 @@ function TiltEngine() {
 
   /**
    * Handles multiple get requests from specified urls. When all requests are
-   * completed, it fires the ready callback function if it exists & passes an
-   * optional auxiliary parameter to it.
+   * completed, it fires the ready callback function if it exists, & passes 
+   * the http request object and also an optional auxiliary parameter if 
+   * available.
+   * @param {array} urls: an array of urls to perform the GET to
+   * @param {function} readyCallback: function called when all requests ready
+   * @param {object} auxParam: optional parameter passed to readyCallback
    */
   this.requests = function(urls, readyCallback, auxParam) {
     var http = [];

@@ -44,8 +44,10 @@ TiltChrome.BrowserOverlay = {
   
   /**
    * Initializes Tilt.
+   * @param {object XULCommandEvent} aEvent: the event firing this function
    */
-  initialize: function(aEvent) {
+  initialize: function(aEvent) { 
+    Components.utils.forceGC();
     
     TiltUtils.Console.error(TiltUtils.StringBundle.format(
       "linkProgram.error", ["ceva", "altceva"]));
