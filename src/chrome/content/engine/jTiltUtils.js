@@ -81,7 +81,6 @@ TiltUtils.Iframe = {
    * @param {object XULElement} iframe: the iframe to be added
    */
   appendToStack: function(iframe) {
-    alert(iframe);
     window.gBrowser.selectedBrowser.parentNode.appendChild(iframe);
     return iframe;
   },
