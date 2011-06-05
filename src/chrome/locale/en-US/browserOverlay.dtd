@@ -3,13 +3,3 @@
 
 <!ENTITY tilt.menuItemInitialize.label     "Initialize Tilt">
 <!ENTITY tilt.menuItemInitialize.accesskey "I">
-
-<!ENTITY tilt.menuItemHide.label     "Hide visualization">
-<!ENTITY tilt.menuItemHide.accesskey "H">
-
-<!ENTITY tilt.menuItemOptions.label     "Options">
-<!ENTITY tilt.menuItemOptions.accesskey "O">
-
-<!ENTITY tilt.menuItemOptionsOption1.label "Option1">
-<!ENTITY tilt.menuItemOptionsOption2.label "Option2">
-<!ENTITY tilt.menuItemOptionsOption3.label "Option3">
