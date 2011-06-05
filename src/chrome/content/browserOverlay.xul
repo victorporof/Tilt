@@ -42,23 +42,7 @@
         <menuitem id="tilt-menuItemInitialize"
                   label="&tilt.menuItemInitialize.label;"
                   accesskey="&tilt.menuItemInitialize.accesskey;"
-                  oncommand="TiltChrome.BrowserOverlay.initialize(event);"/>
-        <menu id="tilt-menuItemOptions"
-              label="&tilt.menuItemOptions.label;"
-              accesskey="&tilt.menuItemOptions.accesskey;">
-          <menupopup>
-            <menuitem id="tilt-menuItemOptionsOption1"
-                      label="&tilt.menuItemOptionsOption1.label;"
-                      type="checkbox"
-                      checked="true"/>
-            <menuitem id="tilt-menuItemOptionsOption2"
-                      label="&tilt.menuItemOptionsOption2.label;"
-                      type="checkbox"/>
-            <menuitem id="tilt-menuItemOptionsOption3"
-                      label="&tilt.menuItemOptionsOption3.label;"
-                      type="checkbox"/>
-          </menupopup>
-        </menu>
+                  oncommand="TiltChrome.BrowserOverlay.initialize(event);"/>        
       </menupopup>
     </menu>
   </menupopup>

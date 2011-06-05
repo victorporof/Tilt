@@ -3,7 +3,7 @@
 <plist version="1.0">
 <dict>
 	<key>currentDocument</key>
-	<string>chrome/content/browserOverlay.js</string>
+	<string>chrome/content/engine/jTiltEngine.js</string>
 	<key>documents</key>
 	<array>
 		<dict>
@@ -105,7 +105,7 @@
 			<key>firstVisibleColumn</key>
 			<integer>0</integer>
 			<key>firstVisibleLine</key>
-			<integer>31</integer>
+			<integer>41</integer>
 		</dict>
 		<key>chrome/content/browserOverlay.xul</key>
 		<dict>
@@ -140,28 +140,28 @@
 			<key>caret</key>
 			<dict>
 				<key>column</key>
-				<integer>44</integer>
+				<integer>24</integer>
 				<key>line</key>
-				<integer>351</integer>
+				<integer>287</integer>
 			</dict>
 			<key>firstVisibleColumn</key>
 			<integer>0</integer>
 			<key>firstVisibleLine</key>
-			<integer>344</integer>
+			<integer>12</integer>
 		</dict>
 		<key>chrome/content/engine/jTiltEngine.js</key>
 		<dict>
 			<key>caret</key>
 			<dict>
 				<key>column</key>
-				<integer>0</integer>
+				<integer>19</integer>
 				<key>line</key>
-				<integer>455</integer>
+				<integer>147</integer>
 			</dict>
 			<key>firstVisibleColumn</key>
 			<integer>0</integer>
 			<key>firstVisibleLine</key>
-			<integer>429</integer>
+			<integer>162</integer>
 		</dict>
 		<key>chrome/content/engine/jTiltIframeUtils.js</key>
 		<dict>
@@ -175,7 +175,7 @@
 			<key>firstVisibleColumn</key>
 			<integer>0</integer>
 			<key>firstVisibleLine</key>
-			<integer>27</integer>
+			<integer>0</integer>
 		</dict>
 		<key>chrome/content/engine/jTiltVisualization.js</key>
 		<dict>
@@ -189,7 +189,7 @@
 			<key>firstVisibleColumn</key>
 			<integer>0</integer>
 			<key>firstVisibleLine</key>
-			<integer>43</integer>
+			<integer>15</integer>
 		</dict>
 		<key>chrome/content/engine/shaders/shader-color.fs</key>
 		<dict>
@@ -297,6 +297,6 @@
 	<key>showFileHierarchyDrawer</key>
 	<true/>
 	<key>windowFrame</key>
-	<string>{{274, 67}, {758, 811}}</string>
+	<string>{{399, 67}, {758, 811}}</string>
 </dict>
 </plist>
