@@ -35,32 +35,32 @@ TiltChrome.BrowserOverlay = {
   /**
    * The iframe containing the canvas element, used for rendering.
    */
-  iframe: undefined,
+  iframe: null,
   
   /*
    * Visualization logic and drawing loop.
    */
-  visualization: undefined,
+  visualization: null,
   
   /**
    * Initializes Tilt.
    */
   initialize: function(aEvent) {
-    Components.utils.forceGC();
-        
+    
+    TiltUtils.Console.error(TiltUtils.StringBundle.format(
+      "linkProgram.error", ["ceva", "altceva"]));
+      
+    var tiltMenu = document.getElementById("tilt-menuItemInitialize");    
     if (this.iframe) {
-      var label = "Initialize Tilt";
-      document.getElementById("tilt-menuItemInitialize").label = label
-
+      tiltMenu.label = TiltUtils.StringBundle.get("menuItemInitialize.label");
       return this.destroy();
     }
     else {
-      var label = "Hide visualization";
-      document.getElementById("tilt-menuItemInitialize").label = label;
+      tiltMenu.label = TiltUtils.StringBundle.get("menuItemHide.label");
     }
     
     var that = this;
-    TiltIframe.Utils.initCanvas(function loadCallback(iframe, canvas) {
+    TiltUtils.Iframe.initCanvas(function loadCallback(iframe, canvas) {
       that.iframe = iframe;
       
       canvas.width = iframe.contentWindow.innerWidth;
@@ -76,9 +76,9 @@ TiltChrome.BrowserOverlay = {
    * Destroys Tilt, removing the iframe from the stack.
    */
   destroy: function() {
-    TiltIframe.Utils.removeFromStack(this.iframe);
-    this.iframe = undefined;
-    this.visualization = undefined;
+    TiltUtils.Iframe.removeFromStack(this.iframe);
+    this.iframe = null;
+    this.visualization = null;
     
     Components.utils.forceGC();
   }
