@@ -79,7 +79,7 @@ function TiltVisualization(canvas, width, height) {
       draw.rotateY(TiltUtils.Math.radians(timeCount / 10));
       draw.translate(-150, -150, 0);
       
-      if (someTexture != undefined) {
+      if (someTexture != null) {
         draw.image(someTexture, 0, 0, 300, 300, "rgba(0, 0.5, 0, 0.75)");    
       }
     }

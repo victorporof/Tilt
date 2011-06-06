@@ -28,12 +28,12 @@ function TiltEngine() {
   /**
    * WebGL context to be used.
    */
-  this.gl = undefined;
+  this.gl = null;
 
   /**
    * The current shader used by the WebGL context.
    */
-  this.shader = undefined;
+  this.shader = null;
 
   /**
    * Initializes a WebGL context, and runs fail or success callback functions.
