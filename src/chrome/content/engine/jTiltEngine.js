@@ -152,7 +152,7 @@ function TiltEngine() {
   }
 
   /**
-   * Links two compiled vertex/fragment shaders together to form a program.
+   * Links two compiled vertex or fragment shaders together to form a program.
    * @param {object} vertShader: the compiled vertex shader
    * @param {object} fragShader: the compiled fragment shader
    * @return {object} the newly created and linked shader program
