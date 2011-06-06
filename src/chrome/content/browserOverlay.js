@@ -48,9 +48,6 @@ TiltChrome.BrowserOverlay = {
    */
   initialize: function(aEvent) { 
     Components.utils.forceGC();
-    
-    TiltUtils.Console.error(TiltUtils.StringBundle.format(
-      "linkProgram.error", ["ceva", "altceva"]));
       
     var tiltMenu = document.getElementById("tilt-menuItemInitialize");    
     if (this.iframe) {
