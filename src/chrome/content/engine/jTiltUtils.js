@@ -33,12 +33,15 @@ if ("undefined" == typeof(TiltUtils)) {
 TiltUtils.Iframe = {
 
   /**
-   * Helper method, allowing to easily create an iframe with a canvas element,
-   * anytime, anywhere.
+   * Helper method, allowing to easily create an iframe with a canvas element.
+   * When loaded, the loadCallback function is called with the iframe and the
+   * canvas passed as parameters to it. You can also use the specified 
+   * iframe or canvas id to get the elements by id.
    * @param {function} loadCallback: function called when initialization done
    * @param {boolean} keepInStack: true if the iframe should be retained
    * @param {string} iframe_id: optional, id for the created iframe
    * @param {string} canvas_id: optional, id for the created canvas element
+   * @return {object XULElement} the newly created iframe
    */
   initCanvas: function(loadCallback, keepInStack, iframe_id, canvas_id) {
     if (!iframe_id) {
@@ -79,6 +82,7 @@ TiltUtils.Iframe = {
   /**
    * Appends an iframe to the current selected browser parent node.
    * @param {object XULElement} iframe: the iframe to be added
+   * @return {object XULElement} the same iframe
    */
   appendToStack: function(iframe) {
     window.gBrowser.selectedBrowser.parentNode.appendChild(iframe);
@@ -88,6 +92,7 @@ TiltUtils.Iframe = {
   /**
    * Removes an iframe to the current selected browser parent node.
    * @param {object XULElement} iframe: the iframe to be removed
+   * @return {object XULElement} the same iframe
    */
   removeFromStack: function(iframe) {
     window.gBrowser.selectedBrowser.parentNode.removeChild(iframe);
@@ -103,7 +108,7 @@ TiltUtils.Image = {
   /**
    * Scales an image to power of two width and height.
    * If the image already has power of two dimensions, the readyCallback
-   * functions is called immediately. In either case the newly created image
+   * function is called immediately. In either case the newly created image
    * will be passed to the readyCallback function.
    * @param {object} image: the image to be scaled
    * @param {function} readyCallback: function called when scaling is finished
@@ -163,9 +168,9 @@ TiltUtils.Math = {
   },
 
   /**
-   * Returns the next highest power of two for a number.
+   * Returns the next power of two for a number.
    * @param {number} x: the number to be converted
-   * @return {number} the next highest power of two for x
+   * @return {number} the next closest power of two for x
    */
   nextPowerOfTwo: function(x) {
     --x;
@@ -214,8 +219,8 @@ TiltUtils.StringBundle = {
   
   /**
    * Returns a string in the string bundle.
-   * @param (string) string: the string name in the bundle
-   * @return (string) the equivalent string from the bundle
+   * @param {string} string: the string name in the bundle
+   * @return {string} the equivalent string from the bundle
    */
   get: function(string) {
     return document.getElementById(this.bundle).getString(string);
@@ -223,9 +228,9 @@ TiltUtils.StringBundle = {
   
   /**
    * Returns a formatted string using the string bundle.
-   * @param (string) string: the string name in the bundle
-   * @param (array) args: an array of args for the formatted string
-   * @return (string) the equivalent formatted string from the bundle
+   * @param {string} string: the string name in the bundle
+   * @param {array} args: an array of args for the formatted string
+   * @return {string} the equivalent formatted string from the bundle
    */
    format: function(string, args) {
      return document.getElementById(this.bundle).getFormattedString(string,       
@@ -240,7 +245,7 @@ TiltUtils.Console = {
   
   /**
    * Logs a message to the console.
-   * @param (string) aMessage: the message to be logged
+   * @param {string} aMessage: the message to be logged
    */
   log: function(aMessage) {
     var consoleService = Components.classes["@mozilla.org/consoleservice;1"]
@@ -251,23 +256,23 @@ TiltUtils.Console = {
   
   /**
    * Logs an error to the console.
-   * @param (string) aMessage: the message to be logged
-   * @param (string) aSourceName: the URL of file with error. This will be a 
+   * @param {string} aMessage: the message to be logged
+   * @param {string} aSourceName: the URL of file with error. This will be a 
    * hyperlink in the JavaScript Console, so you'd better use real URL. You 
    * may pass null if it's not applicable.
-   * @param (string) aSourceLine: the line #aLineNumber from aSourceName file. 
+   * @param {string} aSourceLine: the line #aLineNumber from aSourceName file. 
    * You are responsible for providing that line. You may pass null if you are 
    * lazy; that will prevent showing the source line in JavaScript Console.
-   * @param (string) aLineNumber: specify the exact location of error
-   * @param (string) aColumnNumber: is used to draw the arrow pointing to the 
+   * @param {string} aLineNumber: specify the exact location of error
+   * @param {string} aColumnNumber: is used to draw the arrow pointing to the 
    * problem character.
-   * @param (number) aFlags: one of flags declared in nsIScriptError. At the 
+   * @param {number} aFlags: one of flags declared in nsIScriptError. At the 
    * time of writing, possible values are: 
    *  nsIScriptError.errorFlag = 0
    *  nsIScriptError.warningFlag = 1
    *  nsIScriptError.exceptionFlag = 2
    *  nsIScriptError.strictFlag = 4
-   * @param (string) aCategory: a string indicating what kind of code caused 
+   * @param {string} aCategory: a string indicating what kind of code caused 
    * the message. There are quite a few category strings and they do not seem 
    * to be listed in a single place. Hopefully, they will all be listed in 
    * nsIScriptError.idl eventually.

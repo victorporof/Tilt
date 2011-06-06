@@ -101,7 +101,7 @@ function TiltDraw(aCanvas, width, height, successCallback, failCallback) {
   /**
    * Performs mandatory initialization of shaders and other objects required
    * for drawing, like vertex buffers and primitives.
-   * @return {object} the TiltDraw initialized object
+   * @return {object} this object initialized
    */
   this.initialize = function() {
     var colorShaderPath =
@@ -191,7 +191,7 @@ function TiltDraw(aCanvas, width, height, successCallback, failCallback) {
 
   /**
    * Returns the engine.
-   * return {object} the engine
+   * @return {object} the engine
    */
    this.getEngine = function() {
      return engine;
@@ -199,7 +199,7 @@ function TiltDraw(aCanvas, width, height, successCallback, failCallback) {
 
   /**
    * Returns the canvas.
-   * return {object} the canvas
+   * @return {object} the canvas
    */
   this.getCanvas = function() {
     return canvas;
@@ -208,7 +208,7 @@ function TiltDraw(aCanvas, width, height, successCallback, failCallback) {
   /**
    * Returns the time count.
    * This represents the total time passed since initialization.
-   * return {number} the time count
+   * @return {number} the time count
    */
   this.getTimeCount = function() {
     return timeCount;
@@ -217,7 +217,7 @@ function TiltDraw(aCanvas, width, height, successCallback, failCallback) {
   /**
    * Returns the frame count.
    * This is a counter for the number of frames passed since initialization.
-   * return {number} the frame count
+   * @return {number} the frame count
    */
   this.getFrameCount = function() {
     return frameCount;
@@ -226,7 +226,7 @@ function TiltDraw(aCanvas, width, height, successCallback, failCallback) {
   /**
    * Returns the framerate.
    * This is a variable retaining the current frame rate.
-   * return {number} the framerate
+   * @return {number} the framerate
    */
   this.getFrameRate = function() {
     return frameRate;
@@ -235,16 +235,14 @@ function TiltDraw(aCanvas, width, height, successCallback, failCallback) {
   /**
    * Returns the frame delta time.
    * Represents the delta time elapsed between frames.
-   * return {number} the frame delta time
+   * @return {number} the frame delta time
    */
   this.getFrameDelta = function() {
     return frameDelta;
   }
 
-  /**
-   * Helpers for managing variables like frameCount, frameRate, frameDelta.
-   * Used internally, in the requestAnimFrame function.
-   */
+  // Helpers for managing variables like frameCount, frameRate, frameDelta
+  // Used internally, in the requestAnimFrame function
   var currentTime = 0;
   var lastTime = 0;
 
@@ -279,9 +277,10 @@ function TiltDraw(aCanvas, width, height, successCallback, failCallback) {
 
   /**
    * Sets up the WebGL context viewport.
-   * This defines the width and height of the gl drawing canvas context.
-   * @param {number} width: the width of the drawing area
-   * @param {number} height: the height of the drawing area
+   * This defines the width and height of the gl drawing canvas context (but
+   * not the size of the actual canvas element).
+   * @param {number} width: the width of the viewport area
+   * @param {number} height: the height of the viewport area
    */
   this.viewport = function(width, height) {
     gl.viewport(0, 0, width, height);
@@ -321,7 +320,7 @@ function TiltDraw(aCanvas, width, height, successCallback, failCallback) {
   
   /**
    * Sets a custom projection matrix.
-   * @param {Float32Array} matrix the custom projection matrix to be used
+   * @param {object} matrix the custom projection matrix to be used
    */
    this.projection = function(matrix) {
      this.viewport(canvas.width, canvas.height);

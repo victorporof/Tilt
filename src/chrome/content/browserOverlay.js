@@ -49,26 +49,27 @@ TiltChrome.BrowserOverlay = {
   initialize: function(aEvent) { 
     Components.utils.forceGC();
       
-    var tiltMenu = document.getElementById("tilt-menuItemInitialize");    
+    var tiltMenu = document.getElementById("tilt-menuItemInitialize");  
+    var that = this;
+
     if (this.iframe) {
+      this.destroy();
       tiltMenu.label = TiltUtils.StringBundle.get("menuItemInitialize.label");
-      return this.destroy();
     }
     else {
       tiltMenu.label = TiltUtils.StringBundle.get("menuItemHide.label");
-    }
     
-    var that = this;
-    TiltUtils.Iframe.initCanvas(function loadCallback(iframe, canvas) {
-      that.iframe = iframe;
+      TiltUtils.Iframe.initCanvas(function loadCallback(iframe, canvas) {
+        that.iframe = iframe;
       
-      canvas.width = iframe.contentWindow.innerWidth;
-      canvas.height = iframe.contentWindow.innerHeight;
+        canvas.width = iframe.contentWindow.innerWidth;
+        canvas.height = iframe.contentWindow.innerHeight;
       
-      that.visualization = new TiltVisualization(canvas);
-      that.visualization.setup();
-      that.visualization.loop();
-    }, true);
+        that.visualization = new TiltVisualization(canvas);
+        that.visualization.setup();
+        that.visualization.loop();
+      }, true);
+    }
   },
   
   /**

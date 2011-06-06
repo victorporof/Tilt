@@ -71,6 +71,8 @@ function TiltEngine() {
    * Initializes a shader program, using sources located at a specific url.
    * If only two params are specified (the shader name and the readyCallback 
    * function), then ".fs" and ".vs" extensions will be automatically used).
+   * The ready callback function will have as a parameter the newly created
+   * shader program, by compiling and linking the vertex and fragment shader.
    * @param {string} vertShaderURL: the vertex shader resource
    * @param {string} fragShaderURL: the fragment shader resource
    * @param {function} readyCallback: the function called when loading is done
@@ -108,9 +110,9 @@ function TiltEngine() {
   }
 
   /**
-   * Compiles a shader source of pecific type, either x-vertex or x-fragment.
+   * Compiles a shader source of pecific type, either vertex or fragment.
    * @param {string} shaderSource: the source code for the shader
-   * @param {string} shaderType: the shader type (vertex or fragment)
+   * @param {string} shaderType: the shader type ('x-vertex' or 'x-fragment')
    * @return {object} the compiled shader
    */
   this.compileShader = function(shaderSource, shaderType) {
@@ -141,7 +143,9 @@ function TiltEngine() {
     gl.compileShader(shader);
 
     if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
-      TiltUtils.Console.error(gl.getShaderInfoLog(shader));
+      TiltUtils.Console.error(TiltUtils.StringBundle.format(
+        "compileShader.compile.error"), [gl.getShaderInfoLog(shader)]);
+
       return null;
     }
     return shader;
@@ -217,7 +221,7 @@ function TiltEngine() {
    * The 'numItems' can be specified to use only a portion of the array.
    * @param {array} elementsArray: an array of floats
    * @param {number} itemSize: how many items create a block
-   * @param {number} numItems: how mahy items to use from the array
+   * @param {number} numItems: how many items to use from the array
    * @return {object} the buffer
    */
   this.initBuffer = function(elementsArray, itemSize, numItems) {
@@ -237,6 +241,8 @@ function TiltEngine() {
 
   /**
    * Initializez a buffer of vertex indices, using an array of unsigned ints.
+   * The item size will automatically default to 1, and the numItems will be
+   * equal to the number of items in the array.
    * @param {array} elementsArray: an array of unsigned integers
    * @return {object} the index buffer
    */
@@ -285,7 +291,7 @@ function TiltEngine() {
       }
     }
 
-    /* Used internally for binding an image to a texture object */
+    // Used internally for binding an image to a texture object
     function bindTextureImage() {
       TiltUtils.Image.resizeToPowerOfTwo(texture.image,
                                          function resizeCallback(image) {
@@ -378,7 +384,7 @@ function TiltEngine() {
   }
 
   /**
-   * Draws specified vertex buffers, for a custom modelview and projection;
+   * Draws specified vertex buffers, for a custom modelview and projection.
    * This function implies that default uniforms & attributes are embedded in
    * the shader program variable. Some buffer parameters can be omitted.
    * Used internally, you probably shouldn't call this function directly.
@@ -410,7 +416,7 @@ function TiltEngine() {
   }
 
   /**
-   * Draws specified vertex buffers, for a custom modelview and projection;
+   * Draws specified vertex buffers, for a custom modelview and projection.
    * This function does not imply anything. Buffer parameters can be omitted.
    * Also used internally, you probably shouldn't call this function directly.
    *
