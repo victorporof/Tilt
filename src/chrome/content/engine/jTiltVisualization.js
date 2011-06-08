@@ -62,7 +62,7 @@ function TiltVisualization(canvas, dom, width, height) {
     
     engine.initTexture(dom, function readyCallback(texure) {
       dom_texture = texure;
-    }, "rgb(0, 255, 0)");
+    }, "white");
   }
   
   /**
