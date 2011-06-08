@@ -101,6 +101,7 @@ function TiltDraw(aCanvas, width, height, successCallback, failCallback) {
   /**
    * Performs mandatory initialization of shaders and other objects required
    * for drawing, like vertex buffers and primitives.
+   * 
    * @return {object} this object initialized
    */
   this.initialize = function() {
@@ -183,6 +184,7 @@ function TiltDraw(aCanvas, width, height, successCallback, failCallback) {
   /**
    * Returns true if the initialization is complete (currently, this means 
    * that both the color and the texture shader are loaded).
+   *
    * @return {boolean} true if the initialization is complete
    */
   this.isInitialized = function() {
@@ -191,6 +193,7 @@ function TiltDraw(aCanvas, width, height, successCallback, failCallback) {
 
   /**
    * Returns the engine.
+   *
    * @return {object} the engine
    */
    this.getEngine = function() {
@@ -199,6 +202,7 @@ function TiltDraw(aCanvas, width, height, successCallback, failCallback) {
 
   /**
    * Returns the canvas.
+   *
    * @return {object} the canvas
    */
   this.getCanvas = function() {
@@ -208,6 +212,7 @@ function TiltDraw(aCanvas, width, height, successCallback, failCallback) {
   /**
    * Returns the time count.
    * This represents the total time passed since initialization.
+   *
    * @return {number} the time count
    */
   this.getTimeCount = function() {
@@ -217,6 +222,7 @@ function TiltDraw(aCanvas, width, height, successCallback, failCallback) {
   /**
    * Returns the frame count.
    * This is a counter for the number of frames passed since initialization.
+   *
    * @return {number} the frame count
    */
   this.getFrameCount = function() {
@@ -226,6 +232,7 @@ function TiltDraw(aCanvas, width, height, successCallback, failCallback) {
   /**
    * Returns the framerate.
    * This is a variable retaining the current frame rate.
+   *
    * @return {number} the framerate
    */
   this.getFrameRate = function() {
@@ -235,6 +242,7 @@ function TiltDraw(aCanvas, width, height, successCallback, failCallback) {
   /**
    * Returns the frame delta time.
    * Represents the delta time elapsed between frames.
+   *
    * @return {number} the frame delta time
    */
   this.getFrameDelta = function() {
@@ -279,6 +287,7 @@ function TiltDraw(aCanvas, width, height, successCallback, failCallback) {
    * Sets up the WebGL context viewport.
    * This defines the width and height of the gl drawing canvas context (but
    * not the size of the actual canvas element).
+   *
    * @param {number} width: the width of the viewport area
    * @param {number} height: the height of the viewport area
    */
@@ -320,6 +329,7 @@ function TiltDraw(aCanvas, width, height, successCallback, failCallback) {
   
   /**
    * Sets a custom projection matrix.
+   *
    * @param {object} matrix the custom projection matrix to be used
    */
    this.projection = function(matrix) {
@@ -359,6 +369,7 @@ function TiltDraw(aCanvas, width, height, successCallback, failCallback) {
 
   /**
    * Translates the modelview by the x, y and z coordinates.
+   *
    * @param {number} x: the x ammount of translation
    * @param {number} y: the y ammount of translation
    * @param {number} z: the z ammount of translation
@@ -369,6 +380,7 @@ function TiltDraw(aCanvas, width, height, successCallback, failCallback) {
 
   /**
    * Rotates the modelview by a specified angle on the x, y and z axis.
+   *
    * @param {number} x: the x axis of the rotation
    * @param {number} y: the y axis of the rotation
    * @param {number} z: the z axis of the rotation
@@ -380,6 +392,7 @@ function TiltDraw(aCanvas, width, height, successCallback, failCallback) {
 
   /**
    * Rotates the modelview by a specified angle on the x axis.
+   *
    * @param {number} angle: the angle expressed in radians
    */
   this.rotateX = function(angle) {
@@ -388,6 +401,7 @@ function TiltDraw(aCanvas, width, height, successCallback, failCallback) {
 
   /**
    * Rotates the modelview by a specified angle on the y axis.
+   *
    * @param {number} angle: the angle expressed in radians
    */
   this.rotateY = function(angle) {
@@ -396,6 +410,7 @@ function TiltDraw(aCanvas, width, height, successCallback, failCallback) {
 
   /**
    * Rotates the modelview by a specified angle on the z axis.
+   *
    * @param {number} angle: the angle expressed in radians
    */
   this.rotateZ = function(angle) {
@@ -404,6 +419,7 @@ function TiltDraw(aCanvas, width, height, successCallback, failCallback) {
 
   /**
    * Scales the modelview by the x, y and z coordinates.
+   *
    * @param {number} x: the x ammount of scaling
    * @param {number} y: the y ammount of scaling
    * @param {number} z: the z ammount of scaling
@@ -414,12 +430,13 @@ function TiltDraw(aCanvas, width, height, successCallback, failCallback) {
 
   /**
    * Clears the canvas context (usually at the beginning of each frame).
-   * If the color is undefined, it will default to opaque black.
+   * If the color is undefined, it will default to opaque white.
+   *
    * @param {string} color: the color, defined in hex or as rgb() or rgba()
    */
   this.background = function(color) {
     if (!color) {
-      color = [0, 0, 0, 1];
+      color = [1, 1, 1, 1];
     }
     else {
       color = TiltUtils.Math.hex2rgba(color);
@@ -431,6 +448,7 @@ function TiltDraw(aCanvas, width, height, successCallback, failCallback) {
 
   /**
    * Draws a rectangle using the specified parameters.
+   *
    * @param {number} x: the x position of the object
    * @param {number} y: the y position of the object
    * @param {number} width: the width of the object
@@ -453,6 +471,7 @@ function TiltDraw(aCanvas, width, height, successCallback, failCallback) {
 
   /**
    * Draws an image using the specified parameters.
+   *
    * @param {object} texture: the texture to be used
    * @param {number} x: the x position of the object
    * @param {number} y: the y position of the object
@@ -479,4 +498,22 @@ function TiltDraw(aCanvas, width, height, successCallback, failCallback) {
                         texture);
     this.popMatrix();
   }
+  
+  /**
+   * Destroys this object.
+   */
+   this.destroy = function() {
+     engine.destroy();
+     engine = null;
+     canvas = null;
+     gl = null;
+     
+     colorShader = null;
+     textureShader = null;
+     mvMatrixStack = null;
+     mvMatrix = null;
+     projMatrix = null;
+     rectangleVertices = null;
+     cubeVertices = null;
+   }
 }

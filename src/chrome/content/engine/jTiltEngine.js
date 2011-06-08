@@ -37,6 +37,7 @@ function TiltEngine() {
 
   /**
    * Initializes a WebGL context, and runs fail or success callback functions.
+   *
    * @param {object} canvas: the canvas to create the WebGL context with
    * @param {number} width: the width of the canvas
    * @param {number} height: the height of the canvas
@@ -73,6 +74,7 @@ function TiltEngine() {
    * function), then ".fs" and ".vs" extensions will be automatically used).
    * The ready callback function will have as a parameter the newly created
    * shader program, by compiling and linking the vertex and fragment shader.
+   *
    * @param {string} vertShaderURL: the vertex shader resource
    * @param {string} fragShaderURL: the fragment shader resource
    * @param {function} readyCallback: the function called when loading is done
@@ -92,7 +94,7 @@ function TiltEngine() {
     var fragShader;
 
     this.requests([vertShaderURL, fragShaderURL],
-                  function finishedCallback(http) {
+                  function requestsCallback(http) {
 
       vertShader = that.compileShader(http[0].responseText,
                                       "x-shader/x-vertex");
@@ -111,6 +113,7 @@ function TiltEngine() {
 
   /**
    * Compiles a shader source of pecific type, either vertex or fragment.
+   *
    * @param {string} shaderSource: the source code for the shader
    * @param {string} shaderType: the shader type ('x-vertex' or 'x-fragment')
    * @return {object} the compiled shader
@@ -153,6 +156,7 @@ function TiltEngine() {
 
   /**
    * Links two compiled vertex or fragment shaders together to form a program.
+   *
    * @param {object} vertShader: the compiled vertex shader
    * @param {object} fragShader: the compiled fragment shader
    * @return {object} the newly created and linked shader program
@@ -174,6 +178,7 @@ function TiltEngine() {
 
   /**
    * Uses the shader program as current for the gl context.
+   *
    * @param {object} program: the shader program to be used by the engine
    */
   this.useShader = function(program) {
@@ -182,6 +187,7 @@ function TiltEngine() {
 
   /**
    * Gets a shader attribute location from a program.
+   *
    * @param {object} program: the shader program to obtain the attribute from
    * @param {string} attribute: the attribute name
    * @return {number} the attribute location from the program
@@ -192,6 +198,7 @@ function TiltEngine() {
 
   /**
    * Gets a shader uniform location from a program.
+   *
    * @param {object} program: the shader program to obtain the uniform from
    * @param {string} uniform: the uniform name
    * @return {object} the uniform object from the program
@@ -204,6 +211,7 @@ function TiltEngine() {
    * Gets a generic shader variable (attribute or uniform) from a program.
    * If an attribute is found, the attribute location will be returned.
    * Otherwise, the uniform will be searched and returned if found.
+   *
    * @param {object} program: the shader program to obtain the uniform from
    * @param {string} variable: the attribute or uniform name
    * @return {number} or {object} the attribute or uniform from the program
@@ -219,6 +227,7 @@ function TiltEngine() {
   /**
    * Initializes buffer data to be used for drawing, using an array of floats.
    * The 'numItems' can be specified to use only a portion of the array.
+   *
    * @param {array} elementsArray: an array of floats
    * @param {number} itemSize: how many items create a block
    * @param {number} numItems: how many items to use from the array
@@ -243,6 +252,7 @@ function TiltEngine() {
    * Initializez a buffer of vertex indices, using an array of unsigned ints.
    * The item size will automatically default to 1, and the numItems will be
    * equal to the number of items in the array.
+   *
    * @param {array} elementsArray: an array of unsigned integers
    * @return {object} the index buffer
    */
@@ -263,6 +273,7 @@ function TiltEngine() {
    * Initializes a texture from a source, calls a callback function when
    * ready; the source may be an url or a pre-existing image or canvas; if the
    * source is an already loaded image, the texture is immediately created.
+   *
    * @param {object} or {string} textureSource: the texture source
    * @param {function} readyCallback: function called when loading is finished
    * @param {string} minFilter: either 'nearest' or 'linear'
@@ -322,6 +333,7 @@ function TiltEngine() {
   /**
    * Sets texture parameters for the current texture binding.
    * Optionally, you can also set the current texture manually.
+   *
    * @param {string} minFilter: either 'nearest' or 'linear'
    * @param {string} magFilter: either 'nearest' or 'linear'
    * @param {object} mipmap: either 'mipmap' or null
@@ -484,6 +496,7 @@ function TiltEngine() {
    * Handles a generic get request, performed on a specified url. When done,
    * it fires the ready callback function if it exists, & passes the http
    * request object and also an optional auxiliary parameter if available.
+   *
    * @param {string} url: the url to perform the GET to
    * @param {function} readyCallback: function to be called when request ready
    * @param {object} auxParam: optional parameter passed to readyCallback
@@ -507,6 +520,7 @@ function TiltEngine() {
    * completed, it fires the ready callback function if it exists, & passes 
    * the http request object and also an optional auxiliary parameter if 
    * available.
+   *
    * @param {array} urls: an array of urls to perform the GET to
    * @param {function} readyCallback: function called when all requests ready
    * @param {object} auxParam: optional parameter passed to readyCallback
@@ -530,5 +544,13 @@ function TiltEngine() {
         onrequestready();
       }, i);
     }
+  }
+
+  /**
+   * Destroys this object.
+   */
+  this.destroy = function() {
+    this.gl = null;
+    this.shader = null;
   }
 }
