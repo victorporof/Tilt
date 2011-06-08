@@ -42,11 +42,11 @@ TiltUtils.Iframe = {
    * @param {boolean} keepInStack: true if the iframe should be retained
    * @param {string} iframe_id: optional, id for the created iframe
    * @param {string} canvas_id: optional, id for the created canvas element
-   * @param {string} attribute_type: optional, the type of the iframe
+   * @param {string} type: optional, the type of the iframe
    * @return {object XULElement} the newly created iframe
    */
   initCanvas: function(readyCallback, keepInStack,
-                       attribute_type, iframe_id, canvas_id) {
+                       type, iframe_id, canvas_id) {
 
     if (!iframe_id) {
       iframe_id = "tilt-iframe";
@@ -56,7 +56,8 @@ TiltUtils.Iframe = {
     }
 
     var iframe = document.createElement("iframe");
-    iframe.setAttribute("type", attribute_type);
+    iframe.setAttribute("type", type);
+    iframe.setAttribute("transparent", "true");
     iframe.id = iframe_id;
     iframe.flex = 1;
 

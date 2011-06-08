@@ -71,15 +71,15 @@ function TiltVisualization(canvas, dom, width, height) {
       var frameCount = draw.getFrameCount();
       var frameRate = draw.getFrameRate();
       var frameDelta = draw.getFrameDelta();
-    
+      
       if (draw.isInitialized()) {
-        draw.background();
+        draw.background(dom_texture ? 0 : "rgba(0, 0, 0, 0)");
       
         draw.perspective();
         draw.translate(width / 2, height / 2, 0);
-        draw.rotate(1, 0.75, 0.5, TiltUtils.Math.radians(timeCount / 16));
+        draw.rotate(1, 0.5, 0.25, TiltUtils.Math.radians(timeCount / 16));
         draw.translate(-width / 2, -height / 2, 0);
-      
+        
         if (dom_texture != null) {
           draw.image(dom_texture, 0, 0, width, height);    
         }
