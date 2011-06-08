@@ -248,10 +248,20 @@ TiltUtils.Math = {
             hex.charAt(2) + hex.charAt(2);
     }
     else if (hex.match("^rgba") == "rgba") {
-      return hex.substring(5, hex.length - 1).split(',');
+      var rgba = hex.substring(5, hex.length - 1).split(',');
+      rgba[0] /= 255;
+      rgba[1] /= 255;
+      rgba[2] /= 255;
+      rgba[3] /= 255;
+      return rgba;
     }
     else if (hex.match("^rgb") == "rgb") {
-      return hex.substring(4, hex.length - 1).split(',');
+      var rgba = hex.substring(4, hex.length - 1).split(',');
+      rgba[0] /= 255;
+      rgba[1] /= 255;
+      rgba[2] /= 255;
+      rgba[3] = 1;
+      return rgba;
     }
 
     var r = parseInt(hex.substring(0, 2), 16) / 255;
@@ -306,7 +316,7 @@ TiltUtils.Console = {
    */
   log: function(aMessage) {
     var consoleService = Components.classes["@mozilla.org/consoleservice;1"]
-    .getService(Components.interfaces.nsIConsoleService);
+      .getService(Components.interfaces.nsIConsoleService);
     
     consoleService.logStringMessage(aMessage);
   },
@@ -339,10 +349,10 @@ TiltUtils.Console = {
                   aColumnNumber, aFlags, aCategory) {
 
     var consoleService = Components.classes["@mozilla.org/consoleservice;1"]
-    .getService(Components.interfaces.nsIConsoleService);
+      .getService(Components.interfaces.nsIConsoleService);
 
     var scriptError = Components.classes["@mozilla.org/scripterror;1"]
-    .createInstance(Components.interfaces.nsIScriptError);
+      .createInstance(Components.interfaces.nsIScriptError);
     
     scriptError.init(aMessage, aSourceName, aSourceLine, aLineNumber, 
                      aColumnNumber, aFlags, aCategory);
