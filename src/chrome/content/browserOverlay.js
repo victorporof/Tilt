@@ -33,6 +33,11 @@ if ("undefined" == typeof(TiltChrome)) {
 TiltChrome.BrowserOverlay = {
   
   /**
+   * A snapshot image representing the contents of a DOM window.
+   */
+  dom: null,
+  
+  /**
    * The iframe containing the canvas element, used for rendering.
    */
   iframe: null,
@@ -41,14 +46,14 @@ TiltChrome.BrowserOverlay = {
    * Visualization logic and drawing loop.
    */
   visualization: null,
-  
+    
   /**
    * Initializes Tilt.
    * @param {object XULCommandEvent} aEvent: the event firing this function
    */
   initialize: function(aEvent) { 
     Components.utils.forceGC();
-      
+    
     var tiltMenu = document.getElementById("tilt-menuItemInitialize");  
     var that = this;
 
@@ -58,26 +63,33 @@ TiltChrome.BrowserOverlay = {
     }
     else {
       tiltMenu.label = TiltUtils.StringBundle.get("menuItemHide.label");
-    
-      TiltUtils.Iframe.initCanvas(function loadCallback(iframe, canvas) {
-        that.iframe = iframe;
       
-        canvas.width = iframe.contentWindow.innerWidth;
-        canvas.height = iframe.contentWindow.innerHeight;
-      
-        that.visualization = new TiltVisualization(canvas);
-        that.visualization.setup();
-        that.visualization.loop();
-      }, true);
+      TiltUtils.Canvas.MOZ_dom_element_texture(function textureCallback(dom) {
+        that.dom = dom;
+        
+        TiltUtils.Iframe.initCanvas(function initCallback(iframe, canvas) {
+          that.iframe = iframe;
+
+          canvas.width = iframe.contentWindow.innerWidth;
+          canvas.height = iframe.contentWindow.innerHeight;
+
+          that.visualization = new TiltVisualization(canvas, dom);
+          that.visualization.setup();
+          that.visualization.loop();
+        }, true, "content");
+      });
     }
   },
   
   /**
    * Destroys Tilt, removing the iframe from the stack.
    */
-  destroy: function() {
+  destroy: function() {    
     TiltUtils.Iframe.removeFromStack(this.iframe);
+    this.dom = null;
     this.iframe = null;
+
+    this.visualization.destroy();
     this.visualization = null;
     
     Components.utils.forceGC();
