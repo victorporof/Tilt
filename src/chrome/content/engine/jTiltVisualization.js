@@ -48,10 +48,6 @@ function TiltVisualization(canvas, dom, width, height) {
    */
   this.setup = function() {
     var engine = draw.getEngine();
-        
-    var chromePath = "chrome://tilt/skin/texture.jpg";
-    var texturePath = "http://bit.ly/khwMvF";
-    var npotPath = "http://bit.ly/jsEMaP";
     
     engine.initTexture(dom, function readyCallback(texure) {
       dom_texture = texure;
@@ -74,13 +70,11 @@ function TiltVisualization(canvas, dom, width, height) {
       
       if (draw.isInitialized()) {
         draw.background(dom_texture ? 0 : "rgba(0, 0, 0, 0)");
-      
-        draw.perspective();
-        draw.translate(width / 2, height / 2, 0);
-        draw.rotate(1, 0.5, 0.25, TiltUtils.Math.radians(timeCount / 16));
-        draw.translate(-width / 2, -height / 2, 0);
         
-        if (dom_texture != null) {
+        if (dom_texture) {
+          draw.translate(width / 2, height / 2, 0);
+          draw.rotate(1, 0.5, 0.25, TiltUtils.Math.radians(frameDelta / 16));
+          draw.translate(-width / 2, -height / 2, 0);
           draw.image(dom_texture, 0, 0, width, height);    
         }
       }
@@ -90,11 +84,11 @@ function TiltVisualization(canvas, dom, width, height) {
   /**
    * Destroys this object.
    */
-   this.destroy = function() {
-     that = null;
-     
-     draw.destroy();
-     draw = null;
-     dom_texture = null;
-   }
+  this.destroy = function() {
+    that = null;
+    
+    draw.destroy();
+    draw = null;
+    dom_texture = null;
+  }
 }
