@@ -23,6 +23,12 @@
  *    3. This notice may not be removed or altered from any source
  *    distribution.
  */
+ 
+/**
+ * TiltEngine constructor.
+ *
+ * @return {object} the created object
+ */
 function TiltEngine() {
 
   /**
@@ -43,6 +49,7 @@ function TiltEngine() {
    * @param {number} height: the height of the canvas
    * @param {function} successCallback: to be called if initialization worked
    * @param {function} failCallback: to be called if initialization failed
+   *
    * @return {object} the created gl context if successful, null otherwise
    */
   this.initWebGL = function(canvas, width, height,
@@ -116,6 +123,7 @@ function TiltEngine() {
    *
    * @param {string} shaderSource: the source code for the shader
    * @param {string} shaderType: the shader type ('x-vertex' or 'x-fragment')
+   *
    * @return {object} the compiled shader
    */
   this.compileShader = function(shaderSource, shaderType) {
@@ -159,6 +167,7 @@ function TiltEngine() {
    *
    * @param {object} vertShader: the compiled vertex shader
    * @param {object} fragShader: the compiled fragment shader
+   *
    * @return {object} the newly created and linked shader program
    */
   this.linkProgram = function(vertShader, fragShader) {
@@ -190,6 +199,7 @@ function TiltEngine() {
    *
    * @param {object} program: the shader program to obtain the attribute from
    * @param {string} attribute: the attribute name
+   *
    * @return {number} the attribute location from the program
    */
   this.shaderAttribute = function(program, attribute) {
@@ -201,6 +211,7 @@ function TiltEngine() {
    *
    * @param {object} program: the shader program to obtain the uniform from
    * @param {string} uniform: the uniform name
+   *
    * @return {object} the uniform object from the program
    */
   this.shaderUniform = function(program, uniform) {
@@ -214,6 +225,7 @@ function TiltEngine() {
    *
    * @param {object} program: the shader program to obtain the uniform from
    * @param {string} variable: the attribute or uniform name
+   *
    * @return {number} or {object} the attribute or uniform from the program
    */
   this.shaderIO = function(program, variable) {
@@ -231,6 +243,7 @@ function TiltEngine() {
    * @param {array} elementsArray: an array of floats
    * @param {number} itemSize: how many items create a block
    * @param {number} numItems: how many items to use from the array
+   *
    * @return {object} the buffer
    */
   this.initBuffer = function(elementsArray, itemSize, numItems) {
@@ -254,9 +267,13 @@ function TiltEngine() {
    * equal to the number of items in the array.
    *
    * @param {array} elementsArray: an array of unsigned integers
+   * @param {number} numItems: how many items to use from the array
+   *
    * @return {object} the index buffer
    */
-  this.initIndexBuffer = function(elementsArray) {
+  this.initIndexBuffer = function(elementsArray, numItems) {
+    if (!numItems) numItems = elementsArray.length;
+     
     var gl = this.gl;
     var buffer = gl.createBuffer();
     gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, buffer);
@@ -264,7 +281,7 @@ function TiltEngine() {
                   gl.STATIC_DRAW);
 
     buffer.itemSize = 1;
-    buffer.numItems = elementsArray.length;
+    buffer.numItems = numItems;
 
     return buffer;
   }
@@ -276,6 +293,7 @@ function TiltEngine() {
    *
    * @param {object} or {string} textureSource: the texture source
    * @param {function} readyCallback: function called when loading is finished
+   * @param {object} fillColor: optional, color to fill the transparent bits
    * @param {string} minFilter: either 'nearest' or 'linear'
    * @param {string} magFilter: either 'nearest' or 'linear'
    * @param {object} mipmap: either 'mipmap' or null
@@ -283,7 +301,7 @@ function TiltEngine() {
    * @param {string} wrapT: either 'repeat' or undefined
    * @param {object} flipY: either 'flipY' or null
    */
-  this.initTexture = function(textureSource, readyCallback,
+  this.initTexture = function(textureSource, readyCallback, fillColor,
                               minFilter, magFilter, mipmap,
                               wrapS, wrapT, flipY) {
     var that = this;
@@ -307,17 +325,17 @@ function TiltEngine() {
       TiltUtils.Image.resizeToPowerOfTwo(texture.image,
                                          function resizeCallback(image) {
         texture.image = image;
-
+        
         if (flipY) {
           gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
         }
         gl.bindTexture(gl.TEXTURE_2D, texture);
         gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE,
                       texture.image);
-
+                      
         that.setTextureParams(minFilter, magFilter, mipmap,
                               wrapS, wrapT, flipY);
-
+                              
         if (mipmap) {
           gl.generateMipmap(gl.TEXTURE_2D);
         }
@@ -326,7 +344,7 @@ function TiltEngine() {
         if (readyCallback) {
           readyCallback(texture);
         }
-      }, true);
+      }, fillColor, true);
     }
   }
 
@@ -401,13 +419,13 @@ function TiltEngine() {
    * the shader program variable. Some buffer parameters can be omitted.
    * Used internally, you probably shouldn't call this function directly.
    *
-   * @param {Float32Array} mvMatrix: the modelview matrix
-   * @param {Float32Array} projMatrix: the projection matrix
+   * @param {object} mvMatrix: the modelview matrix
+   * @param {object} projMatrix: the projection matrix
    * @param {object} verticesBuffer: the vertices buffer (x, y and z coords)
    * @param {object} texcoordBuffer: the texture coordinates (u, v)
    * @param {string} color: the tint color to be used by the shader
    * @param {object} texture: the texture to be used by the shader if required
-   * @param {UInt16Array} indexBuffer: indices for the passed vertices
+   * @param {object} indexBuffer: indices for the passed vertices
    * @param {number} drawMode: gl context enum, like gl.TRIANGLES or gl.LINES
    */
   this.drawVertices = function(mvMatrix, projMatrix,
@@ -433,9 +451,9 @@ function TiltEngine() {
    * Also used internally, you probably shouldn't call this function directly.
    *
    * @param {object} mvMatrixUniform: the uniform to store the modelview
-   * @param {Float32Array} mvMatrix: the modelview matrix
+   * @param {object} mvMatrix: the modelview matrix
    * @param {object} projMatrixUniform: the uniform to store the projection
-   * @param {Float32Array} projMatrix: the projection matrix
+   * @param {object} projMatrix: the projection matrix
    * @param {object} verticesAttribute: the attribute to store the vertices
    * @param {object} verticesBuffer: the vertices buffer (x, y and z coords)
    * @param {object} texcoordAttribute: the attribute to store the texcoords
@@ -444,7 +462,7 @@ function TiltEngine() {
    * @param {string} color: the tint color to be used by the shader
    * @param {object} textureSampler: the sampler to store the texture
    * @param {object} texture: the texture to be used by the shader if required
-   * @param {UInt16Array} indexBuffer: indices for the passed vertices
+   * @param {object} indexBuffer: indices for the passed vertices
    * @param {number} drawMode: gl context enum, like gl.TRIANGLES or gl.LINES
    */
   this.drawVertices_ = function(mvMatrixUniform, mvMatrix,

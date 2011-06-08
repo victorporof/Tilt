@@ -23,6 +23,17 @@
  *    3. This notice may not be removed or altered from any source
  *    distribution.
  */
+ 
+/**
+ * TiltVisualization constructor.
+ * 
+ * @param {object} canvas: the canvas element used for rendering
+ * @param {object} dom: MOZ_dom_element_texture object
+ * @param {object} width: optional, specify the width of the canvas
+ * @param {object} height: optional, specify the height of the canvas
+ *
+ * @return {object} the created object
+ */
 function TiltVisualization(canvas, dom, width, height) {
   
   /**
@@ -51,7 +62,7 @@ function TiltVisualization(canvas, dom, width, height) {
     
     engine.initTexture(dom, function readyCallback(texure) {
       dom_texture = texure;
-    });
+    }, "rgb(0, 255, 0)");
   }
   
   /**

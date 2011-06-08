@@ -23,6 +23,18 @@
  *    3. This notice may not be removed or altered from any source
  *    distribution.
  */
+
+/**
+ * TiltDraw constructor.
+ * 
+ * @param {object} canvas: the canvas element used for rendering
+ * @param {object} width: optional, specify the width of the canvas
+ * @param {object} height: optional, specify the height of the canvas
+ * @param {function} successCallback: to be called if initialization worked
+ * @param {function} failCallback: to be called if initialization failed
+ *
+ * @return {object} the created object
+ */ 
 function TiltDraw(canvas, width, height, successCallback, failCallback) {
 
   /**

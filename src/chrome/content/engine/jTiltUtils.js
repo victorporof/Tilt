@@ -137,10 +137,10 @@ TiltUtils.Canvas = {
       
       canvas.width = width;
       canvas.height = height;
-
-      // FIXME
+      
       var context = canvas.getContext('2d');
-      context.drawWindow(window, 0, 86, width, height, "rgb(255, 255, 255)");
+      context.drawWindow(window.gBrowser.selectedBrowser.contentWindow, 
+                         0, 0, width, height, "rgb(255, 255, 255)");
       
       if (readyCallback) {
         readyCallback(canvas);
@@ -162,10 +162,11 @@ TiltUtils.Image = {
    *
    * @param {object} image: the image to be scaled
    * @param {function} readyCallback: function called when scaling is finished
+   * @param {object} fillColor: optional, color to fill the transparent bits
    * @param {boolean} forceResize: true if image should be resized regardless
    * if it already has power of two dimensions
    */
-  resizeToPowerOfTwo: function(image, readyCallback, forceResize) {
+  resizeToPowerOfTwo: function(image, readyCallback, fillColor, forceResize) {
     if (TiltUtils.Math.isPowerOfTwo(image.width) &&
         TiltUtils.Math.isPowerOfTwo(image.height) && !forceResize) {
 
@@ -183,6 +184,11 @@ TiltUtils.Image = {
       canvas.height = TiltUtils.Math.nextPowerOfTwo(image.height);
 
       var context = canvas.getContext('2d');
+
+      if (fillColor) {
+        context.fillStyle = fillColor;
+        context.fillRect(0, 0, canvas.width, canvas.height);
+      }
       context.drawImage(image,
         0, 0, image.width, image.height,
         0, 0, canvas.width, canvas.height);

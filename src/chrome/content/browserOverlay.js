@@ -62,14 +62,14 @@ TiltChrome.BrowserOverlay = {
       TiltUtils.Canvas.MOZ_dom_element_texture(function textureCallback(dom) {
         TiltUtils.Iframe.initCanvas(function initCallback(iframe, canvas) {
           that.iframe = iframe;
-
+          
           canvas.width = iframe.contentWindow.innerWidth;
           canvas.height = iframe.contentWindow.innerHeight;
-
+          
           that.visualization = new TiltVisualization(canvas, dom);
           that.visualization.setup();
           that.visualization.loop();
-        }, true, "content");
+        }, true);
       });
     }
   },
