@@ -34,16 +34,20 @@ TiltUtils.Iframe = {
 
   /**
    * Helper method, allowing to easily create an iframe with a canvas element.
-   * When loaded, the loadCallback function is called with the iframe and the
+   * When loaded, the readyCallback function is called with the iframe and the
    * canvas passed as parameters to it. You can also use the specified 
    * iframe or canvas id to get the elements by id.
-   * @param {function} loadCallback: function called when initialization done
+   *
+   * @param {function} readyCallback: function called when initialization done
    * @param {boolean} keepInStack: true if the iframe should be retained
    * @param {string} iframe_id: optional, id for the created iframe
    * @param {string} canvas_id: optional, id for the created canvas element
+   * @param {string} attribute_type: optional, the type of the iframe
    * @return {object XULElement} the newly created iframe
    */
-  initCanvas: function(loadCallback, keepInStack, iframe_id, canvas_id) {
+  initCanvas: function(readyCallback, keepInStack,
+                       attribute_type, iframe_id, canvas_id) {
+
     if (!iframe_id) {
       iframe_id = "tilt-iframe";
     }
@@ -52,17 +56,17 @@ TiltUtils.Iframe = {
     }
 
     var iframe = document.createElement("iframe");
+    iframe.setAttribute("type", attribute_type);
     iframe.id = iframe_id;
-    iframe.setAttribute("transparent", "true");
     iframe.flex = 1;
 
     var that = this;
-    iframe.addEventListener("load", function loadCallbackEventListener() {
-      iframe.removeEventListener("load", loadCallbackEventListener, true);
+    iframe.addEventListener("load", function loadCallback() {
+      iframe.removeEventListener("load", loadCallback, true);
 
-      if (loadCallback) {
+      if (readyCallback) {
         var canvas = iframe.contentDocument.getElementById(canvas_id);
-        loadCallback(iframe, canvas);
+        readyCallback(iframe, canvas);
       }
       if (!keepInStack) {
         that.removeFromStack(iframe);
@@ -81,6 +85,7 @@ TiltUtils.Iframe = {
 
   /**
    * Appends an iframe to the current selected browser parent node.
+   *
    * @param {object XULElement} iframe: the iframe to be added
    * @return {object XULElement} the same iframe
    */
@@ -91,12 +96,55 @@ TiltUtils.Iframe = {
 
   /**
    * Removes an iframe to the current selected browser parent node.
+   *
    * @param {object XULElement} iframe: the iframe to be removed
    * @return {object XULElement} the same iframe
    */
   removeFromStack: function(iframe) {
     window.gBrowser.selectedBrowser.parentNode.removeChild(iframe);
     return iframe;
+  }
+}
+
+/**
+ * Utilities targeting some complex canvas drawing operations, especially the
+ */
+TiltUtils.Canvas = {
+
+  /**
+   * Implement MOZ_dom_element_texture (#653656) as a JavaScript shim using 
+   * canvas.drawWindow or similar.
+   *
+   * This is a JavaScript implementation of WebGL MOZ_dom_element_texture 
+   * extension. It requres three parameters: width, height and a callback.
+   * If unspecified, the width and height default to the contentWindow 
+   * innerWidth and innerHeight. The newly created image will be passed as a  
+   * parameter to the readyCallback function.
+   * 
+   * @param {function} readyCallback: function called when drawing is finished
+   * @param {number} width: the width of the MOZ_dom_element_texture
+   * @param {number} height: the height of the MOZ_dom_element_texture
+   */
+  MOZ_dom_element_texture: function(readyCallback, width, height) {
+    TiltUtils.Iframe.initCanvas(function initCallback(iframe, canvas) {
+      if (!width) {
+        width = iframe.contentWindow.innerWidth;
+      }
+      if (!height) {
+        height = iframe.contentWindow.innerHeight;
+      }
+      
+      canvas.width = width;
+      canvas.height = height;
+
+      // FIXME
+      var context = canvas.getContext('2d');
+      context.drawWindow(window, 0, 86, width, height, "rgb(255, 255, 255)");
+      
+      if (readyCallback) {
+        readyCallback(canvas);
+      } 
+    }, false);
   }
 }
 
@@ -110,6 +158,7 @@ TiltUtils.Image = {
    * If the image already has power of two dimensions, the readyCallback
    * function is called immediately. In either case the newly created image
    * will be passed to the readyCallback function.
+   *
    * @param {object} image: the image to be scaled
    * @param {function} readyCallback: function called when scaling is finished
    * @param {boolean} forceResize: true if image should be resized regardless
@@ -128,7 +177,7 @@ TiltUtils.Image = {
     var iframe_id = "tilt-iframe-" + image.src;
     var canvas_id = "tilt-canvas-" + image.src;
 
-    TiltUtils.Iframe.initCanvas(function loadCallback(iframe, canvas) {
+    TiltUtils.Iframe.initCanvas(function initCallback(iframe, canvas) {
       canvas.width = TiltUtils.Math.nextPowerOfTwo(image.width);
       canvas.height = TiltUtils.Math.nextPowerOfTwo(image.height);
 
@@ -151,6 +200,7 @@ TiltUtils.Math = {
 
   /**
    * Helper function, converts degrees to radians.
+   *
    * @param {number} degrees: the degrees to be converted to radians
    * @return {number} the degrees converted to radians
    */
@@ -160,6 +210,7 @@ TiltUtils.Math = {
 
   /**
    * Returns if parameter is a power of two.
+   *
    * @param {number} x: the number to be verified
    * @return {boolean} true if x is power of two
    */
@@ -169,6 +220,7 @@ TiltUtils.Math = {
 
   /**
    * Returns the next power of two for a number.
+   *
    * @param {number} x: the number to be converted
    * @return {number} the next closest power of two for x
    */
@@ -182,6 +234,7 @@ TiltUtils.Math = {
 
   /**
    * Converts a hex color to rgba.
+   *
    * @param {string} a color expressed in hex, or using rgb() or rgba()
    * @return {array} an array with 4 color components: red, green, blue, alpha
    */
@@ -219,6 +272,7 @@ TiltUtils.StringBundle = {
   
   /**
    * Returns a string in the string bundle.
+   *
    * @param {string} string: the string name in the bundle
    * @return {string} the equivalent string from the bundle
    */
@@ -228,6 +282,7 @@ TiltUtils.StringBundle = {
   
   /**
    * Returns a formatted string using the string bundle.
+   *
    * @param {string} string: the string name in the bundle
    * @param {array} args: an array of args for the formatted string
    * @return {string} the equivalent formatted string from the bundle
@@ -245,6 +300,7 @@ TiltUtils.Console = {
   
   /**
    * Logs a message to the console.
+   *
    * @param {string} aMessage: the message to be logged
    */
   log: function(aMessage) {
@@ -256,6 +312,7 @@ TiltUtils.Console = {
   
   /**
    * Logs an error to the console.
+   *
    * @param {string} aMessage: the message to be logged
    * @param {string} aSourceName: the URL of file with error. This will be a 
    * hyperlink in the JavaScript Console, so you'd better use real URL. You 
