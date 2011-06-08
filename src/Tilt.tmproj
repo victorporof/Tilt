@@ -3,7 +3,7 @@
 <plist version="1.0">
 <dict>
 	<key>currentDocument</key>
-	<string>install.rdf</string>
+	<string>chrome/content/engine/jTiltUtils.js</string>
 	<key>documents</key>
 	<array>
 		<dict>
@@ -82,157 +82,65 @@
 			<key>caret</key>
 			<dict>
 				<key>column</key>
-				<integer>0</integer>
-				<key>line</key>
-				<integer>73</integer>
-			</dict>
-			<key>firstVisibleColumn</key>
-			<integer>0</integer>
-			<key>firstVisibleLine</key>
-			<integer>41</integer>
-		</dict>
-		<key>chrome/content/browserOverlay.xul</key>
-		<dict>
-			<key>caret</key>
-			<dict>
-				<key>column</key>
 				<integer>10</integer>
 				<key>line</key>
-				<integer>64</integer>
+				<integer>67</integer>
 			</dict>
 			<key>firstVisibleColumn</key>
 			<integer>0</integer>
 			<key>firstVisibleLine</key>
-			<integer>21</integer>
-		</dict>
-		<key>chrome/content/engine/glMatrix-0.9.5.js</key>
-		<dict>
-			<key>caret</key>
-			<dict>
-				<key>column</key>
-				<integer>15</integer>
-				<key>line</key>
-				<integer>29</integer>
-			</dict>
-			<key>columnSelection</key>
-			<false/>
-			<key>firstVisibleColumn</key>
-			<integer>0</integer>
-			<key>firstVisibleLine</key>
-			<integer>48</integer>
-			<key>selectFrom</key>
-			<dict>
-				<key>column</key>
-				<integer>10</integer>
-				<key>line</key>
-				<integer>29</integer>
-			</dict>
-			<key>selectTo</key>
-			<dict>
-				<key>column</key>
-				<integer>22</integer>
-				<key>line</key>
-				<integer>29</integer>
-			</dict>
+			<integer>43</integer>
 		</dict>
 		<key>chrome/content/engine/jTiltDraw.js</key>
 		<dict>
 			<key>caret</key>
 			<dict>
 				<key>column</key>
-				<integer>42</integer>
+				<integer>2</integer>
 				<key>line</key>
-				<integer>448</integer>
+				<integer>34</integer>
 			</dict>
-			<key>columnSelection</key>
-			<false/>
 			<key>firstVisibleColumn</key>
 			<integer>0</integer>
 			<key>firstVisibleLine</key>
-			<integer>427</integer>
-			<key>selectFrom</key>
-			<dict>
-				<key>column</key>
-				<integer>33</integer>
-				<key>line</key>
-				<integer>448</integer>
-			</dict>
-			<key>selectTo</key>
-			<dict>
-				<key>column</key>
-				<integer>42</integer>
-				<key>line</key>
-				<integer>448</integer>
-			</dict>
+			<integer>456</integer>
 		</dict>
 		<key>chrome/content/engine/jTiltEngine.js</key>
 		<dict>
 			<key>caret</key>
 			<dict>
 				<key>column</key>
-				<integer>56</integer>
+				<integer>9</integer>
 				<key>line</key>
-				<integer>271</integer>
+				<integer>345</integer>
 			</dict>
-			<key>columnSelection</key>
-			<false/>
 			<key>firstVisibleColumn</key>
 			<integer>0</integer>
 			<key>firstVisibleLine</key>
-			<integer>249</integer>
-			<key>selectFrom</key>
-			<dict>
-				<key>column</key>
-				<integer>47</integer>
-				<key>line</key>
-				<integer>271</integer>
-			</dict>
-			<key>selectTo</key>
-			<dict>
-				<key>column</key>
-				<integer>56</integer>
-				<key>line</key>
-				<integer>271</integer>
-			</dict>
+			<integer>312</integer>
 		</dict>
 		<key>chrome/content/engine/jTiltUtils.js</key>
 		<dict>
 			<key>caret</key>
 			<dict>
 				<key>column</key>
-				<integer>14</integer>
+				<integer>29</integer>
 				<key>line</key>
-				<integer>25</integer>
+				<integer>138</integer>
 			</dict>
-			<key>columnSelection</key>
-			<false/>
 			<key>firstVisibleColumn</key>
 			<integer>0</integer>
 			<key>firstVisibleLine</key>
-			<integer>4</integer>
-			<key>selectFrom</key>
-			<dict>
-				<key>column</key>
-				<integer>5</integer>
-				<key>line</key>
-				<integer>25</integer>
-			</dict>
-			<key>selectTo</key>
-			<dict>
-				<key>column</key>
-				<integer>14</integer>
-				<key>line</key>
-				<integer>25</integer>
-			</dict>
+			<integer>117</integer>
 		</dict>
 		<key>chrome/content/engine/jTiltVisualization.js</key>
 		<dict>
 			<key>caret</key>
 			<dict>
 				<key>column</key>
-				<integer>29</integer>
+				<integer>27</integer>
 				<key>line</key>
-				<integer>81</integer>
+				<integer>63</integer>
 			</dict>
 			<key>firstVisibleColumn</key>
 			<integer>0</integer>
@@ -253,20 +161,6 @@
 			<key>firstVisibleLine</key>
 			<integer>0</integer>
 		</dict>
-		<key>chrome/locale/en-US/browserOverlay.dtd</key>
-		<dict>
-			<key>caret</key>
-			<dict>
-				<key>column</key>
-				<integer>47</integer>
-				<key>line</key>
-				<integer>4</integer>
-			</dict>
-			<key>firstVisibleColumn</key>
-			<integer>0</integer>
-			<key>firstVisibleLine</key>
-			<integer>0</integer>
-		</dict>
 		<key>chrome/skin/browserOverlay.css</key>
 		<dict>
 			<key>caret</key>
@@ -281,41 +175,18 @@
 			<key>firstVisibleLine</key>
 			<integer>0</integer>
 		</dict>
-		<key>install.rdf</key>
-		<dict>
-			<key>caret</key>
-			<dict>
-				<key>column</key>
-				<integer>19</integer>
-				<key>line</key>
-				<integer>11</integer>
-			</dict>
-			<key>firstVisibleColumn</key>
-			<integer>0</integer>
-			<key>firstVisibleLine</key>
-			<integer>0</integer>
-		</dict>
 	</dict>
 	<key>openDocuments</key>
 	<array>
+		<string>chrome/content/browserOverlay.js</string>
+		<string>chrome/content/engine/jTiltVisualization.js</string>
 		<string>chrome/content/engine/jTiltDraw.js</string>
 		<string>chrome/content/engine/jTiltEngine.js</string>
-		<string>chrome/locale/en-US/browserOverlay.dtd</string>
-		<string>chrome/content/browserOverlay.js</string>
 		<string>chrome/content/engine/jTiltUtils.js</string>
-		<string>chrome/content/engine/jTiltVisualization.js</string>
-		<string>chrome/content/browserOverlay.xul</string>
-		<string>chrome/content/engine/glMatrix-0.9.5.js</string>
-		<string>chrome/Makefile.in</string>
-		<string>chrome/skin/browserOverlay.css</string>
-		<string>Tilt.komodoproject</string>
-		<string>chrome.manifest</string>
-		<string>install.rdf</string>
-		<string>Makefile</string>
 	</array>
 	<key>showFileHierarchyDrawer</key>
 	<true/>
 	<key>windowFrame</key>
-	<string>{{399, 67}, {758, 811}}</string>
+	<string>{{551, 67}, {758, 811}}</string>
 </dict>
 </plist>
