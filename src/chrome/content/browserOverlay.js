@@ -33,11 +33,6 @@ if ("undefined" == typeof(TiltChrome)) {
 TiltChrome.BrowserOverlay = {
   
   /**
-   * A snapshot image representing the contents of a DOM window.
-   */
-  dom: null,
-  
-  /**
    * The iframe containing the canvas element, used for rendering.
    */
   iframe: null,
@@ -65,8 +60,6 @@ TiltChrome.BrowserOverlay = {
       tiltMenu.label = TiltUtils.StringBundle.get("menuItemHide.label");
       
       TiltUtils.Canvas.MOZ_dom_element_texture(function textureCallback(dom) {
-        that.dom = dom;
-        
         TiltUtils.Iframe.initCanvas(function initCallback(iframe, canvas) {
           that.iframe = iframe;
 
@@ -86,7 +79,6 @@ TiltChrome.BrowserOverlay = {
    */
   destroy: function() {    
     TiltUtils.Iframe.removeFromStack(this.iframe);
-    this.dom = null;
     this.iframe = null;
 
     this.visualization.destroy();
