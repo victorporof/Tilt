@@ -23,17 +23,12 @@
  *    3. This notice may not be removed or altered from any source
  *    distribution.
  */
-function TiltDraw(aCanvas, width, height, successCallback, failCallback) {
+function TiltDraw(canvas, width, height, successCallback, failCallback) {
 
   /**
    * Helper low level functions for WebGL.
    */
   var engine = new TiltEngine();
-
-  /**
-   * Canvas element used by the engine.
-   */
-  var canvas = aCanvas;
 
   /**
    * WebGL context for the canvas.
@@ -136,6 +131,10 @@ function TiltDraw(aCanvas, width, height, successCallback, failCallback) {
     // modelview and projection matrices used for transformations
     mat4.identity(mvMatrix = mat4.create());
     mat4.identity(projMatrix = mat4.create());
+    
+    // set the default modelview and projection matrices
+    this.origin();
+    this.perspective();
 
     // buffer of 2-component vertices (x, y) as the corners of a rectangle
     rectangleVertices = engine.initBuffer([
@@ -272,15 +271,17 @@ function TiltDraw(aCanvas, width, height, successCallback, failCallback) {
   this.requestAnimFrame = function(loop) {
     window.requestAnimFrame(loop, canvas);
 
-    currentTime = new Date().getTime();
-    if (lastTime != 0) {
-      frameDelta = currentTime - lastTime;
-    }
-    lastTime = currentTime;
+    if (this.isInitialized()) {
+      currentTime = new Date().getTime();
+      if (lastTime != 0) {
+        frameDelta = currentTime - lastTime;
+      }
+      lastTime = currentTime;
 
-    timeCount += frameDelta;
-    frameCount++;
-    frameRate = 0;
+      timeCount += frameDelta;
+      frameCount++;
+      frameRate = 0; // FIXME
+    }
   }
 
   /**
@@ -314,7 +315,6 @@ function TiltDraw(aCanvas, width, height, successCallback, failCallback) {
     this.viewport(canvas.width, canvas.height);
     mat4.perspective(fov, aspect, znear, zfar, projMatrix, true);
     mat4.translate(projMatrix, [-x, -y, -z]);
-    mat4.identity(mvMatrix);
   }
 
   /**
@@ -324,7 +324,6 @@ function TiltDraw(aCanvas, width, height, successCallback, failCallback) {
   this.ortho = function() {
     this.viewport(canvas.width, canvas.height);
     mat4.ortho(0, canvas.width, canvas.height, 0, -100, 100, projMatrix);
-    mat4.identity(mvMatrix);
   }
   
   /**
@@ -335,7 +334,6 @@ function TiltDraw(aCanvas, width, height, successCallback, failCallback) {
    this.projection = function(matrix) {
      this.viewport(canvas.width, canvas.height);
      mat4.set(matrix, projMatrix);
-     mat4.identity(mvMatrix);
    }
 
   /**
@@ -502,18 +500,18 @@ function TiltDraw(aCanvas, width, height, successCallback, failCallback) {
   /**
    * Destroys this object.
    */
-   this.destroy = function() {
-     engine.destroy();
-     engine = null;
-     canvas = null;
-     gl = null;
-     
-     colorShader = null;
-     textureShader = null;
-     mvMatrixStack = null;
-     mvMatrix = null;
-     projMatrix = null;
-     rectangleVertices = null;
-     cubeVertices = null;
-   }
+  this.destroy = function() {
+    engine.destroy();
+    engine = null;
+    gl = null;
+    
+    colorShader = null;
+    textureShader = null;
+    mvMatrixStack = null;
+    mvMatrix = null;
+    projMatrix = null;
+    
+    rectangleVertices = null;
+    cubeVertices = null;
+  }
 }
