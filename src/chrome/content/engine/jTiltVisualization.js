@@ -23,7 +23,7 @@
  *    3. This notice may not be removed or altered from any source
  *    distribution.
  */
-function TiltVisualization(canvas, width, height) {
+function TiltVisualization(canvas, dom, width, height) {
   
   /**
    * By convention, we make a private 'that' variable.
@@ -32,29 +32,29 @@ function TiltVisualization(canvas, width, height) {
    * causes 'this' to be set incorrectly for inner functions.
    */
   var that = this;
-  
+
   /**
    * Helper functions for easy drawing and abstraction.
    */
   var draw = new TiltDraw(canvas, width, height).initialize(); 
 
   /**
-   * Random texture used for testing.
+   * A texture representing the contents of a DOM window.
    */
-  var someTexture = null;
+  var dom_texture = null;
   
   /**
    * The initialization logic.
    */
   this.setup = function() {
     var engine = draw.getEngine();
-    
+        
     var chromePath = "chrome://tilt/skin/texture.jpg";
     var texturePath = "http://bit.ly/khwMvF";
     var npotPath = "http://bit.ly/jsEMaP";
     
-    engine.initTexture(chromePath, function ready(texure) {
-      someTexture = texure;
+    engine.initTexture(dom, function readyCallback(texure) {
+      dom_texture = texure;
     });
   }
   
@@ -62,26 +62,39 @@ function TiltVisualization(canvas, width, height) {
    * The rendering animation logic and loop.
    */
   this.loop = function() {
-    draw.requestAnimFrame(that.loop);
-    
-    var width = draw.getCanvas().width;
-    var height = draw.getCanvas().height;
-    var timeCount = draw.getTimeCount();
-    var frameCount = draw.getFrameCount();
-    var frameRate = draw.getFrameRate();
-    var frameDelta = draw.getFrameDelta();
-    
-    if (draw.isInitialized()) {
-      draw.background("rgba(0, 0, 0, 0)");
+    if (that) {
+      draw.requestAnimFrame(that.loop);
       
-      draw.perspective();
-      draw.translate(width / 2, height / 2, 0);
-      draw.rotateY(TiltUtils.Math.radians(timeCount / 10));
-      draw.translate(-150, -150, 0);
+      var width = draw.getCanvas().width;
+      var height = draw.getCanvas().height;
+      var timeCount = draw.getTimeCount();
+      var frameCount = draw.getFrameCount();
+      var frameRate = draw.getFrameRate();
+      var frameDelta = draw.getFrameDelta();
+    
+      if (draw.isInitialized()) {
+        draw.background();
       
-      if (someTexture != null) {
-        draw.image(someTexture, 0, 0, 300, 300, "rgba(0, 0.5, 0, 0.75)");    
+        draw.perspective();
+        draw.translate(width / 2, height / 2, 0);
+        draw.rotate(1, 0.75, 0.5, TiltUtils.Math.radians(timeCount / 16));
+        draw.translate(-width / 2, -height / 2, 0);
+      
+        if (dom_texture != null) {
+          draw.image(dom_texture, 0, 0, width, height);    
+        }
       }
     }
   }
+  
+  /**
+   * Destroys this object.
+   */
+   this.destroy = function() {
+     that = null;
+     
+     draw.destroy();
+     draw = null;
+     dom_texture = null;
+   }
 }
