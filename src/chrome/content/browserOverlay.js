@@ -66,7 +66,7 @@ TiltChrome.BrowserOverlay = {
           canvas.width = iframe.contentWindow.innerWidth;
           canvas.height = iframe.contentWindow.innerHeight;
           
-          that.visualization = new TiltVisualization(canvas, dom);
+          that.visualization = new TiltVisualization(dom, canvas);
           that.visualization.setup();
           that.visualization.loop();
         }, true);
@@ -77,13 +77,16 @@ TiltChrome.BrowserOverlay = {
   /**
    * Destroys Tilt, removing the iframe from the stack.
    */
-  destroy: function() {    
-    TiltUtils.Iframe.removeFromStack(this.iframe);
-    this.iframe = null;
+  destroy: function() {  
+    var that = this;
+      
+    this.visualization.destroy(function destroyCallback() {
+      that.visualization = null;
 
-    this.visualization.destroy();
-    this.visualization = null;
-    
-    Components.utils.forceGC();
+      TiltUtils.Iframe.removeFromStack(that.iframe);
+      that.iframe = null;
+
+      Components.utils.forceGC();
+    });
   }
 };
