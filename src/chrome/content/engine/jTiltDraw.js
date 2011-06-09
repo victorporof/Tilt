@@ -35,8 +35,8 @@
  *
  * @return {object} the created object
  */ 
-function TiltDraw(canvas, width, height, successCallback, failCallback) {
-
+function TiltDraw(canvas, width, height, failCallback, successCallback) {
+  
   /**
    * Helper low level functions for WebGL.
    */
@@ -46,7 +46,7 @@ function TiltDraw(canvas, width, height, successCallback, failCallback) {
    * WebGL context for the canvas.
    */
   var gl = engine.initWebGL(canvas, width, height,
-                            successCallback, failCallback);
+                            failCallback, successCallback);
 
   /**
    * A shader useful for drawing vertices with only a color component.
