@@ -113,10 +113,7 @@ TiltUtils.Iframe = {
 TiltUtils.Canvas = {
 
   /**
-   * Implement MOZ_dom_element_texture (#653656) as a JavaScript shim using 
-   * canvas.drawWindow or similar.
-   *
-   * This is a JavaScript implementation of WebGL MOZ_dom_element_texture 
+   * JavaScript implementation of WebGL MOZ_dom_element_texture (#653656)
    * extension. It requres three parameters: width, height and a callback.
    * If unspecified, the width and height default to the contentWindow 
    * innerWidth and innerHeight. The newly created image will be passed as a  
@@ -162,11 +159,16 @@ TiltUtils.Image = {
    *
    * @param {object} image: the image to be scaled
    * @param {function} readyCallback: function called when scaling is finished
-   * @param {object} fillColor: optional, color to fill the transparent bits
+   * @param {string} fillColor: optional, color to fill the transparent bits
+   * @param {string} strokeColor: optional, color to draw an outline
+   * @param {number} strokeWeight: optional, the width of the outline
    * @param {boolean} forceResize: true if image should be resized regardless
    * if it already has power of two dimensions
    */
-  resizeToPowerOfTwo: function(image, readyCallback, fillColor, forceResize) {
+  resizeToPowerOfTwo: function(image, readyCallback,
+                               fillColor, strokeColor, strokeWeight,
+                               forceResize) {
+                                 
     if (TiltUtils.Math.isPowerOfTwo(image.width) &&
         TiltUtils.Math.isPowerOfTwo(image.height) && !forceResize) {
 
@@ -189,9 +191,19 @@ TiltUtils.Image = {
         context.fillStyle = fillColor;
         context.fillRect(0, 0, canvas.width, canvas.height);
       }
+      
       context.drawImage(image,
         0, 0, image.width, image.height,
         0, 0, canvas.width, canvas.height);
+
+      if (strokeColor) {
+        if (!strokeWeight) {
+          strokeWeight = 1;
+        }
+        context.strokeStyle = strokeColor;
+        context.lineWidth = strokeWeight;
+        context.strokeRect(0, 0, canvas.width, canvas.height);
+      }
 
       if (readyCallback) {
         readyCallback(canvas);
