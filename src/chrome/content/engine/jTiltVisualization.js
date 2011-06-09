@@ -27,14 +27,14 @@
 /**
  * TiltVisualization constructor.
  * 
- * @param {object} canvas: the canvas element used for rendering
  * @param {object} dom: MOZ_dom_element_texture object
+ * @param {object} canvas: the canvas element used for rendering
  * @param {object} width: optional, specify the width of the canvas
  * @param {object} height: optional, specify the height of the canvas
  *
  * @return {object} the created object
  */
-function TiltVisualization(canvas, dom, width, height) {
+function TiltVisualization(dom, canvas, width, height) {
   
   /**
    * By convention, we make a private 'that' variable.
@@ -47,13 +47,13 @@ function TiltVisualization(canvas, dom, width, height) {
   /**
    * A texture representing the contents of a DOM window.
    */
-  var dom_texture = null;
+  var domTexture = null;
   
   /**
    * Helper functions for easy drawing and abstraction.
    */
   var draw = new TiltDraw(canvas, width, height, function failCallback() {
-    TiltUtils.Console.log(TiltUtils.StringBundle.get("webgl.error"))
+    TiltUtils.Console.log(TiltUtils.StringBundle.get("webgl.error"));
   }).initialize();
   
   /**
@@ -63,7 +63,7 @@ function TiltVisualization(canvas, dom, width, height) {
     var engine = draw.getEngine();
     
     engine.initTexture(dom, function readyCallback(texure) {
-      dom_texture = texure;
+      domTexture = texure;
     }, "white");
   }
   
@@ -82,13 +82,13 @@ function TiltVisualization(canvas, dom, width, height) {
       var frameDelta = draw.getFrameDelta();
       
       if (draw.isInitialized()) {
-        draw.background(dom_texture ? 0 : "rgba(0, 0, 0, 0)");
+        draw.background(domTexture ? 0 : "rgba(0, 0, 0, 0)");
         
-        if (dom_texture) {
+        if (domTexture) {
           draw.translate(width / 2, height / 2, 0);
           draw.rotate(1, 0.5, 0.25, TiltUtils.Math.radians(frameDelta / 16));
           draw.translate(-width / 2, -height / 2, 0);
-          draw.image(dom_texture, 0, 0, width, height);    
+          draw.image(domTexture, 0, 0, width, height);    
         }
       }
     }
@@ -96,12 +96,18 @@ function TiltVisualization(canvas, dom, width, height) {
   
   /**
    * Destroys this object.
+   *
+   * @param readyCallback: function to be called when finished
    */
-  this.destroy = function() {
+  this.destroy = function(readyCallback) {
     that = null;
-    dom_texture = null;
+    domTexture = null;
     
     draw.destroy();
     draw = null;
+    
+    if (readyCallback) {
+      readyCallback();
+    }
   }
 }
