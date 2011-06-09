@@ -293,7 +293,9 @@ function TiltEngine() {
    *
    * @param {object} or {string} textureSource: the texture source
    * @param {function} readyCallback: function called when loading is finished
-   * @param {object} fillColor: optional, color to fill the transparent bits
+   * @param {string} fillColor: optional, color to fill the transparent bits
+   * @param {string} strokeColor: optional, color to draw an outline
+   * @param {number} strokeWeight: optional, the width of the outline
    * @param {string} minFilter: either 'nearest' or 'linear'
    * @param {string} magFilter: either 'nearest' or 'linear'
    * @param {object} mipmap: either 'mipmap' or null
@@ -301,7 +303,8 @@ function TiltEngine() {
    * @param {string} wrapT: either 'repeat' or undefined
    * @param {object} flipY: either 'flipY' or null
    */
-  this.initTexture = function(textureSource, readyCallback, fillColor,
+  this.initTexture = function(textureSource, readyCallback,
+                              fillColor, strokeColor, strokeWeight,
                               minFilter, magFilter, mipmap,
                               wrapS, wrapT, flipY) {
     var that = this;
@@ -344,7 +347,7 @@ function TiltEngine() {
         if (readyCallback) {
           readyCallback(texture);
         }
-      }, fillColor, true);
+      }, fillColor, strokeColor, strokeWeight, true);
     }
   }
   
