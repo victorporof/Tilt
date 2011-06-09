@@ -43,16 +43,18 @@ function TiltVisualization(canvas, dom, width, height) {
    * causes 'this' to be set incorrectly for inner functions.
    */
   var that = this;
-
-  /**
-   * Helper functions for easy drawing and abstraction.
-   */
-  var draw = new TiltDraw(canvas, width, height).initialize(); 
-
+  
   /**
    * A texture representing the contents of a DOM window.
    */
   var dom_texture = null;
+  
+  /**
+   * Helper functions for easy drawing and abstraction.
+   */
+  var draw = new TiltDraw(canvas, width, height, function failCallback() {
+    TiltUtils.Console.log(TiltUtils.StringBundle.get("webgl.error"))
+  }).initialize();
   
   /**
    * The initialization logic.
@@ -97,9 +99,9 @@ function TiltVisualization(canvas, dom, width, height) {
    */
   this.destroy = function() {
     that = null;
+    dom_texture = null;
     
     draw.destroy();
     draw = null;
-    dom_texture = null;
   }
 }
