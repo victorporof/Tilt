@@ -53,7 +53,7 @@ function TiltEngine() {
    * @return {object} the created gl context if successful, null otherwise
    */
   this.initWebGL = function(canvas, width, height,
-                            successCallback, failCallback) {
+                            failCallback, successCallback) {
 
     var gl = WebGLUtils.create3DContext(canvas);
     if (gl) {
@@ -90,34 +90,34 @@ function TiltEngine() {
     if (arguments.length < 2) {
       return;
     }
-    if (arguments.length == 2) {
+    else if (arguments.length == 2) {
       readyCallback = fragShaderURL;
       fragShaderURL = vertShaderURL + ".fs";
       vertShaderURL = vertShaderURL + ".vs";
     }
-
+    
     var that = this;
     var vertShader;
     var fragShader;
-
+    
     this.requests([vertShaderURL, fragShaderURL],
                   function requestsCallback(http) {
-
+                  
       vertShader = that.compileShader(http[0].responseText,
                                       "x-shader/x-vertex");
 
       fragShader = that.compileShader(http[1].responseText,
                                       "x-shader/x-fragment");
-
+                                      
       vertShader.src = http[0].responseText;
       fragShader.src = http[1].responseText;
-
+      
       if (readyCallback) {
         readyCallback(that.linkProgram(vertShader, fragShader));
       }
     });
   }
-
+  
   /**
    * Compiles a shader source of pecific type, either vertex or fragment.
    *
@@ -248,16 +248,16 @@ function TiltEngine() {
    */
   this.initBuffer = function(elementsArray, itemSize, numItems) {
     if (!numItems) numItems = elementsArray.length / itemSize;
-
+    
     var gl = this.gl;
     var buffer = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
     gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(elementsArray),
                   gl.STATIC_DRAW);
-
+                  
     buffer.itemSize = itemSize;
     buffer.numItems = numItems;
-
+    
     return buffer;
   }
 
@@ -279,7 +279,7 @@ function TiltEngine() {
     gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, buffer);
     gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(elementsArray),
                   gl.STATIC_DRAW);
-
+                  
     buffer.itemSize = 1;
     buffer.numItems = numItems;
 
@@ -340,14 +340,14 @@ function TiltEngine() {
           gl.generateMipmap(gl.TEXTURE_2D);
         }
         gl.bindTexture(gl.TEXTURE_2D, null);
-
+        
         if (readyCallback) {
           readyCallback(texture);
         }
       }, fillColor, true);
     }
   }
-
+  
   /**
    * Sets texture parameters for the current texture binding.
    * Optionally, you can also set the current texture manually.
@@ -563,7 +563,7 @@ function TiltEngine() {
       }, i);
     }
   }
-
+  
   /**
    * Destroys this object.
    */
