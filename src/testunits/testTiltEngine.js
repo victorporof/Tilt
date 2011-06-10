@@ -24,15 +24,16 @@
  *    distribution.
  */
  
-var jumlib = {};
-Components.utils.import("resource://mozmill/modules/jum.js", jumlib);
 Components.utils.import("resource://tilt/engine/jTiltEngine.js");
 
 var setupModule = function(module) {
   module.controller = mozmill.getBrowserController();
 }
 
-var test1 = function() {
-  // TODO: add actual tests
-  controller.window.alert(typeof new TiltEngine().initWebGL);
+var testCreateTiltEngine = function() {
+  var engine = new TiltEngine();
+  
+  if (!engine) {
+    controller.window.alert("Could not initialize Tilt engine");
+  }
 }
