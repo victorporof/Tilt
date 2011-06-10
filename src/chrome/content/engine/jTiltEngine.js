@@ -428,16 +428,16 @@ function TiltEngine() {
    * @param {object} projMatrix: the projection matrix
    * @param {object} verticesBuffer: the vertices buffer (x, y and z coords)
    * @param {object} texcoordBuffer: the texture coordinates (u, v)
-   * @param {string} color: the tint color to be used by the shader
    * @param {object} texture: the texture to be used by the shader if required
+   * @param {string} color: the tint color to be used by the shader
    * @param {object} indexBuffer: indices for the passed vertices
    * @param {number} drawMode: gl context enum, like gl.TRIANGLES or gl.LINES
    */
   this.drawVertices = function(mvMatrix, projMatrix,
                                verticesBuffer,
                                texcoordBuffer,
-                               color,
                                texture,
+                               color,
                                indexBuffer, drawMode) {
 
     var shader = this.shader;
@@ -445,8 +445,8 @@ function TiltEngine() {
                        shader.projMatrix, projMatrix,
                        shader.vertexPosition, verticesBuffer,
                        shader.vertexTexCoord, texcoordBuffer,
-                       shader.color, color,
                        shader.sampler, texture,
+                       shader.color, color,
                        indexBuffer, drawMode);
   }
 
@@ -463,10 +463,10 @@ function TiltEngine() {
    * @param {object} verticesBuffer: the vertices buffer (x, y and z coords)
    * @param {object} texcoordAttribute: the attribute to store the texcoords
    * @param {object} texcoordBuffer: the texture coordinates (u, v)
-   * @param {object} colorUniform: the uniform to store the tint color
-   * @param {string} color: the tint color to be used by the shader
    * @param {object} textureSampler: the sampler to store the texture
    * @param {object} texture: the texture to be used by the shader if required
+   * @param {object} colorUniform: the uniform to store the tint color
+   * @param {string} color: the tint color to be used by the shader
    * @param {object} indexBuffer: indices for the passed vertices
    * @param {number} drawMode: gl context enum, like gl.TRIANGLES or gl.LINES
    */
@@ -474,8 +474,8 @@ function TiltEngine() {
                                 projMatrixUniform, projMatrix,
                                 verticesAttribute, verticesBuffer,
                                 texcoordAttribute, texcoordBuffer,
-                                colorUniform, color,
                                 textureSampler, texture,
+                                colorUniform, color,
                                 indexBuffer, drawMode) {
     var gl = this.gl;
 
@@ -494,13 +494,13 @@ function TiltEngine() {
       gl.vertexAttribPointer(texcoordAttribute, texcoordBuffer.itemSize,
                              gl.FLOAT, false, 0, 0);
     }
-    if (colorUniform != undefined && color != undefined) {
-      gl.uniform4f(colorUniform, color[0], color[1], color[2], color[3]);
-    }
     if (textureSampler != undefined && texture != undefined) {
       gl.activeTexture(gl.TEXTURE0);
       gl.bindTexture(gl.TEXTURE_2D, texture);
       gl.uniform1i(textureSampler, 0);
+    }
+    if (colorUniform != undefined && color != undefined) {
+      gl.uniform4f(colorUniform, color[0], color[1], color[2], color[3]);
     }
     if (drawMode == undefined) {
       drawMode = gl.TRIANGLE_STRIP;
