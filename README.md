@@ -1,4 +1,4 @@
-# Tilt: a WebGL-based 3D visualization of a Webpage.
+# Tilt: a WebGL-based 3D visualization of a Webpage
 #### [Development Blog](http://blog.mozilla.com/tilt/)
 #### [Tilt Project Page](https://wiki.mozilla.org/Tilt_Project_Page)
 
