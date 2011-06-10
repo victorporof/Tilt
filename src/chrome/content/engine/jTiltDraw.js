@@ -294,7 +294,7 @@ function TiltDraw(canvas, width, height, failCallback, successCallback) {
 
       timeCount += frameDelta;
       frameCount++;
-      frameRate = 0; // FIXME
+      frameRate = 0; // FIXME: calculate frame rate
     }
   }
 
