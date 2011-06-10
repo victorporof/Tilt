@@ -38,6 +38,11 @@ var EXPORTED_SYMBOLS = ["TiltDraw"];
  * @return {object} the created object
  */ 
 function TiltDraw(canvas, width, height, failCallback, successCallback) {
+
+  /**
+   * By convention, we make a private 'that' variable.
+   */
+  var that = this;
   
   /**
    * Helper low level functions for WebGL.
@@ -53,13 +58,13 @@ function TiltDraw(canvas, width, height, failCallback, successCallback) {
   /**
    * A shader useful for drawing vertices with only a color component.
    */
-  var colorShader;
+  var colorShader = null;
 
   /**
    * A shader useful for drawing vertices with both a color component and
    * texture coordinates.
    */
-  var textureShader;
+  var textureShader = null;
   
   /**
    * A modelview matrix stack, used for push/pop operations.
@@ -69,46 +74,46 @@ function TiltDraw(canvas, width, height, failCallback, successCallback) {
   /**
    * The current modelview matrix;
    */
-  var mvMatrix;
+  var mvMatrix = null;
 
   /**
    * The current projection matrix;
    */
-  var projMatrix;
+  var projMatrix = null;
 
   /**
    * Vertices representing the corners of a rectangle.
    */
-  var rectangleVertices;
+  var rectangleVertices = null;
 
   /**
    * Vertices representing the corners of a cube.
    */
-  var cubeVertices;
+  var cubeVertices = null;
 
   /**
    * The current tint color applied to any objects which can be tinted.
    * These mostly represent images or texturable primitives.
    */
-  var tint;
+  var tint = "";
 
   /**
    * The current fill color applied to any objects which can be filled.
    * These are rectangles, circles, 2d primitives in general.
    */
-  var fill;
+  var fill = "";
   
   /**
    * The current stroke color applied to any objects which can be stroked.
    * This property mostly refers to lines.
    */
-  var stroke;
+  var stroke = "";
 
   /**
    * The current stroke weight.
    * This property also refers to lines.
    */
-  var strokeWeight;
+  var strokeWeight = 0;
 
   /**
    * Time passed since initialization.
@@ -171,18 +176,18 @@ function TiltDraw(canvas, width, height, failCallback, successCallback) {
     mat4.identity(projMatrix = mat4.create());
     
     // set the default modelview and projection matrices
-    this.origin();
-    this.perspective();
+    that.origin();
+    that.perspective();
     
     // set the default rendering properties
-    this.blendMode("alpha");
-    this.depthTest("true");
+    that.blendMode("alpha");
+    that.depthTest("true");
     
     // set the default tint, fill, stroke and stroke weight
-    this.tint("#fff");
-    this.fill("#fff");
-    this.stroke("#000");
-    this.strokeWeight(1);
+    that.tint("#fff");
+    that.fill("#fff");
+    that.stroke("#000");
+    that.strokeWeight(1);
     
     // buffer of 2-component vertices (x, y) as the corners of a rectangle
     rectangleVertices = engine.initBuffer([
@@ -234,7 +239,7 @@ function TiltDraw(canvas, width, height, failCallback, successCallback) {
       16, 17, 18, 16, 18, 19,
       20, 21, 22, 20, 22, 23]);
     
-    return this;
+    return that;
   }
 
   /**
@@ -248,6 +253,24 @@ function TiltDraw(canvas, width, height, failCallback, successCallback) {
   }
 
   /**
+   * Returns the canvas width.
+   *
+   * @return {object} the canvas width
+   */
+  this.getWidth = function() {
+    return canvas.width;
+  }
+  
+  /**
+   * Returns the canvas height.
+   *
+   * @return {object} the canvas height
+   */
+  this.getHeight = function() {
+    return canvas.height;
+  }
+  
+  /**
    * Returns the engine.
    *
    * @return {object} the engine
@@ -255,16 +278,25 @@ function TiltDraw(canvas, width, height, failCallback, successCallback) {
    this.getEngine = function() {
      return engine;
    }
-
-  /**
-   * Returns the canvas.
+    
+  /** 
+   * Returns the rectangle vertices
    *
-   * @return {object} the canvas
+   * @return {object} the rectangle vertices
    */
-  this.getCanvas = function() {
-    return canvas;
+  this.getRectangleVertices = function() {
+    return rectangleVertices;
   }
-
+  
+  /** 
+   * Returns the cube vertices
+   *
+   * @return {object} the cube vertices
+   */
+  this.getCubeVertices = function() {
+    return cubeVertices;
+  }
+  
   /**
    * Returns the time count.
    * This represents the total time passed since initialization.
@@ -328,7 +360,7 @@ function TiltDraw(canvas, width, height, failCallback, successCallback) {
   this.requestAnimFrame = function(loop) {
     window.requestAnimFrame(loop, canvas);
 
-    if (this.isInitialized()) {
+    if (that.isInitialized()) {
       currentTime = new Date().getTime();
       if (lastTime != 0) {
         frameDelta = currentTime - lastTime;
@@ -369,7 +401,7 @@ function TiltDraw(canvas, width, height, failCallback, successCallback) {
     var zfar = z * 10;
     var aspect = w / h;
 
-    this.viewport(canvas.width, canvas.height);
+    that.viewport(canvas.width, canvas.height);
     mat4.perspective(fov, aspect, znear, zfar, projMatrix, true);
     mat4.translate(projMatrix, [-x, -y, -z]);
   }
@@ -379,7 +411,7 @@ function TiltDraw(canvas, width, height, failCallback, successCallback) {
    * This is recommended for 2d rendering.
    */
   this.ortho = function() {
-    this.viewport(canvas.width, canvas.height);
+    that.viewport(canvas.width, canvas.height);
     mat4.ortho(0, canvas.width, canvas.height, 0, -100, 100, projMatrix);
   }
   
@@ -389,7 +421,7 @@ function TiltDraw(canvas, width, height, failCallback, successCallback) {
    * @param {object} matrix the custom projection matrix to be used
    */
    this.projection = function(matrix) {
-     this.viewport(canvas.width, canvas.height);
+     that.viewport(canvas.width, canvas.height);
      mat4.set(matrix, projMatrix);
    }
 
@@ -568,48 +600,16 @@ function TiltDraw(canvas, width, height, failCallback, successCallback) {
    */
   this.rect = function(x, y, width, height) {
     engine.useShader(colorShader);
-    this.pushMatrix();
-    this.translate(x, y, 0);
-    this.scale(width, height, 1);
+    that.pushMatrix();
+    that.translate(x, y, 0);
+    that.scale(width, height, 1);
 
     engine.drawVertices(mvMatrix, projMatrix,
                         rectangleVertices,                    // vertices
                         null,                                 // texture coord
                         null,                                 // texture
                         fill);                                // color
-    this.popMatrix();
-  }
-
-  /**
-   * Draws a box using the specified parameters.
-   *
-   * @param {number} x: the x position of the object
-   * @param {number} y: the y position of the object
-   * @param {number} z: the z position of the object
-   * @param {number} width: the width of the object
-   * @param {number} height: the height of the object
-   * @param {number} depth: the depth of the object
-   * @param {object} texture: the texture to be used
-   */
-  this.box = function(x, y, z, width, height, depth, texture) {
-    if (texture) {
-      engine.useShader(textureShader);
-    }
-    else {
-      engine.useShader(colorShader);
-    }
-    this.pushMatrix();
-    this.translate(x, y, z);
-    this.scale(width, height, depth);
-    
-    engine.drawVertices(mvMatrix, projMatrix,
-                        cubeVertices,                         // vertices
-                        cubeVertices.texCoord,                // texture coord
-                        texture,                              // texture
-                        tint,                                 // color
-                        cubeVertices.indices,                 // indices
-                        gl.TRIANGLES);                        // draw mode
-    this.popMatrix();
+    that.popMatrix();
   }
   
   /**
@@ -628,18 +628,50 @@ function TiltDraw(canvas, width, height, failCallback, successCallback) {
     }
     
     engine.useShader(textureShader);
-    this.pushMatrix();
-    this.translate(x, y, 0);
-    this.scale(width, height, 1);
+    that.pushMatrix();
+    that.translate(x, y, 0);
+    that.scale(width, height, 1);
 
     engine.drawVertices(mvMatrix, projMatrix,
                         rectangleVertices,                    // vertices
                         rectangleVertices,                    // texture coord
                         texture,                              // texture
                         tint);                                // color
-    this.popMatrix();
+    that.popMatrix();
   }
   
+  /**
+   * Draws a box using the specified parameters.
+   *
+   * @param {number} x: the x position of the object
+   * @param {number} y: the y position of the object
+   * @param {number} z: the z position of the object
+   * @param {number} width: the width of the object
+   * @param {number} height: the height of the object
+   * @param {number} depth: the depth of the object
+   * @param {object} texture: the texture to be used
+   */
+  this.box = function(x, y, z, width, height, depth, texture) {
+    if (texture) {
+      engine.useShader(textureShader);
+    }
+    else {
+      engine.useShader(colorShader);
+    }
+    that.pushMatrix();
+    that.translate(x, y, z);
+    that.scale(width, height, depth);
+    
+    engine.drawVertices(mvMatrix, projMatrix,
+                        cubeVertices,                         // vertices
+                        cubeVertices.texCoord,                // texture coord
+                        texture,                              // texture
+                        tint,                                 // color
+                        cubeVertices.indices,                 // indices
+                        gl.TRIANGLES);                        // draw mode
+    that.popMatrix();
+  }
+    
   /**
    * Sets blending, either 'alpha' or 'add'; anything else disables blending.
    *
@@ -684,6 +716,11 @@ function TiltDraw(canvas, width, height, failCallback, successCallback) {
   }
   
   /**
+   * Simple closure for the texture initialization (used for P5 similarity).
+   */
+  this.requestTexture = engine.initTexture;
+  
+  /**
    * Destroys this object.
    */
   this.destroy = function() {
@@ -699,5 +736,7 @@ function TiltDraw(canvas, width, height, failCallback, successCallback) {
     
     rectangleVertices = null;
     cubeVertices = null;
+    
+    that = null;
   }
 }

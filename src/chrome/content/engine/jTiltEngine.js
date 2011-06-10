@@ -34,6 +34,11 @@ var EXPORTED_SYMBOLS = ["TiltEngine"];
 function TiltEngine() {
 
   /**
+   * By convention, we make a private 'that' variable.
+   */
+  var that = this;
+  
+  /**
    * WebGL context to be used.
    */
   this.gl = null;
@@ -70,11 +75,12 @@ function TiltEngine() {
       }
     }
     else {
+      TiltUtils.Console.log(TiltUtils.StringBundle.get("webgl.error"));
       if (failCallback) {
         failCallback();
       }
     }
-    return this.gl = gl;
+    return that.gl = gl;
   }
 
   /**
@@ -98,11 +104,10 @@ function TiltEngine() {
       vertShaderURL = vertShaderURL + ".vs";
     }
     
-    var that = this;
     var vertShader;
     var fragShader;
     
-    this.requests([vertShaderURL, fragShaderURL],
+    that.requests([vertShaderURL, fragShaderURL],
                   function requestsCallback(http) {
                   
       vertShader = that.compileShader(http[0].responseText,
@@ -129,7 +134,7 @@ function TiltEngine() {
    * @return {object} the compiled shader
    */
   this.compileShader = function(shaderSource, shaderType) {
-    var gl = this.gl;
+    var gl = that.gl;
     var shader;
 
     if (!shaderSource) {
@@ -173,7 +178,7 @@ function TiltEngine() {
    * @return {object} the newly created and linked shader program
    */
   this.linkProgram = function(vertShader, fragShader) {
-    var gl = this.gl;
+    var gl = that.gl;
     var program = gl.createProgram();
     gl.attachShader(program, vertShader);
     gl.attachShader(program, fragShader);
@@ -183,7 +188,7 @@ function TiltEngine() {
       TiltUtils.Console.error(TiltUtils.StringBundle.format(
         "linkProgram.error", [vertShader.src, fragShader.src]));
     }
-    else this.useShader(program);
+    else that.useShader(program);
     return program;
   }
 
@@ -193,7 +198,7 @@ function TiltEngine() {
    * @param {object} program: the shader program to be used by the engine
    */
   this.useShader = function(program) {
-    this.gl.useProgram(this.shader = program);
+    that.gl.useProgram(that.shader = program);
   }
 
   /**
@@ -205,7 +210,7 @@ function TiltEngine() {
    * @return {number} the attribute location from the program
    */
   this.shaderAttribute = function(program, attribute) {
-    return this.gl.getAttribLocation(program, attribute);
+    return that.gl.getAttribLocation(program, attribute);
   }
 
   /**
@@ -217,7 +222,7 @@ function TiltEngine() {
    * @return {object} the uniform object from the program
    */
   this.shaderUniform = function(program, uniform) {
-    return this.gl.getUniformLocation(program, uniform);
+    return that.gl.getUniformLocation(program, uniform);
   }
 
   /**
@@ -231,9 +236,9 @@ function TiltEngine() {
    * @return {number} or {object} the attribute or uniform from the program
    */
   this.shaderIO = function(program, variable) {
-    var location = this.shaderAttribute(program, variable);
+    var location = that.shaderAttribute(program, variable);
     if (location < 0) {
-      location = this.shaderUniform(program, variable);
+      location = that.shaderUniform(program, variable);
     }
     return location;
   }
@@ -251,7 +256,7 @@ function TiltEngine() {
   this.initBuffer = function(elementsArray, itemSize, numItems) {
     if (!numItems) numItems = elementsArray.length / itemSize;
     
-    var gl = this.gl;
+    var gl = that.gl;
     var buffer = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
     gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(elementsArray),
@@ -276,7 +281,7 @@ function TiltEngine() {
   this.initIndexBuffer = function(elementsArray, numItems) {
     if (!numItems) numItems = elementsArray.length;
      
-    var gl = this.gl;
+    var gl = that.gl;
     var buffer = gl.createBuffer();
     gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, buffer);
     gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(elementsArray),
@@ -309,8 +314,7 @@ function TiltEngine() {
                               fillColor, strokeColor, strokeWeight,
                               minFilter, magFilter, mipmap,
                               wrapS, wrapT, flipY) {
-    var that = this;
-    var gl = this.gl;
+    var gl = that.gl;
     var texture = gl.createTexture();
 
     if ("object" === typeof(textureSource)) {
@@ -367,7 +371,7 @@ function TiltEngine() {
   this.setTextureParams = function(minFilter, magFilter, mipmap,
                                    wrapS, wrapT,
                                    texture) {
-    var gl = this.gl;
+    var gl = that.gl;
     
     if (texture) {
       gl.bindTexture(gl.TEXTURE_2D, texture);
@@ -440,8 +444,8 @@ function TiltEngine() {
                                color,
                                indexBuffer, drawMode) {
 
-    var shader = this.shader;
-    this.drawVertices_(shader.mvMatrix, mvMatrix,
+    var shader = that.shader;
+    that.drawVertices_(shader.mvMatrix, mvMatrix,
                        shader.projMatrix, projMatrix,
                        shader.vertexPosition, verticesBuffer,
                        shader.vertexTexCoord, texcoordBuffer,
@@ -477,7 +481,7 @@ function TiltEngine() {
                                 textureSampler, texture,
                                 colorUniform, color,
                                 indexBuffer, drawMode) {
-    var gl = this.gl;
+    var gl = that.gl;
 
     gl.uniformMatrix4fv(mvMatrixUniform, false, mvMatrix);
     gl.uniformMatrix4fv(projMatrixUniform, false, projMatrix);
@@ -562,7 +566,7 @@ function TiltEngine() {
     }
 
     for (var i = 0, size = urls.length; i < size; i++) {
-      this.request(urls[i], function ready(request, index) {
+      that.request(urls[i], function ready(request, index) {
         http[index] = request;
         onrequestready();
       }, i);
@@ -573,7 +577,9 @@ function TiltEngine() {
    * Destroys this object.
    */
   this.destroy = function() {
-    this.gl = null;
-    this.shader = null;
+    that.gl = null;
+    that.shader = null;
+
+    that = null;
   }
 }
