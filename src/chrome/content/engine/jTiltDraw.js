@@ -24,6 +24,8 @@
  *    distribution.
  */
 
+var EXPORTED_SYMBOLS = ["TiltDraw"];
+
 /**
  * TiltDraw constructor.
  * 
