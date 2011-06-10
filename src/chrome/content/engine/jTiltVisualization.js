@@ -40,9 +40,6 @@ function TiltVisualization(dom, canvas, width, height) {
   
   /**
    * By convention, we make a private 'that' variable.
-   * This is used to make the object available to the private methods, as a
-   * workaround for an error in the ECMAScript Language Specification which
-   * causes 'this' to be set incorrectly for inner functions.
    */
   var that = this;
   
@@ -54,19 +51,31 @@ function TiltVisualization(dom, canvas, width, height) {
   /**
    * Helper functions for easy drawing and abstraction.
    */
-  var draw = new TiltDraw(canvas, width, height, function failCallback() {
-    TiltUtils.Console.log(TiltUtils.StringBundle.get("webgl.error"));
-  }).initialize();
+  var draw = new TiltDraw(canvas, width, height);
   
   /**
    * The initialization logic.
    */
   this.setup = function() {
-    var engine = draw.getEngine();
+    // initialize shaders, matrices and other components required for drawing
+    draw.initialize();
     
-    engine.initTexture(dom, function readyCallback(texure) {
-      domTexture = texure;
-    }, "white");
+    // we require a particular way of mapping textures for the box objects
+    // representing each node (only the front and back cube faces are textured
+    // and not the margins), so we override the default cube texture coords
+    // for the default cube vertices
+    draw.getCubeVertices().texCoord = draw.getEngine().initBuffer([
+      0, 0, 1, 0, 1, 1, 0, 1,
+      0, 0, 0, 0,	0, 0, 0, 0,
+      1, 1, 0, 1,	0, 0, 1, 0,
+      0, 0, 0, 0,	0, 0, 0, 0,
+      0, 0, 0, 0,	0, 0, 0, 0,
+      0, 0, 0, 0,	0, 0, 0, 0], 2);
+
+    // convert the dom image to a texture
+    draw.requestTexture(dom, function readyCallback(loadedTexture) {
+      domTexture = loadedTexture;
+    }, "white", "gray", 8); // using a white background & gray margins of 8px
   }
   
   /**
@@ -74,25 +83,30 @@ function TiltVisualization(dom, canvas, width, height) {
    */
   this.loop = function() {
     if (that) {
+      // prepare for the next frame of the animation loop
       draw.requestAnimFrame(that.loop);
       
-      var width = draw.getCanvas().width;
-      var height = draw.getCanvas().height;
+      // get some variables from the draw object for easier access
+      var width = draw.getWidth();
+      var height = draw.getHeight();
       var timeCount = draw.getTimeCount();
       var frameCount = draw.getFrameCount();
       var frameRate = draw.getFrameRate();
       var frameDelta = draw.getFrameDelta();
       
+      // only after the draw object has finished initializing
       if (draw.isInitialized()) {
-        draw.background(domTexture ? 0 : "#0000");
-        
+        // set a default (white) background if the dom texture has finished 
+        // loading, or transparent otherwise
+        draw.background(domTexture ? "#fff" : "#0000");
+
+        // if the dom texture is available, the visualization can be drawn
         if (domTexture) {
-          draw.translate(width / 2, height / 2, -width / 32);
-          draw.rotate(1, 0.5, 0.25, TiltUtils.Math.radians(frameDelta / 16));
-          draw.box(0, 0, 0,
-            width, height, width / 32, domTexture);
-          
-          draw.translate(-width / 2, -height / 2, width / 32);
+          // this is just a test case for now, actual implementation later
+          draw.translate(width / 2, height / 2, 0);
+          draw.rotate(1, 0.5, 0.25, TiltUtils.Math.radians(frameDelta / 32));
+          draw.box(0, 0, 0, width, height, 16, domTexture);
+          draw.translate(-width / 2, -height / 2, 0);
         }
       }
     }
