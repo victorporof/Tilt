@@ -23,7 +23,9 @@
  *    3. This notice may not be removed or altered from any source
  *    distribution.
  */
- 
+
+var EXPORTED_SYMBOLS = ["TiltEngine"];
+
 /**
  * TiltEngine constructor.
  *
