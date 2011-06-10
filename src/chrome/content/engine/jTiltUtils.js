@@ -265,12 +265,18 @@ TiltUtils.Math = {
    * @return {array} an array with 4 color components: red, green, blue, alpha
    */
   hex2rgba: function(hex) {
-    hex = hex.charAt(0) == "#" ? hex.substring(1, 7) : hex;
+    hex = hex.charAt(0) == "#" ? hex.substring(1, 9) : hex;
 
     if (hex.length == 3) {
       hex = hex.charAt(0) + hex.charAt(0) +
             hex.charAt(1) + hex.charAt(1) +
-            hex.charAt(2) + hex.charAt(2);
+            hex.charAt(2) + hex.charAt(2) + "ff";
+    }
+    else if (hex.length == 4) {
+      hex = hex.charAt(0) + hex.charAt(0) +
+            hex.charAt(1) + hex.charAt(1) +
+            hex.charAt(2) + hex.charAt(2) +
+            hex.charAt(3) + hex.charAt(3);
     }
     else if (hex.match("^rgba") == "rgba") {
       var rgba = hex.substring(5, hex.length - 1).split(',');
@@ -292,7 +298,8 @@ TiltUtils.Math = {
     var r = parseInt(hex.substring(0, 2), 16) / 255;
     var g = parseInt(hex.substring(2, 4), 16) / 255;
     var b = parseInt(hex.substring(4, 6), 16) / 255;
-    return [r, g, b, 1];
+    var a = parseInt(hex.substring(6, 8), 16) / 255;
+    return [r, g, b, a];
   }
 }
 
