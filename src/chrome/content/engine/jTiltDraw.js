@@ -60,7 +60,7 @@ function TiltDraw(canvas, width, height, failCallback, successCallback) {
    * texture coordinates.
    */
   var textureShader;
-
+  
   /**
    * A modelview matrix stack, used for push/pop operations.
    */
@@ -85,6 +85,30 @@ function TiltDraw(canvas, width, height, failCallback, successCallback) {
    * Vertices representing the corners of a cube.
    */
   var cubeVertices;
+
+  /**
+   * The current tint color applied to any objects which can be tinted.
+   * These mostly represent images or texturable primitives.
+   */
+  var tint;
+
+  /**
+   * The current fill color applied to any objects which can be filled.
+   * These are rectangles, circles, 2d primitives in general.
+   */
+  var fill;
+  
+  /**
+   * The current stroke color applied to any objects which can be stroked.
+   * This property mostly refers to lines.
+   */
+  var stroke;
+
+  /**
+   * The current stroke weight.
+   * This property also refers to lines.
+   */
+  var strokeWeight;
 
   /**
    * Time passed since initialization.
@@ -149,40 +173,59 @@ function TiltDraw(canvas, width, height, failCallback, successCallback) {
     // set the default modelview and projection matrices
     this.origin();
     this.perspective();
-
+    
+    // set the default rendering properties
+    this.blendMode("alpha");
+    this.depthTest("true");
+    
+    // set the default tint, fill, stroke and stroke weight
+    this.tint("#fff");
+    this.fill("#fff");
+    this.stroke("#000");
+    this.strokeWeight(1);
+    
     // buffer of 2-component vertices (x, y) as the corners of a rectangle
     rectangleVertices = engine.initBuffer([
       0, 0, 1, 0, 0, 1, 1, 1], 2);
     
     // buffers of 3-component vertices (x, y, z) as the corners of a cube
     cubeVertices = engine.initBuffer([
-      -1.0, -1.0, 1.0, 
-      1.0, -1.0, 1.0, 
-      1.0, 1.0, 1.0, 
-      -1.0, 1.0, 1.0,
-      -1.0, -1.0, -1.0,
-      -1.0, 1.0, -1.0,
-      1.0, 1.0, -1.0,
-      1.0, -1.0, -1.0,
-      -1.0, 1.0, -1.0,
-      -1.0, 1.0, 1.0,
-      1.0, 1.0, 1.0,
-      1.0, 1.0, -1.0,
-      -1.0, -1.0, -1.0,
-      1.0, -1.0, -1.0,
-      1.0, -1.0, 1.0,
-      -1.0, -1.0, 1.0,
-      1.0, -1.0, -1.0,
-      1.0, 1.0, -1.0,
-      1.0, 1.0, 1.0,
-      1.0, -1.0, 1.0,
-      -1.0, -1.0, -1.0,
-      -1.0, -1.0, 1.0,
-      -1.0, 1.0, 1.0,
-      -1.0, 1.0, -1.0], 3);
+      -0.5, -0.5,  0.5, // front
+       0.5, -0.5,  0.5,
+       0.5,  0.5,  0.5,
+      -0.5,  0.5,  0.5,
+      -0.5,  0.5,  0.5, // top
+       0.5,  0.5,  0.5,
+       0.5,  0.5, -0.5,
+      -0.5,  0.5, -0.5,
+      -0.5,  0.5, -0.5, // back
+       0.5,  0.5, -0.5,
+       0.5, -0.5, -0.5,
+      -0.5, -0.5, -0.5,
+      -0.5, -0.5, -0.5, // bottom
+       0.5, -0.5, -0.5,
+       0.5, -0.5,  0.5,
+      -0.5, -0.5,  0.5,
+       0.5, -0.5,  0.5, // right
+       0.5, -0.5, -0.5,
+       0.5,  0.5, -0.5,
+       0.5,  0.5,  0.5,
+      -0.5, -0.5, -0.5, // left
+      -0.5, -0.5,  0.5,
+      -0.5,  0.5,  0.5,
+      -0.5,  0.5, -0.5], 3);
+    
+    // buffers of 2-component texture coordinates (u, v) for the cube
+    cubeVertices.texCoord = engine.initBuffer([
+      0, 0, 1, 0, 1, 1, 0, 1,
+      0, 0, 1, 0,	1, 1, 0, 1,
+      1, 1, 0, 1,	0, 0, 1, 0,
+      0, 0, 1, 0, 1, 1, 0, 1,
+      0, 0, 1, 0,	1, 1, 0, 1,
+      0, 0, 1, 0,	1, 1, 0, 1], 2);
       
     // vertex indices for the cube vertices, defining the order for which
-    // these points can create a cube, using a triangle strip
+    // these points can create a cube from triangles
     cubeVertices.indices = engine.initIndexBuffer([
       0, 1, 2, 0, 2, 3,
       4, 5, 6, 4, 6, 7,
@@ -190,7 +233,7 @@ function TiltDraw(canvas, width, height, failCallback, successCallback) {
       12, 13, 14, 12, 14, 15,
       16, 17, 18, 16, 18, 19,
       20, 21, 22, 20, 22, 23]);
-      
+    
     return this;
   }
 
@@ -441,6 +484,63 @@ function TiltDraw(canvas, width, height, failCallback, successCallback) {
   }
 
   /**
+   * Sets the current tint color.
+   *
+   * @param {string} color: the color, defined in hex or as rgb() or rgba()
+   */
+  this.tint = function(color) {
+    tint = TiltUtils.Math.hex2rgba(color);
+  }
+
+  /**
+   * Disables the current tint color value.
+   */
+  this.noTint = function() {
+    tint = [1, 1, 1, 1];
+  }
+
+  /**
+   * Sets the current fill color.
+   *
+   * @param {string} color: the color, defined in hex or as rgb() or rgba()
+   */
+  this.fill = function(color) {
+    fill = TiltUtils.Math.hex2rgba(color);
+  }
+
+  /**
+   * Disables the current fill color value.
+   */
+  this.noFill = function() {
+    fill = [0, 0, 0, 0];
+  }
+
+  /**
+   * Sets the current stroke color.
+   *
+   * @param {string} color: the color, defined in hex or as rgb() or rgba()
+   */
+  this.stroke = function(color) {
+    stroke = TiltUtils.Math.hex2rgba(color);
+  }
+
+  /**
+   * Disables the current stroke color value.
+   */
+  this.noStroke = function() {
+    stroke = [0, 0, 0, 0];
+  }
+  
+  /**
+   * Sets the current stroke weight.
+   *
+   * @param {number} weight: the stroke weight
+   */
+  this.strokeWeight = function(weight) {
+    strokeWeight = weight;
+  }
+  
+  /**
    * Clears the canvas context (usually at the beginning of each frame).
    * If the color is undefined, it will default to opaque white.
    *
@@ -465,9 +565,8 @@ function TiltDraw(canvas, width, height, failCallback, successCallback) {
    * @param {number} y: the y position of the object
    * @param {number} width: the width of the object
    * @param {number} height: the height of the object
-   * @param {string} color: the color, defined in hex or as rgb() or rgba()
    */
-  this.rect = function(x, y, width, height, color) {
+  this.rect = function(x, y, width, height) {
     engine.useShader(colorShader);
     this.pushMatrix();
     this.translate(x, y, 0);
@@ -476,11 +575,43 @@ function TiltDraw(canvas, width, height, failCallback, successCallback) {
     engine.drawVertices(mvMatrix, projMatrix,
                         rectangleVertices,                    // vertices
                         null,                                 // texture coord
-                        color == undefined ?
-                        [1, 1, 1, 1] : TiltUtils.Math.hex2rgba(color));
+                        null,                                 // texture
+                        fill);                                // color
     this.popMatrix();
   }
 
+  /**
+   * Draws a box using the specified parameters.
+   *
+   * @param {number} x: the x position of the object
+   * @param {number} y: the y position of the object
+   * @param {number} z: the z position of the object
+   * @param {number} width: the width of the object
+   * @param {number} height: the height of the object
+   * @param {number} depth: the depth of the object
+   * @param {object} texture: the texture to be used
+   */
+  this.box = function(x, y, z, width, height, depth, texture) {
+    if (texture) {
+      engine.useShader(textureShader);
+    }
+    else {
+      engine.useShader(colorShader);
+    }
+    this.pushMatrix();
+    this.translate(x, y, z);
+    this.scale(width, height, depth);
+    
+    engine.drawVertices(mvMatrix, projMatrix,
+                        cubeVertices,                         // vertices
+                        cubeVertices.texCoord,                // texture coord
+                        texture,                              // texture
+                        tint,                                 // color
+                        cubeVertices.indices,                 // indices
+                        gl.TRIANGLES);                        // draw mode
+    this.popMatrix();
+  }
+  
   /**
    * Draws an image using the specified parameters.
    *
@@ -489,14 +620,13 @@ function TiltDraw(canvas, width, height, failCallback, successCallback) {
    * @param {number} y: the y position of the object
    * @param {number} width: the width of the object
    * @param {number} height: the height of the object
-   * @param {string} tint: the tint, defined in hex or as rgb() or rgba()
    */
-  this.image = function(texture, x, y, width, height, tint) {
-    if (width == undefined || height == undefined) {
+  this.image = function(texture, x, y, width, height) {
+    if (!width || !height) {
       width = texture.image.width;
       height = texture.image.height;
     }
-
+    
     engine.useShader(textureShader);
     this.pushMatrix();
     this.translate(x, y, 0);
@@ -505,10 +635,52 @@ function TiltDraw(canvas, width, height, failCallback, successCallback) {
     engine.drawVertices(mvMatrix, projMatrix,
                         rectangleVertices,                    // vertices
                         rectangleVertices,                    // texture coord
-                        tint == undefined ?
-                        [1, 1, 1, 1] : TiltUtils.Math.hex2rgba(tint),
-                        texture);
+                        texture,                              // texture
+                        tint);                                // color
     this.popMatrix();
+  }
+  
+  /**
+   * Sets blending, either 'alpha' or 'add'; anything else disables blending.
+   *
+   * @param {string} mode: blending, either 'alpha', 'add' or undefined
+   */
+  this.blendMode = function(mode) {
+    if (mode == "alpha") {
+      gl.enable(gl.BLEND);
+      gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+    }
+    else if (mode == "add") {
+      gl.enable(gl.BLEND);
+      gl.blendFunc(gl.ONE, gl.ONE);
+    }
+    else gl.disable(gl.BLEND);
+  }
+
+  /**
+   * Sets depth testing; disabling it is useful when handling transparency.
+   *
+   * @param {string} mode: depth testing, either 'true' or 'false'
+   */
+  this.depthTest = function(mode) {
+    if (mode && mode != "false") {
+      gl.enable(gl.DEPTH_TEST);
+    }
+    else {
+      gl.disable(gl.DEPTH_TEST);
+    }
+  }
+
+  /**
+   * Sets the dimensions of the canvas object.
+   *
+   * @param {number} width: the width of the canvas
+   * @param {number} height: the height of the canvas
+   */
+  this.size = function(width, height) {
+    canvas.width = width;
+    canvas.height = height;
+    gl.viewport(0, 0, width, height);
   }
   
   /**
