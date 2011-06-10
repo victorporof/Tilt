@@ -27,6 +27,12 @@ if ("undefined" == typeof(TiltUtils)) {
   var TiltUtils = {};
 };
 
+var EXPORTED_SYMBOLS = [
+  "TiltUtils.Iframe",
+  "TiltUtils.Canvas",
+  "TiltUtils.Image",
+  "TiltUtils.Math"];
+
 /**
  * Utilities for creating, using and removing iframes.
  */
@@ -54,13 +60,12 @@ TiltUtils.Iframe = {
     if (!canvas_id) {
       canvas_id = "tilt-canvas";
     }
-
+    
     var iframe = document.createElement("iframe");
     iframe.setAttribute("type", type);
-    iframe.setAttribute("transparent", "true");
     iframe.id = iframe_id;
     iframe.flex = 1;
-
+    
     var that = this;
     iframe.addEventListener("load", function loadCallback() {
       iframe.removeEventListener("load", loadCallback, true);
