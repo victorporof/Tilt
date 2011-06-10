@@ -84,13 +84,15 @@ function TiltVisualization(dom, canvas, width, height) {
       var frameDelta = draw.getFrameDelta();
       
       if (draw.isInitialized()) {
-        draw.background(domTexture ? 0 : "rgba(0, 0, 0, 0)");
+        draw.background(domTexture ? 0 : "#0000");
         
         if (domTexture) {
-          draw.translate(width / 2, height / 2, 0);
+          draw.translate(width / 2, height / 2, -width / 32);
           draw.rotate(1, 0.5, 0.25, TiltUtils.Math.radians(frameDelta / 16));
-          draw.translate(-width / 2, -height / 2, 0);
-          draw.image(domTexture, 0, 0, width, height);    
+          draw.box(0, 0, 0,
+            width, height, width / 32, domTexture);
+          
+          draw.translate(-width / 2, -height / 2, width / 32);
         }
       }
     }
