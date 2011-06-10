@@ -1,13 +1,12 @@
 # Tilt: a WebGL-based 3D visualization of a Webpage.
-#### [Blog](https://wiki.mozilla.org/Tilt_Project_Page)
+#### [Development Blog](https://wiki.mozilla.org/Tilt_Project_Page)
 #### [Tilt Project Page](http://blog.mozilla.com/tilt/)
 
 ### Description
-#### [Additional info](http://bit.ly/gsoc-mozilla-application)
-
 > Tilt represents a new way of visualizing a web page. This tool creates a 3D representation of the document, with the purpose of displaying, understanding and easily analyzing the DOM. It will take advantage of the great tools Firefox has to offer, as it is an extension which contains a WebGL implementation, providing rich user-experience, fun interaction and useful information, while taking full advantage of 3D hardware acceleration, GLSL shaders and what OpenGL ES 2.0 has to offer.
 
 > The implementation consists of a Firefox extension containing a 3D representation of a web page, as both a fun visualization tool and a developer-friendly environment for debugging the document’s structure, contents and nesting of the DOM tree. Various information besides the actual contents will be displayed on request, regarding each node’s type, class, id, and other attributes if available. The rendering will be dynamic, in-browser, using WebGL and GLSL shaders.
+#### [Additional info](http://bit.ly/gsoc-mozilla-application)
 
 ### Project Proposal
 I propose implementing a Firefox extension containing a 3D representation of a web page, as both a fun visualization tool and a developer-friendly environment for debugging the document’s structure, contents and nesting of the DOM tree. Various information besides the actual contents will be displayed on request, regarding each node’s type, class, id, and other attributes if available. The rendering will be dynamic, in-browser, using WebGL and GLSL shaders.
