@@ -96,6 +96,7 @@ TiltUtils.Iframe = {
    * @return {object XULElement} the same iframe
    */
   appendToStack: function(iframe) {
+    // FIXME: custom browser
     window.gBrowser.selectedBrowser.parentNode.appendChild(iframe);
     return iframe;
   },
@@ -107,6 +108,7 @@ TiltUtils.Iframe = {
    * @return {object XULElement} the same iframe
    */
   removeFromStack: function(iframe) {
+    // FIXME: custom browser
     window.gBrowser.selectedBrowser.parentNode.removeChild(iframe);
     return iframe;
   }
