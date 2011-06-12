@@ -91,6 +91,9 @@ function TiltVisualization(image, canvas, width, height) {
         var z = depth * 8;
         var w = coord.width;
         var h = coord.height;
+
+        // number of vertex points, used for creating the indices array
+        var i = mesh.vertices.length / 3; // a vertex has 3 coords: x, y and z
         
         // compute the vertices
         mesh.vertices.push(x,     y,     z);
@@ -104,9 +107,6 @@ function TiltVisualization(image, canvas, width, height) {
           (x + w) / width, (y    ) / height,
           (x + w) / width, (y + h) / height, 
           (x    ) / width, (y + h) / height);
-
-        // number of vertex points, used for creating the indices array
-        var i = mesh.vertices.length / 3; // a vertex has 3 coords: x, y and z
 
         // compute the indices
         mesh.indices.push(i, i + 1, i + 2, i, i + 2, i + 3);
