@@ -13,17 +13,22 @@
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
   <script type="application/x-javascript"
-          src="chrome://tilt/content/engine/webgl-utils.js"/>
+          src="chrome://tilt/content/engine/lib/webgl-utils.js"/>
   <script type="application/x-javascript"
-          src="chrome://tilt/content/engine/glMatrix-0.9.5.js"/>
+          src="chrome://tilt/content/engine/lib/glMatrix-0.9.5.js"/>
+
   <script type="application/x-javascript"
-          src="chrome://tilt/content/engine/jTiltUtils.js"/>
+          src="chrome://tilt/content/engine/utils/jTiltUtils.js"/>
+  <script type="application/x-javascript"
+          src="chrome://tilt/content/engine/utils/jTiltExtensions.js"/>
+
   <script type="application/x-javascript"
           src="chrome://tilt/content/engine/jTiltEngine.js"/>
   <script type="application/x-javascript"
           src="chrome://tilt/content/engine/jTiltDraw.js"/>
   <script type="application/x-javascript"
           src="chrome://tilt/content/engine/jTiltVisualization.js"/>
+          
   <script type="application/x-javascript"
           src="chrome://tilt/content/browserOverlay.js"/>
 
