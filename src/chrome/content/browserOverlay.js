@@ -49,28 +49,38 @@ TiltChrome.BrowserOverlay = {
   initialize: function(aEvent) { 
     Components.utils.forceGC();
     
+    // get the Tilt menu item, to change the title if the visualization is on
     var tiltMenu = document.getElementById("tilt-menuItemInitialize");  
     var that = this;
-
-    if (this.iframe) {
-      this.destroy();
-      tiltMenu.label = TiltUtils.StringBundle.get("menuItemInitialize.label");
-    }
-    else {
+    
+    // if the visualization is not currently running
+    if (!this.iframe) {
+      // change the menu label acrodingly
       tiltMenu.label = TiltUtils.StringBundle.get("menuItemHide.label");
       
-      TiltUtils.Canvas.MOZ_dom_element_texture(function textureCallback(dom) {
+      // use an extension to get the image representation of the document
+      TiltExtensions.WebGL.initDocumentImage(function textureCallback(image) {
+        // initialize an iframe containing a canvas element
         TiltUtils.Iframe.initCanvas(function initCallback(iframe, canvas) {
+          // remember the iframe so that it can be destroyed later
           that.iframe = iframe;
           
+          // set the width and height to mach the content window dimensions
           canvas.width = iframe.contentWindow.innerWidth;
           canvas.height = iframe.contentWindow.innerHeight;
           
-          that.visualization = new TiltVisualization(dom, canvas);
+          // construct the visualization using the dom image and the canvas
+          that.visualization = new TiltVisualization(image, canvas);
           that.visualization.setup();
           that.visualization.loop();
         }, true);
       });
+    }
+    else {
+      // if the visualization is running destroy it
+      this.destroy();
+      // change the menu label to the default initialization string
+      tiltMenu.label = TiltUtils.StringBundle.get("menuItemInitialize.label");
     }
   },
   
@@ -80,12 +90,15 @@ TiltChrome.BrowserOverlay = {
   destroy: function() {  
     var that = this;
       
+    // issue a destroy call through all the visualization children
     this.visualization.destroy(function destroyCallback() {
-      that.visualization = null;
+      that.visualization = null; // when done, do some cleanup
 
+      // remove the iframe from the browser stack
       TiltUtils.Iframe.removeFromStack(that.iframe);
       that.iframe = null;
 
+      // collect any remaining garbage
       Components.utils.forceGC();
     });
   }
