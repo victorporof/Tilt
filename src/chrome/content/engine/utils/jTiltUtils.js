@@ -141,17 +141,17 @@ TiltUtils.Document = {
    * @param {object} dom: the document object model to traverse
    */
   traverse: function(nodeCallback, readyCallback, dom) {
-    recursive(nodeCallback, readyCallback, dom ? dom : this.get(), 0);
+    if (nodeCallback) {
+      recursive(nodeCallback, dom ? dom : this.get(), 0);
+    }
 
     // Used internally for recursively traversing a document object model
-    function recursive(nodeCallback, readyCallback, dom, depth) {
-
+    function recursive(nodeCallback, dom, depth) {
       for (var i = 0, len = dom.childNodes.length; i < len; i++) {
-        if (nodeCallback) {
-          nodeCallback(dom.childNodes[i], depth);
-        }
-
-        recursive(nodeCallback, readyCallback, dom.childNodes[i], depth + 1);
+        var child = dom.childNodes[i];
+        
+        nodeCallback(child, depth);
+        recursive(nodeCallback, child, depth + 1);
       }
     }
     
