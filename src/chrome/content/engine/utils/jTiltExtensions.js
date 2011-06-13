@@ -46,7 +46,6 @@ TiltExtensions.WebGL = {
    * @param {number} height: the height of the MOZ_dom_element_texture
    */
   initDocumentImage: function(readyCallback, width, height) {
-
     // Using a custom iframe with a canvas context element to draw the window
     TiltUtils.Iframe.initCanvas(function initCallback(iframe, canvas) {
       if (!width) {
