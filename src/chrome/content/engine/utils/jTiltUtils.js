@@ -407,7 +407,7 @@ TiltUtils.String = {
    * @return {string} the trimmed string
    */
   trim: function(str) {
-   	return str.replace(/^\s+|\s+$/g,"");
+    return str.replace(/^\s+|\s+$/g,"");
   },
   
   /**
@@ -417,7 +417,7 @@ TiltUtils.String = {
    * @return {string} the trimmed string
    */
   ltrim: function(str) {
-   	return str.replace(/^\s+/,""); 	
+    return str.replace(/^\s+/,""); 	
   },
   
   /**
@@ -427,7 +427,7 @@ TiltUtils.String = {
    * @return {string} the trimmed string
    */
   rtrim: function(str) {
-   	return str.replace(/\s+$/,"");
+    return str.replace(/\s+$/,"");
   }
 }
 
