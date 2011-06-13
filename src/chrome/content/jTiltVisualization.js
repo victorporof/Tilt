@@ -85,7 +85,7 @@ function TiltVisualization(image, canvas, width, height) {
       var coord = TiltUtils.Document.getNodeCoordinates(node);
 
       // use this node only if it actually has any dimensions
-      if (coord.x || coord.y || coord.width || coord.height) {
+      if (coord.x || coord.y || coord.width || coord.height && depth) {
         var x = coord.x;
         var y = coord.y;
         var z = depth * 8;
@@ -111,7 +111,7 @@ function TiltVisualization(image, canvas, width, height) {
         // compute the indices
         mesh.indices.push(i, i + 1, i + 2, i, i + 2, i + 3);
       }
-    }, function readyCallback(dom, maxDepth) {
+    }, function readyCallback() {
       // when finished, initialize the buffers
       mesh.vertexBuffer = draw.initBuffer(mesh.vertices, 3);
       mesh.vertexBuffer.texCoord = draw.initBuffer(mesh.texCoord, 2);
@@ -149,13 +149,12 @@ function TiltVisualization(image, canvas, width, height) {
         // if the dom texture is available, the visualization can be drawn
         if (dom) {
           // this is just a test case for now, actual implementation later
-          draw.translate(width / 2, height / 2, -400);
+          draw.translate(width / 2, height / 2 - 100, -400);
           draw.rotate(0, 1, 0, TiltUtils.Math.radians(timeCount / 32));
           draw.translate(-width / 2, -height / 2, 0);
           
-          draw.mesh(0, 0, 0, 1, 1, 1,
-                    mesh.vertexBuffer,
-                    mesh.vertexBuffer.texCoord, dom, "rgba(14, 16, 22, 255)",
+          draw.mesh(mesh.vertexBuffer,
+                    mesh.vertexBuffer.texCoord, null, "rgba(14, 16, 22, 255)",
                     mesh.vertexBuffer.indices, "triangles");
         }
       }
