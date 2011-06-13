@@ -577,8 +577,12 @@ function TiltDraw(canvas, width, height, failCallback, successCallback) {
    * @param {number} height: the height of the object
    */
   this.rect = function(x, y, z, width, height) {
-    this.mesh(x, y, z, width, height, 1,
-              rectangleVertexBuffer, null, null, fill);
+    that.pushMatrix();
+    that.translate(x, y, z);
+    that.scale(width, height, 1);
+
+    this.mesh(rectangleVertexBuffer, null, null, fill);
+    that.popMatrix();
   }
   
   /**
@@ -596,10 +600,15 @@ function TiltDraw(canvas, width, height, failCallback, successCallback) {
       width = texture.image.width;
       height = texture.image.height;
     }
+
+    that.pushMatrix();
+    that.translate(x, y, z);
+    that.scale(width, height, 1);
     
-    this.mesh(x, y, z, width, height, 1,
-              rectangleVertexBuffer,
+    this.mesh(rectangleVertexBuffer,
               rectangleVertexBuffer.texCoord, texture, tint);
+
+    that.popMatrix();
   }
   
   /**
@@ -614,30 +623,28 @@ function TiltDraw(canvas, width, height, failCallback, successCallback) {
    * @param {object} texture: the texture to be used
    */
   this.box = function(x, y, z, width, height, depth, texture) {
-    this.mesh(x, y, z, width, height, depth,
-              cubeVertexBuffer,
+    that.pushMatrix();
+    that.translate(x, y, z);
+    that.scale(width, height, depth);
+
+    this.mesh(cubeVertexBuffer,
               cubeVertexBuffer.texCoord, texture, tint,
               cubeVertexBuffer.indices, gl.TRIANGLES);
+
+    that.popMatrix();
   }
 
   /**
    * Draws a custom mesh using the specified parameters.
    *
-   * @param {number} x: the x position of the object
-   * @param {number} y: the y position of the object
-   * @param {number} z: the z position of the object
-   * @param {number} width: the width of the object
-   * @param {number} height: the height of the object
-   * @param {number} depth: the depth of the object
-   * @param {object} verticesBuffer: the vertices buffer (x, y and z coords)
+   * @param {object} verticesBuffer: the vertices buffer (x, y and z)
    * @param {object} texcoordBuffer: the texture coordinates (u, v)
    * @param {object} texture: the texture to be used by the shader if required
    * @param {string} color: the tint color to be used by the shader
    * @param {object} indexBuffer: indices for the passed vertices
-   * @param {number} drawMode: gl context enum, like gl.TRIANGLES or gl.LINES
+   * @param {number} drawMode: 'triangles', 'triangle-strip, 'points', 'lines' 
    */
-  this.mesh = function(x, y, z, width, height, depth,
-                       verticesBuffer,
+  this.mesh = function(verticesBuffer,
                        texcoordBuffer, texture, color,
                        indexBuffer, drawMode) {
     if (texture) {
@@ -677,11 +684,7 @@ function TiltDraw(canvas, width, height, failCallback, successCallback) {
     if ("string" == typeof color) {
       color = TiltUtils.Math.hex2rgba(color);
     }
-    
-    that.pushMatrix();
-    that.translate(x, y, z);
-    that.scale(width, height, depth);
-    
+        
     engine.drawVertices(mvMatrix, projMatrix,
                         verticesBuffer,                       // vertices
                         texcoordBuffer,                       // texture coord
@@ -689,7 +692,6 @@ function TiltDraw(canvas, width, height, failCallback, successCallback) {
                         color,                                // color
                         indexBuffer,                          // indices
                         drawMode);                            // draw mode
-    that.popMatrix();
   }
   
   /**
