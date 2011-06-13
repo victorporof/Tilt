@@ -63,7 +63,7 @@ TiltExtensions.WebGL = {
       
       // FIXME: custom browser
       context.drawWindow(window.gBrowser.selectedBrowser.contentWindow, 
-                         0, 0, width, height, "rgb(255, 255, 255)");
+                         0, 0, width, height, "#fff");
     
       if (readyCallback) {
         readyCallback(canvas);
