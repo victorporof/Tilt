@@ -89,9 +89,9 @@ TiltChrome.BrowserOverlay = {
    */
   destroy: function() {  
     var that = this;
-      
+    
     // issue a destroy call through all the visualization children
-    this.visualization.destroy(function destroyCallback() {
+    that.visualization.destroy(function readyCallback() {
       that.visualization = null; // when done, do some cleanup
 
       // remove the iframe from the browser stack
