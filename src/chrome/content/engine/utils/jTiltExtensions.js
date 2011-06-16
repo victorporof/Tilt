@@ -36,7 +36,7 @@ TiltExtensions.WebGL = {
 
   /**
    * JavaScript implementation of WebGL MOZ_dom_element_texture (#653656)
-   * extension. It requres three parameters: width, height and a callback.
+   * extension. It requres three parameters: a callback, width and height.
    * If unspecified, the width and height default to the contentWindow 
    * innerWidth and innerHeight. The newly created image will be passed as a  
    * parameter to the readyCallback function.
