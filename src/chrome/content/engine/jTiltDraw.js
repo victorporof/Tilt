@@ -95,19 +95,19 @@ function TiltDraw(canvas, width, height, failCallback, successCallback) {
    * The current tint color applied to any objects which can be tinted.
    * These mostly represent images or texturable primitives.
    */
-  var tint = "";
+  var tint = [];
 
   /**
    * The current fill color applied to any objects which can be filled.
    * These are rectangles, circles, 2d primitives in general.
    */
-  var fill = "";
+  var fill = [];
   
   /**
    * The current stroke color applied to any objects which can be stroked.
    * This property mostly refers to lines.
    */
-  var stroke = "";
+  var stroke = [];
 
   /**
    * The current stroke weight.
@@ -244,7 +244,7 @@ function TiltDraw(canvas, width, height, failCallback, successCallback) {
       20, 21, 22, 20, 22, 23]);
     
     return that;
-  }
+  };
 
   /**
    * Returns true if the initialization is complete (currently, this means 
@@ -254,25 +254,7 @@ function TiltDraw(canvas, width, height, failCallback, successCallback) {
    */
   this.isInitialized = function() {
     return colorShader && textureShader;
-  }
-
-  /**
-   * Returns the canvas width.
-   *
-   * @return {object} the canvas width
-   */
-  this.getWidth = function() {
-    return canvas.width;
-  }
-  
-  /**
-   * Returns the canvas height.
-   *
-   * @return {object} the canvas height
-   */
-  this.getHeight = function() {
-    return canvas.height;
-  }
+  };
   
   /**
    * Returns the time count.
@@ -282,7 +264,7 @@ function TiltDraw(canvas, width, height, failCallback, successCallback) {
    */
   this.getTimeCount = function() {
     return timeCount;
-  }
+  };
 
   /**
    * Returns the frame count.
@@ -292,7 +274,7 @@ function TiltDraw(canvas, width, height, failCallback, successCallback) {
    */
   this.getFrameCount = function() {
     return frameCount;
-  }
+  };
 
   /**
    * Returns the framerate.
@@ -302,7 +284,7 @@ function TiltDraw(canvas, width, height, failCallback, successCallback) {
    */
   this.getFrameRate = function() {
     return frameRate;
-  }
+  };
 
   /**
    * Returns the frame delta time.
@@ -312,7 +294,7 @@ function TiltDraw(canvas, width, height, failCallback, successCallback) {
    */
   this.getFrameDelta = function() {
     return frameDelta;
-  }
+  };
 
   // Helpers for managing variables like frameCount, frameRate, frameDelta
   // Used internally, in the requestAnimFrame function
@@ -339,16 +321,17 @@ function TiltDraw(canvas, width, height, failCallback, successCallback) {
 
     if (that.isInitialized()) {
       currentTime = new Date().getTime();
-      if (lastTime != 0) {
+      
+      if (lastTime !== 0) {
         frameDelta = currentTime - lastTime;
+        frameRate = 1000 / frameDelta;
       }
       lastTime = currentTime;
-
+      
       timeCount += frameDelta;
       frameCount++;
-      frameRate = 0; // FIXME: calculate frame rate
     }
-  }
+  };
 
   /**
    * Sets up the WebGL context viewport.
@@ -360,7 +343,7 @@ function TiltDraw(canvas, width, height, failCallback, successCallback) {
    */
   this.viewport = function(width, height) {
     gl.viewport(0, 0, width, height);
-  }
+  };
 
   /**
    * Sets a default perspective projection, with the near frustum rectangle
@@ -377,11 +360,11 @@ function TiltDraw(canvas, width, height, failCallback, successCallback) {
     var znear = z / 10;
     var zfar = z * 10;
     var aspect = w / h;
-
+    
     that.viewport(canvas.width, canvas.height);
     mat4.perspective(fov, aspect, znear, zfar, projMatrix, true);
     mat4.translate(projMatrix, [-x, -y, -z]);
-  }
+  };
 
   /**
    * Sets a default orthographic projection.
@@ -390,7 +373,7 @@ function TiltDraw(canvas, width, height, failCallback, successCallback) {
   this.ortho = function() {
     that.viewport(canvas.width, canvas.height);
     mat4.ortho(0, canvas.width, canvas.height, 0, -100, 100, projMatrix);
-  }
+  };
   
   /**
    * Sets a custom projection matrix.
@@ -400,7 +383,7 @@ function TiltDraw(canvas, width, height, failCallback, successCallback) {
    this.projection = function(matrix) {
      that.viewport(canvas.width, canvas.height);
      mat4.set(matrix, projMatrix);
-   }
+   };
 
   /**
    * Pushes the current modelview matrix on a stack, to be popped out later.
@@ -411,7 +394,7 @@ function TiltDraw(canvas, width, height, failCallback, successCallback) {
     var copy = mat4.create();
     mat4.set(mvMatrix, copy);
     mvMatrixStack.push(copy);
-  }
+  };
 
   /**
    * Pops an existing model view matrix from stack.
@@ -421,7 +404,7 @@ function TiltDraw(canvas, width, height, failCallback, successCallback) {
     if (mvMatrixStack.length > 0) {
       mvMatrix = mvMatrixStack.pop();
     }
-  }
+  };
 
   /**
    * Resets the modelview matrix to identity.
@@ -429,7 +412,7 @@ function TiltDraw(canvas, width, height, failCallback, successCallback) {
    */
   this.origin = function() {
     mat4.identity(mvMatrix);
-  }
+  };
 
   /**
    * Translates the modelview by the x, y and z coordinates.
@@ -440,7 +423,7 @@ function TiltDraw(canvas, width, height, failCallback, successCallback) {
    */
   this.translate = function(x, y, z) {
     mat4.translate(mvMatrix, [x, y, z]);
-  }
+  };
 
   /**
    * Rotates the modelview by a specified angle on the x, y and z axis.
@@ -452,7 +435,7 @@ function TiltDraw(canvas, width, height, failCallback, successCallback) {
    */
   this.rotate = function(x, y, z, angle) {
     mat4.rotate(mvMatrix, angle, [x, y, z]);
-  }
+  };
 
   /**
    * Rotates the modelview by a specified angle on the x axis.
@@ -461,7 +444,7 @@ function TiltDraw(canvas, width, height, failCallback, successCallback) {
    */
   this.rotateX = function(angle) {
     mat4.rotateX(mvMatrix, angle);
-  }
+  };
 
   /**
    * Rotates the modelview by a specified angle on the y axis.
@@ -470,7 +453,7 @@ function TiltDraw(canvas, width, height, failCallback, successCallback) {
    */
   this.rotateY = function(angle) {
     mat4.rotateY(mvMatrix, angle);
-  }
+  };
 
   /**
    * Rotates the modelview by a specified angle on the z axis.
@@ -479,7 +462,7 @@ function TiltDraw(canvas, width, height, failCallback, successCallback) {
    */
   this.rotateZ = function(angle) {
     mat4.rotateZ(mvMatrix, angle);
-  }
+  };
 
   /**
    * Scales the modelview by the x, y and z coordinates.
@@ -490,7 +473,7 @@ function TiltDraw(canvas, width, height, failCallback, successCallback) {
    */
   this.scale = function(x, y, z) {
     mat4.scale(mvMatrix, [x, y, z]);
-  }
+  };
 
   /**
    * Sets the current tint color.
@@ -499,14 +482,14 @@ function TiltDraw(canvas, width, height, failCallback, successCallback) {
    */
   this.tint = function(color) {
     tint = TiltUtils.Math.hex2rgba(color);
-  }
+  };
 
   /**
    * Disables the current tint color value.
    */
   this.noTint = function() {
     tint = [1, 1, 1, 1];
-  }
+  };
 
   /**
    * Sets the current fill color.
@@ -515,14 +498,14 @@ function TiltDraw(canvas, width, height, failCallback, successCallback) {
    */
   this.fill = function(color) {
     fill = TiltUtils.Math.hex2rgba(color);
-  }
+  };
 
   /**
    * Disables the current fill color value.
    */
   this.noFill = function() {
     fill = [0, 0, 0, 0];
-  }
+  };
 
   /**
    * Sets the current stroke color.
@@ -531,14 +514,14 @@ function TiltDraw(canvas, width, height, failCallback, successCallback) {
    */
   this.stroke = function(color) {
     stroke = TiltUtils.Math.hex2rgba(color);
-  }
+  };
 
   /**
    * Disables the current stroke color value.
    */
   this.noStroke = function() {
     stroke = [0, 0, 0, 0];
-  }
+  };
   
   /**
    * Sets the current stroke weight.
@@ -547,7 +530,7 @@ function TiltDraw(canvas, width, height, failCallback, successCallback) {
    */
   this.strokeWeight = function(weight) {
     strokeWeight = weight;
-  }
+  };
   
   /**
    * Clears the canvas context (usually at the beginning of each frame).
@@ -565,7 +548,7 @@ function TiltDraw(canvas, width, height, failCallback, successCallback) {
 
     gl.clearColor(color[0], color[1], color[2], color[3]);
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-  }
+  };
 
   /**
    * Draws a rectangle using the specified parameters.
@@ -581,9 +564,9 @@ function TiltDraw(canvas, width, height, failCallback, successCallback) {
     that.translate(x, y, z);
     that.scale(width, height, 1);
 
-    this.mesh(rectangleVertexBuffer, null, null, fill);
+    that.mesh(rectangleVertexBuffer, null, null, fill);
     that.popMatrix();
-  }
+  };
   
   /**
    * Draws an image using the specified parameters.
@@ -605,11 +588,11 @@ function TiltDraw(canvas, width, height, failCallback, successCallback) {
     that.translate(x, y, z);
     that.scale(width, height, 1);
     
-    this.mesh(rectangleVertexBuffer,
+    that.mesh(rectangleVertexBuffer,
               rectangleVertexBuffer.texCoord, texture, tint);
 
     that.popMatrix();
-  }
+  };
   
   /**
    * Draws a box using the specified parameters.
@@ -626,13 +609,13 @@ function TiltDraw(canvas, width, height, failCallback, successCallback) {
     that.pushMatrix();
     that.translate(x, y, z);
     that.scale(width, height, depth);
-
-    this.mesh(cubeVertexBuffer,
+    
+    that.mesh(cubeVertexBuffer,
               cubeVertexBuffer.texCoord, texture, tint,
               cubeVertexBuffer.indices, gl.TRIANGLES);
 
     that.popMatrix();
-  }
+  };
 
   /**
    * Draws a custom mesh using the specified parameters.
@@ -654,34 +637,34 @@ function TiltDraw(canvas, width, height, failCallback, successCallback) {
       engine.useShader(colorShader);
     }
     
-    if ("string" == typeof drawMode) {
-      if ("triangles" == drawMode) {
+    if ("string" === typeof drawMode) {
+      if ("triangles" === drawMode) {
         drawMode = gl.TRIANGLES;
       }
-      else if ("triangle-strip" == drawMode) {
+      else if ("triangle-strip" === drawMode) {
         drawMode = gl.TRIANGLE_STRIP;
       }
-      else if ("triangle-fan" == drawMode) {
+      else if ("triangle-fan" === drawMode) {
         drawMode = gl.TRIANGLE_FAN;
       }
-      else if ("points" == drawMode) {
+      else if ("points" === drawMode) {
         drawMode = gl.POINTS;
       }
-      else if ("points" == drawMode) {
+      else if ("points" === drawMode) {
         drawMode = gl.POINTS;
       }
-      else if ("lines" == drawMode) {
+      else if ("lines" === drawMode) {
         drawMode = gl.LINES;
       }
-      else if ("line-strip" == drawMode) {
+      else if ("line-strip" === drawMode) {
         drawMode = gl.LINE_STRIP;
       }
-      else if ("line-loop" == drawMode) {
+      else if ("line-loop" === drawMode) {
         drawMode = gl.LINE_LOOP;
       }
     }
     
-    if ("string" == typeof color) {
+    if ("string" === typeof color) {
       color = TiltUtils.Math.hex2rgba(color);
     }
         
@@ -692,7 +675,7 @@ function TiltDraw(canvas, width, height, failCallback, successCallback) {
                         color,                                // color
                         indexBuffer,                          // indices
                         drawMode);                            // draw mode
-  }
+  };
   
   /**
    * Sets blending, either 'alpha' or 'add'; anything else disables blending.
@@ -700,16 +683,18 @@ function TiltDraw(canvas, width, height, failCallback, successCallback) {
    * @param {string} mode: blending, either 'alpha', 'add' or undefined
    */
   this.blendMode = function(mode) {
-    if (mode == "alpha") {
+    if (mode === "alpha") {
       gl.enable(gl.BLEND);
       gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
     }
-    else if (mode == "add" || mode == "additive") {
+    else if (mode === "add" || mode === "additive") {
       gl.enable(gl.BLEND);
       gl.blendFunc(gl.ONE, gl.ONE);
     }
-    else gl.disable(gl.BLEND);
-  }
+    else {
+      gl.disable(gl.BLEND);
+    }
+  };
 
   /**
    * Sets depth testing; disabling it is useful when handling transparency.
@@ -717,13 +702,13 @@ function TiltDraw(canvas, width, height, failCallback, successCallback) {
    * @param {boolean} mode: true if depth testing should be enabled
    */
   this.depthTest = function(mode) {
-    if (mode && mode != "false") {
+    if (mode && mode !== "false") {
       gl.enable(gl.DEPTH_TEST);
     }
     else {
       gl.disable(gl.DEPTH_TEST);
     }
-  }
+  };
 
   /**
    * Sets the dimensions of the canvas object.
@@ -735,7 +720,7 @@ function TiltDraw(canvas, width, height, failCallback, successCallback) {
     canvas.width = width;
     canvas.height = height;
     gl.viewport(0, 0, width, height);
-  }
+  };
   
   /**
    * Simple closures wrapping some engine functions for easier access.
@@ -762,5 +747,5 @@ function TiltDraw(canvas, width, height, failCallback, successCallback) {
     cubeVertexBuffer = null;
     
     that = null;
-  }
+  };
 }
