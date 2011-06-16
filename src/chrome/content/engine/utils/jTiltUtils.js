@@ -23,9 +23,9 @@
  *    3. This notice may not be removed or altered from any source
  *    distribution.
  */
-if ("undefined" == typeof(TiltUtils)) {
+if ("undefined" === typeof(TiltUtils)) {
   var TiltUtils = {};
-};
+}
 
 var EXPORTED_SYMBOLS = [
   "TiltUtils.Iframe",
@@ -65,7 +65,6 @@ TiltUtils.Iframe = {
     var iframe = document.createElement("iframe");
     iframe.setAttribute("type", type);
     iframe.id = iframe_id;
-    iframe.flex = 1;
     
     var that = this;
     iframe.addEventListener("load", function loadCallback() {
@@ -76,7 +75,7 @@ TiltUtils.Iframe = {
         readyCallback(iframe, canvas);
       }
       if (!keepInStack) {
-        that.removeFromStack(iframe);
+        that.remove(iframe);
       }
     }, true);
 
@@ -87,16 +86,16 @@ TiltUtils.Iframe = {
       </body>\
     </html>');
 
-    return this.appendToStack(iframe);
+    return this.append(iframe);
   },
-
+  
   /**
    * Appends an iframe to the current selected browser parent node.
    *
    * @param {object XULElement} iframe: the iframe to be added
    * @return {object XULElement} the same iframe
    */
-  appendToStack: function(iframe) {
+  append: function(iframe) {
     // FIXME: custom browser
     window.gBrowser.selectedBrowser.parentNode.appendChild(iframe);
     return iframe;
@@ -108,12 +107,12 @@ TiltUtils.Iframe = {
    * @param {object XULElement} iframe: the iframe to be removed
    * @return {object XULElement} the same iframe
    */
-  removeFromStack: function(iframe) {
+  remove: function(iframe) {
     // FIXME: custom browser
     window.gBrowser.selectedBrowser.parentNode.removeChild(iframe);
     return iframe;
   }
-}
+};
 
 /** 
  * Utilities for accessing and manipulating a document.
@@ -202,48 +201,48 @@ TiltUtils.Document = {
    * @return {string} the string equivalent of the node type
    */
   getNodeType: function(node) {
-    var type = undefined;
+    var type;
     
-    if (node.nodeType == 1) {
+    if (node.nodeType === 1) {
       type = "ELEMENT_NODE";
     }
-    else if (node.nodeType == 2) {
+    else if (node.nodeType === 2) {
       type = "ATTRIBUTE_NODE";
     }
-    else if (node.nodeType == 3) {
+    else if (node.nodeType === 3) {
       type = "TEXT_NODE";
     }
-    else if (node.nodeType == 4) {
+    else if (node.nodeType === 4) {
       type = "CDATA_SECTION_NODE";
     }
-    else if (node.nodeType == 5) {
+    else if (node.nodeType === 5) {
       type = "ENTITY_REFERENCE_NODE";
     }
-    else if (node.nodeType == 6) {
+    else if (node.nodeType === 6) {
       type = "ENTITY_NODE";
     }
-    else if (node.nodeType == 7) {
+    else if (node.nodeType === 7) {
       type = "PROCESSING_INSTRUCTION_NODE";
     }
-    else if (node.nodeType == 8) {
+    else if (node.nodeType === 8) {
       type = "COMMENT_NODE";
     }
-    else if (node.nodeType == 9) {
+    else if (node.nodeType === 9) {
       type = "DOCUMENT_NODE";
     }
-    else if (node.nodeType == 10) {
+    else if (node.nodeType === 10) {
       type = "DOCUMENT_TYPE_NODE";
     }
-    else if (node.nodeType == 11) {
+    else if (node.nodeType === 11) {
       type = "DOCUMENT_FRAGMENT_NODE";
     }
-    else if (node.nodeType == 12) {
+    else if (node.nodeType === 12) {
       type = "NOTATION_NODE";
     }
     
     return type;
   }
-}
+};
 
 /**
  * Utilities for manipulating images.
@@ -309,7 +308,7 @@ TiltUtils.Image = {
       }
     }, false, iframe_id, canvas_id);
   }
-}
+};
 
 /**
  * Various math functions required by the engine.
@@ -333,11 +332,11 @@ TiltUtils.Math = {
    * @return {boolean} true if x is power of two
    */
   isPowerOfTwo: function (x) {
-    return (x & (x - 1)) == 0;
+    return (x & (x - 1)) === 0;
   },
 
   /**
-   * Returns the next power of two for a number.
+   * Returns the next closest power of two greater than a number.
    *
    * @param {number} x: the number to be converted
    * @return {number} the next closest power of two for x
@@ -355,20 +354,23 @@ TiltUtils.Math = {
    *
    * @param {string} a color expressed in hex, or using rgb() or rgba()
    * @return {array} an array with 4 color components: red, green, blue, alpha
+   * with ranges from 0..1
    */
   hex2rgba: function(hex) {
-    hex = hex.charAt(0) == "#" ? hex.substring(1, 9) : hex;
+    hex = hex.charAt(0) === "#" ? hex.substring(1) : hex;
 
-    if (hex.length == 3) {
-      hex = hex.charAt(0) + hex.charAt(0) +
-            hex.charAt(1) + hex.charAt(1) +
-            hex.charAt(2) + hex.charAt(2) + "ff";
+    if (hex.length === 3) {
+      var r = parseInt(hex.charAt(0), 16);
+      var g = parseInt(hex.charAt(1), 16);
+      var b = parseInt(hex.charAt(2), 16);
+      return [r * r / 255, g * g / 255, b * b / 255, 1];
     }
-    else if (hex.length == 4) {
-      hex = hex.charAt(0) + hex.charAt(0) +
-            hex.charAt(1) + hex.charAt(1) +
-            hex.charAt(2) + hex.charAt(2) +
-            hex.charAt(3) + hex.charAt(3);
+    else if (hex.length === 4) {
+      var r = parseInt(hex.charAt(0), 16);
+      var g = parseInt(hex.charAt(1), 16);
+      var b = parseInt(hex.charAt(2), 16);
+      var a = parseInt(hex.charAt(3), 16);
+      return [r * r / 255, g * g / 255, b * b / 255, a * a / 255];
     }
     else if (hex.match("^rgba") == "rgba") {
       var rgba = hex.substring(5, hex.length - 1).split(',');
@@ -386,14 +388,15 @@ TiltUtils.Math = {
       rgba[3] = 1;
       return rgba;
     }
-
-    var r = parseInt(hex.substring(0, 2), 16) / 255;
-    var g = parseInt(hex.substring(2, 4), 16) / 255;
-    var b = parseInt(hex.substring(4, 6), 16) / 255;
-    var a = parseInt(hex.substring(6, 8), 16) / 255;
-    return [r, g, b, a];
+    else {
+      var r = parseInt(hex.substring(0, 2), 16) / 255;
+      var g = parseInt(hex.substring(2, 4), 16) / 255;
+      var b = parseInt(hex.substring(4, 6), 16) / 255;
+      var a = parseInt(hex.substring(6, 8), 16) / 255;
+      return [r, g, b, a];
+    }
   }
-}
+};
 
 /**
  * Helper functions for manipulating strings.
@@ -407,7 +410,7 @@ TiltUtils.String = {
    * @return {string} the trimmed string
    */
   trim: function(str) {
-    return str.replace(/^\s+|\s+$/g,"");
+    return str.replace(/^\s+|\s+$/g, "");
   },
   
   /**
@@ -417,7 +420,7 @@ TiltUtils.String = {
    * @return {string} the trimmed string
    */
   ltrim: function(str) {
-    return str.replace(/^\s+/,""); 	
+    return str.replace(/^\s+/, ""); 	
   },
   
   /**
@@ -427,9 +430,9 @@ TiltUtils.String = {
    * @return {string} the trimmed string
    */
   rtrim: function(str) {
-    return str.replace(/\s+$/,"");
+    return str.replace(/\s+$/, "");
   }
-}
+};
 
 /**
  * Easy way to access the string bundle.
@@ -462,7 +465,7 @@ TiltUtils.StringBundle = {
      return document.getElementById(this.bundle).getFormattedString(string,       
                                                                     args);
    }
-}
+};
 
 /**
  * Various console functions required by the engine.
@@ -519,4 +522,4 @@ TiltUtils.Console = {
 
     consoleService.logMessage(scriptError);
   }
-}
+};
