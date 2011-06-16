@@ -73,6 +73,7 @@ function TiltEngine() {
       if (successCallback) {
         successCallback();
       }
+      that.gl = gl;
     }
     else {
       TiltUtils.Console.log(TiltUtils.StringBundle.get("webgl.error"));
@@ -80,8 +81,9 @@ function TiltEngine() {
         failCallback();
       }
     }
-    return that.gl = gl;
-  }
+    
+    return gl;
+  };
 
   /**
    * Initializes a shader program, using sources located at a specific url.
@@ -98,7 +100,7 @@ function TiltEngine() {
     if (arguments.length < 2) {
       return;
     }
-    else if (arguments.length == 2) {
+    else if (arguments.length === 2) {
       readyCallback = fragShaderURL;
       fragShaderURL = vertShaderURL + ".fs";
       vertShaderURL = vertShaderURL + ".vs";
@@ -123,7 +125,7 @@ function TiltEngine() {
         readyCallback(that.linkProgram(vertShader, fragShader));
       }
     });
-  }
+  };
   
   /**
    * Compiles a shader source of pecific type, either vertex or fragment.
@@ -144,10 +146,10 @@ function TiltEngine() {
       return null;
     }
 
-    if (shaderType == "x-shader/x-vertex") {
+    if (shaderType === "x-shader/x-vertex") {
       shader = gl.createShader(gl.VERTEX_SHADER);
     }
-    else if (shaderType == "x-shader/x-fragment") {
+    else if (shaderType === "x-shader/x-fragment") {
       shader = gl.createShader(gl.FRAGMENT_SHADER);
     }
     else {
@@ -167,7 +169,7 @@ function TiltEngine() {
       return null;
     }
     return shader;
-  }
+  };
 
   /**
    * Links two compiled vertex or fragment shaders together to form a program.
@@ -188,9 +190,12 @@ function TiltEngine() {
       TiltUtils.Console.error(TiltUtils.StringBundle.format(
         "linkProgram.error", [vertShader.src, fragShader.src]));
     }
-    else that.useShader(program);
+    else {
+      that.useShader(program);
+    }
+    
     return program;
-  }
+  };
 
   /**
    * Uses the shader program as current for the gl context.
@@ -198,8 +203,10 @@ function TiltEngine() {
    * @param {object} program: the shader program to be used by the engine
    */
   this.useShader = function(program) {
-    that.gl.useProgram(that.shader = program);
-  }
+    if (that.shader !== program) {
+      that.gl.useProgram(that.shader = program);
+    }
+  };
 
   /**
    * Gets a shader attribute location from a program.
@@ -211,7 +218,7 @@ function TiltEngine() {
    */
   this.shaderAttribute = function(program, attribute) {
     return that.gl.getAttribLocation(program, attribute);
-  }
+  };
 
   /**
    * Gets a shader uniform location from a program.
@@ -223,7 +230,7 @@ function TiltEngine() {
    */
   this.shaderUniform = function(program, uniform) {
     return that.gl.getUniformLocation(program, uniform);
-  }
+  };
 
   /**
    * Gets a generic shader variable (attribute or uniform) from a program.
@@ -241,7 +248,7 @@ function TiltEngine() {
       location = that.shaderUniform(program, variable);
     }
     return location;
-  }
+  };
 
   /**
    * Initializes buffer data to be used for drawing, using an array of floats.
@@ -254,7 +261,9 @@ function TiltEngine() {
    * @return {object} the buffer
    */
   this.initBuffer = function(elementsArray, itemSize, numItems) {
-    if (!numItems) numItems = elementsArray.length / itemSize;
+    if (!numItems) {
+      numItems = elementsArray.length / itemSize;
+    }
     
     var gl = that.gl;
     var buffer = gl.createBuffer();
@@ -266,7 +275,7 @@ function TiltEngine() {
     buffer.numItems = numItems;
     
     return buffer;
-  }
+  };
 
   /**
    * Initializez a buffer of vertex indices, using an array of unsigned ints.
@@ -279,8 +288,10 @@ function TiltEngine() {
    * @return {object} the index buffer
    */
   this.initIndexBuffer = function(elementsArray, numItems) {
-    if (!numItems) numItems = elementsArray.length;
-     
+    if (!numItems) {
+      numItems = elementsArray.length;
+    }
+    
     var gl = that.gl;
     var buffer = gl.createBuffer();
     gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, buffer);
@@ -291,7 +302,7 @@ function TiltEngine() {
     buffer.numItems = numItems;
 
     return buffer;
-  }
+  };
 
   /**
    * Initializes a texture from a source, calls a callback function when
@@ -326,9 +337,9 @@ function TiltEngine() {
       texture.image.src = textureSource;
       texture.image.onload = function() {
         bindTextureImage();
-      }
+      };
     }
-
+    
     // Used internally for binding an image to a texture object
     function bindTextureImage() {
       TiltUtils.Image.resizeToPowerOfTwo(texture.image,
@@ -355,7 +366,7 @@ function TiltEngine() {
         }
       }, fillColor, strokeColor, strokeWeight, true);
     }
-  }
+  };
   
   /**
    * Sets texture parameters for the current texture binding.
@@ -377,11 +388,11 @@ function TiltEngine() {
       gl.bindTexture(gl.TEXTURE_2D, texture);
     }
 
-    if (minFilter == "nearest") {
+    if (minFilter === "nearest") {
       gl.texParameteri(gl.TEXTURE_2D,
                        gl.TEXTURE_MIN_FILTER, gl.NEAREST);
     }
-    else if (minFilter == "linear" && mipmap) {
+    else if (minFilter === "linear" && mipmap) {
       gl.texParameteri(gl.TEXTURE_2D,
                        gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR);
     }
@@ -390,11 +401,11 @@ function TiltEngine() {
                        gl.TEXTURE_MIN_FILTER, gl.LINEAR);
     }
 
-    if (magFilter == "nearest") {
+    if (magFilter === "nearest") {
       gl.texParameteri(gl.TEXTURE_2D,
                        gl.TEXTURE_MAG_FILTER, gl.NEAREST);
     }
-    else if (magFilter == "linear" && mipmap) {
+    else if (magFilter === "linear" && mipmap) {
       gl.texParameteri(gl.TEXTURE_2D,
                        gl.TEXTURE_MAG_FILTER, gl.LINEAR_MIPMAP_LINEAR);
     }
@@ -403,7 +414,7 @@ function TiltEngine() {
                        gl.TEXTURE_MAG_FILTER, gl.LINEAR);
     }
 
-    if (wrapS == "repeat") {
+    if (wrapS === "repeat") {
       gl.texParameteri(gl.TEXTURE_2D,
                        gl.TEXTURE_WRAP_S, gl.REPEAT);
     }
@@ -412,7 +423,7 @@ function TiltEngine() {
                        gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
     }
 
-    if (wrapT == "repeat") {
+    if (wrapT === "repeat") {
       gl.texParameteri(gl.TEXTURE_2D,
                        gl.TEXTURE_WRAP_T, gl.REPEAT);
     }
@@ -420,7 +431,7 @@ function TiltEngine() {
       gl.texParameteri(gl.TEXTURE_2D,
                        gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
     }
-  }
+  };
 
   /**
    * Draws specified vertex buffers, for a custom modelview and projection.
@@ -452,7 +463,7 @@ function TiltEngine() {
                        shader.sampler, texture,
                        shader.color, color,
                        indexBuffer, drawMode);
-  }
+  };
 
   /**
    * Draws specified vertex buffers, for a custom modelview and projection.
@@ -486,27 +497,27 @@ function TiltEngine() {
     gl.uniformMatrix4fv(mvMatrixUniform, false, mvMatrix);
     gl.uniformMatrix4fv(projMatrixUniform, false, projMatrix);
 
-    if (verticesAttribute != undefined && verticesBuffer != undefined) {
+    if (verticesAttribute !== undefined && verticesBuffer !== undefined) {
       gl.enableVertexAttribArray(verticesAttribute);
       gl.bindBuffer(gl.ARRAY_BUFFER, verticesBuffer);
       gl.vertexAttribPointer(verticesAttribute, verticesBuffer.itemSize,
                              gl.FLOAT, false, 0, 0);
     }
-    if (texcoordAttribute != undefined && texcoordBuffer != undefined) {
+    if (texcoordAttribute !== undefined && texcoordBuffer !== undefined) {
       gl.enableVertexAttribArray(texcoordAttribute);
       gl.bindBuffer(gl.ARRAY_BUFFER, texcoordBuffer);
       gl.vertexAttribPointer(texcoordAttribute, texcoordBuffer.itemSize,
                              gl.FLOAT, false, 0, 0);
     }
-    if (textureSampler != undefined && texture != undefined) {
+    if (textureSampler !== undefined && texture !== undefined) {
       gl.activeTexture(gl.TEXTURE0);
       gl.bindTexture(gl.TEXTURE_2D, texture);
       gl.uniform1i(textureSampler, 0);
     }
-    if (colorUniform != undefined && color != undefined) {
+    if (colorUniform !== undefined && color !== undefined) {
       gl.uniform4f(colorUniform, color[0], color[1], color[2], color[3]);
     }
-    if (drawMode == undefined) {
+    if (drawMode === undefined) {
       drawMode = gl.TRIANGLE_STRIP;
     }
 
@@ -517,7 +528,7 @@ function TiltEngine() {
     else {
       gl.drawArrays(drawMode, 0, verticesBuffer.numItems);
     }
-  }
+  };
 
   /**
    * Handles a generic get request, performed on a specified url. When done,
@@ -534,13 +545,13 @@ function TiltEngine() {
     http.open("GET", url, true);
     http.send(null);
     http.onreadystatechange = function() {
-      if (http.readyState == 4) {
+      if (http.readyState === 4) {
         if (readyCallback) {
           readyCallback(http, auxParam);
         }
       }
     };
-  }
+  };
 
   /**
    * Handles multiple get requests from specified urls. When all requests are
@@ -556,22 +567,22 @@ function TiltEngine() {
     var http = [];
     var finished = 0;
 
-    function onrequestready() {
+    function onRequestReady() {
       finished++;
-      if (finished == urls.length) {
+      if (finished === urls.length) {
         if (readyCallback) {
           readyCallback(http, auxParam);
         }
       }
     }
-
+    
     for (var i = 0, size = urls.length; i < size; i++) {
-      that.request(urls[i], function ready(request, index) {
+      that.request(urls[i], function requestReady(request, index) {
         http[index] = request;
-        onrequestready();
+        onRequestReady();
       }, i);
     }
-  }
+  };
   
   /**
    * Destroys this object.
@@ -579,7 +590,7 @@ function TiltEngine() {
   this.destroy = function() {
     that.gl = null;
     that.shader = null;
-
+    
     that = null;
-  }
+  };
 }
