@@ -60,7 +60,7 @@ function TiltVisualization(image, canvas, width, height) {
     vertices: [],
     texCoord: [],
     indices: []
-  }
+  };
   
   /**
    * The initialization logic.
@@ -74,10 +74,6 @@ function TiltVisualization(image, canvas, width, height) {
       dom = texture;
     }, "white", "gray", 8); // using a white background & gray margins of 8px
     
-    // get some variables from the draw object for easier access
-    var width = draw.getWidth();
-    var height = draw.getHeight();
-    
     // create the combined mesh representing the document visualization by
     // traversing the dom and adding a shape for each node that is drawable    
     TiltUtils.Document.traverse(function nodeCallback(node, depth) {
@@ -85,7 +81,7 @@ function TiltVisualization(image, canvas, width, height) {
       var coord = TiltUtils.Document.getNodeCoordinates(node);
 
       // use this node only if it actually has any dimensions
-      if (coord.x || coord.y || coord.width || coord.height && depth) {
+      if ((coord.x || coord.y || coord.width || coord.height) && depth) {
         var x = coord.x;
         var y = coord.y;
         var z = depth * 8;
@@ -103,10 +99,10 @@ function TiltVisualization(image, canvas, width, height) {
         
         // compute the texture coordinates
         mesh.texCoord.push(
-          (x    ) / width, (y    ) / height, 
-          (x + w) / width, (y    ) / height,
-          (x + w) / width, (y + h) / height, 
-          (x    ) / width, (y + h) / height);
+          (x    ) / canvas.width, (y    ) / canvas.height, 
+          (x + w) / canvas.width, (y    ) / canvas.height,
+          (x + w) / canvas.width, (y + h) / canvas.height, 
+          (x    ) / canvas.width, (y + h) / canvas.height);
         
         // compute the indices
         mesh.indices.push(i, i + 1, i + 2, i, i + 2, i + 3);
@@ -121,7 +117,7 @@ function TiltVisualization(image, canvas, width, height) {
     // use additive blending without depth testing enabled
     draw.blendMode("add");
     draw.depthTest(false);
-  }
+  };
   
   /**
    * The rendering animation logic and loop.
@@ -132,8 +128,6 @@ function TiltVisualization(image, canvas, width, height) {
       draw.requestAnimFrame(that.loop);
       
       // get some variables from the draw object for easier access
-      var width = draw.getWidth();
-      var height = draw.getHeight();
       var timeCount = draw.getTimeCount();
       var frameCount = draw.getFrameCount();
       var frameRate = draw.getFrameRate();
@@ -149,17 +143,17 @@ function TiltVisualization(image, canvas, width, height) {
         // if the dom texture is available, the visualization can be drawn
         if (dom) {
           // this is just a test case for now, actual implementation later
-          draw.translate(width / 2, height / 2 - 100, -400);
+          draw.translate(canvas.width / 2, canvas.height / 2 - 100, -400);
           draw.rotate(0, 1, 0, TiltUtils.Math.radians(timeCount / 32));
-          draw.translate(-width / 2, -height / 2, 0);
+          draw.translate(-canvas.width / 2, -canvas.height / 2, 0);
           
           draw.mesh(mesh.vertexBuffer,
-                    mesh.vertexBuffer.texCoord, null, "rgba(14, 16, 22, 255)",
+                    mesh.vertexBuffer.texCoord, dom, "rgba(14, 16, 22, 255)",
                     mesh.vertexBuffer.indices, "triangles");
         }
       }
     }
-  }
+  };
   
   /**
    * Destroys this object.
@@ -176,5 +170,5 @@ function TiltVisualization(image, canvas, width, height) {
     if (readyCallback) {
       readyCallback();
     }
-  }
+  };
 }
