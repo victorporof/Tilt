@@ -23,9 +23,9 @@
  *    3. This notice may not be removed or altered from any source
  *    distribution.
  */
-if ("undefined" == typeof(TiltChrome)) {
+if ("undefined" === typeof(TiltChrome)) {
   var TiltChrome = {};
-};
+}
 
 /**
  * Controls the browser overlay for the Tilt extension.
@@ -50,8 +50,8 @@ TiltChrome.BrowserOverlay = {
     Components.utils.forceGC();
     
     // get the Tilt menu item, to change the title if the visualization is on
-    var tiltMenu = document.getElementById("tilt-menuItemInitialize");  
-    var that = this;
+    let tiltMenu = document.getElementById("tilt-menuItemInitialize");  
+    let that = this;
     
     // if the visualization is not currently running
     if (!this.iframe) {
@@ -88,14 +88,14 @@ TiltChrome.BrowserOverlay = {
    * Destroys Tilt, removing the iframe from the stack.
    */
   destroy: function() {  
-    var that = this;
+    let that = this;
     
     // issue a destroy call through all the visualization children
     that.visualization.destroy(function readyCallback() {
       that.visualization = null; // when done, do some cleanup
 
       // remove the iframe from the browser stack
-      TiltUtils.Iframe.removeFromStack(that.iframe);
+      TiltUtils.Iframe.remove(that.iframe);
       that.iframe = null;
 
       // collect any remaining garbage
