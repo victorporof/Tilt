@@ -74,7 +74,9 @@ window.requestAnimFrame = (function() {
 TiltUtils.Document = {
 
   /**
-   * Helper method, allowing to easily create an iframe with a canvas element.
+   * Helper method, allowing to easily create an iframe with a canvas element
+   * if running in a chrome environment. If this is running from a html page, 
+   * a canvas element is directly created.
    * When loaded, the readyCallback function is called with the canvas and the
    * iframe passed as parameters to it. You can also use the specified 
    * iframe or canvas id to get the elements by id.
@@ -94,34 +96,53 @@ TiltUtils.Document = {
       iframe_id = "tilt-iframe";
     }
     
-    var iframe = document.createElement("iframe");
-    iframe.setAttribute("style", "visibility: hidden;");
-    iframe.id = iframe_id;
+    if (gBrowser) {
+      var iframe = document.createElement("iframe");
+      iframe.setAttribute("style", "visibility: hidden;");
+      iframe.id = iframe_id;
 
-    var that = this;
-    iframe.addEventListener("load", function loadCallback() {
-      iframe.removeEventListener("load", loadCallback, true);
+      var that = this;
+      iframe.addEventListener("load", function loadCallback() {
+        iframe.removeEventListener("load", loadCallback, true);
+
+        if (readyCallback) {
+          var canvas = iframe.contentDocument.getElementById(canvas_id);
+          readyCallback(canvas, iframe);
+        }
+        if (!keepInStack) {
+          that.remove(iframe);
+        }
+        else {
+          iframe.setAttribute("style", "visibility: visible;");
+        }
+      }, true);
+
+      iframe.setAttribute("src", 'data:text/html,\
+      <html>\
+        <body style="margin: 0px 0px 0px 0px;">\
+          <canvas id="' + canvas_id + '"/>\
+        </body>\
+      </html>');
+
+      return this.append(iframe);
+    }
+    else {
+      var canvas = document.createElement("canvas");
+      canvas.setAttribute("style", "visibility: hidden;");
+      canvas.id = canvas_id;
 
       if (readyCallback) {
-        var canvas = iframe.contentDocument.getElementById(canvas_id);
-        readyCallback(canvas, iframe);
+        readyCallback(canvas);
       }
       if (!keepInStack) {
-        that.remove(iframe);
+        that.remove(canvas);
       }
       else {
-        iframe.setAttribute("style", "visibility: visible;");
+        canvas.setAttribute("style", "visibility: visible;");
       }
-    }, true);
-
-    iframe.setAttribute("src", 'data:text/html,\
-    <html>\
-      <body style="margin: 0px 0px 0px 0px;">\
-        <canvas id="' + canvas_id + '"/>\
-      </body>\
-    </html>');
-
-    return this.append(iframe);
+      
+      return this.append(canvas);
+    }
   },
   
   /**
