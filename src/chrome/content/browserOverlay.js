@@ -61,7 +61,7 @@ TiltChrome.BrowserOverlay = {
       // use an extension to get the image representation of the document
       TiltExtensions.WebGL.initDocumentImage(function textureCallback(image) {
         // initialize an iframe containing a canvas element
-        TiltUtils.Iframe.initCanvas(function initCallback(iframe, canvas) {
+        TiltUtils.Document.initCanvas(function initCallback(canvas, iframe) {
           // remember the iframe so that it can be destroyed later
           that.iframe = iframe;
           
@@ -95,7 +95,7 @@ TiltChrome.BrowserOverlay = {
       that.visualization = null; // when done, do some cleanup
 
       // remove the iframe from the browser stack
-      TiltUtils.Iframe.remove(that.iframe);
+      TiltUtils.Document.remove(that.iframe);
       that.iframe = null;
 
       // collect any remaining garbage
