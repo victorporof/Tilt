@@ -150,17 +150,37 @@ function TiltDraw(canvas, width, height, failCallback, successCallback) {
       "chrome://tilt/content/engine/shaders/shader-texture";
 
     // initializing a color shader
-    engine.initShader(colorShaderPath, function ready(p) {
+    engine.initProgram(colorShaderPath, function ready(p) {
       colorShader = p;
       colorShader.vertexPosition = engine.shaderIO(p, "vertexPosition");
 
       colorShader.mvMatrix = engine.shaderIO(p, "mvMatrix");
       colorShader.projMatrix = engine.shaderIO(p, "projMatrix");
       colorShader.color = engine.shaderIO(p, "color");
+      
+      colorShader.setAttributes = function(verticesBuffer) {
+        engine.bindVertexBuffer(colorShader.vertexPosition, verticesBuffer);
+      };
+      
+      colorShader.setUniforms = function(mvMatrix, projMatrix, color) {
+        engine.bindUniformMatrix(colorShader.mvMatrix, mvMatrix);
+        engine.bindUniformMatrix(colorShader.projMatrix, projMatrix);
+        engine.bindUniformVec4(colorShader.color, color);
+      };
+      
+      colorShader.use = function(verticesBuffer,
+                                 mvMatrix, projMatrix, color) {
+        
+        engine.useProgram(colorShader, 
+          [colorShader.vertexPosition]);
+        
+        colorShader.setAttributes(verticesBuffer);
+        colorShader.setUniforms(mvMatrix, projMatrix, color);
+      };
     });
-
+    
     // initializing a texture shader
-    engine.initShader(textureShaderPath, function ready(p) {
+    engine.initProgram(textureShaderPath, function ready(p) {
       textureShader = p;
       textureShader.vertexPosition = engine.shaderIO(p, "vertexPosition");
       textureShader.vertexTexCoord = engine.shaderIO(p, "vertexTexCoord");
@@ -169,6 +189,28 @@ function TiltDraw(canvas, width, height, failCallback, successCallback) {
       textureShader.projMatrix = engine.shaderIO(p, "projMatrix");
       textureShader.color = engine.shaderIO(p, "color");
       textureShader.sampler = engine.shaderIO(p, "sampler");
+            
+      textureShader.setAttributes = function(verticesBuffer, texCoordBuffer) {
+        engine.bindVertexBuffer(textureShader.vertexPosition, verticesBuffer);
+        engine.bindVertexBuffer(textureShader.vertexTexCoord, texCoordBuffer);
+      };
+      
+      textureShader.setUniforms = function(mvMatrix, projMatrix, col, tex) {
+        engine.bindUniformMatrix(textureShader.mvMatrix, mvMatrix);
+        engine.bindUniformMatrix(textureShader.projMatrix, projMatrix);
+        engine.bindUniformVec4(textureShader.color, col);
+        engine.bindTexture(textureShader.sampler, tex);
+      };
+
+      textureShader.use = function(verticesBuffer, texCoordBuffer,
+                                   mvMatrix, projMatrix, color, texture) {
+
+        engine.useProgram(textureShader, 
+          [textureShader.vertexPosition, textureShader.vertexTexCoord]);
+        
+        textureShader.setAttributes(verticesBuffer, texCoordBuffer);
+        textureShader.setUniforms(mvMatrix, projMatrix, color, texture);
+      };
     });
 
     // modelview and projection matrices used for transformations
@@ -351,8 +393,8 @@ function TiltDraw(canvas, width, height, failCallback, successCallback) {
    */
   this.perspective = function() {
     var fov = 45;
-    var w = canvas.width;
-    var h = canvas.height;
+    var w = canvas.clientWidth;
+    var h = canvas.clientHeight;
     var x = w / 2.0;
     var y = h / 2.0;
 
@@ -371,8 +413,11 @@ function TiltDraw(canvas, width, height, failCallback, successCallback) {
    * This is recommended for 2d rendering.
    */
   this.ortho = function() {
+    var w = canvas.clientWidth;
+    var h = canvas.clientHeight;
+
     that.viewport(canvas.width, canvas.height);
-    mat4.ortho(0, canvas.width, canvas.height, 0, -100, 100, projMatrix);
+    mat4.ortho(0, w, h, 0, -100, 100, projMatrix);
   };
   
   /**
@@ -564,7 +609,10 @@ function TiltDraw(canvas, width, height, failCallback, successCallback) {
     that.translate(x, y, z);
     that.scale(width, height, 1);
 
-    that.mesh(rectangleVertexBuffer, null, null, fill);
+    colorShader.use(rectangleVertexBuffer,
+                    mvMatrix, projMatrix, fill);
+
+    engine.drawVertices(gl.TRIANGLE_STRIP, 0, rectangleVertexBuffer.numItems);
     that.popMatrix();
   };
   
@@ -588,9 +636,11 @@ function TiltDraw(canvas, width, height, failCallback, successCallback) {
     that.translate(x, y, z);
     that.scale(width, height, 1);
     
-    that.mesh(rectangleVertexBuffer,
-              rectangleVertexBuffer.texCoord, texture, tint);
+    textureShader.use(rectangleVertexBuffer,
+                      rectangleVertexBuffer.texCoord,
+                      mvMatrix, projMatrix, tint, texture);
 
+    engine.drawVertices(gl.TRIANGLE_STRIP, 0, rectangleVertexBuffer.numItems);
     that.popMatrix();
   };
   
@@ -609,73 +659,55 @@ function TiltDraw(canvas, width, height, failCallback, successCallback) {
     that.pushMatrix();
     that.translate(x, y, z);
     that.scale(width, height, depth);
-    
-    that.mesh(cubeVertexBuffer,
-              cubeVertexBuffer.texCoord, texture, tint,
-              cubeVertexBuffer.indices, gl.TRIANGLES);
 
-    that.popMatrix();
-  };
-
-  /**
-   * Draws a custom mesh using the specified parameters.
-   *
-   * @param {object} verticesBuffer: the vertices buffer (x, y and z)
-   * @param {object} texcoordBuffer: the texture coordinates (u, v)
-   * @param {object} texture: the texture to be used by the shader if required
-   * @param {string} color: the tint color to be used by the shader
-   * @param {object} indexBuffer: indices for the passed vertices
-   * @param {number} drawMode: 'triangles', 'triangle-strip, 'points', 'lines' 
-   */
-  this.mesh = function(verticesBuffer,
-                       texcoordBuffer, texture, color,
-                       indexBuffer, drawMode) {
     if (texture) {
-      engine.useShader(textureShader);
+      textureShader.use(cubeVertexBuffer,
+                        cubeVertexBuffer.texCoord,
+                        mvMatrix, projMatrix, tint, texture);
     }
     else {
-      engine.useShader(colorShader);
+      colorShader.use(cubeVertexBuffer,
+                      mvMatrix, projMatrix, fill);
     }
     
-    if ("string" === typeof drawMode) {
-      if ("triangles" === drawMode) {
-        drawMode = gl.TRIANGLES;
-      }
-      else if ("triangle-strip" === drawMode) {
-        drawMode = gl.TRIANGLE_STRIP;
-      }
-      else if ("triangle-fan" === drawMode) {
-        drawMode = gl.TRIANGLE_FAN;
-      }
-      else if ("points" === drawMode) {
-        drawMode = gl.POINTS;
-      }
-      else if ("points" === drawMode) {
-        drawMode = gl.POINTS;
-      }
-      else if ("lines" === drawMode) {
-        drawMode = gl.LINES;
-      }
-      else if ("line-strip" === drawMode) {
-        drawMode = gl.LINE_STRIP;
-      }
-      else if ("line-loop" === drawMode) {
-        drawMode = gl.LINE_LOOP;
-      }
-    }
-    
-    if ("string" === typeof color) {
-      color = TiltUtils.Math.hex2rgba(color);
-    }
-        
-    engine.drawVertices(mvMatrix, projMatrix,
-                        verticesBuffer,                       // vertices
-                        texcoordBuffer,                       // texture coord
-                        texture,                              // texture
-                        color,                                // color
-                        indexBuffer,                          // indices
-                        drawMode);                            // draw mode
+    engine.drawIndexedVertices(gl.TRIANGLES, cubeVertexBuffer.indices);    
+    that.popMatrix();
   };
+  
+  /**
+   * 
+   * @param {object} verticesBuffer: the vertices buffer (x, y and z)
+   * @param {object} texCoordBuffer: the texture coordinates buffer (u, v)
+   * @param {object} normalsBuffer: the normals buffer (m, n, p)
+   * @param {number} or {string} drawMode: gl enum, like gl.TRIANGLES, or
+   * 'triangles', 'triangle-strip, 'triangle-fan, 'points', 'lines' etc.
+   * @param {string} color: the color to be used by the shader if required
+   * @param {object} texture: the texture to be used by the shader if required
+   * @param {object} indicesBuffer: indices for the passed vertices buffer
+   */
+  this.mesh = function(verticesBuffer, texCoordBuffer, normalsBuffer,
+                       drawMode, color, texture, indicesBuffer) {
+    
+    if (texture) {
+      textureShader.use(verticesBuffer, texCoordBuffer,
+                        mvMatrix, projMatrix, "string" === typeof color ? 
+                        TiltUtils.Math.hex2rgba(color) : color, texture);
+    }
+    else {
+      colorShader.use(verticesBuffer,
+                      mvMatrix, projMatrix, "string" === typeof color ? 
+                      TiltUtils.Math.hex2rgba(color) : color);
+    }
+    
+    if (indicesBuffer) {
+      engine.drawIndexedVertices(drawMode, indicesBuffer);          
+    }
+    else {
+      engine.drawVertices(drawMode, 0, verticesBuffer.numItems);    
+    }
+
+    // TODO: use the normals buffer, add some lighting
+  }
   
   /**
    * Sets blending, either 'alpha' or 'add'; anything else disables blending.
@@ -725,9 +757,17 @@ function TiltDraw(canvas, width, height, failCallback, successCallback) {
   /**
    * Simple closures wrapping some engine functions for easier access.
    */
+  this.initProgram = engine.initProgram;
+  this.useProgram = engine.useProgram;  
+  this.shaderIO = engine.shaderIO;
+  this.bindUniformMatrix = engine.bindUniformMatrix;
+  this.bindUniformVec4 = engine.bindUniformVec4;
+  this.bindTexture = engine.bindTexture;
   this.initBuffer = engine.initBuffer;
   this.initIndexBuffer = engine.initIndexBuffer;
   this.initTexture = engine.initTexture;
+  this.drawVertices = engine.drawVertices;
+  this.drawIndexedVertices = engine.drawIndexedVertices;
   
   /**
    * Destroys this object.

@@ -37,7 +37,7 @@ function TiltEngine() {
    * By convention, we make a private 'that' variable.
    */
   var that = this;
-  
+
   /**
    * WebGL context to be used.
    */
@@ -46,7 +46,7 @@ function TiltEngine() {
   /**
    * The current shader used by the WebGL context.
    */
-  this.shader = null;
+  this.program = null;
 
   /**
    * Initializes a WebGL context, and runs fail or success callback functions.
@@ -96,11 +96,8 @@ function TiltEngine() {
    * @param {string} fragShaderURL: the fragment shader resource
    * @param {function} readyCallback: the function called when loading is done
    */
-  this.initShader = function(vertShaderURL, fragShaderURL, readyCallback) {
-    if (arguments.length < 2) {
-      return;
-    }
-    else if (arguments.length === 2) {
+  this.initProgram = function(vertShaderURL, fragShaderURL, readyCallback) {
+    if (arguments.length === 2) {
       readyCallback = fragShaderURL;
       fragShaderURL = vertShaderURL + ".fs";
       vertShaderURL = vertShaderURL + ".vs";
@@ -190,21 +187,25 @@ function TiltEngine() {
       TiltUtils.Console.error(TiltUtils.StringBundle.format(
         "linkProgram.error", [vertShader.src, fragShader.src]));
     }
-    else {
-      that.useShader(program);
-    }
     
     return program;
   };
-
+  
   /**
    * Uses the shader program as current for the gl context.
    *
    * @param {object} program: the shader program to be used by the engine
+   * @param {array} attributes: array of attributes to enable for this shader
    */
-  this.useShader = function(program) {
-    if (that.shader !== program) {
-      that.gl.useProgram(that.shader = program);
+  this.useProgram = function(program, attributes) {
+    var gl = that.gl;
+    
+    if (that.program !== program) {
+      gl.useProgram(that.program = program);
+      
+      for (var i = 0, len = attributes.length; i < len; i++) {
+        gl.enableVertexAttribArray(attributes[i]);
+      }
     }
   };
 
@@ -249,6 +250,51 @@ function TiltEngine() {
     }
     return location;
   };
+  /**
+   * Binds a vertex buffer as an array buffer for a specific shader attribute
+   *
+   * @param {number} attribute: the attribute obtained from the shader
+   * @param {object} buffer: the buffer to bind
+   */
+  this.bindVertexBuffer = function(attribute, buffer) {
+    var gl = that.gl;
+    
+    gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
+    gl.vertexAttribPointer(attribute, buffer.itemSize, gl.FLOAT, false, 0, 0);    
+  };
+  
+  /**
+   * Binds a uniform matrix.
+   *
+   * @param {object} uniform: the uniform to bind the variable to
+   * @param {object} variable: the variable to be binded
+   */
+  this.bindUniformMatrix = function(uniform, variable) {
+    that.gl.uniformMatrix4fv(uniform, false, variable);
+  };
+  
+  /**
+   * Binds a uniform vector of 4 elements.
+   *
+   * @param {object} uniform: the uniform to bind the variable to
+   * @param {object} variable: the variable to be binded
+   */
+  this.bindUniformVec4 = function(uniform, variable) {
+    that.gl.uniform4fv(uniform, variable);
+  };
+  
+  /**
+   * Binds a uniform texture to a sampler.
+   *
+   * @param {object} sampler: the sampler to bind the texture to
+   * @param {object} texture: the texture to be binded
+   */
+  this.bindTexture = function(sampler, texture) {
+    var gl = that.gl;
+    
+    gl.bindTexture(gl.TEXTURE_2D, texture);
+    gl.uniform1i(sampler, 0);
+  };
 
   /**
    * Initializes buffer data to be used for drawing, using an array of floats.
@@ -276,7 +322,7 @@ function TiltEngine() {
     
     return buffer;
   };
-
+  
   /**
    * Initializez a buffer of vertex indices, using an array of unsigned ints.
    * The item size will automatically default to 1, and the numItems will be
@@ -303,7 +349,7 @@ function TiltEngine() {
 
     return buffer;
   };
-
+    
   /**
    * Initializes a texture from a source, calls a callback function when
    * ready; the source may be an url or a pre-existing image or canvas; if the
@@ -380,8 +426,7 @@ function TiltEngine() {
    * @param {object} texture: optional texture to replace the current binding
    */
   this.setTextureParams = function(minFilter, magFilter, mipmap,
-                                   wrapS, wrapT,
-                                   texture) {
+                                   wrapS, wrapT, texture) {
     var gl = that.gl;
     
     if (texture) {
@@ -434,100 +479,80 @@ function TiltEngine() {
   };
 
   /**
-   * Draws specified vertex buffers, for a custom modelview and projection.
-   * This function implies that default uniforms & attributes are embedded in
-   * the shader program variable. Some buffer parameters can be omitted.
-   * Used internally, you probably shouldn't call this function directly.
+   * Draws binded vertex buffers using the specified parameters.
    *
-   * @param {object} mvMatrix: the modelview matrix
-   * @param {object} projMatrix: the projection matrix
-   * @param {object} verticesBuffer: the vertices buffer (x, y and z coords)
-   * @param {object} texcoordBuffer: the texture coordinates (u, v)
-   * @param {object} texture: the texture to be used by the shader if required
-   * @param {string} color: the tint color to be used by the shader
-   * @param {object} indexBuffer: indices for the passed vertices
-   * @param {number} drawMode: gl context enum, like gl.TRIANGLES or gl.LINES
+   * @param {number} or {string} drawMode: gl enum, like gl.TRIANGLES, or
+   * 'triangles', 'triangle-strip, 'triangle-fan, 'points', 'lines' etc.
+   * @param {number} first: the starting index in the enabled arrays
+   * @param {number} count: the number of indices to be rendered
    */
-  this.drawVertices = function(mvMatrix, projMatrix,
-                               verticesBuffer,
-                               texcoordBuffer,
-                               texture,
-                               color,
-                               indexBuffer, drawMode) {
-
-    var shader = that.shader;
-    that.drawVertices_(shader.mvMatrix, mvMatrix,
-                       shader.projMatrix, projMatrix,
-                       shader.vertexPosition, verticesBuffer,
-                       shader.vertexTexCoord, texcoordBuffer,
-                       shader.sampler, texture,
-                       shader.color, color,
-                       indexBuffer, drawMode);
+  this.drawVertices = function(drawMode, first, count) {
+    that.gl.drawArrays(that.getDrawModeEnum(drawMode), first, count);
   };
-
+  
   /**
-   * Draws specified vertex buffers, for a custom modelview and projection.
-   * This function does not imply anything. Buffer parameters can be omitted.
-   * Also used internally, you probably shouldn't call this function directly.
+   * Draws binded vertex buffers using the specified parameters.
+   * This function uses an index buffer.
    *
-   * @param {object} mvMatrixUniform: the uniform to store the modelview
-   * @param {object} mvMatrix: the modelview matrix
-   * @param {object} projMatrixUniform: the uniform to store the projection
-   * @param {object} projMatrix: the projection matrix
-   * @param {object} verticesAttribute: the attribute to store the vertices
-   * @param {object} verticesBuffer: the vertices buffer (x, y and z coords)
-   * @param {object} texcoordAttribute: the attribute to store the texcoords
-   * @param {object} texcoordBuffer: the texture coordinates (u, v)
-   * @param {object} textureSampler: the sampler to store the texture
-   * @param {object} texture: the texture to be used by the shader if required
-   * @param {object} colorUniform: the uniform to store the tint color
-   * @param {string} color: the tint color to be used by the shader
-   * @param {object} indexBuffer: indices for the passed vertices
-   * @param {number} drawMode: gl context enum, like gl.TRIANGLES or gl.LINES
+   * @param {number} or {string} drawMode: gl enum, like gl.TRIANGLES, or
+   * 'triangles', 'triangle-strip, 'triangle-fan, 'points', 'lines' etc.
+   * @param {object} indicesBuffer: indices for the passed vertices buffer; if 
+   * the indices buffer is specified, the first and count values are ignored
    */
-  this.drawVertices_ = function(mvMatrixUniform, mvMatrix,
-                                projMatrixUniform, projMatrix,
-                                verticesAttribute, verticesBuffer,
-                                texcoordAttribute, texcoordBuffer,
-                                textureSampler, texture,
-                                colorUniform, color,
-                                indexBuffer, drawMode) {
+  this.drawIndexedVertices = function(drawMode, indicesBuffer) {
+    var gl = that.gl;    
+    gl.drawElements(that.getDrawModeEnum(drawMode),                      
+                    indicesBuffer.numItems, gl.UNSIGNED_SHORT,
+                    indicesBuffer);
+  };
+  
+  /**
+   * Converts from a string describing the draw mode to the corresponding 
+   * value as a gl enum. If drawMode is undefined, it is defaulted to 
+   * gl.TRIANGLE_STRIP. If it is already a number, that number is returned.
+   *
+   * @param {number} or {string} drawMode: gl enum, like gl.TRIANGLES, or
+   * 'triangles', 'triangle-strip, 'triangle-fan, 'points', 'lines' etc.
+   * @return {number} the corresponding value
+   */
+  this.getDrawModeEnum = function(drawMode) {
     var gl = that.gl;
-
-    gl.uniformMatrix4fv(mvMatrixUniform, false, mvMatrix);
-    gl.uniformMatrix4fv(projMatrixUniform, false, projMatrix);
-
-    if (verticesAttribute !== undefined && verticesBuffer !== undefined) {
-      gl.enableVertexAttribArray(verticesAttribute);
-      gl.bindBuffer(gl.ARRAY_BUFFER, verticesBuffer);
-      gl.vertexAttribPointer(verticesAttribute, verticesBuffer.itemSize,
-                             gl.FLOAT, false, 0, 0);
+    var mode;
+    
+    if ("string" === typeof drawMode) {
+      if ("triangles" === drawMode) {
+        mode = gl.TRIANGLES;
+      }
+      else if ("triangle-strip" === drawMode) {
+        mode = gl.TRIANGLE_STRIP;
+      }
+      else if ("triangle-fan" === drawMode) {
+        mode = gl.TRIANGLE_FAN;
+      }
+      else if ("points" === drawMode) {
+        mode = gl.POINTS;
+      }
+      else if ("points" === drawMode) {
+        mode = gl.POINTS;
+      }
+      else if ("lines" === drawMode) {
+        mode = gl.LINES;
+      }
+      else if ("line-strip" === drawMode) {
+        mode = gl.LINE_STRIP;
+      }
+      else if ("line-loop" === drawMode) {
+        mode = gl.LINE_LOOP;
+      }
     }
-    if (texcoordAttribute !== undefined && texcoordBuffer !== undefined) {
-      gl.enableVertexAttribArray(texcoordAttribute);
-      gl.bindBuffer(gl.ARRAY_BUFFER, texcoordBuffer);
-      gl.vertexAttribPointer(texcoordAttribute, texcoordBuffer.itemSize,
-                             gl.FLOAT, false, 0, 0);
-    }
-    if (textureSampler !== undefined && texture !== undefined) {
-      gl.activeTexture(gl.TEXTURE0);
-      gl.bindTexture(gl.TEXTURE_2D, texture);
-      gl.uniform1i(textureSampler, 0);
-    }
-    if (colorUniform !== undefined && color !== undefined) {
-      gl.uniform4f(colorUniform, color[0], color[1], color[2], color[3]);
-    }
-    if (drawMode === undefined) {
-      drawMode = gl.TRIANGLE_STRIP;
-    }
-
-    if (indexBuffer) {
-      gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
-      gl.drawElements(drawMode, indexBuffer.numItems, gl.UNSIGNED_SHORT, 0);
+    else if (drawMode === undefined) {
+      mode = gl.TRIANGLE_STRIP;
     }
     else {
-      gl.drawArrays(drawMode, 0, verticesBuffer.numItems);
+      return drawMode;
     }
+    
+    return mode;
   };
 
   /**
@@ -589,7 +614,7 @@ function TiltEngine() {
    */
   this.destroy = function() {
     that.gl = null;
-    that.shader = null;
+    that.program = null;
     
     that = null;
   };

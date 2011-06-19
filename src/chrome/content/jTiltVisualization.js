@@ -128,6 +128,8 @@ function TiltVisualization(image, canvas, width, height) {
       draw.requestAnimFrame(that.loop);
       
       // get some variables from the draw object for easier access
+      var width = canvas.clientWidth;
+      var height = canvas.clientHeight;
       var timeCount = draw.getTimeCount();
       var frameCount = draw.getFrameCount();
       var frameRate = draw.getFrameRate();
@@ -143,9 +145,9 @@ function TiltVisualization(image, canvas, width, height) {
         // if the dom texture is available, the visualization can be drawn
         if (dom) {
           // this is just a test case for now, actual implementation later
-          draw.translate(canvas.width / 2, canvas.height / 2 - 100, -400);
+          draw.translate(width / 2, height / 2 - 100, -400);
           draw.rotate(0, 1, 0, TiltUtils.Math.radians(timeCount / 32));
-          draw.translate(-canvas.width / 2, -canvas.height / 2, 0);
+          draw.translate(-width / 2, -height / 2, 0);
           
           draw.mesh(mesh.vertexBuffer,
                     mesh.vertexBuffer.texCoord, null, 
