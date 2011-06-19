@@ -13,8 +13,6 @@
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
   <script type="application/x-javascript"
-          src="chrome://tilt/content/engine/lib/webgl-utils.js"/>
-  <script type="application/x-javascript"
           src="chrome://tilt/content/engine/lib/glMatrix-0.9.5.js"/>
 
   <script type="application/x-javascript"
