@@ -82,7 +82,7 @@ TiltUtils.Iframe = {
     iframe.setAttribute("src", 'data:text/html,\
     <html>\
       <body style="margin: 0px 0px 0px 0px;">\
-        <canvas id="' + canvas_id + '"/>\
+        <canvas style="width: 100%; height: 100%;" id="' + canvas_id + '"/>\
       </body>\
     </html>');
 
@@ -483,7 +483,7 @@ TiltUtils.Console = {
     
     consoleService.logStringMessage(aMessage);
   },
-  
+
   /**
    * Logs an error to the console.
    *
