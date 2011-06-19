@@ -68,15 +68,15 @@ window.requestAnimFrame = (function() {
          };
 })();
 
-/**
- * Utilities for creating, using and removing iframes.
+/** 
+ * Utilities for accessing and manipulating a document.
  */
-TiltUtils.Iframe = {
+TiltUtils.Document = {
 
   /**
    * Helper method, allowing to easily create an iframe with a canvas element.
-   * When loaded, the readyCallback function is called with the iframe and the
-   * canvas passed as parameters to it. You can also use the specified 
+   * When loaded, the readyCallback function is called with the canvas and the
+   * iframe passed as parameters to it. You can also use the specified 
    * iframe or canvas id to get the elements by id.
    *
    * @param {function} readyCallback: function called when initialization done
@@ -86,37 +86,38 @@ TiltUtils.Iframe = {
    * @param {string} type: optional, the type of the iframe
    * @return {object XULElement} the newly created iframe
    */
-  initCanvas: function(readyCallback, keepInStack,
-                       type, iframe_id, canvas_id) {
-
+  initCanvas: function(readyCallback, keepInStack, canvas_id, iframe_id) {
+    if (!canvas_id) {
+      canvas_id = "tilt-canvas";
+    }    
     if (!iframe_id) {
       iframe_id = "tilt-iframe";
     }
-    if (!canvas_id) {
-      canvas_id = "tilt-canvas";
-    }
     
     var iframe = document.createElement("iframe");
-    iframe.setAttribute("type", type);
+    iframe.setAttribute("style", "visibility: hidden;");
     iframe.id = iframe_id;
-    
+
     var that = this;
     iframe.addEventListener("load", function loadCallback() {
       iframe.removeEventListener("load", loadCallback, true);
 
       if (readyCallback) {
         var canvas = iframe.contentDocument.getElementById(canvas_id);
-        readyCallback(iframe, canvas);
+        readyCallback(canvas, iframe);
       }
       if (!keepInStack) {
         that.remove(iframe);
+      }
+      else {
+        iframe.setAttribute("style", "visibility: visible;");
       }
     }, true);
 
     iframe.setAttribute("src", 'data:text/html,\
     <html>\
       <body style="margin: 0px 0px 0px 0px;">\
-        <canvas style="width: 100%; height: 100%;" id="' + canvas_id + '"/>\
+        <canvas id="' + canvas_id + '"/>\
       </body>\
     </html>');
 
@@ -124,34 +125,37 @@ TiltUtils.Iframe = {
   },
   
   /**
-   * Appends an iframe to the current selected browser parent node.
+   * Appends an element to a specific node.
+   * If the node is not specified, it defaults to selectedBrowser.parentNode.
    *
-   * @param {object XULElement} iframe: the iframe to be added
-   * @return {object XULElement} the same iframe
+   * @param {object} iframe: the element to be appended
+   * @param {object} node: the node to append the element to
+   * @return {object} the same iframe
    */
-  append: function(iframe) {
-    // FIXME: custom browser
-    window.gBrowser.selectedBrowser.parentNode.appendChild(iframe);
-    return iframe;
+  append: function(element, node) {
+    if (!node) {
+      if ("undefined" !== typeof(gBrowser)) {
+        node = gBrowser.selectedBrowser.parentNode;
+      }
+      else if ("undefined" !== typeof(document)) {
+        node = document.body;
+      }
+    }
+    
+    node.appendChild(element);
+    return element;
   },
 
   /**
-   * Removes an iframe to the current selected browser parent node.
+   * Removes an element from it's parent node.
    *
-   * @param {object XULElement} iframe: the iframe to be removed
-   * @return {object XULElement} the same iframe
+   * @param {object} iframe: the iframe to be removed
+   * @return {object} the same iframe
    */
-  remove: function(iframe) {
-    // FIXME: custom browser
-    window.gBrowser.selectedBrowser.parentNode.removeChild(iframe);
-    return iframe;
-  }
-};
-
-/** 
- * Utilities for accessing and manipulating a document.
- */
-TiltUtils.Document = {
+  remove: function(element) {
+    element.parentNode.removeChild(element);
+    return element;
+  },
   
   /**
    * Returns the current content document.
@@ -310,10 +314,10 @@ TiltUtils.Image = {
       }
     }
 
-    var iframe_id = "tilt-iframe-" + image.src;
     var canvas_id = "tilt-canvas-" + image.src;
+    var iframe_id = "tilt-iframe-" + image.src;
 
-    TiltUtils.Iframe.initCanvas(function initCallback(iframe, canvas) {
+    TiltUtils.Document.initCanvas(function initCallback(canvas, iframe) {
       canvas.width = TiltUtils.Math.nextPowerOfTwo(image.width);
       canvas.height = TiltUtils.Math.nextPowerOfTwo(image.height);
 
@@ -340,7 +344,7 @@ TiltUtils.Image = {
       if (readyCallback) {
         readyCallback(canvas);
       }
-    }, false, iframe_id, canvas_id);
+    }, false, canvas_id, iframe_id);
   }
 };
 
@@ -480,24 +484,37 @@ TiltUtils.StringBundle = {
   
   /**
    * Returns a string in the string bundle.
+   * If the string bundle is not found, the parameter string is returned.
    *
    * @param {string} string: the string name in the bundle
    * @return {string} the equivalent string from the bundle
    */
   get: function(string) {
-    return document.getElementById(this.bundle).getString(string);
+    var elem = document.getElementById(this.bundle);
+    if (elem) {
+      return elem.getString(string);
+    }
+    else {
+      return string;
+    }
   },
   
   /**
    * Returns a formatted string using the string bundle.
+   * If the string bundle is not found, the parameter arguments are returned.
    *
    * @param {string} string: the string name in the bundle
    * @param {array} args: an array of args for the formatted string
    * @return {string} the equivalent formatted string from the bundle
    */
    format: function(string, args) {
-     return document.getElementById(this.bundle).getFormattedString(string,       
-                                                                    args);
+     var elem = document.getElementById(this.bundle);
+     if (elem) {
+       return elem.getFormattedString(string, args);
+     }
+     else {
+       return string + " " + args;
+     }
    }
 };
 
@@ -512,10 +529,15 @@ TiltUtils.Console = {
    * @param {string} aMessage: the message to be logged
    */
   log: function(aMessage) {
-    var consoleService = Components.classes["@mozilla.org/consoleservice;1"]
-      .getService(Components.interfaces.nsIConsoleService);
+    try {
+      var consoleService = Components.classes["@mozilla.org/consoleservice;1"]
+        .getService(Components.interfaces.nsIConsoleService);
     
-    consoleService.logStringMessage(aMessage);
+      consoleService.logStringMessage(aMessage);
+    }
+    catch(exception) {
+      alert(aMessage);      
+    }
   },
 
   /**
@@ -545,15 +567,20 @@ TiltUtils.Console = {
   error: function(aMessage, aSourceName, aSourceLine, aLineNumber, 
                   aColumnNumber, aFlags, aCategory) {
 
-    var consoleService = Components.classes["@mozilla.org/consoleservice;1"]
-      .getService(Components.interfaces.nsIConsoleService);
+    try {
+      var consoleService = Components.classes["@mozilla.org/consoleservice;1"]
+        .getService(Components.interfaces.nsIConsoleService);
 
-    var scriptError = Components.classes["@mozilla.org/scripterror;1"]
-      .createInstance(Components.interfaces.nsIScriptError);
-    
-    scriptError.init(aMessage, aSourceName, aSourceLine, aLineNumber, 
-                     aColumnNumber, aFlags, aCategory);
+      var scriptError = Components.classes["@mozilla.org/scripterror;1"]
+        .createInstance(Components.interfaces.nsIScriptError);
 
-    consoleService.logMessage(scriptError);
+      scriptError.init(aMessage, aSourceName, aSourceLine, aLineNumber, 
+                       aColumnNumber, aFlags, aCategory);
+
+      consoleService.logMessage(scriptError);
+    }
+    catch(exception) {
+      alert(aMessage);
+    }
   }
 };
