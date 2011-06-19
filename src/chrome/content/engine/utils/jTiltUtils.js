@@ -35,6 +35,40 @@ var EXPORTED_SYMBOLS = [
   "TiltUtils.String"];
 
 /**
+ * Creates a WebGL context.
+ *
+ * @param {object} canvas: the canvas to get context from
+ * @return {object} the created context.
+ */
+var create3DContext = function(canvas, opt_attribs) {
+  var names = ["experimental-webgl", "webgl", "webkit-3d", "moz-webgl"];
+  var context = null;
+  for (var i = 0; i < names.length; ++i) {
+    try {
+      context = canvas.getContext(names[i], opt_attribs);
+    } catch(e) { }
+
+    if (context) {
+      break;
+    }
+  }
+  return context;
+}
+
+/**
+ * Provides requestAnimationFrame in a cross browser way.
+ */
+window.requestAnimFrame = (function() {
+  return window.webkitRequestAnimationFrame ||
+         window.mozRequestAnimationFrame ||
+         window.oRequestAnimationFrame ||
+         window.msRequestAnimationFrame ||
+         function(callback, Element) {
+           window.setTimeout(callback, 1000 / 60);
+         };
+})();
+
+/**
  * Utilities for creating, using and removing iframes.
  */
 TiltUtils.Iframe = {
