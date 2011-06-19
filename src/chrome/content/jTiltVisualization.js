@@ -99,10 +99,10 @@ function TiltVisualization(image, canvas, width, height) {
         
         // compute the texture coordinates
         mesh.texCoord.push(
-          (x    ) / canvas.width, (y    ) / canvas.height, 
-          (x + w) / canvas.width, (y    ) / canvas.height,
-          (x + w) / canvas.width, (y + h) / canvas.height, 
-          (x    ) / canvas.width, (y + h) / canvas.height);
+          (x    ) / canvas.clientWidth, (y    ) / canvas.clientHeight, 
+          (x + w) / canvas.clientWidth, (y    ) / canvas.clientHeight,
+          (x + w) / canvas.clientWidth, (y + h) / canvas.clientHeight, 
+          (x    ) / canvas.clientWidth, (y + h) / canvas.clientHeight);
         
         // compute the indices
         mesh.indices.push(i, i + 1, i + 2, i, i + 2, i + 3);
@@ -148,8 +148,9 @@ function TiltVisualization(image, canvas, width, height) {
           draw.translate(-canvas.width / 2, -canvas.height / 2, 0);
           
           draw.mesh(mesh.vertexBuffer,
-                    mesh.vertexBuffer.texCoord, dom, "rgba(14, 16, 22, 255)",
-                    mesh.vertexBuffer.indices, "triangles");
+                    mesh.vertexBuffer.texCoord, null, 
+                    "triangles", "rgba(14, 16, 22, 255)", dom,
+                    mesh.vertexBuffer.indices);
         }
       }
     }
