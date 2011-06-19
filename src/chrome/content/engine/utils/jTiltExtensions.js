@@ -47,7 +47,7 @@ TiltExtensions.WebGL = {
    */
   initDocumentImage: function(readyCallback, width, height) {
     // Using a custom iframe with a canvas context element to draw the window
-    TiltUtils.Iframe.initCanvas(function initCallback(iframe, canvas) {
+    TiltUtils.Document.initCanvas(function initCallback(canvas, iframe) {
       if (!width) {
         width = iframe.contentWindow.innerWidth;
       }
@@ -61,7 +61,7 @@ TiltExtensions.WebGL = {
       var context = canvas.getContext('2d');
       
       // FIXME: custom browser
-      context.drawWindow(window.gBrowser.selectedBrowser.contentWindow, 
+      context.drawWindow(gBrowser.selectedBrowser.contentWindow, 
                          0, 0, width, height, "#fff");
     
       if (readyCallback) {
