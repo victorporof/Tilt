@@ -62,7 +62,7 @@ function TiltEngine() {
   this.initWebGL = function(canvas, width, height,
                             failCallback, successCallback) {
 
-    var gl = WebGLUtils.create3DContext(canvas);
+    var gl = create3DContext(canvas);
     if (gl) {
       if (width) {
         canvas.width = width;
