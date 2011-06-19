@@ -97,11 +97,11 @@ TiltUtils.Document = {
     }
     
     if ("undefined" !== typeof(gBrowser)) {
+      var that = this;
       var iframe = document.createElement("iframe");
       iframe.setAttribute("style", "visibility: hidden;");
       iframe.id = iframe_id;
 
-      var that = this;
       iframe.addEventListener("load", function loadCallback() {
         iframe.removeEventListener("load", loadCallback, true);
 
@@ -124,9 +124,10 @@ TiltUtils.Document = {
         </body>\
       </html>');
 
-      return this.append(iframe);
+      return that.append(iframe);
     }
     else {
+      var that = this;
       var canvas = document.createElement("canvas");
       canvas.setAttribute("style", "visibility: hidden;");
       canvas.id = canvas_id;
@@ -141,7 +142,7 @@ TiltUtils.Document = {
         canvas.setAttribute("style", "visibility: visible;");
       }
       
-      return this.append(canvas);
+      return that.append(canvas);
     }
   },
   
