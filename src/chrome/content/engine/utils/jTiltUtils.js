@@ -96,7 +96,7 @@ TiltUtils.Document = {
       iframe_id = "tilt-iframe";
     }
     
-    if (gBrowser) {
+    if ("undefined" !== typeof(gBrowser)) {
       var iframe = document.createElement("iframe");
       iframe.setAttribute("style", "visibility: hidden;");
       iframe.id = iframe_id;
@@ -158,7 +158,7 @@ TiltUtils.Document = {
       if ("undefined" !== typeof(gBrowser)) {
         node = gBrowser.selectedBrowser.parentNode;
       }
-      else if ("undefined" !== typeof(document)) {
+      else {
         node = document.body;
       }
     }
