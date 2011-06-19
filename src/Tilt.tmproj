@@ -3,7 +3,7 @@
 <plist version="1.0">
 <dict>
 	<key>currentDocument</key>
-	<string>chrome/content/jTiltVisualization.js</string>
+	<string>chrome/content/engine/utils/jTiltUtils.js</string>
 	<key>documents</key>
 	<array>
 		<dict>
@@ -21,19 +21,33 @@
 	<integer>242</integer>
 	<key>metaData</key>
 	<dict>
+		<key>chrome.manifest</key>
+		<dict>
+			<key>caret</key>
+			<dict>
+				<key>column</key>
+				<integer>30</integer>
+				<key>line</key>
+				<integer>5</integer>
+			</dict>
+			<key>firstVisibleColumn</key>
+			<integer>0</integer>
+			<key>firstVisibleLine</key>
+			<integer>0</integer>
+		</dict>
 		<key>chrome/content/browserOverlay.js</key>
 		<dict>
 			<key>caret</key>
 			<dict>
 				<key>column</key>
-				<integer>2</integer>
+				<integer>36</integer>
 				<key>line</key>
-				<integer>85</integer>
+				<integer>51</integer>
 			</dict>
 			<key>firstVisibleColumn</key>
 			<integer>0</integer>
 			<key>firstVisibleLine</key>
-			<integer>62</integer>
+			<integer>52</integer>
 		</dict>
 		<key>chrome/content/browserOverlay.xul</key>
 		<dict>
@@ -54,28 +68,42 @@
 			<key>caret</key>
 			<dict>
 				<key>column</key>
-				<integer>4</integer>
+				<integer>54</integer>
 				<key>line</key>
-				<integer>611</integer>
+				<integer>538</integer>
 			</dict>
 			<key>firstVisibleColumn</key>
 			<integer>0</integer>
 			<key>firstVisibleLine</key>
-			<integer>661</integer>
+			<integer>522</integer>
 		</dict>
 		<key>chrome/content/engine/jTiltEngine.js</key>
 		<dict>
 			<key>caret</key>
 			<dict>
 				<key>column</key>
-				<integer>23</integer>
+				<integer>25</integer>
 				<key>line</key>
-				<integer>496</integer>
+				<integer>79</integer>
 			</dict>
 			<key>firstVisibleColumn</key>
 			<integer>0</integer>
 			<key>firstVisibleLine</key>
-			<integer>485</integer>
+			<integer>59</integer>
+		</dict>
+		<key>chrome/content/engine/lib/glMatrix-0.9.5.js</key>
+		<dict>
+			<key>caret</key>
+			<dict>
+				<key>column</key>
+				<integer>25</integer>
+				<key>line</key>
+				<integer>12</integer>
+			</dict>
+			<key>firstVisibleColumn</key>
+			<integer>0</integer>
+			<key>firstVisibleLine</key>
+			<integer>0</integer>
 		</dict>
 		<key>chrome/content/engine/lib/webgl-utils.js</key>
 		<dict>
@@ -152,9 +180,9 @@
 			<key>caret</key>
 			<dict>
 				<key>column</key>
-				<integer>66</integer>
+				<integer>5</integer>
 				<key>line</key>
-				<integer>38</integer>
+				<integer>42</integer>
 			</dict>
 			<key>firstVisibleColumn</key>
 			<integer>0</integer>
@@ -166,40 +194,88 @@
 			<key>caret</key>
 			<dict>
 				<key>column</key>
-				<integer>4</integer>
+				<integer>0</integer>
 				<key>line</key>
-				<integer>68</integer>
+				<integer>486</integer>
 			</dict>
 			<key>firstVisibleColumn</key>
 			<integer>0</integer>
 			<key>firstVisibleLine</key>
-			<integer>16</integer>
+			<integer>13</integer>
 		</dict>
 		<key>chrome/content/jTiltVisualization.js</key>
 		<dict>
 			<key>caret</key>
 			<dict>
 				<key>column</key>
-				<integer>8</integer>
+				<integer>5</integer>
 				<key>line</key>
-				<integer>141</integer>
+				<integer>157</integer>
 			</dict>
 			<key>firstVisibleColumn</key>
 			<integer>0</integer>
 			<key>firstVisibleLine</key>
-			<integer>115</integer>
+			<integer>131</integer>
+		</dict>
+		<key>install.rdf</key>
+		<dict>
+			<key>caret</key>
+			<dict>
+				<key>column</key>
+				<integer>6</integer>
+				<key>line</key>
+				<integer>24</integer>
+			</dict>
+			<key>firstVisibleColumn</key>
+			<integer>0</integer>
+			<key>firstVisibleLine</key>
+			<integer>0</integer>
+		</dict>
+		<key>testunits/testTiltEngine.js</key>
+		<dict>
+			<key>caret</key>
+			<dict>
+				<key>column</key>
+				<integer>0</integer>
+				<key>line</key>
+				<integer>27</integer>
+			</dict>
+			<key>firstVisibleColumn</key>
+			<integer>0</integer>
+			<key>firstVisibleLine</key>
+			<integer>0</integer>
+		</dict>
+		<key>testunits/testTiltInitialization.js</key>
+		<dict>
+			<key>caret</key>
+			<dict>
+				<key>column</key>
+				<integer>15</integer>
+				<key>line</key>
+				<integer>58</integer>
+			</dict>
+			<key>firstVisibleColumn</key>
+			<integer>0</integer>
+			<key>firstVisibleLine</key>
+			<integer>18</integer>
 		</dict>
 	</dict>
 	<key>openDocuments</key>
 	<array>
 		<string>chrome/content/browserOverlay.xul</string>
 		<string>chrome/content/browserOverlay.js</string>
+		<string>chrome.manifest</string>
+		<string>testunits/testTiltEngine.js</string>
+		<string>testunits/testTiltInitialization.js</string>
+		<string>install.rdf</string>
 		<string>chrome/content/jTiltVisualization.js</string>
 		<string>chrome/content/engine/jTiltDraw.js</string>
 		<string>chrome/content/engine/jTiltEngine.js</string>
 		<string>chrome/content/engine/utils/jTiltUtils.js</string>
 		<string>chrome/content/engine/shaders/shader-color.fs</string>
 		<string>chrome/content/engine/shaders/shader-color.vs</string>
+		<string>chrome/content/engine/lib/webgl-utils.js</string>
+		<string>chrome/content/engine/lib/glMatrix-0.9.5.js</string>
 		<string>chrome/content/engine/shaders/shader-texture.fs</string>
 		<string>chrome/content/engine/shaders/shader-texture.vs</string>
 		<string>chrome/content/engine/utils/jTiltExtensions.js</string>
@@ -207,6 +283,6 @@
 	<key>showFileHierarchyDrawer</key>
 	<true/>
 	<key>windowFrame</key>
-	<string>{{580, 67}, {680, 811}}</string>
+	<string>{{514, 67}, {680, 811}}</string>
 </dict>
 </plist>
