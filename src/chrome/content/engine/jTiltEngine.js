@@ -227,7 +227,10 @@ function TiltEngine() {
    * @return {number} the attribute location from the program
    */
   this.shaderAttribute = function(program, attribute) {
-    return that.gl.getAttribLocation(program, attribute);
+    var value = that.gl.getAttribLocation(program, attribute);
+    value.cache = [];
+    
+    return value;
   };
 
   /**
@@ -239,7 +242,10 @@ function TiltEngine() {
    * @return {object} the uniform object from the program
    */
   this.shaderUniform = function(program, uniform) {
-    return that.gl.getUniformLocation(program, uniform);
+    var value = that.gl.getUniformLocation(program, uniform);
+    value.cache = [];
+    
+    return value;
   };
 
   /**
@@ -273,36 +279,60 @@ function TiltEngine() {
   };
   
   /**
-   * Binds a uniform matrix.
+   * Binds a uniform matrix if not already cached.
    *
    * @param {object} uniform: the uniform to bind the variable to
    * @param {object} variable: the variable to be binded
    */
   this.bindUniformMatrix = function(uniform, variable) {
-    that.gl.uniformMatrix4fv(uniform, false, variable);
+    var cached = uniform.cache.length ? true : false;
+    for (i = 0, len = uniform.cache.length; i < len; i++) {
+      if (uniform.cache[i] != variable[i]) {
+        cached = false;
+        break;
+      }
+    }
+    if (!cached) {
+      uniform.cache[i] = variable;
+      that.gl.uniformMatrix4fv(uniform, false, variable);
+    }
   };
   
   /**
-   * Binds a uniform vector of 4 elements.
+   * Binds a uniform vector of 4 elements if not already cached.
    *
    * @param {object} uniform: the uniform to bind the variable to
    * @param {object} variable: the variable to be binded
    */
   this.bindUniformVec4 = function(uniform, variable) {
-    that.gl.uniform4fv(uniform, variable);
+    var cached = uniform.cache.length ? true : false;
+    for (i = 0, len = uniform.cache.length; i < len; i++) {
+      if (uniform.cache[i] != variable[i]) {
+        cached = false;
+        break;
+      }
+    }
+    if (!cached) {
+      uniform.cache[i] = variable;
+      that.gl.uniform4fv(uniform, variable);
+    }
   };
   
   /**
-   * Binds a uniform texture to a sampler.
+   * Binds a uniform texture to a sampler if not already cached.
    *
    * @param {object} sampler: the sampler to bind the texture to
    * @param {object} texture: the texture to be binded
+   * @param {boolean} clearCache: true if should clearCache
    */
-  this.bindTexture = function(sampler, texture) {
+  this.bindTexture = function(sampler, texture, clearCache) {
     var gl = that.gl;
-    
-    gl.bindTexture(gl.TEXTURE_2D, texture);
-    gl.uniform1i(sampler, 0);
+
+    if (sampler.chache !== texture || clearCache) {
+      sampler.cache = texture;
+      gl.bindTexture(gl.TEXTURE_2D, texture);
+      gl.uniform1i(sampler, 0);
+    }
   };
 
   /**
