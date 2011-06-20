@@ -59,9 +59,9 @@ TiltChrome.BrowserOverlay = {
       tiltMenu.label = TiltUtils.StringBundle.get("menuItemHide.label");
       
       // use an extension to get the image representation of the document
-      TiltExtensions.WebGL.initDocumentImage(function textureCallback(image) {
+      TiltExtensions.WebGL.initDocumentImage(function imageCallback(image) {
         // initialize an iframe containing a canvas element
-        TiltUtils.Document.initCanvas(function initCallback(canvas, iframe) {
+        TiltUtils.Document.initCanvas(function readyCallback(canvas, iframe) {
           // remember the iframe so that it can be destroyed later
           that.iframe = iframe;
           
