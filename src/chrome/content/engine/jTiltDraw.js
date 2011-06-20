@@ -30,14 +30,12 @@ var EXPORTED_SYMBOLS = ["TiltDraw"];
  * TiltDraw constructor.
  * 
  * @param {object} canvas: the canvas element used for rendering
- * @param {object} width: optional, specify the width of the canvas
- * @param {object} height: optional, specify the height of the canvas
  * @param {function} successCallback: to be called if initialization worked
  * @param {function} failCallback: to be called if initialization failed
  *
  * @return {object} the created object
  */ 
-function TiltDraw(canvas, width, height, failCallback, successCallback) {
+function TiltDraw(canvas, failCallback, successCallback) {
 
   /**
    * By convention, we make a private 'that' variable.
@@ -52,8 +50,7 @@ function TiltDraw(canvas, width, height, failCallback, successCallback) {
   /**
    * WebGL context for the canvas.
    */
-  var gl = engine.initWebGL(canvas, width, height,
-                            failCallback, successCallback);
+  var gl = engine.initWebGL(canvas, failCallback, successCallback);
 
   /**
    * A shader useful for drawing vertices with only a color component.
@@ -140,11 +137,9 @@ function TiltDraw(canvas, width, height, failCallback, successCallback) {
    * Performs mandatory initialization of shaders and other objects required
    * for drawing, like vertex buffers and primitives.
    * 
-   * @param {object} width: optional, specify the width of the canvas
-   * @param {object} height: optional, specify the height of the canvas
    * @return {object} this object initialized
    */
-  this.initialize = function(width, height) {
+  this.initialize = function() {
     // initializing a color shader
     engine.initProgram(TiltShaders.Color.vs, 
                        TiltShaders.Color.fs, function readyCallback(p) {
@@ -283,11 +278,6 @@ function TiltDraw(canvas, width, height, failCallback, successCallback) {
       16, 17, 18, 16, 18, 19,
       20, 21, 22, 20, 22, 23]);
 
-    // set the canvas and viewport dimensions if specified
-    if (width || height) {
-      that.size(width, height);
-    }
-    
     return that;
   };
   
@@ -798,8 +788,10 @@ function TiltDraw(canvas, width, height, failCallback, successCallback) {
 
 /**
  * Creates a Tilt environemnt. The readyCallback function is called when
- * initialization is complete, along with an instance of TiltDraw passed as a
- * parameter. Use this to append a canvas element to the document, like this:
+ * initialization is complete, along with the canvas and additionally, an 
+ * instance of TiltDraw passed as a parameter. For more complex initialization
+ * scenarios, use TiltUtils.Document.initCanvas and create a TiltDraw object.
+ * Use this function to append a canvas element to the document, like this:
  *
  *      TiltDraw.Create(640, 480, function readyCallback(tilt) {
  *        setup();
@@ -829,9 +821,9 @@ TiltDraw.Create = function(width, height, readyCallback) {
       canvas.width = width;
       canvas.height = height;
     }
-
+    
     if (readyCallback) {
-      readyCallback(new TiltDraw(canvas).initialize());
+      readyCallback(canvas, new TiltDraw(canvas).initialize());
     }
   }, true);
 }
