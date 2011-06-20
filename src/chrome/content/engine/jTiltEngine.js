@@ -52,28 +52,18 @@ function TiltEngine() {
    * Initializes a WebGL context, and runs fail or success callback functions.
    *
    * @param {object} canvas: the canvas to create the WebGL context with
-   * @param {number} width: the width of the canvas
-   * @param {number} height: the height of the canvas
    * @param {function} successCallback: to be called if initialization worked
    * @param {function} failCallback: to be called if initialization failed
    *
    * @return {object} the created gl context if successful, null otherwise
    */
-  this.initWebGL = function(canvas, width, height,
-                            failCallback, successCallback) {
-
+  this.initWebGL = function(canvas, failCallback, successCallback) {
     var gl = create3DContext(canvas);
     if (gl) {
-      if (width) {
-        canvas.width = width;
-      }
-      if (height) {
-        canvas.height = height;
-      }
+      that.gl = gl;
       if (successCallback) {
         successCallback();
       }
-      that.gl = gl;
     }
     else {
       TiltUtils.Console.log(TiltUtils.StringBundle.get("webgl.init.error"));
