@@ -129,7 +129,6 @@ TiltUtils.Document = {
     else {
       var that = this;
       var canvas = document.createElement("canvas");
-      canvas.setAttribute("style", "visibility: hidden;");
       canvas.id = canvas_id;
 
       if (readyCallback) {
@@ -137,9 +136,6 @@ TiltUtils.Document = {
       }
       if (!keepInStack) {
         that.remove(canvas);
-      }
-      else {
-        canvas.setAttribute("style", "visibility: visible;");
       }
       
       return that.append(canvas);
