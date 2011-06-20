@@ -128,7 +128,7 @@ function TiltVisualization(image, canvas) {
       // get some variables from the draw object for easier access
       var width = canvas.clientWidth;
       var height = canvas.clientHeight;
-      var timeCount = tilt.getTimeCount();
+      var elapsedTime = tilt.getElapsedTime();
       var frameCount = tilt.getFrameCount();
       var frameRate = tilt.getFrameRate();
       var frameDelta = tilt.getFrameDelta();
@@ -144,7 +144,7 @@ function TiltVisualization(image, canvas) {
         if (dom) {
           // this is just a test case for now, actual implementation later
           tilt.translate(width / 2, height / 2 - 100, -400);
-          tilt.rotate(0, 1, 0, TiltUtils.Math.radians(timeCount / 32));
+          tilt.rotate(0, 1, 0, TiltUtils.Math.radians(elapsedTime / 32));
           tilt.translate(-width / 2, -height / 2, 0);
           
           tilt.mesh(mesh.vertexBuffer,
