@@ -76,7 +76,7 @@ TiltUtils.Document = {
   /**
    * Helper method, allowing to easily create an iframe with a canvas element
    * if running in a chrome environment. If this is running from a html page, 
-   * a canvas element is directly created.
+   * just a canvas element is directly created.
    * When loaded, the readyCallback function is called with the canvas and the
    * iframe passed as parameters to it. You can also use the specified 
    * iframe or canvas id to get the elements by id.
@@ -86,7 +86,7 @@ TiltUtils.Document = {
    * @param {string} iframe_id: optional, id for the created iframe
    * @param {string} canvas_id: optional, id for the created canvas element
    * @param {string} type: optional, the type of the iframe
-   * @return {object XULElement} the newly created iframe
+   * @return {object} the newly created iframe or canvas
    */
   initCanvas: function(readyCallback, keepInStack, canvas_id, iframe_id) {
     if (!canvas_id) {
@@ -96,8 +96,9 @@ TiltUtils.Document = {
       iframe_id = "tilt-iframe";
     }
     
+    var that = this;
+
     if ("undefined" !== typeof(gBrowser)) {
-      var that = this;
       var iframe = document.createElement("iframe");
       iframe.setAttribute("style", "visibility: hidden;");
       iframe.id = iframe_id;
@@ -127,7 +128,6 @@ TiltUtils.Document = {
       return that.append(iframe);
     }
     else {
-      var that = this;
       var canvas = document.createElement("canvas");
       canvas.setAttribute("style", "visibility: hidden;");
       canvas.id = canvas_id;
@@ -498,6 +498,7 @@ TiltUtils.String = {
 
 /**
  * Easy way to access the string bundle.
+ * Usually useful only when this is used inside an extension evironment.
  */
 TiltUtils.StringBundle = {
   
@@ -560,6 +561,7 @@ TiltUtils.Console = {
   
   /**
    * Logs a message to the console.
+   * If this is not inside an extension environment, an alert() is used
    *
    * @param {string} aMessage: the message to be logged
    */
@@ -581,6 +583,7 @@ TiltUtils.Console = {
 
   /**
    * Logs an error to the console.
+   * If this is not inside an extension environment, an alert() is used
    *
    * @param {string} aMessage: the message to be logged
    * @param {string} aSourceName: the URL of file with error. This will be a 
