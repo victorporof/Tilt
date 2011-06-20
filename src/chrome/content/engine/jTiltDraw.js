@@ -143,14 +143,9 @@ function TiltDraw(canvas, width, height, failCallback, successCallback) {
    * @return {object} this object initialized
    */
   this.initialize = function() {
-    var colorShaderPath =
-      "chrome://tilt/content/engine/shaders/shader-color";
-
-    var textureShaderPath =
-      "chrome://tilt/content/engine/shaders/shader-texture";
-
     // initializing a color shader
-    engine.initProgram(colorShaderPath, function ready(p) {
+    engine.initProgram(TiltShaders.Color.vs, 
+                       TiltShaders.Color.fs, function readyCallback(p) {
       colorShader = p;
       colorShader.vertexPosition = engine.shaderIO(p, "vertexPosition");
 
@@ -180,7 +175,8 @@ function TiltDraw(canvas, width, height, failCallback, successCallback) {
     });
     
     // initializing a texture shader
-    engine.initProgram(textureShaderPath, function ready(p) {
+    engine.initProgram(TiltShaders.Texture.vs,
+                       TiltShaders.Texture.fs, function readyCallback(p) {
       textureShader = p;
       textureShader.vertexPosition = engine.shaderIO(p, "vertexPosition");
       textureShader.vertexTexCoord = engine.shaderIO(p, "vertexTexCoord");
@@ -212,7 +208,7 @@ function TiltDraw(canvas, width, height, failCallback, successCallback) {
         textureShader.setUniforms(mvMatrix, projMatrix, color, texture);
       };
     });
-
+    
     // modelview and projection matrices used for transformations
     mat4.identity(mvMatrix = mat4.create());
     mat4.identity(projMatrix = mat4.create());
@@ -348,18 +344,18 @@ function TiltDraw(canvas, width, height, failCallback, successCallback) {
    * Also handles variables like frameCount, frameRate, frameDelta internally.
    * Use this at the beginning of your loop function, like this:
    *
-   *       function loop() {
-   *         window.requestAnimFrame(loop, canvas);
+   *       function draw() {
+   *         window.requestAnimFrame(draw, canvas);
    *
    *         // do rendering
    *         ...
    *       }
-   *       loop();
+   *       draw();
    *
    * @param {function} loop: the function to be called each frame
    */
-  this.requestAnimFrame = function(loop) {
-    window.requestAnimFrame(loop, canvas);
+  this.requestAnimFrame = function(draw) {
+    window.requestAnimFrame(draw, canvas);
 
     if (that.isInitialized()) {
       currentTime = new Date().getTime();
