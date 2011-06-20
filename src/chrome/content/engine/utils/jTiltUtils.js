@@ -512,6 +512,10 @@ TiltUtils.StringBundle = {
    * @return {string} the equivalent string from the bundle
    */
   get: function(string) {
+    if (!string) {
+      return "undefined";
+    }
+    
     var elem = document.getElementById(this.bundle);
     if (elem) {
       return elem.getString(string);
@@ -529,15 +533,22 @@ TiltUtils.StringBundle = {
    * @param {array} args: an array of args for the formatted string
    * @return {string} the equivalent formatted string from the bundle
    */
-   format: function(string, args) {
-     var elem = document.getElementById(this.bundle);
-     if (elem) {
-       return elem.getFormattedString(string, args);
-     }
-     else {
-       return string + " " + args;
-     }
-   }
+  format: function(string, args) {
+    if (!string) {
+      return "undefined";
+    }
+    if (!args) {
+      return string;
+    }
+
+    var elem = document.getElementById(this.bundle);
+    if (elem) {
+      return elem.getFormattedString(string, args);
+    }
+    else {
+      return string + " " + args;
+    }
+  }
 };
 
 /**
@@ -552,6 +563,10 @@ TiltUtils.Console = {
    */
   log: function(aMessage) {
     try {
+      if (!aMessage) {
+        aMessage = "undefined";
+      }
+      
       var consoleService = Components.classes["@mozilla.org/consoleservice;1"]
         .getService(Components.interfaces.nsIConsoleService);
     
@@ -588,8 +603,11 @@ TiltUtils.Console = {
    */
   error: function(aMessage, aSourceName, aSourceLine, aLineNumber, 
                   aColumnNumber, aFlags, aCategory) {
-
     try {
+      if (!aMessage) {
+        aMessage = "undefined";
+      }
+
       var consoleService = Components.classes["@mozilla.org/consoleservice;1"]
         .getService(Components.interfaces.nsIConsoleService);
 
