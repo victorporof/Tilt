@@ -293,7 +293,7 @@ function TiltEngine() {
       }
     }
     if (!cached) {
-      uniform.cache[i] = variable;
+      mat4.set(variable, uniform.cache);
       that.gl.uniformMatrix4fv(uniform, false, variable);
     }
   };
@@ -313,7 +313,10 @@ function TiltEngine() {
       }
     }
     if (!cached) {
-      uniform.cache[i] = variable;
+      uniform.cache[0] = variable[0];
+      uniform.cache[1] = variable[1];
+      uniform.cache[2] = variable[2];
+      uniform.cache[3] = variable[3];
       that.gl.uniform4fv(uniform, variable);
     }
   };
