@@ -14,8 +14,6 @@ jar_sources := $(wildcard $(jar_source_root)/content/*.js) \
                $(wildcard $(jar_source_root)/content/*.css) \
                $(wildcard $(jar_source_root)/content/engine/*.js) \
                $(wildcard $(jar_source_root)/content/engine/lib/*.js) \
-               $(wildcard $(jar_source_root)/content/engine/shaders/*.vs) \
-               $(wildcard $(jar_source_root)/content/engine/shaders/*.fs) \
                $(wildcard $(jar_source_root)/content/engine/utils/*.js) \
                $(wildcard $(jar_source_root)/skin/*.css) \
                $(wildcard $(jar_source_root)/skin/*.png) \
