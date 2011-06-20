@@ -3,7 +3,7 @@
 <plist version="1.0">
 <dict>
 	<key>currentDocument</key>
-	<string>chrome/content/engine/jTiltShaders.js</string>
+	<string>chrome/content/jTiltVisualization.js</string>
 	<key>documents</key>
 	<array>
 		<dict>
@@ -47,7 +47,7 @@
 			<key>firstVisibleColumn</key>
 			<integer>0</integer>
 			<key>firstVisibleLine</key>
-			<integer>35</integer>
+			<integer>46</integer>
 		</dict>
 		<key>chrome/content/browserOverlay.xul</key>
 		<dict>
@@ -75,7 +75,7 @@
 			<key>firstVisibleColumn</key>
 			<integer>0</integer>
 			<key>firstVisibleLine</key>
-			<integer>341</integer>
+			<integer>785</integer>
 		</dict>
 		<key>chrome/content/engine/jTiltEngine.js</key>
 		<dict>
@@ -112,14 +112,14 @@
 			<key>caret</key>
 			<dict>
 				<key>column</key>
-				<integer>5</integer>
+				<integer>0</integer>
 				<key>line</key>
-				<integer>39</integer>
+				<integer>71</integer>
 			</dict>
 			<key>firstVisibleColumn</key>
 			<integer>0</integer>
 			<key>firstVisibleLine</key>
-			<integer>34</integer>
+			<integer>57</integer>
 		</dict>
 		<key>chrome/content/engine/lib/glMatrix-0.9.5.js</key>
 		<dict>
@@ -172,26 +172,26 @@
 				<key>column</key>
 				<integer>0</integer>
 				<key>line</key>
-				<integer>35</integer>
+				<integer>586</integer>
 			</dict>
 			<key>firstVisibleColumn</key>
 			<integer>0</integer>
 			<key>firstVisibleLine</key>
-			<integer>25</integer>
+			<integer>0</integer>
 		</dict>
 		<key>chrome/content/jTiltVisualization.js</key>
 		<dict>
 			<key>caret</key>
 			<dict>
 				<key>column</key>
-				<integer>6</integer>
+				<integer>8</integer>
 				<key>line</key>
-				<integer>126</integer>
+				<integer>141</integer>
 			</dict>
 			<key>firstVisibleColumn</key>
 			<integer>0</integer>
 			<key>firstVisibleLine</key>
-			<integer>118</integer>
+			<integer>131</integer>
 		</dict>
 		<key>chrome/locale/en-US/browserOverlay.properties</key>
 		<dict>
@@ -252,15 +252,12 @@
 	</dict>
 	<key>openDocuments</key>
 	<array>
-		<string>chrome/content/browserOverlay.xul</string>
 		<string>chrome/content/browserOverlay.js</string>
 		<string>chrome/content/jTiltVisualization.js</string>
 		<string>chrome/content/engine/jTiltDraw.js</string>
 		<string>chrome/content/engine/jTiltEngine.js</string>
 		<string>chrome/content/engine/jTiltShaders.js</string>
-		<string>chrome/locale/en-US/browserOverlay.properties</string>
 		<string>chrome/content/engine/utils/jTiltUtils.js</string>
-		<string>chrome/content/engine/lib/glMatrix-0.9.5.js</string>
 		<string>chrome/content/engine/utils/jTiltExtensions.js</string>
 	</array>
 	<key>showFileHierarchyDrawer</key>
