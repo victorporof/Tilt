@@ -115,7 +115,7 @@ function TiltDraw(canvas, failCallback, successCallback) {
   /**
    * Time passed since initialization.
    */
-  var timeCount = 0;
+  var elapsedTime = 0;
 
   /**
    * Counter for the number of frames passed since initialization.
@@ -292,13 +292,13 @@ function TiltDraw(canvas, failCallback, successCallback) {
   };
   
   /**
-   * Returns the time count.
+   * Returns the elapsed time.
    * This represents the total time passed since initialization.
    *
-   * @return {number} the time count
+   * @return {number} the elapsed time
    */
-  this.getTimeCount = function() {
-    return timeCount;
+  this.getElapsedTime = function() {
+    return elapsedTime;
   };
 
   /**
@@ -363,7 +363,7 @@ function TiltDraw(canvas, failCallback, successCallback) {
       }
       lastTime = currentTime;
       
-      timeCount += frameDelta;
+      elapsedTime += frameDelta;
       frameCount++;
     }
   };
