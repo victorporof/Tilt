@@ -76,7 +76,7 @@ function TiltEngine() {
       that.gl = gl;
     }
     else {
-      TiltUtils.Console.log(TiltUtils.StringBundle.get("webgl.error"));
+      TiltUtils.Console.log(TiltUtils.StringBundle.get("webgl.init.error"));
       if (failCallback) {
         failCallback();
       }
@@ -85,6 +85,27 @@ function TiltEngine() {
     return gl;
   };
 
+  /**
+   * Initializes a shader program, using specified sources.
+   * The ready callback function will have as a parameter the newly created
+   * shader program, by compiling and linking the vertex and fragment shader.
+   *
+   * @param {string} vertShaderSrc: the vertex shader source
+   * @param {string} fragShaderSrc: the fragment shader source
+   * @param {function} readyCallback: the function called when loading is done
+   */
+  this.initProgram = function(vertShaderSrc, fragShaderSrc, readyCallback) {
+    var vertShader = that.compileShader(vertShaderSrc, "x-shader/x-vertex");
+    var fragShader = that.compileShader(fragShaderSrc, "x-shader/x-fragment");
+    
+    vertShader.src = vertShaderSrc;
+    fragShader.src = fragShaderSrc;
+    
+    if (readyCallback) {
+      readyCallback(that.linkProgram(vertShader, fragShader));
+    }
+  };
+  
   /**
    * Initializes a shader program, using sources located at a specific url.
    * If only two params are specified (the shader name and the readyCallback 
@@ -96,25 +117,22 @@ function TiltEngine() {
    * @param {string} fragShaderURL: the fragment shader resource
    * @param {function} readyCallback: the function called when loading is done
    */
-  this.initProgram = function(vertShaderURL, fragShaderURL, readyCallback) {
+  this.initProgramAt = function(vertShaderURL, fragShaderURL, readyCallback) {
     if (arguments.length === 2) {
       readyCallback = fragShaderURL;
       fragShaderURL = vertShaderURL + ".fs";
       vertShaderURL = vertShaderURL + ".vs";
     }
     
-    var vertShader;
-    var fragShader;
-    
     that.requests([vertShaderURL, fragShaderURL],
                   function requestsCallback(http) {
-                  
-      vertShader = that.compileShader(http[0].responseText,
-                                      "x-shader/x-vertex");
 
-      fragShader = that.compileShader(http[1].responseText,
-                                      "x-shader/x-fragment");
-                                      
+      var vertShader = that.compileShader(http[0].responseText,
+                                          "x-shader/x-vertex");
+
+      var fragShader = that.compileShader(http[1].responseText,
+                                          "x-shader/x-fragment");
+
       vertShader.src = http[0].responseText;
       fragShader.src = http[1].responseText;
       
@@ -137,6 +155,7 @@ function TiltEngine() {
     var shader;
 
     if (!shaderSource) {
+      shaderSource = "undefined";
       TiltUtils.Console.error(TiltUtils.StringBundle.get(
         "compileShader.source.error"));
 
@@ -559,6 +578,7 @@ function TiltEngine() {
    * Handles a generic get request, performed on a specified url. When done,
    * it fires the ready callback function if it exists, & passes the http
    * request object and also an optional auxiliary parameter if available.
+   * Used internally for getting shader sources from a specific resource.
    *
    * @param {string} url: the url to perform the GET to
    * @param {function} readyCallback: function to be called when request ready
@@ -581,8 +601,8 @@ function TiltEngine() {
   /**
    * Handles multiple get requests from specified urls. When all requests are
    * completed, it fires the ready callback function if it exists, & passes 
-   * the http request object and also an optional auxiliary parameter if 
-   * available.
+   * the http request object and an optional auxiliary parameter if available.
+   * Used internally for getting shader sources from a specific resource.
    *
    * @param {array} urls: an array of urls to perform the GET to
    * @param {function} readyCallback: function called when all requests ready
