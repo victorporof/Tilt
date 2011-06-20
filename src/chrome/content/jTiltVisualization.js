@@ -51,7 +51,7 @@ function TiltVisualization(image, canvas, width, height) {
   /**
    * Helper functions for easy drawing and abstraction.
    */
-  var draw = new TiltDraw(canvas, width, height);
+  var tilt = new TiltDraw(canvas, width, height);
   
   /**
    * The combined mesh representing the document visualization.
@@ -67,10 +67,10 @@ function TiltVisualization(image, canvas, width, height) {
    */
   this.setup = function() {
     // initialize shaders, matrices and other components required for drawing
-    draw.initialize();
+    tilt.initialize();
         
     // convert the dom image to a texture
-    draw.initTexture(image, function readyCallback(texture) {
+    tilt.initTexture(image, function readyCallback(texture) {
       dom = texture;
     }, "white", "gray", 8); // using a white background & gray margins of 8px
     
@@ -109,47 +109,47 @@ function TiltVisualization(image, canvas, width, height) {
       }
     }, function readyCallback() {
       // when finished, initialize the buffers
-      mesh.vertexBuffer = draw.initBuffer(mesh.vertices, 3);
-      mesh.vertexBuffer.texCoord = draw.initBuffer(mesh.texCoord, 2);
-      mesh.vertexBuffer.indices = draw.initIndexBuffer(mesh.indices);
+      mesh.vertexBuffer = tilt.initBuffer(mesh.vertices, 3);
+      mesh.vertexBuffer.texCoord = tilt.initBuffer(mesh.texCoord, 2);
+      mesh.vertexBuffer.indices = tilt.initIndexBuffer(mesh.indices);
     });
     
     // use additive blending without depth testing enabled
-    draw.blendMode("add");
-    draw.depthTest(false);
+    tilt.blendMode("add");
+    tilt.depthTest(false);
   };
   
   /**
    * The rendering animation logic and loop.
    */
-  this.loop = function() {
+  this.draw = function() {
     if (that) {
       // prepare for the next frame of the animation loop
-      draw.requestAnimFrame(that.loop);
+      tilt.requestAnimFrame(that.draw);
       
       // get some variables from the draw object for easier access
       var width = canvas.clientWidth;
       var height = canvas.clientHeight;
-      var timeCount = draw.getTimeCount();
-      var frameCount = draw.getFrameCount();
-      var frameRate = draw.getFrameRate();
-      var frameDelta = draw.getFrameDelta();
+      var timeCount = tilt.getTimeCount();
+      var frameCount = tilt.getFrameCount();
+      var frameRate = tilt.getFrameRate();
+      var frameDelta = tilt.getFrameDelta();
       
       // only after the draw object has finished initializing
-      if (draw.isInitialized()) {
+      if (tilt.isInitialized()) {
         // set a default (white) background if the dom texture has finished 
         // loading, or transparent otherwise
-        draw.background("#000" + (dom ? "" : "0"));
-        draw.origin();
+        tilt.background("#000" + (dom ? "" : "0"));
+        tilt.origin();
         
         // if the dom texture is available, the visualization can be drawn
         if (dom) {
           // this is just a test case for now, actual implementation later
-          draw.translate(width / 2, height / 2 - 100, -400);
-          draw.rotate(0, 1, 0, TiltUtils.Math.radians(timeCount / 32));
-          draw.translate(-width / 2, -height / 2, 0);
+          tilt.translate(width / 2, height / 2 - 100, -400);
+          tilt.rotate(0, 1, 0, TiltUtils.Math.radians(timeCount / 32));
+          tilt.translate(-width / 2, -height / 2, 0);
           
-          draw.mesh(mesh.vertexBuffer,
+          tilt.mesh(mesh.vertexBuffer,
                     mesh.vertexBuffer.texCoord, null, 
                     "triangles", "rgba(14, 16, 22, 255)", dom,
                     mesh.vertexBuffer.indices);
@@ -167,8 +167,8 @@ function TiltVisualization(image, canvas, width, height) {
     that = null;
     dom = null;
     
-    draw.destroy();
-    draw = null;
+    tilt.destroy();
+    tilt = null;
     
     if (readyCallback) {
       readyCallback();
