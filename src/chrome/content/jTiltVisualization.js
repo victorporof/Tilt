@@ -31,12 +31,10 @@ var EXPORTED_SYMBOLS = ["TiltVisualization"];
  * 
  * @param {object} image: image representing the document object model
  * @param {object} canvas: the canvas element used for rendering
- * @param {object} width: optional, specify the width of the canvas
- * @param {object} height: optional, specify the height of the canvas
  *
  * @return {object} the created object
  */
-function TiltVisualization(image, canvas, width, height) {
+function TiltVisualization(image, canvas) {
   
   /**
    * By convention, we make a private 'that' variable.
@@ -51,7 +49,7 @@ function TiltVisualization(image, canvas, width, height) {
   /**
    * Helper functions for easy drawing and abstraction.
    */
-  var tilt = new TiltDraw(canvas, width, height);
+  var tilt = new TiltDraw(canvas);
   
   /**
    * The combined mesh representing the document visualization.
