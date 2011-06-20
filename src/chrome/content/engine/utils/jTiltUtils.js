@@ -53,7 +53,7 @@ var create3DContext = function(canvas, opt_attribs) {
     }
   }
   return context;
-}
+};
 
 /**
  * Provides requestAnimationFrame in a cross browser way.
