@@ -72,7 +72,7 @@ TiltChrome.BrowserOverlay = {
           // construct the visualization using the dom image and the canvas
           that.visualization = new TiltVisualization(image, canvas);
           that.visualization.setup();
-          that.visualization.loop();
+          that.visualization.draw();
         }, true);
       });
     }
