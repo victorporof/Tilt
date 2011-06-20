@@ -285,13 +285,14 @@ function TiltEngine() {
    * @param {object} variable: the variable to be binded
    */
   this.bindUniformMatrix = function(uniform, variable) {
-    var cached = uniform.cache.length ? true : false;
-    for (i = 0, len = uniform.cache.length; i < len; i++) {
-      if (uniform.cache[i] != variable[i]) {
-        cached = false;
-        break;
-      }
-    }
+    var cached;
+
+    if (uniform.cache.length) {
+      cached = 
+        uniform.cache[0] == variable[0] && // first 3 elements from the 
+        uniform.cache[5] == variable[5] && // matrix primary diagonal are 
+        uniform.cache[10] == variable[10]; // most likely to be very volatile
+    }    
     if (!cached) {
       mat4.set(variable, uniform.cache);
       that.gl.uniformMatrix4fv(uniform, false, variable);
@@ -305,18 +306,19 @@ function TiltEngine() {
    * @param {object} variable: the variable to be binded
    */
   this.bindUniformVec4 = function(uniform, variable) {
-    var cached = uniform.cache.length ? true : false;
-    for (i = 0, len = uniform.cache.length; i < len; i++) {
-      if (uniform.cache[i] != variable[i]) {
-        cached = false;
-        break;
-      }
+    var cached;
+    
+    if (uniform.cache.length) {
+      cached = 
+        uniform.cache[0] == variable[0] && // first 3 elements from the 
+        uniform.cache[1] == variable[1] && // vector ({r, g, b} or {x, y, z}) 
+        uniform.cache[2] == variable[2];   // most likely to be very volatile
     }
+    
     if (!cached) {
       uniform.cache[0] = variable[0];
       uniform.cache[1] = variable[1];
       uniform.cache[2] = variable[2];
-      uniform.cache[3] = variable[3];
       that.gl.uniform4fv(uniform, variable);
     }
   };
@@ -331,7 +333,7 @@ function TiltEngine() {
   this.bindTexture = function(sampler, texture, clearCache) {
     var gl = that.gl;
 
-    if (sampler.chache !== texture || clearCache) {
+    if (clearCache || sampler.chache != texture) {
       sampler.cache = texture;
       gl.bindTexture(gl.TEXTURE_2D, texture);
       gl.uniform1i(sampler, 0);
