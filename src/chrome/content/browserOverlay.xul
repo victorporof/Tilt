@@ -21,6 +21,8 @@
           src="chrome://tilt/content/engine/utils/jTiltExtensions.js"/>
 
   <script type="application/x-javascript"
+          src="chrome://tilt/content/engine/jTiltShaders.js"/>
+  <script type="application/x-javascript"
           src="chrome://tilt/content/engine/jTiltEngine.js"/>
   <script type="application/x-javascript"
           src="chrome://tilt/content/engine/jTiltDraw.js"/>
