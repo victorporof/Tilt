@@ -290,11 +290,13 @@ function TiltEngine() {
     if (uniform.cache.length) {
       cached = 
         uniform.cache[0] == variable[0] && // first 3 elements from the 
-        uniform.cache[5] == variable[5] && // matrix primary diagonal are 
-        uniform.cache[10] == variable[10]; // most likely to be very volatile
+        uniform.cache[1] == variable[5] && // matrix primary diagonal are 
+        uniform.cache[2] == variable[10];  // most likely to be very volatile
     }    
     if (!cached) {
-      mat4.set(variable, uniform.cache);
+      uniform.cache[0] = variable[0];
+      uniform.cache[1] = variable[5];
+      uniform.cache[2] = variable[10];
       that.gl.uniformMatrix4fv(uniform, false, variable);
     }
   };
@@ -328,7 +330,7 @@ function TiltEngine() {
    *
    * @param {object} sampler: the sampler to bind the texture to
    * @param {object} texture: the texture to be binded
-   * @param {boolean} clearCache: true if should clearCache
+   * @param {boolean} clearCache: true if should clear the cache
    */
   this.bindTexture = function(sampler, texture, clearCache) {
     var gl = that.gl;
