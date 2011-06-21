@@ -28,7 +28,6 @@ var EXPORTED_SYMBOLS = ["TiltEngine"];
 
 /**
  * TiltEngine constructor.
- *
  * @return {object} the created object
  */
 function TiltEngine() {
@@ -54,7 +53,6 @@ function TiltEngine() {
    * @param {object} canvas: the canvas to create the WebGL context with
    * @param {function} successCallback: to be called if initialization worked
    * @param {function} failCallback: to be called if initialization failed
-   *
    * @return {object} the created gl context if successful, null otherwise
    */
   this.initWebGL = function(canvas, failCallback, successCallback) {
@@ -137,7 +135,6 @@ function TiltEngine() {
    *
    * @param {string} shaderSource: the source code for the shader
    * @param {string} shaderType: the shader type ('x-vertex' or 'x-fragment')
-   *
    * @return {object} the compiled shader
    */
   this.compileShader = function(shaderSource, shaderType) {
@@ -182,7 +179,6 @@ function TiltEngine() {
    *
    * @param {object} vertShader: the compiled vertex shader
    * @param {object} fragShader: the compiled fragment shader
-   *
    * @return {object} the newly created and linked shader program
    */
   this.linkProgram = function(vertShader, fragShader) {
@@ -223,7 +219,6 @@ function TiltEngine() {
    *
    * @param {object} program: the shader program to obtain the attribute from
    * @param {string} attribute: the attribute name
-   *
    * @return {number} the attribute location from the program
    */
   this.shaderAttribute = function(program, attribute) {
@@ -238,7 +233,6 @@ function TiltEngine() {
    *
    * @param {object} program: the shader program to obtain the uniform from
    * @param {string} uniform: the uniform name
-   *
    * @return {object} the uniform object from the program
    */
   this.shaderUniform = function(program, uniform) {
@@ -255,7 +249,6 @@ function TiltEngine() {
    *
    * @param {object} program: the shader program to obtain the uniform from
    * @param {string} variable: the attribute or uniform name
-   *
    * @return {number} or {object} the attribute or uniform from the program
    */
   this.shaderIO = function(program, variable) {
@@ -349,7 +342,6 @@ function TiltEngine() {
    * @param {array} elementsArray: an array of floats
    * @param {number} itemSize: how many items create a block
    * @param {number} numItems: how many items to use from the array
-   *
    * @return {object} the buffer
    */
   this.initBuffer = function(elementsArray, itemSize, numItems) {
@@ -376,7 +368,6 @@ function TiltEngine() {
    *
    * @param {array} elementsArray: an array of unsigned integers
    * @param {number} numItems: how many items to use from the array
-   *
    * @return {object} the index buffer
    */
   this.initIndexBuffer = function(elementsArray, numItems) {
