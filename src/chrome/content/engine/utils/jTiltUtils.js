@@ -40,7 +40,7 @@ var EXPORTED_SYMBOLS = [
  * @param {object} canvas: the canvas to get context from
  * @return {object} the created context.
  */
-var create3DContext = function(canvas, opt_attribs) {
+function create3DContext(canvas, opt_attribs) {
   var names = ["experimental-webgl", "webgl", "webkit-3d", "moz-webgl"];
   var context = null;
   for (var i = 0; i < names.length; ++i) {
@@ -59,7 +59,8 @@ var create3DContext = function(canvas, opt_attribs) {
  * Provides requestAnimationFrame in a cross browser way.
  */
 window.requestAnimFrame = (function() {
-  return window.webkitRequestAnimationFrame ||
+  return window.requestAnimFrame ||
+         window.webkitRequestAnimationFrame ||
          window.mozRequestAnimationFrame ||
          window.oRequestAnimationFrame ||
          window.msRequestAnimationFrame ||
@@ -341,7 +342,7 @@ TiltUtils.Image = {
     var canvas_id = "tilt-canvas-" + image.src;
     var iframe_id = "tilt-iframe-" + image.src;
 
-    TiltUtils.Document.initCanvas(function initCallback(canvas, iframe) {
+    TiltUtils.Document.initCanvas(function initCallback(canvas) {
       canvas.width = TiltUtils.Math.nextPowerOfTwo(image.width);
       canvas.height = TiltUtils.Math.nextPowerOfTwo(image.height);
 
