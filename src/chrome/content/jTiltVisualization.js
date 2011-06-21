@@ -29,12 +29,12 @@ var EXPORTED_SYMBOLS = ["TiltVisualization"];
 /**
  * TiltVisualization constructor.
  * 
- * @param {object} image: image representing the document object model
+ * @param {object} tilt: helper functions for easy drawing and abstraction
  * @param {object} canvas: the canvas element used for rendering
- *
+ * @param {object} image: image representing the document object model
  * @return {object} the created object
  */
-function TiltVisualization(image, canvas) {
+function TiltVisualization(tilt, canvas, image) {
   
   /**
    * By convention, we make a private 'that' variable.
@@ -45,11 +45,6 @@ function TiltVisualization(image, canvas) {
    * A texture representing the contents of a document object model window.
    */
   var dom = null;
-  
-  /**
-   * Helper functions for easy drawing and abstraction.
-   */
-  var tilt = new TiltDraw(canvas);
   
   /**
    * The combined mesh representing the document visualization.
@@ -64,9 +59,6 @@ function TiltVisualization(image, canvas) {
    * The initialization logic.
    */
   this.setup = function() {
-    // initialize shaders, matrices and other components required for drawing
-    tilt.initialize();
-        
     // convert the dom image to a texture
     tilt.initTexture(image, function readyCallback(texture) {
       dom = texture;
@@ -143,7 +135,7 @@ function TiltVisualization(image, canvas) {
         // if the dom texture is available, the visualization can be drawn
         if (dom) {
           // this is just a test case for now, actual implementation later
-          tilt.translate(width / 2, height / 2 - 100, -400);
+          tilt.translate(width / 2, height / 2 - 50, -400);
           tilt.rotate(0, 1, 0, TiltUtils.Math.radians(elapsedTime / 32));
           tilt.translate(-width / 2, -height / 2, 0);
           
