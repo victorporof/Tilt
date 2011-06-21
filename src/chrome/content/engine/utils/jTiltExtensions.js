@@ -36,33 +36,35 @@ TiltExtensions.WebGL = {
 
   /**
    * JavaScript implementation of WebGL MOZ_dom_element_texture (#653656)
-   * extension. It requres three parameters: a callback, width and height.
-   * If unspecified, the width and height default to the contentWindow 
+   * extension. It requres a callback function, a window, width & height.
+   * If unspecified, contentWindow will default to the gBrowser.contentWindow.
+   * Also, if unspecified, the width and height default to the contentWindow 
    * innerWidth and innerHeight. The newly created image will be passed as a  
    * parameter to the readyCallback function.
    * 
    * @param {function} readyCallback: function called when drawing is finished
    * @param {number} width: the width of the MOZ_dom_element_texture
    * @param {number} height: the height of the MOZ_dom_element_texture
+   * @param {object} window: optional, the window to draw
    */
-  initDocumentImage: function(readyCallback, width, height) {
+  initDocumentImage: function(readyCallback, contentWindow, width, height) {
     // Using a custom iframe with a canvas context element to draw the window
-    TiltUtils.Document.initCanvas(function initCallback(canvas, iframe) {
+    TiltUtils.Document.initCanvas(function initCallback(canvas) {
+      if (!contentWindow) {
+        contentWindow = gBrowser.contentWindow;
+      }
       if (!width) {
-        width = iframe.contentWindow.innerWidth;
+        width = contentWindow.innerWidth;
       }
       if (!height) {
-        height = iframe.contentWindow.innerHeight;
+        height = contentWindow.innerHeight;
       }
     
       canvas.width = width;
       canvas.height = height;
     
       var context = canvas.getContext('2d');
-      
-      // FIXME: custom browser
-      context.drawWindow(gBrowser.selectedBrowser.contentWindow, 
-                         0, 0, width, height, "#fff");
+      context.drawWindow(contentWindow, 0, 0, width, height, "#fff");
     
       if (readyCallback) {
         readyCallback(canvas);
