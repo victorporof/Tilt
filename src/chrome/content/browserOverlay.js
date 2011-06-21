@@ -60,20 +60,20 @@ TiltChrome.BrowserOverlay = {
       
       // use an extension to get the image representation of the document
       TiltExtensions.WebGL.initDocumentImage(function imageCallback(image) {
+        // set the width and height to mach the content window dimensions
+        var w = gBrowser.contentWindow.innerWidth;
+        var h = gBrowser.contentWindow.innerHeight;
+
         // initialize an iframe containing a canvas element
-        TiltUtils.Document.initCanvas(function initCallback(canvas, iframe) {
+        TiltDraw.Create(w, h, function createCallback(tilt, canvas, iframe) {
           // remember the iframe so that it can be destroyed later
           that.iframe = iframe;
           
-          // set the width and height to mach the content window dimensions
-          canvas.width = iframe.contentWindow.innerWidth;
-          canvas.height = iframe.contentWindow.innerHeight;
-          
           // construct the visualization using the dom image and the canvas
-          that.visualization = new TiltVisualization(image, canvas);
+          that.visualization = new TiltVisualization(tilt, canvas, image);
           that.visualization.setup();
           that.visualization.draw();
-        }, true);
+        });
       });
     }
     else {
