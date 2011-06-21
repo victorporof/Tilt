@@ -27,12 +27,58 @@
 var EXPORTED_SYMBOLS = ["TiltDraw"];
 
 /**
+ * Creates a Tilt environemnt. The readyCallback function is called when
+ * initialization is complete, along with the canvas and additionally, an 
+ * instance of TiltDraw passed as a parameter. If this is running inside an
+ * extension environment, a container iframe is also returned. For more 
+ * complex initialization scenarios, use TiltUtils.Document.initCanvas and 
+ * create a TiltDraw object manually with the constructor.
+ * Use this function to append a canvas element to the document, like this:
+ *
+ *      TiltDraw.Create(640, 480, function readyCallback(tilt, canvas) {
+ *        setup();
+ *        draw();
+ *
+ *        function setup() {
+ *          // initialization logic
+ *          ...
+ *        };
+ *
+ *        function draw() {
+ *          tilt.requestAnimFrame(draw);
+ *          tilt.background("#ff0");
+ *
+ *          // do rendering
+ *          ...
+ *        };
+ *      });
+ *
+ * @param {object} width: specify the initial width of the canvas
+ * @param {object} height: specify the initial height of the canvas
+ * @param {function} readyCallback: function called when initialization ready
+ */
+TiltDraw.Create = function(width, height, readyCallback) {
+  TiltUtils.Document.initCanvas(function initCallback(canvas, iframe) {
+    if (width && height) {
+      canvas.width = width;
+      canvas.height = height;
+    }
+    
+    if (readyCallback) {
+      readyCallback(new TiltDraw(canvas).initialize(), canvas, iframe);
+    }
+  }, true);
+}
+
+/**
  * TiltDraw constructor.
+ * When created, nothing is loaded (no shaders, no matrices, no buffers..).
+ * Use the initialize() function to perform mandatory initialization of 
+ * shaders and other objects required for drawing.
  * 
  * @param {object} canvas: the canvas element used for rendering
- * @param {function} successCallback: to be called if initialization worked
- * @param {function} failCallback: to be called if initialization failed
- *
+ * @param {function} successCallback: to be called if gl initialization worked
+ * @param {function} failCallback: to be called if gl initialization failed
  * @return {object} the created object
  */ 
 function TiltDraw(canvas, failCallback, successCallback) {
@@ -737,6 +783,7 @@ function TiltDraw(canvas, failCallback, successCallback) {
 
   /**
    * Sets the dimensions of the canvas object.
+   * This function resets the model view and projection matrices.
    *
    * @param {number} width: the width of the canvas
    * @param {number} height: the height of the canvas
@@ -784,46 +831,4 @@ function TiltDraw(canvas, failCallback, successCallback) {
     
     that = null;
   };
-}
-
-/**
- * Creates a Tilt environemnt. The readyCallback function is called when
- * initialization is complete, along with the canvas and additionally, an 
- * instance of TiltDraw passed as a parameter. For more complex initialization
- * scenarios, use TiltUtils.Document.initCanvas and create a TiltDraw object.
- * Use this function to append a canvas element to the document, like this:
- *
- *      TiltDraw.Create(640, 480, function readyCallback(tilt) {
- *        setup();
- *        draw();
- *
- *        function setup() {
- *          // initialization logic
- *          ...
- *        };
- *
- *        function draw() {
- *          tilt.requestAnimFrame(draw);
- *          tilt.background("#ff0");
- *
- *          // do rendering
- *          ...
- *        };
- *      });
- *
- * @param {object} width: specify the initial width of the canvas
- * @param {object} height: specify the initial height of the canvas
- * @param {function} readyCallback: function called when initialization ready
- */
-TiltDraw.Create = function(width, height, readyCallback) {
-  TiltUtils.Document.initCanvas(function initCallback(canvas) {
-    if (width && height) {
-      canvas.width = width;
-      canvas.height = height;
-    }
-    
-    if (readyCallback) {
-      readyCallback(canvas, new TiltDraw(canvas).initialize());
-    }
-  }, true);
 }
