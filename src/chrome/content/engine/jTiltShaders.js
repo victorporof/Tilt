@@ -37,26 +37,28 @@ if ("undefined" === typeof(TiltShaders)) {
  */  
 TiltShaders.Color = {
 
-  vs:
-"attribute vec3 vertexPosition;" +
+  vs: [
+"attribute vec3 vertexPosition;",
 
-"uniform mat4 mvMatrix;" +
-"uniform mat4 projMatrix;" +
+"uniform mat4 mvMatrix;",
+"uniform mat4 projMatrix;",
 
-"void main(void) {" +
-"    gl_Position = projMatrix * mvMatrix * vec4(vertexPosition, 1.0);" +
-"}",
-
-  fs:
-"#ifdef GL_ES\n" +
-"precision highp float;\n" +
-"#endif\n" +
-
-"uniform vec4 color;" +
-
-"void main(void) {" +
-"    gl_FragColor = color;" +
+"void main(void) {",
+"    gl_Position = projMatrix * mvMatrix * vec4(vertexPosition, 1.0);",
 "}"
+].join("\n"),
+
+  fs: [
+"#ifdef GL_ES",
+"precision highp float;",
+"#endif",
+
+"uniform vec4 color;",
+
+"void main(void) {",
+"    gl_FragColor = color;",
+"}"
+].join("\n")
 };
 
 /** 
@@ -70,32 +72,34 @@ TiltShaders.Color = {
  */
 TiltShaders.Texture = {
 
-  vs:
-"attribute vec3 vertexPosition;" +
-"attribute vec2 vertexTexCoord;" +
+  vs: [
+"attribute vec3 vertexPosition;",
+"attribute vec2 vertexTexCoord;",
 
-"uniform mat4 mvMatrix;" +
-"uniform mat4 projMatrix;" +
+"uniform mat4 mvMatrix;",
+"uniform mat4 projMatrix;",
 
-"varying vec2 texCoord;" +
+"varying vec2 texCoord;",
 
-"void main(void) {" +
-"    gl_Position = projMatrix * mvMatrix * vec4(vertexPosition, 1.0);" +
-"    texCoord = vertexTexCoord;" +
-"}",
+"void main(void) {",
+"    gl_Position = projMatrix * mvMatrix * vec4(vertexPosition, 1.0);",
+"    texCoord = vertexTexCoord;",
+"}"
+].join("\n"),
 
-  fs:
-"#ifdef GL_ES\n" +
-"precision highp float;\n" +
-"#endif\n" +
+  fs: [
+"#ifdef GL_ES",
+"precision highp float;",
+"#endif",
 
-"uniform vec4 color;" +
-"uniform sampler2D sampler;" +
+"uniform vec4 color;",
+"uniform sampler2D sampler;",
 
-"varying vec2 texCoord;" +
+"varying vec2 texCoord;",
 
-"void main(void) {" +
-"    vec4 tex = texture2D(sampler, vec2(texCoord.s, texCoord.t));" +
-"    gl_FragColor = color * tex;" +
-"}" 
+"void main(void) {",
+"    vec4 tex = texture2D(sampler, vec2(texCoord.s, texCoord.t));",
+"    gl_FragColor = color * tex;",
+"}"
+].join("\n")
 };
