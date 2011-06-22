@@ -127,9 +127,14 @@ function TiltVisualization(tilt, canvas, image) {
       
       // only after the draw object has finished initializing
       if (tilt.isInitialized()) {
-        // set a default (white) background if the dom texture has finished 
-        // loading, or transparent otherwise
-        tilt.background("#000" + (dom ? "" : "0"));
+        // set a black background if the dom texture has finished loading,
+        // or transparent otherwise
+        if (dom) {
+          tilt.clear();
+        }
+        else {
+          tilt.background("#0000");
+        }
         tilt.origin();
         
         // if the dom texture is available, the visualization can be drawn
