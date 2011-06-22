@@ -273,6 +273,10 @@ function TiltDraw(canvas, failCallback, successCallback) {
     // buffer of 2-component vertices (x, y) as the corners of a rectangle
     rectangle.vertices = engine.initBuffer([
       0, 0, 1, 0, 0, 1, 1, 1], 2);
+
+    // buffer of 2-component vertices (x, y) as the outline of a rectangle
+    rectangle.outline = engine.initBuffer([
+      0, 0, 1, 0, 1, 1, 0, 1, 0, 0], 2);
       
     // buffer of 2-component texture coordinates (u, v) for the rectangle
     rectangle.texCoord = engine.initBuffer([
@@ -647,10 +651,18 @@ function TiltDraw(canvas, failCallback, successCallback) {
     that.translate(x, y, 0);
     that.scale(width, height, 1);
     
-    colorShader.use(rectangle.vertices,
-                    mvMatrix, projMatrix, fill);
+    if (fill) {
+      colorShader.use(rectangle.vertices,
+                      mvMatrix, projMatrix, fill);
 
-    engine.drawVertices(gl.TRIANGLE_STRIP, 0, rectangle.vertices.numItems);
+      engine.drawVertices(gl.TRIANGLE_STRIP, 0, rectangle.vertices.numItems);
+    }
+    if (stroke) {
+      colorShader.use(rectangle.outline,
+                      mvMatrix, projMatrix, stroke);
+
+      engine.drawVertices(gl.LINE_STRIP, 0, rectangle.outline.numItems);
+    }
     that.popMatrix();
   };
   
