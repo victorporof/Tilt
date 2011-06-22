@@ -59,20 +59,18 @@ TiltChrome.BrowserOverlay = {
       tiltMenu.label = TiltUtils.StringBundle.get("menuItemHide.label");
       
       // use an extension to get the image representation of the document
-      TiltExtensions.WebGL.initDocumentImage(function imageCallback(image) {
+      TiltExtensions.WebGL.initDocumentImage(function(image) {
         // set the width and height to mach the content window dimensions
         var w = gBrowser.contentWindow.innerWidth;
         var h = gBrowser.contentWindow.innerHeight;
 
         // initialize an iframe containing a canvas element
-        TiltDraw.Create(w, h, function createCallback(tilt, canvas, iframe) {
+        TiltDraw.Create(w, h, function(tilt, canvas, iframe) {
           // remember the iframe so that it can be destroyed later
           that.iframe = iframe;
           
           // construct the visualization using the dom image and the canvas
           that.visualization = new TiltVisualization(tilt, canvas, image);
-          that.visualization.setup();
-          that.visualization.draw();
         });
       });
     }
@@ -91,7 +89,7 @@ TiltChrome.BrowserOverlay = {
     let that = this;
     
     // issue a destroy call through all the visualization children
-    that.visualization.destroy(function readyCallback() {
+    that.visualization.destroy(function() {
       that.visualization = null; // when done, do some cleanup
 
       // remove the iframe from the browser stack
