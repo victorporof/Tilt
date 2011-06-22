@@ -56,8 +56,8 @@ var EXPORTED_SYMBOLS = ["TiltDraw"];
  *        ...
  *      });
  *
- * @param {object} width: specify the initial width of the canvas
- * @param {object} height: specify the initial height of the canvas
+ * @param {number} width: specify the initial width of the canvas
+ * @param {number} height: specify the initial height of the canvas
  * @param {function} readyCallback: function called when initialization ready
  */
 TiltDraw.Create = function(width, height, readyCallback) {
@@ -65,20 +65,19 @@ TiltDraw.Create = function(width, height, readyCallback) {
     canvas.width = width;
     canvas.height = height;
 
-    if (readyCallback) {
-      var tilt = new TiltDraw(canvas);
-      
-      tilt.initialize(function() {
+    var tilt = new TiltDraw(canvas);    
+
+    tilt.initialize(function() {
+      if ("function" === typeof(readyCallback)) {
         readyCallback(tilt, canvas, iframe);
-        
-        if (tilt.setup) {
-          tilt.setup();
-        }
-        if (tilt.draw) {
-          tilt.draw();
-        }
-      });
-    }
+      }
+      if ("function" === typeof(tilt.setup)) {
+        tilt.setup();
+      }
+      if ("function" === typeof(tilt.draw)) {
+        tilt.draw();
+      }
+    });
   }, true);
 }
 
@@ -382,19 +381,20 @@ function TiltDraw(canvas, failCallback, successCallback) {
       mouseX = e.pageX - canvas.offsetLeft;
       mouseY = e.pageY - canvas.offsetTop;
       
-      if (that.mouseMoved) {
+      if ("function" === typeof(that.mouseMoved)) {
         that.mouseMoved(mouseX, mouseY);
       }
     }
 
     // handle the onclick event
     canvas.onclick = function(e) {
-      if (that.mousePressed) {
+      if ("function" === typeof(that.mousePressed)) {
         that.mousePressed(mouseX, mouseY);
       }
     }
     
-    if (readyCallback) {
+    // call the ready callback function if it was passed as a valid parameter
+    if ("function" === typeof(readyCallback)) {
       readyCallback();
     }
 
@@ -724,7 +724,7 @@ function TiltDraw(canvas, failCallback, successCallback) {
   this.background = function(color) {
     var rgba;
 
-    if (!color) {
+    if ("undefined" === typeof(color)) {
       rgba = TiltUtils.Math.hex2rgba("#d6d6d6ff");
     }
     else if ("string" === typeof(color)) {
@@ -925,11 +925,11 @@ function TiltDraw(canvas, failCallback, successCallback) {
    * @param {string} mode: blending, either 'alpha', 'add' or undefined
    */
   this.blendMode = function(mode) {
-    if (mode === "alpha") {
+    if ("alpha" === mode) {
       gl.enable(gl.BLEND);
       gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
     }
-    else if (mode === "add" || mode === "additive") {
+    else if ("add" === mode || "additive" === mode) {
       gl.enable(gl.BLEND);
       gl.blendFunc(gl.ONE, gl.ONE);
     }
@@ -944,7 +944,7 @@ function TiltDraw(canvas, failCallback, successCallback) {
    * @param {boolean} mode: true if depth testing should be enabled
    */
   this.depthTest = function(mode) {
-    if (mode && mode !== "false") {
+    if (mode) {
       gl.enable(gl.DEPTH_TEST);
     }
     else {

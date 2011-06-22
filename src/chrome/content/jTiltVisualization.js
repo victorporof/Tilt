@@ -32,14 +32,10 @@ var EXPORTED_SYMBOLS = ["TiltVisualization"];
  * @param {object} tilt: helper functions for easy drawing and abstraction
  * @param {object} canvas: the canvas element used for rendering
  * @param {object} image: image representing the document object model
+ * @param {object} controller: the controller responsable for handling events
  * @return {object} the created object
  */
-function TiltVisualization(tilt, canvas, image) {
-  
-  /**
-   * By convention, we make a private 'that' variable.
-   */
-  var that = this;
+function TiltVisualization(tilt, canvas, image, controller) {
   
   /**
    * A texture representing the contents of a document object model window.
@@ -131,13 +127,13 @@ function TiltVisualization(tilt, canvas, image) {
     
     // only after the draw object has finished initializing
     if (tilt.isInitialized()) {
-      // set a black background if the dom texture has finished loading,
-      // or transparent otherwise
-      if (dom) {
-        tilt.clear();
+      // set a transparent black background if the dom texture has not 
+      // finished loading, or opaque otherwise
+      if (!dom) {
+        tilt.background("#0000");
       }
       else {
-        tilt.background("#0000");
+        tilt.clear();
       }
       
       // reset the model view matrix to identity
@@ -162,22 +158,42 @@ function TiltVisualization(tilt, canvas, image) {
    * Override the mousePressed function to handle the event.
    */
   tilt.mousePressed = function(x, y) {
-    TiltUtils.Console.error(x + " " + y);
-  }
+    if ("function" === typeof(controller.mousePressed)) {
+      controller.mousePressed(x, y);
+    }
+  };
   
+  /**
+   * Override the mouseMoved function to handle the event.
+   */
+  tilt.mouseMoved = function(x, y) {
+    if ("function" === typeof(controller.mouseMoved)) {
+      controller.mouseMoved(x, y);
+    }
+  };
+  
+  /**
+   * Override the keyPressed function to handle the event.
+   */
+  tilt.keyPressed = function(key) {
+    if ("function" === typeof(controller.keyPressed)) {
+      controller.keyPressed(key);
+    }
+  };
+    
   /**
    * Destroys this object.
    *
-   * @param readyCallback: function to be called when finished
+   * @param {function} readyCallback: function to be called when finished
    */
   this.destroy = function(readyCallback) {
-    that = null;
     dom = null;
+    mesh = null;
     
     tilt.destroy();
     tilt = null;
     
-    if (readyCallback) {
+    if ("function" === typeof(readyCallback)) {
       readyCallback();
     }
   };

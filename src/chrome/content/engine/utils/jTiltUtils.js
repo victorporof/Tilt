@@ -90,10 +90,10 @@ TiltUtils.Document = {
    * @return {object} the newly created iframe or canvas
    */
   initCanvas: function(readyCallback, keepInStack, canvas_id, iframe_id) {
-    if (!canvas_id) {
+    if ("undefined" === typeof(canvas_id)) {
       canvas_id = "tilt-canvas";
     }    
-    if (!iframe_id) {
+    if ("undefined" === typeof(iframe_id)) {
       iframe_id = "tilt-iframe";
     }
     
@@ -107,7 +107,7 @@ TiltUtils.Document = {
       iframe.addEventListener("load", function loadCallback() {
         iframe.removeEventListener("load", loadCallback, true);
 
-        if (readyCallback) {
+        if ("function" === typeof(readyCallback)) {
           var canvas = iframe.contentDocument.getElementById(canvas_id);
           readyCallback(canvas, iframe);
         }
@@ -135,7 +135,7 @@ TiltUtils.Document = {
 
       that.append(canvas);
 
-      if (readyCallback) {
+      if ("function" === typeof(readyCallback)) {
         readyCallback(canvas);
       }
       if (!keepInStack) {
@@ -203,7 +203,7 @@ TiltUtils.Document = {
    * @param {object} dom: the document object model to traverse
    */
   traverse: function(nodeCallback, readyCallback, dom) {
-    if (nodeCallback) {
+    if ("function" === typeof(nodeCallback)) {
       recursive(nodeCallback, dom ? dom : this.get(), 0);
     }
 
@@ -217,7 +217,7 @@ TiltUtils.Document = {
       }
     }
     
-    if (readyCallback) {
+    if ("function" === typeof(readyCallback)) {
       readyCallback(dom ? dom : this.get());
     }
   },
@@ -333,7 +333,7 @@ TiltUtils.Image = {
     if (TiltUtils.Math.isPowerOfTwo(image.width) &&
         TiltUtils.Math.isPowerOfTwo(image.height) && !forceResize) {
 
-      if (readyCallback) {
+      if ("function" === typeof(readyCallback)) {
         readyCallback(image);
         return;
       }
@@ -358,7 +358,7 @@ TiltUtils.Image = {
         0, 0, canvas.width, canvas.height);
 
       if (strokeColor) {
-        if (!strokeWeight) {
+        if (strokeWeight <= 0) {
           strokeWeight = 1;
         }
         context.strokeStyle = strokeColor;
@@ -366,7 +366,7 @@ TiltUtils.Image = {
         context.strokeRect(0, 0, canvas.width, canvas.height);
       }
 
-      if (readyCallback) {
+      if ("function" === typeof(readyCallback)) {
         readyCallback(canvas);
       }
     }, false, canvas_id, iframe_id);

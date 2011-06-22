@@ -27,6 +27,8 @@
   <script type="application/x-javascript"
           src="chrome://tilt/content/engine/jTiltDraw.js"/>
   <script type="application/x-javascript"
+          src="chrome://tilt/content/jTiltController.js"/>
+  <script type="application/x-javascript"
           src="chrome://tilt/content/jTiltVisualization.js"/>
           
   <script type="application/x-javascript"

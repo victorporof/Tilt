@@ -61,13 +61,13 @@ function TiltEngine() {
     });
     if (gl) {
       that.gl = gl;
-      if (successCallback) {
+      if ("function" === typeof(successCallback)) {
         successCallback();
       }
     }
     else {
       TiltUtils.Console.log(TiltUtils.StringBundle.get("webgl.init.error"));
-      if (failCallback) {
+      if ("function" === typeof(failCallback)) {
         failCallback();
       }
     }
@@ -91,7 +91,7 @@ function TiltEngine() {
     vertShader.src = vertShaderSrc;
     fragShader.src = fragShaderSrc;
     
-    if (readyCallback) {
+    if ("function" === typeof(readyCallback)) {
       readyCallback(that.linkProgram(vertShader, fragShader));
     }
   };
@@ -124,7 +124,7 @@ function TiltEngine() {
       vertShader.src = http[0].responseText;
       fragShader.src = http[1].responseText;
       
-      if (readyCallback) {
+      if ("function" === typeof(readyCallback)) {
         readyCallback(that.linkProgram(vertShader, fragShader));
       }
     });
@@ -149,10 +149,10 @@ function TiltEngine() {
       return null;
     }
 
-    if (shaderType === "x-shader/x-vertex") {
+    if ("x-shader/x-vertex" === shaderType) {
       shader = gl.createShader(gl.VERTEX_SHADER);
     }
-    else if (shaderType === "x-shader/x-fragment") {
+    else if ("x-shader/x-fragment" === shaderType) {
       shader = gl.createShader(gl.FRAGMENT_SHADER);
     }
     else {
@@ -345,7 +345,7 @@ function TiltEngine() {
    * @return {object} the initialized buffer
    */
   this.initBuffer = function(elementsArray, itemSize, numItems) {
-    if (!numItems) {
+    if ("undefined" === typeof(numItems)) {
       numItems = elementsArray.length / itemSize;
     }
     
@@ -372,7 +372,7 @@ function TiltEngine() {
    * @return {object} the initialized index buffer
    */
   this.initIndexBuffer = function(elementsArray, numItems) {
-    if (!numItems) {
+    if ("undefined" === typeof(numItems)) {
       numItems = elementsArray.length;
     }
     
@@ -445,7 +445,7 @@ function TiltEngine() {
         }
         gl.bindTexture(gl.TEXTURE_2D, null);
         
-        if (readyCallback) {
+        if ("function" === typeof(readyCallback)) {
           readyCallback(texture);
         }
       }, fillColor, strokeColor, strokeWeight, true);
@@ -471,11 +471,11 @@ function TiltEngine() {
       gl.bindTexture(gl.TEXTURE_2D, texture);
     }
 
-    if (minFilter === "nearest") {
+    if ("nearest" === minFilter) {
       gl.texParameteri(gl.TEXTURE_2D,
                        gl.TEXTURE_MIN_FILTER, gl.NEAREST);
     }
-    else if (minFilter === "linear" && mipmap) {
+    else if ("linear" === minFilter && mipmap) {
       gl.texParameteri(gl.TEXTURE_2D,
                        gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR);
     }
@@ -484,11 +484,11 @@ function TiltEngine() {
                        gl.TEXTURE_MIN_FILTER, gl.LINEAR);
     }
 
-    if (magFilter === "nearest") {
+    if ("nearest" === magFilter) {
       gl.texParameteri(gl.TEXTURE_2D,
                        gl.TEXTURE_MAG_FILTER, gl.NEAREST);
     }
-    else if (magFilter === "linear" && mipmap) {
+    else if ("linear" === magFilter && mipmap) {
       gl.texParameteri(gl.TEXTURE_2D,
                        gl.TEXTURE_MAG_FILTER, gl.LINEAR_MIPMAP_LINEAR);
     }
@@ -497,7 +497,7 @@ function TiltEngine() {
                        gl.TEXTURE_MAG_FILTER, gl.LINEAR);
     }
 
-    if (wrapS === "repeat") {
+    if ("repeat" === wrapS) {
       gl.texParameteri(gl.TEXTURE_2D,
                        gl.TEXTURE_WRAP_S, gl.REPEAT);
     }
@@ -506,7 +506,7 @@ function TiltEngine() {
                        gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
     }
 
-    if (wrapT === "repeat") {
+    if ("repeat" === wrapT) {
       gl.texParameteri(gl.TEXTURE_2D,
                        gl.TEXTURE_WRAP_T, gl.REPEAT);
     }
@@ -583,7 +583,7 @@ function TiltEngine() {
         mode = gl.LINE_LOOP;
       }
     }
-    else if (drawMode === undefined) {
+    else if ("undefined" === typeof(drawMode)) {
       mode = gl.TRIANGLE_STRIP;
     }
     else {
@@ -610,7 +610,7 @@ function TiltEngine() {
     http.send(null);
     http.onreadystatechange = function() {
       if (http.readyState === 4) {
-        if (readyCallback) {
+        if ("function" === typeof(readyCallback)) {
           readyCallback(http, auxParam);
         }
       }
@@ -634,7 +634,7 @@ function TiltEngine() {
     function requestReady() {
       finished++;
       if (finished === urls.length) {
-        if (readyCallback) {
+        if ("function" === typeof(readyCallback)) {
           readyCallback(http, auxParam);
         }
       }
