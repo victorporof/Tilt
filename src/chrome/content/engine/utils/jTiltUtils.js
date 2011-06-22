@@ -23,56 +23,24 @@
  *    3. This notice may not be removed or altered from any source
  *    distribution.
  */
-if ("undefined" === typeof(TiltUtils)) {
-  var TiltUtils = {};
+if ("undefined" === typeof(Tilt)) {
+  var Tilt = {};
+}
+if ("undefined" === typeof(Tilt.Utils)) {
+  Tilt.Utils = {};
 }
 
 var EXPORTED_SYMBOLS = [
-  "TiltUtils.Iframe",
-  "TiltUtils.Document",
-  "TiltUtils.Image",
-  "TiltUtils.Math",
-  "TiltUtils.String"];
-
-/**
- * Creates a WebGL context.
- *
- * @param {object} canvas: the canvas to get context from
- * @return {object} the created context.
- */
-function create3DContext(canvas, opt_attribs) {
-  var names = ["experimental-webgl", "webgl", "webkit-3d", "moz-webgl"];
-  var context = null;
-  for (var i = 0; i < names.length; ++i) {
-    try {
-      context = canvas.getContext(names[i], opt_attribs);
-    } catch(e) { }
-
-    if (context) {
-      break;
-    }
-  }
-  return context;
-};
-
-/**
- * Provides requestAnimationFrame in a cross browser way.
- */
-window.requestAnimFrame = (function() {
-  return window.requestAnimFrame ||
-         window.webkitRequestAnimationFrame ||
-         window.mozRequestAnimationFrame ||
-         window.oRequestAnimationFrame ||
-         window.msRequestAnimationFrame ||
-         function(callback, Element) {
-           window.setTimeout(callback, 1000 / 60);
-         };
-})();
+  "Tilt.Utils.Iframe",
+  "Tilt.Utils.Document",
+  "Tilt.Utils.Image",
+  "Tilt.Utils.Math",
+  "Tilt.Utils.String"];
 
 /** 
  * Utilities for accessing and manipulating a document.
  */
-TiltUtils.Document = {
+Tilt.Utils.Document = {
 
   /**
    * Helper method, allowing to easily create an iframe with a canvas element
@@ -310,7 +278,7 @@ TiltUtils.Document = {
 /**
  * Utilities for manipulating images.
  */
-TiltUtils.Image = {
+Tilt.Utils.Image = {
 
   /**
    * Scales an image to power of two width and height.
@@ -330,8 +298,8 @@ TiltUtils.Image = {
                                fillColor, strokeColor, strokeWeight,
                                forceResize) {
                                  
-    if (TiltUtils.Math.isPowerOfTwo(image.width) &&
-        TiltUtils.Math.isPowerOfTwo(image.height) && !forceResize) {
+    if (Tilt.Utils.Math.isPowerOfTwo(image.width) &&
+        Tilt.Utils.Math.isPowerOfTwo(image.height) && !forceResize) {
 
       if ("function" === typeof(readyCallback)) {
         readyCallback(image);
@@ -342,9 +310,9 @@ TiltUtils.Image = {
     var canvas_id = "tilt-canvas-" + image.src;
     var iframe_id = "tilt-iframe-" + image.src;
 
-    TiltUtils.Document.initCanvas(function initCallback(canvas) {
-      canvas.width = TiltUtils.Math.nextPowerOfTwo(image.width);
-      canvas.height = TiltUtils.Math.nextPowerOfTwo(image.height);
+    Tilt.Utils.Document.initCanvas(function initCallback(canvas) {
+      canvas.width = Tilt.Utils.Math.nextPowerOfTwo(image.width);
+      canvas.height = Tilt.Utils.Math.nextPowerOfTwo(image.height);
 
       var context = canvas.getContext('2d');
 
@@ -376,7 +344,7 @@ TiltUtils.Image = {
 /**
  * Various math functions required by the engine.
  */
-TiltUtils.Math = {
+Tilt.Utils.Math = {
 
   /**
    * Helper function, converts degrees to radians.
@@ -463,7 +431,7 @@ TiltUtils.Math = {
 /**
  * Helper functions for manipulating strings.
  */
-TiltUtils.String = {
+Tilt.Utils.String = {
   
   /**
    * Trims whitespace characters from the left and right side of a string.
@@ -500,7 +468,7 @@ TiltUtils.String = {
  * Easy way to access the string bundle.
  * Usually useful only when this is used inside an extension evironment.
  */
-TiltUtils.StringBundle = {
+Tilt.Utils.StringBundle = {
   
   /** 
    * The bundle name used.
@@ -557,7 +525,7 @@ TiltUtils.StringBundle = {
 /**
  * Various console functions required by the engine.
  */
-TiltUtils.Console = {
+Tilt.Utils.Console = {
   
   /**
    * Logs a message to the console.
@@ -606,21 +574,21 @@ TiltUtils.Console = {
    * to be listed in a single place. Hopefully, they will all be listed in 
    * nsIScriptError.idl eventually.
    */
-  error: function(aMessage, aSourceName, aSourceLine, aLineNumber, 
-                  aColumnNumber, aFlags, aCategory) {
+  error: function(aMessage, aSourceName, aSourceLine, 
+                  aLineNumber, aColumnNumber, aFlags, aCategory) {
     try {
       if (!aMessage) {
         aMessage = "undefined";
       }
 
       var consoleService = Components.classes["@mozilla.org/consoleservice;1"]
-        .getService(Components.interfaces.nsIConsoleService);
+      .getService(Components.interfaces.nsIConsoleService);
 
       var scriptError = Components.classes["@mozilla.org/scripterror;1"]
         .createInstance(Components.interfaces.nsIScriptError);
 
-      scriptError.init(aMessage, aSourceName, aSourceLine, aLineNumber, 
-                       aColumnNumber, aFlags, aCategory);
+      scriptError.init(aMessage, aSourceName, aSourceLine,
+                       aLineNumber, aColumnNumber, aFlags, aCategory);
 
       consoleService.logMessage(scriptError);
     }
