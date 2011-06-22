@@ -679,7 +679,7 @@ function TiltDraw(canvas, failCallback, successCallback) {
    * @param {number} height: the height of the object
    */
   this.rect = function(x, y, width, height) {
-    if ("center" === rect.rectMode) {
+    if ("center" === rectangle.rectMode) {
       x -= width / 2;
       y -= height / 2;
     }
@@ -713,7 +713,7 @@ function TiltDraw(canvas, failCallback, successCallback) {
    * @param {string} mode: either 'corner' or 'center'
    */
   this.rectMode = function(mode) {
-    rect.rectMode = mode;
+    rectangle.rectMode = mode;
   };
   
   /**
@@ -732,7 +732,7 @@ function TiltDraw(canvas, failCallback, successCallback) {
       height = texture.image.height;
     }
     
-    if ("center" === rect.imageMode) {
+    if ("center" === rectangle.imageMode) {
       x -= width / 2;
       y -= height / 2;
     }
@@ -761,7 +761,7 @@ function TiltDraw(canvas, failCallback, successCallback) {
    * @param {string} mode: either 'corner' or 'center'
    */
   this.imageMode = function(mode) {
-    rect.imageMode = mode;
+    rectangle.imageMode = mode;
   };
   
   /**
