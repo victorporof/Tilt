@@ -23,19 +23,19 @@
  *    3. This notice may not be removed or altered from any source
  *    distribution.
  */
-if ("undefined" === typeof(Tilt)) {
-  var Tilt = {};
+if ("undefined" === typeof(TiltChrome)) {
+  var TiltChrome = {};
 }
-if ("undefined" === typeof(Tilt.Controller)) {
-  Tilt.Controller = {};
+if ("undefined" === typeof(TiltChrome.Controller)) {
+  TiltChrome.Controller = {};
 }
 
-var EXPORTED_SYMBOLS = ["TiltEvents"];
+var EXPORTED_SYMBOLS = ["TiltChrome.Controller.MouseAndKeyboard"];
 
 /**
  * A mouse and keyboard implementation
  */
-Tilt.Controller.MouseAndKeyboard = function() {
+TiltChrome.Controller.MouseAndKeyboard = function() {
   var mousePressed = false;
   var mouseX = 0;
   var mouseY = 0;

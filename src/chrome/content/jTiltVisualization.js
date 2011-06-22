@@ -23,11 +23,11 @@
  *    3. This notice may not be removed or altered from any source
  *    distribution.
  */
-if ("undefined" === typeof(Tilt)) {
-  var Tilt = {};
+if ("undefined" === typeof(TiltChrome)) {
+  var TiltChrome = {};
 }
 
-var EXPORTED_SYMBOLS = ["Tilt.Visualization"];
+var EXPORTED_SYMBOLS = ["TiltChrome.Visualization"];
 
 /**
  * Tilt visualization constructor.
@@ -38,7 +38,7 @@ var EXPORTED_SYMBOLS = ["Tilt.Visualization"];
  * @param {object} controller: the controller responsable for handling events
  * @return {object} the created object
  */
-Tilt.Visualization = function(tilt, canvas, image, controller) {
+TiltChrome.Visualization = function(tilt, canvas, image, controller) {
 
   /**
    * By convention, we make a private 'that' variable.
@@ -74,7 +74,6 @@ Tilt.Visualization = function(tilt, canvas, image, controller) {
   tilt.setup = function() {
     // set a reference in the controller for this visualization
     controller.visualization = that;
-    controller.tilt = tilt;
     controller.canvas = canvas;
     
     // convert the dom image to a texture
@@ -159,7 +158,7 @@ Tilt.Visualization = function(tilt, canvas, image, controller) {
 
       // if the dom texture is available, the visualization can be drawn
       if (dom) {
-        // this is just a test case for now, actual implementation later
+        // this is just a test case for now, actual implementation soon
         tilt.translate(transforms.translation[0] + canvas.clientWidth / 2,
                        transforms.translation[1] + canvas.clientHeight / 2,
                        transforms.translation[2]);

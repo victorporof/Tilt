@@ -70,8 +70,9 @@ TiltChrome.BrowserOverlay = {
           that.iframe = iframe;
           
           // construct the visualization using the canvas and the dom image
-          that.visualization = new Tilt.Visualization(tilt, canvas, image,
-            new Tilt.Controller.MouseAndKeyboard());
+          that.visualization = 
+            new TiltChrome.Visualization(tilt, canvas, image,
+            new TiltChrome.Controller.MouseAndKeyboard());
         });
       });
     }
