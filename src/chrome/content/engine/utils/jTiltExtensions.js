@@ -23,16 +23,19 @@
  *    3. This notice may not be removed or altered from any source
  *    distribution.
  */
-if ("undefined" == typeof(TiltExtensions)) {
-  var TiltExtensions = {};
+if ("undefined" == typeof(Tilt)) {
+  var Tilt = {};
+};
+if ("undefined" == typeof(Tilt.Extensions)) {
+  Tilt.Extensions = {};
 };
 
-var EXPORTED_SYMBOLS = ["TiltExtensions.WebGL"];
+var EXPORTED_SYMBOLS = ["Tilt.Extensions.WebGL"];
 
 /**
  * WebGL extensions
  */
-TiltExtensions.WebGL = {
+Tilt.Extensions.WebGL = {
 
   /**
    * JavaScript implementation of WebGL MOZ_dom_element_texture (#653656)
@@ -49,7 +52,7 @@ TiltExtensions.WebGL = {
    */
   initDocumentImage: function(readyCallback, contentWindow, width, height) {
     // Using a custom iframe with a canvas context element to draw the window
-    TiltUtils.Document.initCanvas(function initCallback(canvas) {
+    Tilt.Utils.Document.initCanvas(function initCallback(canvas) {
       if (!contentWindow) {
         contentWindow = gBrowser.contentWindow;
       }
