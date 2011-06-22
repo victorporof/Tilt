@@ -196,16 +196,19 @@ function TiltDraw(canvas, failCallback, successCallback) {
       colorShader.projMatrix = engine.shaderIO(p, "projMatrix");
       colorShader.color = engine.shaderIO(p, "color");
       
+      // function to set the attributes for the color shader
       colorShader.setAttributes = function(verticesBuffer) {
         engine.bindVertexBuffer(colorShader.vertexPosition, verticesBuffer);
       };
       
+      // function to set the uniforms for the color shader
       colorShader.setUniforms = function(mvMatrix, projMatrix, color) {
         engine.bindUniformMatrix(colorShader.mvMatrix, mvMatrix);
         engine.bindUniformMatrix(colorShader.projMatrix, projMatrix);
         engine.bindUniformVec4(colorShader.color, color);
       };
-      
+
+      // helper function to use the color shader with the required params   
       colorShader.use = function(verticesBuffer,
                                  mvMatrix, projMatrix, color) {
         
@@ -229,11 +232,13 @@ function TiltDraw(canvas, failCallback, successCallback) {
       textureShader.color = engine.shaderIO(p, "color");
       textureShader.sampler = engine.shaderIO(p, "sampler");
             
+      // function to set the attributes for the texture shader
       textureShader.setAttributes = function(verticesBuffer, texCoordBuffer) {
         engine.bindVertexBuffer(textureShader.vertexPosition, verticesBuffer);
         engine.bindVertexBuffer(textureShader.vertexTexCoord, texCoordBuffer);
       };
       
+      // function to set the uniforms for the texture shader
       textureShader.setUniforms = function(mvMatrix, projMatrix, col, tex) {
         engine.bindUniformMatrix(textureShader.mvMatrix, mvMatrix);
         engine.bindUniformMatrix(textureShader.projMatrix, projMatrix);
@@ -241,6 +246,7 @@ function TiltDraw(canvas, failCallback, successCallback) {
         engine.bindTexture(textureShader.sampler, tex);
       };
 
+      // helper function to use the texture shader with the required params   
       textureShader.use = function(verticesBuffer, texCoordBuffer,
                                    mvMatrix, projMatrix, color, texture) {
 
@@ -252,11 +258,11 @@ function TiltDraw(canvas, failCallback, successCallback) {
       };
     });
     
-    // modelview and projection matrices used for transformations
+    // model view and projection matrices used for transformations
     mat4.identity(mvMatrix = mat4.create());
     mat4.identity(projMatrix = mat4.create());
     
-    // set the default modelview and projection matrices
+    // set the default model view and projection matrices
     that.origin();
     that.perspective();
     
@@ -672,6 +678,7 @@ function TiltDraw(canvas, failCallback, successCallback) {
   
   /**
    * Clears the canvas context to opaque black.
+   * This is the fast equivalent of background("#000").
    */
   this.clear = function() {
     gl.clearColor(0, 0, 0, 1);
@@ -925,8 +932,8 @@ function TiltDraw(canvas, failCallback, successCallback) {
     mvMatrix = null;
     projMatrix = null;
     
-    rectangleVertexBuffer = null;
-    cubeVertexBuffer = null;
+    rectangle = null;
+    cube = null;
     
     that = null;
   };
