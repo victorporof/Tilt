@@ -23,11 +23,14 @@
  *    3. This notice may not be removed or altered from any source
  *    distribution.
  */
+if ("undefined" === typeof(Tilt)) {
+  var Tilt = {};
+}
 
-var EXPORTED_SYMBOLS = ["TiltVisualization"];
+var EXPORTED_SYMBOLS = ["Tilt.Visualization"];
 
 /**
- * TiltVisualization constructor.
+ * Tilt visualization constructor.
  * 
  * @param {object} tilt: helper functions for easy drawing and abstraction
  * @param {object} canvas: the canvas element used for rendering
@@ -35,7 +38,12 @@ var EXPORTED_SYMBOLS = ["TiltVisualization"];
  * @param {object} controller: the controller responsable for handling events
  * @return {object} the created object
  */
-function TiltVisualization(tilt, canvas, image, controller) {
+Tilt.Visualization = function(tilt, canvas, image, controller) {
+
+  /**
+   * By convention, we make a private 'that' variable.
+   */
+  var that = this;
   
   /**
    * A texture representing the contents of a document object model window.
@@ -52,9 +60,23 @@ function TiltVisualization(tilt, canvas, image, controller) {
   };
   
   /**
+   * Scene transformations, expressing translation, rotation etc.
+   * Modified by events in the controller through delegate functions.
+   */
+  var transforms = {
+    translation: [], // scene translation, on the [x, y, z] axis
+    rotation: []     // scene rotation, expressed in radians as [x, y, z]
+  };
+  
+  /**
    * The initialization logic.
    */
   tilt.setup = function() {
+    // set a reference in the controller for this visualization
+    controller.visualization = that;
+    controller.tilt = tilt;
+    controller.canvas = canvas;
+    
     // convert the dom image to a texture
     tilt.initTexture(image, function(texture) {
       dom = texture;
@@ -62,9 +84,9 @@ function TiltVisualization(tilt, canvas, image, controller) {
     
     // create the combined mesh representing the document visualization by
     // traversing the dom and adding a shape for each node that is drawable    
-    TiltUtils.Document.traverse(function(node, depth) {
+    Tilt.Utils.Document.traverse(function(node, depth) {
       // get the x, y, width and height of a node
-      var coord = TiltUtils.Document.getNodeCoordinates(node);
+      var coord = Tilt.Utils.Document.getNodeCoordinates(node);
 
       // use this node only if it actually has any dimensions
       if ((coord.x || coord.y || coord.width || coord.height) && depth) {
@@ -100,6 +122,10 @@ function TiltVisualization(tilt, canvas, image, controller) {
       mesh.indices = tilt.initIndexBuffer(mesh.indices);
     });
     
+    // set the transformations at initialization
+    transforms.translation = [0, -50, -400];
+    transforms.rotation = [0, 0, 0];
+    
     // use additive blending without depth testing enabled
     tilt.blendMode("add");
     tilt.depthTest(false);
@@ -113,17 +139,9 @@ function TiltVisualization(tilt, canvas, image, controller) {
     if (!tilt) {
       return;
     }
-
+    
     // prepare for the next frame of the animation loop
     tilt.requestAnimFrame(tilt.draw);
-    
-    // get some variables from the draw object for easier access
-    var width = canvas.clientWidth;
-    var height = canvas.clientHeight;
-    var elapsedTime = tilt.getElapsedTime();
-    var frameCount = tilt.getFrameCount();
-    var frameRate = tilt.getFrameRate();
-    var frameDelta = tilt.getFrameDelta();
     
     // only after the draw object has finished initializing
     if (tilt.isInitialized()) {
@@ -142,9 +160,15 @@ function TiltVisualization(tilt, canvas, image, controller) {
       // if the dom texture is available, the visualization can be drawn
       if (dom) {
         // this is just a test case for now, actual implementation later
-        tilt.translate(width / 2, height / 2 - 50, -400);
-        tilt.rotate(0, 1, 0, TiltUtils.Math.radians(elapsedTime / 32));
-        tilt.translate(-width / 2, -height / 2, 0);
+        tilt.translate(transforms.translation[0] + canvas.clientWidth / 2,
+                       transforms.translation[1] + canvas.clientHeight / 2,
+                       transforms.translation[2]);
+
+        tilt.rotateY(transforms.rotation[1]);
+        tilt.rotateX(transforms.rotation[0]);
+        tilt.rotateZ(transforms.rotation[2]);
+        
+        tilt.translate(-canvas.clientWidth / 2, -canvas.clientHeight / 2, 0);
         
         tilt.mesh(mesh.vertices,
                   mesh.texCoord, null, 
@@ -152,6 +176,28 @@ function TiltVisualization(tilt, canvas, image, controller) {
                   mesh.indices);
       }
     }
+    
+    if ("function" === typeof(controller.loop)) {
+      controller.loop();
+    }
+  };
+  
+  /**
+   * Delegate translation method, used by the controller.
+   */
+  this.translate = function(x, y, z) {
+    transforms.translation[0] += x * tilt.getFrameDelta();
+    transforms.translation[1] += y * tilt.getFrameDelta();
+    transforms.translation[2] += z * tilt.getFrameDelta();
+  };
+  
+  /**
+   * Delegate rotation method, used by the controller.
+   */
+  this.rotate = function(x, y, z) {
+    transforms.rotation[0] += x * tilt.getFrameDelta();
+    transforms.rotation[1] += y * tilt.getFrameDelta();
+    transforms.rotation[2] += z * tilt.getFrameDelta();
   };
   
   /**
@@ -162,6 +208,24 @@ function TiltVisualization(tilt, canvas, image, controller) {
       controller.mousePressed(x, y);
     }
   };
+
+  /**
+   * Override the mouseReleased function to handle the event.
+   */
+  tilt.mouseReleased = function(x, y) {
+    if ("function" === typeof(controller.mouseReleased)) {
+      controller.mouseReleased(x, y);
+    }
+  };
+
+  /**
+   * Override the mouseClicked function to handle the event.
+   */
+  tilt.mouseClicked = function(x, y) {
+    if ("function" === typeof(controller.mouseClicked)) {
+      controller.mouseClicked(x, y);
+    }
+  };
   
   /**
    * Override the mouseMoved function to handle the event.
@@ -169,6 +233,24 @@ function TiltVisualization(tilt, canvas, image, controller) {
   tilt.mouseMoved = function(x, y) {
     if ("function" === typeof(controller.mouseMoved)) {
       controller.mouseMoved(x, y);
+    }
+  };
+  
+  /**
+   * Override the mouseOver function to handle the event.
+   */
+  tilt.mouseOver = function(x, y) {
+    if ("function" === typeof(controller.mouseOver)) {
+      controller.mouseOver(x, y);
+    }
+  };
+  
+  /**
+   * Override the mouseMoved function to handle the event.
+   */
+  tilt.mouseOut = function(x, y) {
+    if ("function" === typeof(controller.mouseOut)) {
+      controller.mouseOut(x, y);
     }
   };
   
@@ -196,5 +278,7 @@ function TiltVisualization(tilt, canvas, image, controller) {
     if ("function" === typeof(readyCallback)) {
       readyCallback();
     }
+    
+    that = null;
   };
 }

@@ -1,5 +1,5 @@
 /* 
- * jTiltEvents.js - Visualization logic and drawing loop for Tilt
+ * jTiltController.js - Scalable controllers handling various events for Tilt
  * version 0.1
  *
  * Copyright (c) 2011 Victor Porof
@@ -23,35 +23,48 @@
  *    3. This notice may not be removed or altered from any source
  *    distribution.
  */
-if ("undefined" === typeof(TiltController)) {
-  var TiltController = {};
+if ("undefined" === typeof(Tilt)) {
+  var Tilt = {};
+}
+if ("undefined" === typeof(Tilt.Controller)) {
+  Tilt.Controller = {};
 }
 
 var EXPORTED_SYMBOLS = ["TiltEvents"];
 
 /**
- * 
+ * A mouse and keyboard implementation
  */
-TiltController.MouseAndKeyboard = {
+Tilt.Controller.MouseAndKeyboard = function() {
+  var mousePressed = false;
+  var mouseX = 0;
+  var mouseY = 0;
   
-  /**
-   *
-   */
-  mouseMoved: function(x, y) {
-    
-  },
-  
-  /**
-   *
-   */
-  mousePressed: function(x, y) {
-    TiltUtils.Console.error(x + " " + y);
-  },
-  
-  /**
-   *
-   */
-  keyPressed: function(key) {
-    
+  this.loop = function() {
+    if (mousePressed) {
+      var y = mouseX - this.canvas.width / 2;
+      var x = mouseY - this.canvas.height / 2;
+      
+      x /= -500000;
+      y /= 500000;
+      
+      this.visualization.rotate(x, y, 0);
+    }
   }
-};
+  
+  this.mousePressed = function(x, y) {
+    mousePressed = true;
+  };
+  
+  this.mouseReleased = function(x, y) {
+    mousePressed = false;
+  };
+  
+  this.mouseMoved = function(x, y) {
+    mouseX = x;
+    mouseY = y;
+  };
+  
+  this.keyPressed = function(key) {
+  };
+}
