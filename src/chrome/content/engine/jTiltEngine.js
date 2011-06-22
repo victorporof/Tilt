@@ -354,7 +354,8 @@ function TiltEngine() {
     gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
     gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(elementsArray),
                   gl.STATIC_DRAW);
-                  
+    
+    buffer.array = elementsArray;
     buffer.itemSize = itemSize;
     buffer.numItems = numItems;
     
@@ -381,6 +382,7 @@ function TiltEngine() {
     gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(elementsArray),
                   gl.STATIC_DRAW);
                   
+    buffer.array = elementsArray;
     buffer.itemSize = 1;
     buffer.numItems = numItems;
 
@@ -537,10 +539,10 @@ function TiltEngine() {
    * the indices buffer is specified, the first and count values are ignored
    */
   this.drawIndexedVertices = function(drawMode, indicesBuffer) {
-    var gl = that.gl;    
+    var gl = that.gl;
+    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indicesBuffer);
     gl.drawElements(that.getDrawModeEnum(drawMode),                      
-                    indicesBuffer.numItems, gl.UNSIGNED_SHORT,
-                    indicesBuffer);
+                    indicesBuffer.numItems, gl.UNSIGNED_SHORT, 0);
   };
   
   /**
