@@ -23,14 +23,18 @@
  *    3. This notice may not be removed or altered from any source
  *    distribution.
  */
+if ("undefined" === typeof(Tilt)) {
+  var Tilt = {};
+}
 
-var EXPORTED_SYMBOLS = ["TiltEngine"];
+var EXPORTED_SYMBOLS = ["Tilt.Engine"];
 
 /**
- * TiltEngine constructor.
+ * Tilt engine constructor.
+ *
  * @return {object} the created object
  */
-function TiltEngine() {
+Tilt.Engine = function() {
 
   /**
    * By convention, we make a private 'that' variable.
@@ -56,9 +60,8 @@ function TiltEngine() {
    * @return {object} the created gl context if successful, null otherwise
    */
   this.initWebGL = function(canvas, failCallback, successCallback) {
-    var gl = create3DContext(canvas, {
-        antialias: true
-    });
+    var gl = create3DContext(canvas, { antialias: true });
+    
     if (gl) {
       that.gl = gl;
       if ("function" === typeof(successCallback)) {
@@ -66,15 +69,31 @@ function TiltEngine() {
       }
     }
     else {
-      TiltUtils.Console.log(TiltUtils.StringBundle.get("webgl.init.error"));
+      Tilt.Utils.Console.log(Tilt.Utils.StringBundle.get("webgl.init.error"));
       if ("function" === typeof(failCallback)) {
         failCallback();
       }
     }
+
+    // helper function to create a 3D context in a cross browser way
+    function create3DContext(canvas, opt_attribs) {
+      var names = ["experimental-webgl", "webgl", "webkit-3d", "moz-webgl"];
+      var context = null;
+      for (var i = 0; i < names.length; ++i) {
+        try {
+          context = canvas.getContext(names[i], opt_attribs);
+        } catch(e) { }
+
+        if (context) {
+          break;
+        }
+      }
+      return context;
+    }
     
     return gl;
   };
-
+  
   /**
    * Initializes a shader program, using specified sources.
    * The ready callback function will have as a parameter the newly created
@@ -143,7 +162,7 @@ function TiltEngine() {
 
     if (!shaderSource) {
       shaderSource = "undefined";
-      TiltUtils.Console.error(TiltUtils.StringBundle.get(
+      Tilt.Utils.Console.error(Tilt.Utils.StringBundle.get(
         "compileShader.source.error"));
 
       return null;
@@ -156,7 +175,7 @@ function TiltEngine() {
       shader = gl.createShader(gl.FRAGMENT_SHADER);
     }
     else {
-      TiltUtils.Console.error(TiltUtils.StringBundle.format(
+      Tilt.Utils.Console.error(Tilt.Utils.StringBundle.format(
         "compileShader.type.error"), [shaderSource]);
         
       return null;
@@ -166,7 +185,7 @@ function TiltEngine() {
     gl.compileShader(shader);
 
     if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
-      TiltUtils.Console.error(TiltUtils.StringBundle.format(
+      Tilt.Utils.Console.error(Tilt.Utils.StringBundle.format(
         "compileShader.compile.error"), [gl.getShaderInfoLog(shader)]);
 
       return null;
@@ -189,7 +208,7 @@ function TiltEngine() {
     gl.linkProgram(program);
 
     if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
-      TiltUtils.Console.error(TiltUtils.StringBundle.format(
+      Tilt.Utils.Console.error(Tilt.Utils.StringBundle.format(
         "linkProgram.error", [vertShader.src, fragShader.src]));
     }
     
@@ -427,7 +446,7 @@ function TiltEngine() {
     
     // Used internally for binding an image to a texture object
     function bindTextureImage() {
-      TiltUtils.Image.resizeToPowerOfTwo(texture.image, function(image) {
+      Tilt.Utils.Image.resizeToPowerOfTwo(texture.image, function(image) {
         texture.image = image;
         
         if (flipY) {
@@ -658,3 +677,17 @@ function TiltEngine() {
     that = null;
   };
 }
+
+/**
+ * Provides requestAnimationFrame in a cross browser way.
+ */
+window.requestAnimFrame = (function() {
+  return window.requestAnimFrame ||
+         window.webkitRequestAnimationFrame ||
+         window.mozRequestAnimationFrame ||
+         window.oRequestAnimationFrame ||
+         window.msRequestAnimationFrame ||
+         function(callback, Element) {
+           window.setTimeout(callback, 1000 / 60);
+         };
+})();
