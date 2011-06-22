@@ -23,19 +23,22 @@
  *    3. This notice may not be removed or altered from any source
  *    distribution.
  */
+if ("undefined" === typeof(Tilt)) {
+  var Tilt = {};
+}
 
-var EXPORTED_SYMBOLS = ["TiltDraw"];
+var EXPORTED_SYMBOLS = ["Tilt.Draw"];
 
 /**
  * Creates a Tilt environemnt. The readyCallback function is called when
  * initialization is complete, along with the canvas and additionally, an 
- * instance of TiltDraw passed as a parameter. If this is running inside an
+ * instance of Tilt.Draw passed as a parameter. If this is running inside an
  * extension environment, a container iframe is also returned. For more 
- * complex initialization scenarios, use TiltUtils.Document.initCanvas and 
- * create a TiltDraw object manually with the constructor.
+ * complex initialization scenarios, use Tilt.Utils.Document.initCanvas and 
+ * create a Tilt.Draw object manually with the constructor.
  * Use this function to append a canvas element to the document, like this:
  *
- *      TiltDraw.Create(640, 480, function(tilt, canvas) {
+ *      Tilt.Create(640, 480, function(tilt, canvas) {
  *        tilt.setup = function() {
  *          // initialization logic
  *          ...
@@ -60,12 +63,12 @@ var EXPORTED_SYMBOLS = ["TiltDraw"];
  * @param {number} height: specify the initial height of the canvas
  * @param {function} readyCallback: function called when initialization ready
  */
-TiltDraw.Create = function(width, height, readyCallback) {
-  TiltUtils.Document.initCanvas(function(canvas, iframe) {
+Tilt.Create = function(width, height, readyCallback) {  
+  Tilt.Utils.Document.initCanvas(function(canvas, iframe) {
     canvas.width = width;
     canvas.height = height;
 
-    var tilt = new TiltDraw(canvas);    
+    var tilt = new Tilt.Draw(canvas);    
 
     tilt.initialize(function() {
       if ("function" === typeof(readyCallback)) {
@@ -79,7 +82,7 @@ TiltDraw.Create = function(width, height, readyCallback) {
       }
     });
   }, true);
-}
+};
 
 /**
  * TiltDraw constructor.
@@ -92,7 +95,7 @@ TiltDraw.Create = function(width, height, readyCallback) {
  * @param {function} failCallback: to be called if gl initialization failed
  * @return {object} the created object
  */ 
-function TiltDraw(canvas, failCallback, successCallback) {
+Tilt.Draw = function(canvas, failCallback, successCallback) {
 
   /**
    * By convention, we make a private 'that' variable.
@@ -102,7 +105,7 @@ function TiltDraw(canvas, failCallback, successCallback) {
   /**
    * Helper low level functions for WebGL.
    */
-  var engine = new TiltEngine();
+  var engine = new Tilt.Engine();
 
   /**
    * WebGL context for the canvas.
@@ -208,8 +211,8 @@ function TiltDraw(canvas, failCallback, successCallback) {
    */
   this.initialize = function(readyCallback) {
     // initializing a color shader
-    engine.initProgram(TiltShaders.Color.vs, 
-                       TiltShaders.Color.fs, function(p) {
+    engine.initProgram(Tilt.Shaders.Color.vs, 
+                       Tilt.Shaders.Color.fs, function(p) {
       colorShader = p;
       colorShader.vertexPosition = engine.shaderIO(p, "vertexPosition");
 
@@ -242,8 +245,8 @@ function TiltDraw(canvas, failCallback, successCallback) {
     });
     
     // initializing a texture shader
-    engine.initProgram(TiltShaders.Texture.vs,
-                       TiltShaders.Texture.fs, function(p) {
+    engine.initProgram(Tilt.Shaders.Texture.vs,
+                       Tilt.Shaders.Texture.fs, function(p) {
       textureShader = p;
       textureShader.vertexPosition = engine.shaderIO(p, "vertexPosition");
       textureShader.vertexTexCoord = engine.shaderIO(p, "vertexTexCoord");
@@ -375,8 +378,29 @@ function TiltDraw(canvas, failCallback, successCallback) {
 		  1, 7, 7, 5, 
 		  0, 8, 8, 4,
 		  7, 8]);
-
-    // handle onmousemove move event
+    
+    // handles the onmousedown event
+    canvas.onmousedown = function(e) {      
+      if ("function" === typeof(that.mousePressed)) {
+        that.mousePressed(mouseX, mouseY);
+      }
+    }
+    
+    // handles the onmouseup event
+    canvas.onmouseup = function(e) {      
+      if ("function" === typeof(that.mouseReleased)) {
+        that.mouseReleased(mouseX, mouseY);
+      }
+    }
+    
+    // handle the onclick event
+    canvas.onclick = function(e) {
+      if ("function" === typeof(that.mouseClicked)) {
+        that.mouseClicked(mouseX, mouseY);
+      }
+    }
+    
+    // handle the onmousemove event
     canvas.onmousemove = function(e) {
       mouseX = e.pageX - canvas.offsetLeft;
       mouseY = e.pageY - canvas.offsetTop;
@@ -385,14 +409,21 @@ function TiltDraw(canvas, failCallback, successCallback) {
         that.mouseMoved(mouseX, mouseY);
       }
     }
-
-    // handle the onclick event
-    canvas.onclick = function(e) {
-      if ("function" === typeof(that.mousePressed)) {
-        that.mousePressed(mouseX, mouseY);
+    
+    // handle the onmouseover event
+    canvas.onmouseover = function(e) {
+      if ("function" === typeof(that.mouseOver)) {
+        that.mouseOver(mouseX, mouseY);
       }
     }
     
+    // handle the onmouseout event
+    canvas.onmouseout = function(e) {
+      if ("function" === typeof(that.mouseOut)) {
+        that.mouseOut(mouseX, mouseY);
+      }
+    }
+        
     // call the ready callback function if it was passed as a valid parameter
     if ("function" === typeof(readyCallback)) {
       readyCallback();
@@ -533,7 +564,7 @@ function TiltDraw(canvas, failCallback, successCallback) {
     var x = w / 2.0;
     var y = h / 2.0;
 
-    var z = y / Math.tan(TiltUtils.Math.radians(45) / 2);
+    var z = y / Math.tan(Tilt.Utils.Math.radians(45) / 2);
     var znear = z / 10;
     var zfar = z * 10;
     var aspect = w / h;
@@ -661,7 +692,7 @@ function TiltDraw(canvas, failCallback, successCallback) {
    * @param {string} color: the color, defined in hex or as rgb() or rgba()
    */
   this.tint = function(color) {
-    tint = TiltUtils.Math.hex2rgba(color);
+    tint = Tilt.Utils.Math.hex2rgba(color);
   };
 
   /**
@@ -677,7 +708,7 @@ function TiltDraw(canvas, failCallback, successCallback) {
    * @param {string} color: the color, defined in hex or as rgb() or rgba()
    */
   this.fill = function(color) {
-    fill = TiltUtils.Math.hex2rgba(color);
+    fill = Tilt.Utils.Math.hex2rgba(color);
   };
 
   /**
@@ -693,7 +724,7 @@ function TiltDraw(canvas, failCallback, successCallback) {
    * @param {string} color: the color, defined in hex or as rgb() or rgba()
    */
   this.stroke = function(color) {
-    stroke = TiltUtils.Math.hex2rgba(color);
+    stroke = Tilt.Utils.Math.hex2rgba(color);
   };
 
   /**
@@ -725,10 +756,10 @@ function TiltDraw(canvas, failCallback, successCallback) {
     var rgba;
 
     if ("undefined" === typeof(color)) {
-      rgba = TiltUtils.Math.hex2rgba("#d6d6d6ff");
+      rgba = Tilt.Utils.Math.hex2rgba("#d6d6d6ff");
     }
     else if ("string" === typeof(color)) {
-      rgba = TiltUtils.Math.hex2rgba(color);
+      rgba = Tilt.Utils.Math.hex2rgba(color);
     }
     else if ("number" === typeof(color)) {
       rgba = [color / 255, color / 255, color / 255, 1];
@@ -901,12 +932,12 @@ function TiltDraw(canvas, failCallback, successCallback) {
     if (texture) {
       textureShader.use(verticesBuffer, texCoordBuffer,
                         mvMatrix, projMatrix, "string" === typeof color ? 
-                        TiltUtils.Math.hex2rgba(color) : color, texture);
+                        Tilt.Utils.Math.hex2rgba(color) : color, texture);
     }
     else {
       colorShader.use(verticesBuffer,
                       mvMatrix, projMatrix, "string" === typeof color ? 
-                      TiltUtils.Math.hex2rgba(color) : color);
+                      Tilt.Utils.Math.hex2rgba(color) : color);
     }
     
     if (indicesBuffer) {
@@ -1002,4 +1033,4 @@ function TiltDraw(canvas, failCallback, successCallback) {
     
     that = null;
   };
-}
+};
