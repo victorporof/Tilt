@@ -645,8 +645,8 @@ function TiltDraw(canvas, failCallback, successCallback) {
    * Clears the canvas context (usually at the beginning of each frame).
    * If the color is undefined, it will default to opaque light gray.
    * It is not recommended but possible to pass a number as a parameter,
-   * in which case the color will be [n, n, n, 1], or directly an array of
-   * [r, g, b, a] values, all in the 0..1 interval.
+   * in which case the color will be [n, n, n, 255], or directly an array of
+   * [r, g, b, a] values, all in the 0..255 interval.
    *
    * @param {string} color: the color, defined in hex or as rgb() or rgba()
    */
@@ -660,10 +660,10 @@ function TiltDraw(canvas, failCallback, successCallback) {
       rgba = TiltUtils.Math.hex2rgba(color);
     }
     else if ("number" === typeof(color)) {
-      rgba = [color, color, color, 1];
+      rgba = [color / 255, color / 255, color / 255, 1];
     }
     else {
-      rgba = color;
+      rgba = [color[0] / 255, color[1] / 255, color[2] / 255, color[3] / 255];
     }
     
     gl.clearColor(rgba[0], rgba[1], rgba[2], rgba[3]);
