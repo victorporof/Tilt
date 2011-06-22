@@ -56,7 +56,9 @@ function TiltEngine() {
    * @return {object} the created gl context if successful, null otherwise
    */
   this.initWebGL = function(canvas, failCallback, successCallback) {
-    var gl = create3DContext(canvas);
+    var gl = create3DContext(canvas, {
+        antialias: true
+    });
     if (gl) {
       that.gl = gl;
       if (successCallback) {
