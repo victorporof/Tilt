@@ -284,32 +284,42 @@ function TiltDraw(canvas, failCallback, successCallback) {
     
     // buffer of 3-component vertices (x, y, z) as the corners of a cube
     cube.vertices = engine.initBuffer([
-      -0.5, -0.5,  0.5, // front
+      -0.5, -0.5,  0.5, /* front */
        0.5, -0.5,  0.5,
        0.5,  0.5,  0.5,
       -0.5,  0.5,  0.5,
-      -0.5,  0.5,  0.5, // top
+      -0.5,  0.5,  0.5, /* top */
        0.5,  0.5,  0.5,
        0.5,  0.5, -0.5,
       -0.5,  0.5, -0.5,
-      -0.5,  0.5, -0.5, // back
+      -0.5,  0.5, -0.5, /* back */
        0.5,  0.5, -0.5,
        0.5, -0.5, -0.5,
       -0.5, -0.5, -0.5,
-      -0.5, -0.5, -0.5, // bottom
+      -0.5, -0.5, -0.5, /* bottom */
        0.5, -0.5, -0.5,
        0.5, -0.5,  0.5,
       -0.5, -0.5,  0.5,
-       0.5, -0.5,  0.5, // right
+       0.5, -0.5,  0.5, /* right */
        0.5, -0.5, -0.5,
        0.5,  0.5, -0.5,
        0.5,  0.5,  0.5,
-      -0.5, -0.5, -0.5, // left
+      -0.5, -0.5, -0.5, /* left */
       -0.5, -0.5,  0.5,
       -0.5,  0.5,  0.5,
       -0.5,  0.5, -0.5], 3);
     
-    cube 
+    // buffer of 3-component vertices (x, y, z) as the outline of a cube
+    cube.wireframe = engine.initBuffer([
+      -0.5, -0.5,  0.5, /* front */
+		   0.5, -0.5,  0.5, 
+		   0.5,  0.5,  0.5, 
+		  -0.5,  0.5,  0.5, /* front top   */
+		  -0.5,  0.5, -0.5, /* top */
+		   0.5,  0.5, -0.5,
+		   0.5,  0.5,  0.5, 
+		   0.5, -0.5, -0.5, /* back right */
+		  -0.5, -0.5, -0.5  /* back left */], 3);
     
     // buffer of 2-component texture coordinates (u, v) for the cube
     cube.texCoord = engine.initBuffer([
@@ -329,6 +339,15 @@ function TiltDraw(canvas, failCallback, successCallback) {
       12, 13, 14, 12, 14, 15,
       16, 17, 18, 16, 18, 19,
       20, 21, 22, 20, 22, 23]);
+      
+    // vertex indices for the cube vertices, defining the order for which
+    // these points can create a wireframe cube from lines
+    cube.wireframeIndices = engine.initIndexBuffer([
+      0, 1, 1, 2, 2, 3, 3, 0, 
+		  3, 4, 4, 5, 5, 6,
+		  1, 7, 7, 5, 
+		  0, 8, 8, 4,
+		  7, 8]);
 
     return that;
   };
@@ -737,6 +756,12 @@ function TiltDraw(canvas, failCallback, successCallback) {
 
         engine.drawIndexedVertices(gl.TRIANGLES, cube.indices);    
       }
+    }
+    if (stroke[3]) {
+        colorShader.use(cube.wireframe,
+                        mvMatrix, projMatrix, stroke);
+                        
+        engine.drawIndexedVertices(gl.LINES, cube.wireframeIndices);    
     }
     that.popMatrix();
   };
