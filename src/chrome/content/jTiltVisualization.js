@@ -58,15 +58,15 @@ function TiltVisualization(tilt, canvas, image) {
   /**
    * The initialization logic.
    */
-  this.setup = function() {
+  tilt.setup = function() {
     // convert the dom image to a texture
-    tilt.initTexture(image, function readyCallback(texture) {
+    tilt.initTexture(image, function(texture) {
       dom = texture;
     }, "white", "gray", 8); // using a white background & gray margins of 8px
     
     // create the combined mesh representing the document visualization by
     // traversing the dom and adding a shape for each node that is drawable    
-    TiltUtils.Document.traverse(function nodeCallback(node, depth) {
+    TiltUtils.Document.traverse(function(node, depth) {
       // get the x, y, width and height of a node
       var coord = TiltUtils.Document.getNodeCoordinates(node);
 
@@ -97,7 +97,7 @@ function TiltVisualization(tilt, canvas, image) {
         // compute the indices
         mesh.indices.push(i, i + 1, i + 2, i, i + 2, i + 3);
       }
-    }, function readyCallback() {
+    }, function() {
       // when finished, initialize the buffers
       mesh.vertices = tilt.initBuffer(mesh.vertices, 3);
       mesh.texCoord = tilt.initBuffer(mesh.texCoord, 2);
@@ -112,48 +112,58 @@ function TiltVisualization(tilt, canvas, image) {
   /**
    * The rendering animation logic and loop.
    */
-  this.draw = function() {
-    if (that) {
-      // prepare for the next frame of the animation loop
-      tilt.requestAnimFrame(that.draw);
-      
-      // get some variables from the draw object for easier access
-      var width = canvas.clientWidth;
-      var height = canvas.clientHeight;
-      var elapsedTime = tilt.getElapsedTime();
-      var frameCount = tilt.getFrameCount();
-      var frameRate = tilt.getFrameRate();
-      var frameDelta = tilt.getFrameDelta();
-      
-      // only after the draw object has finished initializing
-      if (tilt.isInitialized()) {
-        // set a black background if the dom texture has finished loading,
-        // or transparent otherwise
-        if (dom) {
-          tilt.clear();
-        }
-        else {
-          tilt.background("#0000");
-        }
-        
-        // reset the model view matrix to identity
-        tilt.origin();
+  tilt.draw = function() {
+    // if the visualization was destroyed, don't continue rendering
+    if (!tilt) {
+      return;
+    }
 
-        // if the dom texture is available, the visualization can be drawn
-        if (dom) {
-          // this is just a test case for now, actual implementation later
-          tilt.translate(width / 2, height / 2 - 50, -400);
-          tilt.rotate(0, 1, 0, TiltUtils.Math.radians(elapsedTime / 32));
-          tilt.translate(-width / 2, -height / 2, 0);
-          
-          tilt.mesh(mesh.vertices,
-                    mesh.texCoord, null, 
-                    "triangles", "rgba(14, 16, 22, 255)", dom,
-                    mesh.indices);
-        }
+    // prepare for the next frame of the animation loop
+    tilt.requestAnimFrame(tilt.draw);
+    
+    // get some variables from the draw object for easier access
+    var width = canvas.clientWidth;
+    var height = canvas.clientHeight;
+    var elapsedTime = tilt.getElapsedTime();
+    var frameCount = tilt.getFrameCount();
+    var frameRate = tilt.getFrameRate();
+    var frameDelta = tilt.getFrameDelta();
+    
+    // only after the draw object has finished initializing
+    if (tilt.isInitialized()) {
+      // set a black background if the dom texture has finished loading,
+      // or transparent otherwise
+      if (dom) {
+        tilt.clear();
+      }
+      else {
+        tilt.background("#0000");
+      }
+      
+      // reset the model view matrix to identity
+      tilt.origin();
+
+      // if the dom texture is available, the visualization can be drawn
+      if (dom) {
+        // this is just a test case for now, actual implementation later
+        tilt.translate(width / 2, height / 2 - 50, -400);
+        tilt.rotate(0, 1, 0, TiltUtils.Math.radians(elapsedTime / 32));
+        tilt.translate(-width / 2, -height / 2, 0);
+        
+        tilt.mesh(mesh.vertices,
+                  mesh.texCoord, null, 
+                  "triangles", "rgba(14, 16, 22, 255)", dom,
+                  mesh.indices);
       }
     }
   };
+  
+  /**
+   * Override the mousePressed function to handle the event.
+   */
+  tilt.mousePressed = function(x, y) {
+    TiltUtils.Console.error(x + " " + y);
+  }
   
   /**
    * Destroys this object.
