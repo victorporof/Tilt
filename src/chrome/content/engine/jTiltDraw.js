@@ -709,7 +709,9 @@ function TiltDraw(canvas, failCallback, successCallback) {
   };
   
   /**
-   * 
+   * Draws a custom mesh, using only the built-in shaders.
+   * For more complex techniques, create your own shaders and drawing logic. 
+   *
    * @param {object} verticesBuffer: the vertices buffer (x, y and z)
    * @param {object} texCoordBuffer: the texture coordinates buffer (u, v)
    * @param {object} normalsBuffer: the normals buffer (m, n, p)
