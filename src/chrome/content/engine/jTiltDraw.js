@@ -125,14 +125,14 @@ function TiltDraw(canvas, failCallback, successCallback) {
   var projMatrix = null;
 
   /**
-   * Vertices representing the corners of a rectangle.
+   * Vertices buffer representing the corners of a rectangle.
    */
-  var rectangleVertexBuffer = null;
+  var rectangle = {};
 
   /**
-   * Vertices representing the corners of a cube.
+   * Vertices buffer representing the corners of a cube.
    */
-  var cubeVertexBuffer = null;
+  var cube = {};
 
   /**
    * The current tint color applied to any objects which can be tinted.
@@ -271,15 +271,15 @@ function TiltDraw(canvas, failCallback, successCallback) {
     that.strokeWeight(1);
     
     // buffer of 2-component vertices (x, y) as the corners of a rectangle
-    rectangleVertexBuffer = engine.initBuffer([
+    rectangle.vertices = engine.initBuffer([
       0, 0, 1, 0, 0, 1, 1, 1], 2);
       
     // buffer of 2-component texture coordinates (u, v) for the rectangle
-    rectangleVertexBuffer.texCoord = engine.initBuffer([
+    rectangle.texCoord = engine.initBuffer([
       0, 0, 1, 0, 0, 1, 1, 1], 2);
     
     // buffer of 3-component vertices (x, y, z) as the corners of a cube
-    cubeVertexBuffer = engine.initBuffer([
+    cube.vertices = engine.initBuffer([
       -0.5, -0.5,  0.5, // front
        0.5, -0.5,  0.5,
        0.5,  0.5,  0.5,
@@ -306,7 +306,7 @@ function TiltDraw(canvas, failCallback, successCallback) {
       -0.5,  0.5, -0.5], 3);
     
     // buffer of 2-component texture coordinates (u, v) for the cube
-    cubeVertexBuffer.texCoord = engine.initBuffer([
+    cube.texCoord = engine.initBuffer([
       0, 0, 1, 0, 1, 1, 0, 1,
       0, 0, 1, 0,	1, 1, 0, 1,
       1, 1, 0, 1,	0, 0, 1, 0,
@@ -316,7 +316,7 @@ function TiltDraw(canvas, failCallback, successCallback) {
       
     // vertex indices for the cube vertices, defining the order for which
     // these points can create a cube from triangles
-    cubeVertexBuffer.indices = engine.initIndexBuffer([
+    cube.indices = engine.initIndexBuffer([
       0, 1, 2, 0, 2, 3,
       4, 5, 6, 4, 6, 7,
       8, 9, 10, 8, 10, 11,
@@ -647,10 +647,10 @@ function TiltDraw(canvas, failCallback, successCallback) {
     that.translate(x, y, 0);
     that.scale(width, height, 1);
     
-    colorShader.use(rectangleVertexBuffer,
+    colorShader.use(rectangle.vertices,
                     mvMatrix, projMatrix, fill);
 
-    engine.drawVertices(gl.TRIANGLE_STRIP, 0, rectangleVertexBuffer.numItems);
+    engine.drawVertices(gl.TRIANGLE_STRIP, 0, rectangle.vertices.numItems);
     that.popMatrix();
   };
   
@@ -674,11 +674,11 @@ function TiltDraw(canvas, failCallback, successCallback) {
     that.translate(x, y, 0);
     that.scale(width, height, 1);
     
-    textureShader.use(rectangleVertexBuffer,
-                      rectangleVertexBuffer.texCoord,
+    textureShader.use(rectangle.vertices, 
+                      rectangle.texCoord,
                       mvMatrix, projMatrix, tint, texture);
 
-    engine.drawVertices(gl.TRIANGLE_STRIP, 0, rectangleVertexBuffer.numItems);
+    engine.drawVertices(gl.TRIANGLE_STRIP, 0, rectangle.vertices.numItems);
     that.popMatrix();
   };
   
@@ -699,16 +699,16 @@ function TiltDraw(canvas, failCallback, successCallback) {
     that.scale(width, height, depth);
 
     if (texture) {
-      textureShader.use(cubeVertexBuffer,
-                        cubeVertexBuffer.texCoord,
+      textureShader.use(cube.vertices,
+                        cube.texCoord,
                         mvMatrix, projMatrix, tint, texture);
     }
     else {
-      colorShader.use(cubeVertexBuffer,
+      colorShader.use(cube.vertices,
                       mvMatrix, projMatrix, fill);
     }
     
-    engine.drawIndexedVertices(gl.TRIANGLES, cubeVertexBuffer.indices);    
+    engine.drawIndexedVertices(gl.TRIANGLES, cube.indices);    
     that.popMatrix();
   };
   
