@@ -114,9 +114,7 @@ function TiltEngine() {
       vertShaderURL = vertShaderURL + ".vs";
     }
     
-    that.requests([vertShaderURL, fragShaderURL],
-                  function requestsCallback(http) {
-
+    that.requests([vertShaderURL, fragShaderURL], function(http) {
       var vertShader = that.compileShader(http[0].responseText,
                                           "x-shader/x-vertex");
 
@@ -429,8 +427,7 @@ function TiltEngine() {
     
     // Used internally for binding an image to a texture object
     function bindTextureImage() {
-      TiltUtils.Image.resizeToPowerOfTwo(texture.image,
-                                         function resizeCallback(image) {
+      TiltUtils.Image.resizeToPowerOfTwo(texture.image, function(image) {
         texture.image = image;
         
         if (flipY) {
@@ -634,7 +631,7 @@ function TiltEngine() {
     var http = [];
     var finished = 0;
 
-    function onRequestReady() {
+    function requestReady() {
       finished++;
       if (finished === urls.length) {
         if (readyCallback) {
@@ -644,9 +641,9 @@ function TiltEngine() {
     }
     
     for (var i = 0, size = urls.length; i < size; i++) {
-      that.request(urls[i], function requestReady(request, index) {
+      that.request(urls[i], function(request, index) {
         http[index] = request;
-        onRequestReady();
+        requestReady();
       }, i);
     }
   };
