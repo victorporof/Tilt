@@ -99,9 +99,9 @@ function TiltVisualization(tilt, canvas, image) {
       }
     }, function readyCallback() {
       // when finished, initialize the buffers
-      mesh.vertexBuffer = tilt.initBuffer(mesh.vertices, 3);
-      mesh.vertexBuffer.texCoord = tilt.initBuffer(mesh.texCoord, 2);
-      mesh.vertexBuffer.indices = tilt.initIndexBuffer(mesh.indices);
+      mesh.vertices = tilt.initBuffer(mesh.vertices, 3);
+      mesh.texCoord = tilt.initBuffer(mesh.texCoord, 2);
+      mesh.indices = tilt.initIndexBuffer(mesh.indices);
     });
     
     // use additive blending without depth testing enabled
@@ -135,8 +135,10 @@ function TiltVisualization(tilt, canvas, image) {
         else {
           tilt.background("#0000");
         }
-        tilt.origin();
         
+        // reset the model view matrix to identity
+        tilt.origin();
+
         // if the dom texture is available, the visualization can be drawn
         if (dom) {
           // this is just a test case for now, actual implementation later
@@ -144,10 +146,10 @@ function TiltVisualization(tilt, canvas, image) {
           tilt.rotate(0, 1, 0, TiltUtils.Math.radians(elapsedTime / 32));
           tilt.translate(-width / 2, -height / 2, 0);
           
-          tilt.mesh(mesh.vertexBuffer,
-                    mesh.vertexBuffer.texCoord, null, 
+          tilt.mesh(mesh.vertices,
+                    mesh.texCoord, null, 
                     "triangles", "rgba(14, 16, 22, 255)", dom,
-                    mesh.vertexBuffer.indices);
+                    mesh.indices);
         }
       }
     }
