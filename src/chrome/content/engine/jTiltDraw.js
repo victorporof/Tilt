@@ -679,6 +679,11 @@ function TiltDraw(canvas, failCallback, successCallback) {
    * @param {number} height: the height of the object
    */
   this.rect = function(x, y, width, height) {
+    if ("center" === rect.rectMode) {
+      x -= width / 2;
+      y -= height / 2;
+    }
+
     that.pushMatrix();
     that.translate(x, y, 0);
     that.scale(width, height, 1);
@@ -699,6 +704,19 @@ function TiltDraw(canvas, failCallback, successCallback) {
   };
   
   /**
+   * Modifies the location from which rectangles draw. The default mode is 
+   * rectMode('corner'), which specifies the location to be the upper left 
+   * corner of the shape and uses the third and fourth parameters of rect() to 
+   * specify the width and height. Use rectMode('center') to draw centered 
+   * at the given x and y position.
+   *
+   * @param {string} mode: either 'corner' or 'center'
+   */
+  this.rectMode = function(mode) {
+    rect.rectMode = mode;
+  };
+  
+  /**
    * Draws an image using the specified parameters.
    *
    * @param {object} texture: the texture to be used
@@ -713,6 +731,11 @@ function TiltDraw(canvas, failCallback, successCallback) {
       width = texture.image.width;
       height = texture.image.height;
     }
+    
+    if ("center" === rect.imageMode) {
+      x -= width / 2;
+      y -= height / 2;
+    }
 
     if (tint[3]) {
       that.pushMatrix();
@@ -726,6 +749,19 @@ function TiltDraw(canvas, failCallback, successCallback) {
       engine.drawVertices(gl.TRIANGLE_STRIP, 0, rectangle.vertices.numItems);
       that.popMatrix();
     }
+  };
+  
+  /**
+   * Modifies the location from which images draw. The default mode is 
+   * imageMode('corner'), which specifies the location to be the upper left 
+   * corner and uses the fourth and fifth parameters of image() to set the 
+   * image's width and height. Use imageMode('center') to draw images centered 
+   * at the given x and y position.
+   *
+   * @param {string} mode: either 'corner' or 'center'
+   */
+  this.imageMode = function(mode) {
+    rect.imageMode = mode;
   };
   
   /**
