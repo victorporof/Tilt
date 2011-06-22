@@ -639,13 +639,12 @@ function TiltDraw(canvas, failCallback, successCallback) {
    *
    * @param {number} x: the x position of the object
    * @param {number} y: the y position of the object
-   * @param {number} z: the z position of the object
    * @param {number} width: the width of the object
    * @param {number} height: the height of the object
    */
-  this.rect = function(x, y, z, width, height) {
+  this.rect = function(x, y, width, height) {
     that.pushMatrix();
-    that.translate(x, y, z);
+    that.translate(x, y, 0);
     that.scale(width, height, 1);
     
     colorShader.use(rectangleVertexBuffer,
@@ -665,14 +664,14 @@ function TiltDraw(canvas, failCallback, successCallback) {
    * @param {number} width: the width of the object
    * @param {number} height: the height of the object
    */
-  this.image = function(texture, x, y, z, width, height) {
+  this.image = function(texture, x, y, width, height) {
     if (!width || !height) {
       width = texture.image.width;
       height = texture.image.height;
     }
 
     that.pushMatrix();
-    that.translate(x, y, z);
+    that.translate(x, y, 0);
     that.scale(width, height, 1);
     
     textureShader.use(rectangleVertexBuffer,
