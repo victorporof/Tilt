@@ -669,7 +669,15 @@ function TiltDraw(canvas, failCallback, successCallback) {
     gl.clearColor(rgba[0], rgba[1], rgba[2], rgba[3]);
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
   };
-
+  
+  /**
+   * Clears the canvas context to opaque black.
+   */
+  this.clear = function() {
+    gl.clearColor(0, 0, 0, 1);
+    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+  };
+  
   /**
    * Draws a rectangle using the specified parameters.
    *
