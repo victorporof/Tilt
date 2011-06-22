@@ -275,7 +275,7 @@ function TiltDraw(canvas, failCallback, successCallback) {
       0, 0, 1, 0, 0, 1, 1, 1], 2);
 
     // buffer of 2-component vertices (x, y) as the outline of a rectangle
-    rectangle.outline = engine.initBuffer([
+    rectangle.wireframe = engine.initBuffer([
       0, 0, 1, 0, 1, 1, 0, 1, 0, 0], 2);
       
     // buffer of 2-component texture coordinates (u, v) for the rectangle
@@ -308,6 +308,8 @@ function TiltDraw(canvas, failCallback, successCallback) {
       -0.5, -0.5,  0.5,
       -0.5,  0.5,  0.5,
       -0.5,  0.5, -0.5], 3);
+    
+    cube 
     
     // buffer of 2-component texture coordinates (u, v) for the cube
     cube.texCoord = engine.initBuffer([
@@ -662,17 +664,17 @@ function TiltDraw(canvas, failCallback, successCallback) {
     that.translate(x, y, 0);
     that.scale(width, height, 1);
     
-    if (fill) {
+    if (fill[3]) {
       colorShader.use(rectangle.vertices,
                       mvMatrix, projMatrix, fill);
 
       engine.drawVertices(gl.TRIANGLE_STRIP, 0, rectangle.vertices.numItems);
     }
-    if (stroke) {
-      colorShader.use(rectangle.outline,
+    if (stroke[3]) {
+      colorShader.use(rectangle.wireframe,
                       mvMatrix, projMatrix, stroke);
 
-      engine.drawVertices(gl.LINE_STRIP, 0, rectangle.outline.numItems);
+      engine.drawVertices(gl.LINE_STRIP, 0, rectangle.wireframe.numItems);
     }
     that.popMatrix();
   };
@@ -693,16 +695,18 @@ function TiltDraw(canvas, failCallback, successCallback) {
       height = texture.image.height;
     }
 
-    that.pushMatrix();
-    that.translate(x, y, 0);
-    that.scale(width, height, 1);
+    if (tint[3]) {
+      that.pushMatrix();
+      that.translate(x, y, 0);
+      that.scale(width, height, 1);
     
-    textureShader.use(rectangle.vertices, 
-                      rectangle.texCoord,
-                      mvMatrix, projMatrix, tint, texture);
-
-    engine.drawVertices(gl.TRIANGLE_STRIP, 0, rectangle.vertices.numItems);
-    that.popMatrix();
+      textureShader.use(rectangle.vertices, 
+                        rectangle.texCoord,
+                        mvMatrix, projMatrix, tint, texture);
+    
+      engine.drawVertices(gl.TRIANGLE_STRIP, 0, rectangle.vertices.numItems);
+      that.popMatrix();
+    }
   };
   
   /**
@@ -718,16 +722,22 @@ function TiltDraw(canvas, failCallback, successCallback) {
     that.scale(width, height, depth);
 
     if (texture) {
-      textureShader.use(cube.vertices,
-                        cube.texCoord,
-                        mvMatrix, projMatrix, tint, texture);
+      if (tint[3]) {
+        textureShader.use(cube.vertices,
+                          cube.texCoord,
+                          mvMatrix, projMatrix, tint, texture);
+
+        engine.drawIndexedVertices(gl.TRIANGLES, cube.indices);
+      }
     }
     else {
-      colorShader.use(cube.vertices,
-                      mvMatrix, projMatrix, fill);
+      if (fill[3]) {
+        colorShader.use(cube.vertices,
+                        mvMatrix, projMatrix, fill);
+
+        engine.drawIndexedVertices(gl.TRIANGLES, cube.indices);    
+      }
     }
-    
-    engine.drawIndexedVertices(gl.TRIANGLES, cube.indices);    
     that.popMatrix();
   };
   
