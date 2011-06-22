@@ -35,22 +35,25 @@ var EXPORTED_SYMBOLS = ["TiltDraw"];
  * create a TiltDraw object manually with the constructor.
  * Use this function to append a canvas element to the document, like this:
  *
- *      TiltDraw.Create(640, 480, function readyCallback(tilt, canvas) {
- *        setup();
- *        draw();
- *
- *        function setup() {
+ *      TiltDraw.Create(640, 480, function(tilt, canvas) {
+ *        tilt.setup = function() {
  *          // initialization logic
  *          ...
  *        };
  *
- *        function draw() {
+ *        tilt.draw = function() {
  *          tilt.requestAnimFrame(draw);
  *          tilt.background("#ff0");
  *
  *          // do rendering
  *          ...
  *        };
+ *
+ *        tilt.mousePressed = function(x, y) {
+ *          // handle mouse events
+ *          ...
+ *        }
+ *        ...
  *      });
  *
  * @param {object} width: specify the initial width of the canvas
@@ -58,14 +61,23 @@ var EXPORTED_SYMBOLS = ["TiltDraw"];
  * @param {function} readyCallback: function called when initialization ready
  */
 TiltDraw.Create = function(width, height, readyCallback) {
-  TiltUtils.Document.initCanvas(function initCallback(canvas, iframe) {
-    if (width && height) {
-      canvas.width = width;
-      canvas.height = height;
-    }
-    
+  TiltUtils.Document.initCanvas(function(canvas, iframe) {
+    canvas.width = width;
+    canvas.height = height;
+
     if (readyCallback) {
-      readyCallback(new TiltDraw(canvas).initialize(), canvas, iframe);
+      var tilt = new TiltDraw(canvas);
+      
+      tilt.initialize(function() {
+        readyCallback(tilt, canvas, iframe);
+        
+        if (tilt.setup) {
+          tilt.setup();
+        }
+        if (tilt.draw) {
+          tilt.draw();
+        }
+      });
     }
   }, true);
 }
@@ -178,17 +190,27 @@ function TiltDraw(canvas, failCallback, successCallback) {
    * Use this to create smooth animations regardless of framerate.
    */
   var frameDelta = 0;
-
+  
+  /**
+   * Variables defining the x and y coordinates of the mouse position. They
+   * are updated automatically using canvas.onmousemove. If you need to handle
+   * this event yourself, override this object's mouseMoved(x, y) function.
+   * Similarily, for the onclick event, override mousePressed(x, y).
+   */
+  var mouseX = 0;
+  var mouseY = 0;
+  
   /**
    * Performs mandatory initialization of shaders and other objects required
    * for drawing, like vertex buffers and primitives.
    * 
+   * @param {function} readyCallback: function called when initialization done
    * @return {object} this object initialized
    */
-  this.initialize = function() {
+  this.initialize = function(readyCallback) {
     // initializing a color shader
     engine.initProgram(TiltShaders.Color.vs, 
-                       TiltShaders.Color.fs, function readyCallback(p) {
+                       TiltShaders.Color.fs, function(p) {
       colorShader = p;
       colorShader.vertexPosition = engine.shaderIO(p, "vertexPosition");
 
@@ -222,7 +244,7 @@ function TiltDraw(canvas, failCallback, successCallback) {
     
     // initializing a texture shader
     engine.initProgram(TiltShaders.Texture.vs,
-                       TiltShaders.Texture.fs, function readyCallback(p) {
+                       TiltShaders.Texture.fs, function(p) {
       textureShader = p;
       textureShader.vertexPosition = engine.shaderIO(p, "vertexPosition");
       textureShader.vertexTexCoord = engine.shaderIO(p, "vertexTexCoord");
@@ -355,6 +377,27 @@ function TiltDraw(canvas, failCallback, successCallback) {
 		  0, 8, 8, 4,
 		  7, 8]);
 
+    // handle onmousemove move event
+    canvas.onmousemove = function(e) {
+      mouseX = e.pageX - canvas.offsetLeft;
+      mouseY = e.pageY - canvas.offsetTop;
+      
+      if (that.mouseMoved) {
+        that.mouseMoved(mouseX, mouseY);
+      }
+    }
+
+    // handle the onclick event
+    canvas.onclick = function(e) {
+      if (that.mousePressed) {
+        that.mousePressed(mouseX, mouseY);
+      }
+    }
+    
+    if (readyCallback) {
+      readyCallback();
+    }
+
     return that;
   };
   
@@ -407,6 +450,28 @@ function TiltDraw(canvas, failCallback, successCallback) {
   this.getFrameDelta = function() {
     return frameDelta;
   };
+
+  /**
+   * Returns the x position of the mouse coordinates. Use of this variable is 
+   * discouraged, please override this object's mousePressed(x, y) or
+   * mouseMoved(x, y) functions instead.
+   *
+   * @param {number} the x position of the mouse
+   */
+   this.getMouseX = function() {
+     return mouseX;
+   };
+
+  /**
+   * Returns the y position of the mouse coordinates. Use of this variable is 
+   * discouraged, please override this object's mousePressed(x, y) or
+   * mouseMoved(x, y) functions instead.
+   *
+   * @param {number} the y position of the mouse
+   */
+   this.getMouseY = function() {
+     return mouseY;
+   };
 
   // Helpers for managing variables like frameCount, frameRate, frameDelta
   // Used internally, in the requestAnimFrame function
