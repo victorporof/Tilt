@@ -43,7 +43,7 @@ function TiltEngine() {
   this.gl = null;
 
   /**
-   * The current shader used by the WebGL context.
+   * The current shader used by the WebGL context. Used for caching.
    */
   this.program = null;
 
@@ -325,7 +325,7 @@ function TiltEngine() {
    *
    * @param {object} sampler: the sampler to bind the texture to
    * @param {object} texture: the texture to be binded
-   * @param {boolean} clearCache: true if should clear the cache
+   * @param {boolean} clearCache: pass true if the texture pixels have changed
    */
   this.bindTexture = function(sampler, texture, clearCache) {
     var gl = that.gl;
@@ -336,15 +336,15 @@ function TiltEngine() {
       gl.uniform1i(sampler, 0);
     }
   };
-
+  
   /**
    * Initializes buffer data to be used for drawing, using an array of floats.
    * The 'numItems' can be specified to use only a portion of the array.
    *
    * @param {array} elementsArray: an array of floats
    * @param {number} itemSize: how many items create a block
-   * @param {number} numItems: how many items to use from the array
-   * @return {object} the buffer
+   * @param {number} numItems: optional, how many items to use from the array
+   * @return {object} the initialized buffer
    */
   this.initBuffer = function(elementsArray, itemSize, numItems) {
     if (!numItems) {
@@ -371,7 +371,7 @@ function TiltEngine() {
    *
    * @param {array} elementsArray: an array of unsigned integers
    * @param {number} numItems: how many items to use from the array
-   * @return {object} the index buffer
+   * @return {object} the initialized index buffer
    */
   this.initIndexBuffer = function(elementsArray, numItems) {
     if (!numItems) {
@@ -393,7 +393,7 @@ function TiltEngine() {
     
   /**
    * Initializes a texture from a source, calls a callback function when
-   * ready; the source may be an url or a pre-existing image or canvas; if the
+   * ready. The source may be an url or a pre-existing image or canvas. If the
    * source is an already loaded image, the texture is immediately created.
    *
    * @param {object} or {string} textureSource: the texture source
@@ -404,8 +404,8 @@ function TiltEngine() {
    * @param {string} minFilter: either 'nearest' or 'linear'
    * @param {string} magFilter: either 'nearest' or 'linear'
    * @param {object} mipmap: either 'mipmap' or null
-   * @param {string} wrapS: either 'repeat' or undefined
-   * @param {string} wrapT: either 'repeat' or undefined
+   * @param {string} wrapS: either 'repeat' or null
+   * @param {string} wrapT: either 'repeat' or null
    * @param {object} flipY: either 'flipY' or null
    */
   this.initTexture = function(textureSource, readyCallback,
@@ -457,13 +457,13 @@ function TiltEngine() {
   
   /**
    * Sets texture parameters for the current texture binding.
-   * Optionally, you can also set the current texture manually.
+   * Optionally, you can also (re)set the current texture binding manually.
    *
    * @param {string} minFilter: either 'nearest' or 'linear'
    * @param {string} magFilter: either 'nearest' or 'linear'
    * @param {object} mipmap: either 'mipmap' or null
-   * @param {string} wrapS: either 'repeat' or undefined
-   * @param {string} wrapT: either 'repeat' or undefined
+   * @param {string} wrapS: either 'repeat' or null
+   * @param {string} wrapT: either 'repeat' or null
    * @param {object} texture: optional texture to replace the current binding
    */
   this.setTextureParams = function(minFilter, magFilter, mipmap,
