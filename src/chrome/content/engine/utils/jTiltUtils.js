@@ -423,17 +423,17 @@ TiltUtils.Math = {
     hex = hex.charAt(0) === "#" ? hex.substring(1) : hex;
 
     if (hex.length === 3) {
-      var r = parseInt(hex.charAt(0), 16);
-      var g = parseInt(hex.charAt(1), 16);
-      var b = parseInt(hex.charAt(2), 16);
-      return [r * r / 255, g * g / 255, b * b / 255, 1];
+      var cr = hex.charAt(0);
+      var cg = hex.charAt(1);
+      var cb = hex.charAt(2);
+      hex = cr + cr + cg + cg + cb + cb + "ff";
     }
     else if (hex.length === 4) {
-      var r = parseInt(hex.charAt(0), 16);
-      var g = parseInt(hex.charAt(1), 16);
-      var b = parseInt(hex.charAt(2), 16);
-      var a = parseInt(hex.charAt(3), 16);
-      return [r * r / 255, g * g / 255, b * b / 255, a * a / 255];
+      var cr = hex.charAt(0);
+      var cg = hex.charAt(1);
+      var cb = hex.charAt(2);
+      var ca = hex.charAt(3);
+      hex = cr + cr + cg + cg + cb + cb + ca + ca;
     }
     else if (hex.match("^rgba") == "rgba") {
       var rgba = hex.substring(5, hex.length - 1).split(',');
@@ -451,13 +451,12 @@ TiltUtils.Math = {
       rgba[3] = 1;
       return rgba;
     }
-    else {
-      var r = parseInt(hex.substring(0, 2), 16) / 255;
-      var g = parseInt(hex.substring(2, 4), 16) / 255;
-      var b = parseInt(hex.substring(4, 6), 16) / 255;
-      var a = parseInt(hex.substring(6, 8), 16) / 255;
-      return [r, g, b, a];
-    }
+
+    var r = parseInt(hex.substring(0, 2), 16) / 255;
+    var g = parseInt(hex.substring(2, 4), 16) / 255;
+    var b = parseInt(hex.substring(4, 6), 16) / 255;
+    var a = parseInt(hex.substring(6, 8), 16) / 255;
+    return [r, g, b, a];
   }
 };
 
