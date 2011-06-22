@@ -23,8 +23,11 @@
  *    3. This notice may not be removed or altered from any source
  *    distribution.
  */
-if ("undefined" === typeof(TiltShaders)) {
-  var TiltShaders = {};
+if ("undefined" === typeof(Tilt)) {
+  var Tilt = {};
+}
+if ("undefined" === typeof(Tilt.Shaders)) {
+  Tilt.Shaders = {};
 }
 
 /**
@@ -35,7 +38,7 @@ if ("undefined" === typeof(TiltShaders)) {
  * @param {uniform} projMatrix: the projection matrix
  * @param {uniform} color: the color to set the gl_FragColor to
  */  
-TiltShaders.Color = {
+Tilt.Shaders.Color = {
 
   vs: [
 "attribute vec3 vertexPosition;",
@@ -70,7 +73,7 @@ TiltShaders.Color = {
  * @param {uniform} projMatrix: the projection matrix
  * @param {uniform} color: the color to multiply the sampled pixel with
  */
-TiltShaders.Texture = {
+Tilt.Shaders.Texture = {
 
   vs: [
 "attribute vec3 vertexPosition;",
