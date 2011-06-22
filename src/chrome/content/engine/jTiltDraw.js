@@ -685,17 +685,13 @@ function TiltDraw(canvas, failCallback, successCallback) {
   /**
    * Draws a box using the specified parameters.
    *
-   * @param {number} x: the x position of the object
-   * @param {number} y: the y position of the object
-   * @param {number} z: the z position of the object
    * @param {number} width: the width of the object
    * @param {number} height: the height of the object
    * @param {number} depth: the depth of the object
    * @param {object} texture: the texture to be used
    */
-  this.box = function(x, y, z, width, height, depth, texture) {
+  this.box = function(width, height, depth, texture) {
     that.pushMatrix();
-    that.translate(x, y, z);
     that.scale(width, height, depth);
 
     if (texture) {
