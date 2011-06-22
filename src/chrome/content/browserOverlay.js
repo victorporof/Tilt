@@ -56,22 +56,22 @@ TiltChrome.BrowserOverlay = {
     // if the visualization is not currently running
     if (!this.iframe) {
       // change the menu label acrodingly
-      tiltMenu.label = TiltUtils.StringBundle.get("menuItemHide.label");
+      tiltMenu.label = Tilt.Utils.StringBundle.get("menuItemHide.label");
       
       // use an extension to get the image representation of the document
-      TiltExtensions.WebGL.initDocumentImage(function(image) {
+      Tilt.Extensions.WebGL.initDocumentImage(function(image) {
         // set the width and height to mach the content window dimensions
         var w = gBrowser.contentWindow.innerWidth;
         var h = gBrowser.contentWindow.innerHeight;
 
         // initialize an iframe containing a canvas element
-        TiltDraw.Create(w, h, function(tilt, canvas, iframe) {
+        Tilt.Create(w, h, function(tilt, canvas, iframe) {
           // remember the iframe so that it can be destroyed later
           that.iframe = iframe;
           
           // construct the visualization using the canvas and the dom image
-          that.visualization = new TiltVisualization(tilt, canvas, image,
-                                   TiltController.MouseAndKeyboard);
+          that.visualization = new Tilt.Visualization(tilt, canvas, image,
+            new Tilt.Controller.MouseAndKeyboard());
         });
       });
     }
@@ -79,7 +79,7 @@ TiltChrome.BrowserOverlay = {
       // if the visualization is running destroy it
       this.destroy();
       // change the menu label to the default initialization string
-      tiltMenu.label = TiltUtils.StringBundle.get("menuItemInitialize.label");
+      tiltMenu.label =Tilt.Utils.StringBundle.get("menuItemInitialize.label");
     }
   },
   
@@ -94,7 +94,7 @@ TiltChrome.BrowserOverlay = {
       that.visualization = null; // when done, do some cleanup
 
       // remove the iframe from the browser stack
-      TiltUtils.Document.remove(that.iframe);
+      Tilt.Utils.Document.remove(that.iframe);
       that.iframe = null;
 
       // collect any remaining garbage
