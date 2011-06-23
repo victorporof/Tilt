@@ -56,7 +56,8 @@ TiltChrome.Visualization = function(tilt, canvas, image, controller) {
   var mesh = {
     vertices: [],
     texCoord: [],
-    indices: []
+    indices: [],
+    wireframeIndices: []
   };
   
   /**
@@ -79,19 +80,20 @@ TiltChrome.Visualization = function(tilt, canvas, image, controller) {
     // convert the dom image to a texture
     tilt.initTexture(image, function(texture) {
       dom = texture;
-    }, "white", "gray", 8); // using a white background & gray margins of 8px
+    }, "white", "#aaa", 8); // using a white background & gray margins of 8px
     
     // create the combined mesh representing the document visualization by
     // traversing the dom and adding a shape for each node that is drawable    
     Tilt.Utils.Document.traverse(function(node, depth) {
       // get the x, y, width and height of a node
       var coord = Tilt.Utils.Document.getNodeCoordinates(node);
+      var thickness = 12;
 
       // use this node only if it actually has any dimensions
-      if ((coord.x || coord.y || coord.width || coord.height) && depth) {
+      if ((coord.width > 1 || coord.height > 1) && depth) {
         var x = coord.x;
         var y = coord.y;
-        var z = depth * 8;
+        var z = depth * thickness;
         var w = coord.width;
         var h = coord.height;
         
@@ -99,35 +101,65 @@ TiltChrome.Visualization = function(tilt, canvas, image, controller) {
         var i = mesh.vertices.length / 3; // a vertex has 3 coords: x, y and z
         
         // compute the vertices
-        mesh.vertices.push(x,     y,     z);
+        mesh.vertices.push(x,     y,     z);             /* front */
         mesh.vertices.push(x + w, y,     z);
         mesh.vertices.push(x + w, y + h, z);
         mesh.vertices.push(x,     y + h, z);
         
+        mesh.vertices.push(x,     y + h, z - thickness); /* bottom */
+        mesh.vertices.push(x + w, y + h, z - thickness);
+        mesh.vertices.push(x + w, y + h, z);
+        mesh.vertices.push(x,     y + h, z);
+        
+        mesh.vertices.push(x,     y,     z);             /* top */
+        mesh.vertices.push(x + w, y,     z);
+        mesh.vertices.push(x + w, y,     z - thickness);
+        mesh.vertices.push(x    , y,     z - thickness);
+      
+        mesh.vertices.push(x + w, y,     z - thickness); /* right */
+        mesh.vertices.push(x + w, y,     z);
+        mesh.vertices.push(x + w, y + h, z);
+        mesh.vertices.push(x + w, y + h, z - thickness);
+      
+        mesh.vertices.push(x,     y,     z);             /* left */
+        mesh.vertices.push(x,     y,     z - thickness);
+        mesh.vertices.push(x,     y + h, z - thickness);
+        mesh.vertices.push(x,     y + h, z);
+            
         // compute the texture coordinates
         mesh.texCoord.push(
           (x    ) / canvas.clientWidth, (y    ) / canvas.clientHeight, 
           (x + w) / canvas.clientWidth, (y    ) / canvas.clientHeight,
           (x + w) / canvas.clientWidth, (y + h) / canvas.clientHeight, 
           (x    ) / canvas.clientWidth, (y + h) / canvas.clientHeight);
+          
+        for (var k = 0; k < 4; k++) {
+          mesh.texCoord.push(0, 0, 0, 0, 0, 0, 0, 0);
+        }
         
         // compute the indices
-        mesh.indices.push(i, i + 1, i + 2, i, i + 2, i + 3);
+        for (var k = 0; k < 5; k++, i += 4) {
+          mesh.indices.push(i, i + 1, i + 2, i, i + 2, i + 3);
+          mesh.wireframeIndices.push(
+            i,     i + 1, 
+            i + 1, i + 2, 
+            i + 2, i + 3,
+            i + 3, i);
+        }       
       }
     }, function() {
       // when finished, initialize the buffers
       mesh.vertices = tilt.initBuffer(mesh.vertices, 3);
       mesh.texCoord = tilt.initBuffer(mesh.texCoord, 2);
       mesh.indices = tilt.initIndexBuffer(mesh.indices);
+      mesh.wireframeIndices = tilt.initIndexBuffer(mesh.wireframeIndices);
     });
     
     // set the transformations at initialization
     transforms.translation = [0, -50, -400];
     transforms.rotation = [0, 0, 0];
     
-    // use additive blending without depth testing enabled
-    tilt.blendMode("add");
-    tilt.depthTest(false);
+    tilt.strokeWeight(2);
   };
   
   /**
@@ -150,7 +182,7 @@ TiltChrome.Visualization = function(tilt, canvas, image, controller) {
         tilt.background("#0000");
       }
       else {
-        tilt.clear();
+        tilt.background("#434344");
       }
       
       // reset the model view matrix to identity
@@ -171,8 +203,12 @@ TiltChrome.Visualization = function(tilt, canvas, image, controller) {
         
         tilt.mesh(mesh.vertices,
                   mesh.texCoord, null, 
-                  "triangles", "rgba(14, 16, 22, 255)", dom,
+                  "triangles", "#fff", dom,
                   mesh.indices);
+        
+        tilt.mesh(mesh.vertices, null, null, 
+                  "lines", "#899", null,
+                  mesh.wireframeIndices);      
       }
     }
     
