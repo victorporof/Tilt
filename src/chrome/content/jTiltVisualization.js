@@ -101,51 +101,53 @@ TiltChrome.Visualization = function(tilt, canvas, image, controller) {
         var i = mesh.vertices.length / 3; // a vertex has 3 coords: x, y and z
         
         // compute the vertices
-        mesh.vertices.push(x,     y,     z);             /* front */
-        mesh.vertices.push(x + w, y,     z);
-        mesh.vertices.push(x + w, y + h, z);
-        mesh.vertices.push(x,     y + h, z);
+        mesh.vertices.push(x,     y,     z);             /* front */    // 0
+        mesh.vertices.push(x + w, y,     z);                            // 1
+        mesh.vertices.push(x + w, y + h, z);                            // 2
+        mesh.vertices.push(x,     y + h, z);                            // 3
         
-        mesh.vertices.push(x,     y + h, z - thickness); /* bottom */
-        mesh.vertices.push(x + w, y + h, z - thickness);
-        mesh.vertices.push(x + w, y + h, z);
-        mesh.vertices.push(x,     y + h, z);
+        // we don't duplicate vertices for the left and right faces, because
+        // they can be reused from the bottom and top faces; we do, however,
+        // duplicate some vertices from front face, because it has custom
+        // texture coordinates which are not shared by the other faces
+        mesh.vertices.push(x,     y + h, z - thickness); /* bottom */   // 4
+        mesh.vertices.push(x + w, y + h, z - thickness);                // 5
+        mesh.vertices.push(x + w, y + h, z);                            // 6
+        mesh.vertices.push(x,     y + h, z);                            // 7
         
-        mesh.vertices.push(x,     y,     z);             /* top */
-        mesh.vertices.push(x + w, y,     z);
-        mesh.vertices.push(x + w, y,     z - thickness);
-        mesh.vertices.push(x    , y,     z - thickness);
-      
-        mesh.vertices.push(x + w, y,     z - thickness); /* right */
-        mesh.vertices.push(x + w, y,     z);
-        mesh.vertices.push(x + w, y + h, z);
-        mesh.vertices.push(x + w, y + h, z - thickness);
-      
-        mesh.vertices.push(x,     y,     z);             /* left */
-        mesh.vertices.push(x,     y,     z - thickness);
-        mesh.vertices.push(x,     y + h, z - thickness);
-        mesh.vertices.push(x,     y + h, z);
-            
+        mesh.vertices.push(x,     y,     z);             /* top */      // 8
+        mesh.vertices.push(x + w, y,     z);                            // 9
+        mesh.vertices.push(x + w, y,     z - thickness);                // 10
+        mesh.vertices.push(x,     y,     z - thickness);                // 11
+        
         // compute the texture coordinates
         mesh.texCoord.push(
           (x    ) / canvas.clientWidth, (y    ) / canvas.clientHeight, 
           (x + w) / canvas.clientWidth, (y    ) / canvas.clientHeight,
           (x + w) / canvas.clientWidth, (y + h) / canvas.clientHeight, 
           (x    ) / canvas.clientWidth, (y + h) / canvas.clientHeight);
-          
-        for (var k = 0; k < 4; k++) {
+        
+        for (var k = 0; k < 2; k++) {
           mesh.texCoord.push(0, 0, 0, 0, 0, 0, 0, 0);
         }
         
         // compute the indices
-        for (var k = 0; k < 5; k++, i += 4) {
-          mesh.indices.push(i, i + 1, i + 2, i, i + 2, i + 3);
-          mesh.wireframeIndices.push(
-            i,     i + 1, 
-            i + 1, i + 2, 
-            i + 2, i + 3,
-            i + 3, i);
-        }       
+        mesh.indices.push(i + 0,  i + 1,  i + 2,  i + 0,  i + 2,  i + 3);
+        mesh.indices.push(i + 4,  i + 5,  i + 6,  i + 4,  i + 6,  i + 7);
+        mesh.indices.push(i + 8,  i + 9,  i + 10, i + 8,  i + 10, i + 11);
+        mesh.indices.push(i + 10, i + 9,  i + 6,  i + 10, i + 6,  i + 5);
+        mesh.indices.push(i + 8,  i + 11, i + 4,  i + 8,  i + 4,  i + 7);
+
+        mesh.wireframeIndices.push(
+          i + 0,  i + 1,  i + 1,  i + 2,  i + 2,  i + 3,  i + 3,  i + 0);
+        mesh.wireframeIndices.push(
+          i + 4,  i + 5,  i + 5,  i + 6,  i + 6,  i + 7,  i + 7,  i + 4);
+        mesh.wireframeIndices.push(
+          i + 8,  i + 9,  i + 9,  i + 10, i + 10, i + 11, i + 11, i + 8);
+        mesh.wireframeIndices.push(
+          i + 10, i + 9,  i + 9,  i + 6,  i + 6,  i + 5,  i + 5,  i + 10);
+        mesh.wireframeIndices.push(
+          i + 8,  i + 11, i + 11, i + 4,  i + 4,  i + 7,  i + 7,  i + 8);
       }
     }, function() {
       // when finished, initialize the buffers
