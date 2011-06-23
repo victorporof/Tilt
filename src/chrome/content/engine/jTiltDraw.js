@@ -318,7 +318,7 @@ Tilt.Draw = function(canvas, failCallback, successCallback) {
        0.5, -0.5,  0.5,
        0.5,  0.5,  0.5,
       -0.5,  0.5,  0.5,
-      -0.5,  0.5,  0.5, /* top */
+      -0.5,  0.5,  0.5, /* bottom */
        0.5,  0.5,  0.5,
        0.5,  0.5, -0.5,
       -0.5,  0.5, -0.5,
@@ -326,7 +326,7 @@ Tilt.Draw = function(canvas, failCallback, successCallback) {
        0.5,  0.5, -0.5,
        0.5, -0.5, -0.5,
       -0.5, -0.5, -0.5,
-      -0.5, -0.5, -0.5, /* bottom */
+      -0.5, -0.5, -0.5, /* top */
        0.5, -0.5, -0.5,
        0.5, -0.5,  0.5,
       -0.5, -0.5,  0.5,
@@ -741,6 +741,7 @@ Tilt.Draw = function(canvas, failCallback, successCallback) {
    */
   this.strokeWeight = function(weight) {
     strokeWeight = weight;
+    gl.lineWidth(weight);
   };
   
   /**
@@ -962,7 +963,7 @@ Tilt.Draw = function(canvas, failCallback, successCallback) {
     }
     else if ("add" === mode || "additive" === mode) {
       gl.enable(gl.BLEND);
-      gl.blendFunc(gl.ONE, gl.ONE);
+      gl.blendFunc(gl.SRC_ALPHA, gl.ONE);
     }
     else {
       gl.disable(gl.BLEND);
