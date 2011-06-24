@@ -80,6 +80,8 @@ TiltChrome.Visualization = function(tilt, canvas, image, controller) {
   tilt.setup = function() {
     // set a reference in the controller for this visualization
     controller.visualization = that;
+    controller.width = tilt.width;
+    controller.height = tilt.height;
     
     // convert the dom image to a texture
     tilt.initTexture(image, function(texture) {
@@ -119,16 +121,16 @@ TiltChrome.Visualization = function(tilt, canvas, image, controller) {
         // they can be reused from the bottom and top faces; we do, however,
         // duplicate some vertices from front face, because it has custom
         // texture coordinates which are not shared by the other faces
-        mesh.vertices.push(x,     y + h, 0);             /* bottom */   // 4
-        mesh.vertices.push(x + w, y + h, 0);                            // 5
+        mesh.vertices.push(x,     y + h, z - thickness); /* bottom */   // 4
+        mesh.vertices.push(x + w, y + h, z - thickness);                // 5
         mesh.vertices.push(x + w, y + h, z);                            // 6
         mesh.vertices.push(x,     y + h, z);                            // 7
         
         mesh.vertices.push(x,     y,     z);             /* top */      // 8
         mesh.vertices.push(x + w, y,     z);                            // 9
-        mesh.vertices.push(x + w, y,     0);                            // 10
-        mesh.vertices.push(x,     y,     0);                            // 11
-        
+        mesh.vertices.push(x + w, y,     z - thickness);                // 10
+        mesh.vertices.push(x,     y,     z - thickness);                // 11
+                
         // compute the texture coordinates
         mesh.texCoord.push(
           (x + tilt.width / 2     ) / tilt.width,
@@ -150,6 +152,10 @@ TiltChrome.Visualization = function(tilt, canvas, image, controller) {
         mesh.indices.push(i + 8,  i + 9,  i + 10, i + 8,  i + 10, i + 11);
         mesh.indices.push(i + 10, i + 9,  i + 6,  i + 10, i + 6,  i + 5);
         mesh.indices.push(i + 8,  i + 11, i + 4,  i + 8,  i + 4,  i + 7);
+        
+        if (depth === 1) {
+          mesh.indices.push(11, 10, 5, 11, 5, 4);
+        }
 
         mesh.wireframeIndices.push(
           i + 0,  i + 1,  i + 1,  i + 2,  i + 2,  i + 3,  i + 3,  i + 0);
@@ -192,9 +198,9 @@ TiltChrome.Visualization = function(tilt, canvas, image, controller) {
     // only after the draw object has finished initializing
     if (tilt.isInitialized()) {
       // set a transparent black background if the dom texture has not 
-      // finished loading, or opaque otherwise
+      // finished loading, or opaque grayish otherwise
       if (!dom) {
-        tilt.background("#0000");
+        tilt.clear(0, 0, 0, 0);
       }
       else if (background) {
         tilt.background("#3e3e3e");
@@ -204,14 +210,12 @@ TiltChrome.Visualization = function(tilt, canvas, image, controller) {
       if (dom && background) {
         tilt.depthTest(false);
         tilt.image(background, 0, 0, tilt.width, tilt.height);
-
+        
         tilt.depthTest(true);
         that.renderVisualization();
       }
     }
     
-    controller.width = tilt.width;
-    controller.height = tilt.height;
     if ("function" === typeof(controller.loop)) {
       controller.loop();
     }
@@ -225,7 +229,7 @@ TiltChrome.Visualization = function(tilt, canvas, image, controller) {
     tilt.translate(transforms.translation[0] + tilt.width / 2,
                    transforms.translation[1] + tilt.height / 2,
                    transforms.translation[2]);
-
+                   
     tilt.rotateY(transforms.rotation[1]);
     tilt.rotateX(transforms.rotation[0]);
     tilt.rotateZ(transforms.rotation[2]);
@@ -239,7 +243,7 @@ TiltChrome.Visualization = function(tilt, canvas, image, controller) {
               "lines", "#899", null,
               mesh.wireframeIndicesBuff); 
   };
-  
+    
   /**
    * Delegate translation method, used by the controller.
    */
@@ -248,7 +252,7 @@ TiltChrome.Visualization = function(tilt, canvas, image, controller) {
     transforms.translation[1] += y * tilt.frameDelta;
     transforms.translation[2] += z * tilt.frameDelta;
   };
-  
+    
   /**
    * Delegate rotation method, used by the controller.
    */
@@ -256,6 +260,14 @@ TiltChrome.Visualization = function(tilt, canvas, image, controller) {
     transforms.rotation[0] += x * tilt.frameDelta;
     transforms.rotation[1] += y * tilt.frameDelta;
     transforms.rotation[2] += z * tilt.frameDelta;
+  };
+  
+  /**
+   * Override the resize function to handle the event.
+   */
+  this.resize = function(width, height) {
+    controller.width = width;
+    controller.height = height;
   };
   
   /**
