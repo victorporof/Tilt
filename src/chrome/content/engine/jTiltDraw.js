@@ -431,6 +431,12 @@ Tilt.Draw = function(canvas, failCallback, successCallback) {
         that.mouseOut(that.mouseX, that.mouseY);
       }
     }
+    
+    // handle the resize event
+    document.onresize = function(e) {
+      that.width = this.width;
+      that.height = this.height;
+    }
         
     // call the ready callback function if it was passed as a valid parameter
     if ("function" === typeof(readyCallback)) {
@@ -472,8 +478,11 @@ Tilt.Draw = function(canvas, failCallback, successCallback) {
    */
   this.requestAnimFrame = function(draw) {
     window.requestAnimFrame(draw, canvas);
-
+    
     if (that.isInitialized()) {
+      that.origin();
+      that.perspective();
+      
       currentTime = new Date().getTime();
       
       if (lastTime !== 0) {
@@ -525,12 +534,12 @@ Tilt.Draw = function(canvas, failCallback, successCallback) {
     var x = w / 2;
     var y = h / 2;
     
-    var z = canvas.height / Math.tan(Tilt.Utils.Math.radians(45) / 2) / 2;
+    var z = that.height / Math.tan(Tilt.Utils.Math.radians(45) / 2) / 2;
     var znear = z / 10;
     var zfar = z * 10;
     var aspect = canvas.width / canvas.height;
     
-    engine.viewport(w, h);
+    engine.viewport(canvas.width, canvas.height);
     mat4.perspective(fov, aspect, znear, zfar, projMatrix, true);
     mat4.translate(projMatrix, [-x, -y, -z]);
   };
@@ -546,7 +555,7 @@ Tilt.Draw = function(canvas, failCallback, successCallback) {
     var w = "number" === typeof(width) ? width : that.width;
     var h = "number" === typeof(height) ? height : that.height;
 
-    engine.viewport(w, h);
+    engine.viewport(canvas.width, canvas.height);
     mat4.ortho(0, w, h, 0, -100, 100, projMatrix);
   };
   
@@ -555,10 +564,10 @@ Tilt.Draw = function(canvas, failCallback, successCallback) {
    *
    * @param {object} matrix the custom projection matrix to be used
    */
-   this.projection = function(matrix) {
-     engine.viewport(that.width, that.height);
-     mat4.set(matrix, projMatrix);
-   };
+  this.projection = function(matrix) {
+    engine.viewport(canvas.width, canvas.height);
+    mat4.set(matrix, projMatrix);
+  };
 
   /**
    * Pushes the current modelview matrix on a stack, to be popped out later.
