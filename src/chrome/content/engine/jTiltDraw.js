@@ -69,7 +69,7 @@ Tilt.Create = function(width, height, readyCallback) {
     canvas.height = height;
 
     var tilt = new Tilt.Draw(canvas);    
-
+    
     tilt.initialize(function() {
       if ("function" === typeof(readyCallback)) {
         readyCallback(tilt, canvas, iframe);
@@ -167,31 +167,25 @@ Tilt.Draw = function(canvas, failCallback, successCallback) {
   var stroke = [];
 
   /**
-   * The current stroke weight.
-   * This property also refers to lines.
-   */
-  var strokeWeight = 0;
-
-  /**
    * Time passed since initialization.
    */
-  var elapsedTime = 0;
+  this.elapsedTime = 0;
 
   /**
    * Counter for the number of frames passed since initialization.
    */
-  var frameCount = 0;
+  this.frameCount = 0;
 
   /**
    * Variable retaining the current frame rate.
    */
-  var frameRate = 0;
+  this.frameRate = 0;
 
   /**
    * Variable representing the delta time elapsed between frames.
    * Use this to create smooth animations regardless of framerate.
    */
-  var frameDelta = 0;
+  this.frameDelta = 0;
   
   /**
    * Variables defining the x and y coordinates of the mouse position. They
@@ -199,9 +193,16 @@ Tilt.Draw = function(canvas, failCallback, successCallback) {
    * this event yourself, override this object's mouseMoved(x, y) function.
    * Similarily, for the onclick event, override mousePressed(x, y).
    */
-  var mouseX = 0;
-  var mouseY = 0;
+  this.mouseX = 0;
+  this.mouseY = 0;
   
+  /**
+   * Variables representing the current framebuffer width and height.
+   * For example, these will be updated or changed when rendering offscreen.
+   */
+  this.width = canvas.clientWidth;
+  this.height = canvas.clientHeight;
+
   /**
    * Performs mandatory initialization of shaders and other objects required
    * for drawing, like vertex buffers and primitives.
@@ -216,7 +217,7 @@ Tilt.Draw = function(canvas, failCallback, successCallback) {
         that[i] = engine[i];
       }
     }
-
+    
     // initializing a color shader
     engine.initProgram(Tilt.Shaders.Color.vs, 
                        Tilt.Shaders.Color.fs, function(p) {
@@ -389,45 +390,45 @@ Tilt.Draw = function(canvas, failCallback, successCallback) {
     // handles the onmousedown event
     canvas.onmousedown = function(e) {      
       if ("function" === typeof(that.mousePressed)) {
-        that.mousePressed(mouseX, mouseY);
+        that.mousePressed(that.mouseX, that.mouseY);
       }
     }
     
     // handles the onmouseup event
     canvas.onmouseup = function(e) {      
       if ("function" === typeof(that.mouseReleased)) {
-        that.mouseReleased(mouseX, mouseY);
+        that.mouseReleased(that.mouseX, that.mouseY);
       }
     }
     
     // handle the onclick event
     canvas.onclick = function(e) {
       if ("function" === typeof(that.mouseClicked)) {
-        that.mouseClicked(mouseX, mouseY);
+        that.mouseClicked(that.mouseX, that.mouseY);
       }
     }
     
     // handle the onmousemove event
     canvas.onmousemove = function(e) {
-      mouseX = e.pageX - canvas.offsetLeft;
-      mouseY = e.pageY - canvas.offsetTop;
+      that.mouseX = e.pageX - canvas.offsetLeft;
+      that.mouseY = e.pageY - canvas.offsetTop;
       
       if ("function" === typeof(that.mouseMoved)) {
-        that.mouseMoved(mouseX, mouseY);
+        that.mouseMoved(that.mouseX, that.mouseY);
       }
     }
     
     // handle the onmouseover event
     canvas.onmouseover = function(e) {
       if ("function" === typeof(that.mouseOver)) {
-        that.mouseOver(mouseX, mouseY);
+        that.mouseOver(that.mouseX, that.mouseY);
       }
     }
     
     // handle the onmouseout event
     canvas.onmouseout = function(e) {
       if ("function" === typeof(that.mouseOut)) {
-        that.mouseOut(mouseX, mouseY);
+        that.mouseOut(that.mouseX, that.mouseY);
       }
     }
         
@@ -448,68 +449,6 @@ Tilt.Draw = function(canvas, failCallback, successCallback) {
   this.isInitialized = function() {
     return colorShader && textureShader;
   };
-  
-  /**
-   * Returns the elapsed time.
-   * This represents the total time passed since initialization.
-   *
-   * @return {number} the elapsed time
-   */
-  this.getElapsedTime = function() {
-    return elapsedTime;
-  };
-
-  /**
-   * Returns the frame count.
-   * This is a counter for the number of frames passed since initialization.
-   *
-   * @return {number} the frame count
-   */
-  this.getFrameCount = function() {
-    return frameCount;
-  };
-
-  /**
-   * Returns the framerate.
-   * This is a variable retaining the current frame rate.
-   *
-   * @return {number} the framerate
-   */
-  this.getFrameRate = function() {
-    return frameRate;
-  };
-
-  /**
-   * Returns the frame delta time.
-   * Represents the delta time elapsed between frames.
-   *
-   * @return {number} the frame delta time
-   */
-  this.getFrameDelta = function() {
-    return frameDelta;
-  };
-
-  /**
-   * Returns the x position of the mouse coordinates. Use of this variable is 
-   * discouraged, please override this object's mousePressed(x, y) or
-   * mouseMoved(x, y) functions instead.
-   *
-   * @param {number} the x position of the mouse
-   */
-   this.getMouseX = function() {
-     return mouseX;
-   };
-
-  /**
-   * Returns the y position of the mouse coordinates. Use of this variable is 
-   * discouraged, please override this object's mousePressed(x, y) or
-   * mouseMoved(x, y) functions instead.
-   *
-   * @param {number} the y position of the mouse
-   */
-   this.getMouseY = function() {
-     return mouseY;
-   };
 
   // Helpers for managing variables like frameCount, frameRate, frameDelta
   // Used internally, in the requestAnimFrame function
@@ -538,33 +477,60 @@ Tilt.Draw = function(canvas, failCallback, successCallback) {
       currentTime = new Date().getTime();
       
       if (lastTime !== 0) {
-        frameDelta = currentTime - lastTime;
-        frameRate = 1000 / frameDelta;
+        that.frameDelta = currentTime - lastTime;
+        that.frameRate = 1000 / that.frameDelta;
       }
       lastTime = currentTime;
       
-      elapsedTime += frameDelta;
-      frameCount++;
+      that.elapsedTime += that.frameDelta;
+      that.frameCount++;
     }
+  };
+  
+  /**
+   * Binds an offscreen rendering context. 
+   * Therefore, anything will be drawn offscreen using a specific framebuffer.
+   * To create an offscreen rendering context, use initOffscreenBuffer().
+   * Pass null to revert to on-screen rendering.
+   *
+   * @param {object} offscreen: the offscreen buffer to render to
+   */
+  this.renderTo = function(offscreen) {
+    if (offscreen) {
+      engine.bindFramebuffer(offscreen.framebuffer);
+      that.width = offscreen.framebuffer.width;
+      that.height = offscreen.framebuffer.height;
+    }
+    else {
+      engine.bindFramebuffer(null);
+      that.width = canvas.clientWidth;
+      that.height = canvas.clientHeight;
+    }
+    
+    that.origin();
+    that.perspective();
   };
   
   /**
    * Sets a default perspective projection, with the near frustum rectangle
    * mapped to the canvas width and height bounds.
+   *
+   * @param {number} width: optional, width of the near frustrum rectangle
+   * @param {number} height: optional, height of the near frustrum rectangle
    */
-  this.perspective = function() {
+  this.perspective = function(width, height) {
     var fov = 45;
-    var w = canvas.clientWidth;
-    var h = canvas.clientHeight;
-    var x = w / 2.0;
-    var y = h / 2.0;
-
-    var z = y / Math.tan(Tilt.Utils.Math.radians(45) / 2);
+    var w = "number" === typeof(width) ? width : that.width;
+    var h = "number" === typeof(height) ? height : that.height;
+    var x = w / 2;
+    var y = h / 2;
+    
+    var z = canvas.height / Math.tan(Tilt.Utils.Math.radians(45) / 2) / 2;
     var znear = z / 10;
     var zfar = z * 10;
-    var aspect = w / h;
+    var aspect = canvas.width / canvas.height;
     
-    engine.viewport(canvas.width, canvas.height);
+    engine.viewport(w, h);
     mat4.perspective(fov, aspect, znear, zfar, projMatrix, true);
     mat4.translate(projMatrix, [-x, -y, -z]);
   };
@@ -572,12 +538,15 @@ Tilt.Draw = function(canvas, failCallback, successCallback) {
   /**
    * Sets a default orthographic projection.
    * This is recommended for 2d rendering.
+   *
+   * @param {number} width: optional, width of the canvas
+   * @param {number} height: optional, height of the canvas
    */
-  this.ortho = function() {
-    var w = canvas.clientWidth;
-    var h = canvas.clientHeight;
+  this.ortho = function(width, height) {
+    var w = "number" === typeof(width) ? width : that.width;
+    var h = "number" === typeof(height) ? height : that.height;
 
-    engine.viewport(canvas.width, canvas.height);
+    engine.viewport(w, h);
     mat4.ortho(0, w, h, 0, -100, 100, projMatrix);
   };
   
@@ -587,7 +556,7 @@ Tilt.Draw = function(canvas, failCallback, successCallback) {
    * @param {object} matrix the custom projection matrix to be used
    */
    this.projection = function(matrix) {
-     engine.viewport(canvas.width, canvas.height);
+     engine.viewport(that.width, that.height);
      mat4.set(matrix, projMatrix);
    };
 
@@ -735,7 +704,6 @@ Tilt.Draw = function(canvas, failCallback, successCallback) {
    * @param {number} weight: the stroke weight
    */
   this.strokeWeight = function(weight) {
-    strokeWeight = weight;
     gl.lineWidth(weight);
   };
   
@@ -957,7 +925,7 @@ Tilt.Draw = function(canvas, failCallback, successCallback) {
     that.origin();
     that.perspective();
   };
-    
+  
   /**
    * Destroys this object.
    */
