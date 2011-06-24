@@ -210,6 +210,13 @@ Tilt.Draw = function(canvas, failCallback, successCallback) {
    * @return {object} this object initialized
    */
   this.initialize = function(readyCallback) {
+    // extend this object with closures representing all the engine functions     
+    for (var i in engine) {
+      if ("function" === typeof(engine[i])) {
+        that[i] = engine[i];
+      }
+    }
+
     // initializing a color shader
     engine.initProgram(Tilt.Shaders.Color.vs, 
                        Tilt.Shaders.Color.fs, function(p) {
@@ -281,7 +288,11 @@ Tilt.Draw = function(canvas, failCallback, successCallback) {
         textureShader.setUniforms(mvMatrix, projMatrix, color, texture);
       };
     });
-    
+
+    // set the default rendering properties
+    engine.blendMode("alpha");
+    engine.depthTest(true);
+
     // model view and projection matrices used for transformations
     mat4.identity(mvMatrix = mat4.create());
     mat4.identity(projMatrix = mat4.create());
@@ -289,11 +300,7 @@ Tilt.Draw = function(canvas, failCallback, successCallback) {
     // set the default model view and projection matrices
     that.origin();
     that.perspective();
-    
-    // set the default rendering properties
-    that.blendMode("alpha");
-    that.depthTest(true);
-    
+        
     // set the default tint, fill, stroke and stroke weight
     that.tint("#fff");
     that.fill("#fff");
@@ -540,19 +547,7 @@ Tilt.Draw = function(canvas, failCallback, successCallback) {
       frameCount++;
     }
   };
-
-  /**
-   * Sets up the WebGL context viewport.
-   * This defines the width and height of the gl drawing canvas context (but
-   * not the size of the actual canvas element).
-   *
-   * @param {number} width: the width of the viewport area
-   * @param {number} height: the height of the viewport area
-   */
-  this.viewport = function(width, height) {
-    gl.viewport(0, 0, width, height);
-  };
-
+  
   /**
    * Sets a default perspective projection, with the near frustum rectangle
    * mapped to the canvas width and height bounds.
@@ -569,7 +564,7 @@ Tilt.Draw = function(canvas, failCallback, successCallback) {
     var zfar = z * 10;
     var aspect = w / h;
     
-    that.viewport(canvas.width, canvas.height);
+    engine.viewport(canvas.width, canvas.height);
     mat4.perspective(fov, aspect, znear, zfar, projMatrix, true);
     mat4.translate(projMatrix, [-x, -y, -z]);
   };
@@ -582,7 +577,7 @@ Tilt.Draw = function(canvas, failCallback, successCallback) {
     var w = canvas.clientWidth;
     var h = canvas.clientHeight;
 
-    that.viewport(canvas.width, canvas.height);
+    engine.viewport(canvas.width, canvas.height);
     mat4.ortho(0, w, h, 0, -100, 100, projMatrix);
   };
   
@@ -592,7 +587,7 @@ Tilt.Draw = function(canvas, failCallback, successCallback) {
    * @param {object} matrix the custom projection matrix to be used
    */
    this.projection = function(matrix) {
-     that.viewport(canvas.width, canvas.height);
+     engine.viewport(canvas.width, canvas.height);
      mat4.set(matrix, projMatrix);
    };
 
@@ -769,19 +764,9 @@ Tilt.Draw = function(canvas, failCallback, successCallback) {
       rgba = [color[0] / 255, color[1] / 255, color[2] / 255, color[3] / 255];
     }
     
-    gl.clearColor(rgba[0], rgba[1], rgba[2], rgba[3]);
-    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+    engine.clear(rgba[0], rgba[1], rgba[2], rgba[3]);
   };
-  
-  /**
-   * Clears the canvas context to opaque black.
-   * This is the fast equivalent of background("#000").
-   */
-  this.clear = function() {
-    gl.clearColor(0, 0, 0, 1);
-    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-  };
-  
+    
   /**
    * Draws a rectangle using the specified parameters.
    *
@@ -840,8 +825,14 @@ Tilt.Draw = function(canvas, failCallback, successCallback) {
    */
   this.image = function(texture, x, y, width, height) {
     if (!width || !height) {
-      width = texture.image.width;
-      height = texture.image.height;
+      if (texture.framebuffer) {
+        width = texture.framebuffer.width;
+        height = texture.framebuffer.height;
+      }
+      else {
+        width = texture.image.width;
+        height = texture.image.height;
+      }
     }
     
     if ("center" === rectangle.imageMode) {
@@ -949,39 +940,6 @@ Tilt.Draw = function(canvas, failCallback, successCallback) {
     }
 
     // TODO: use the normals buffer, add some lighting
-  }
-  
-  /**
-   * Sets blending, either 'alpha' or 'add'; anything else disables blending.
-   *
-   * @param {string} mode: blending, either 'alpha', 'add' or undefined
-   */
-  this.blendMode = function(mode) {
-    if ("alpha" === mode) {
-      gl.enable(gl.BLEND);
-      gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
-    }
-    else if ("add" === mode || "additive" === mode) {
-      gl.enable(gl.BLEND);
-      gl.blendFunc(gl.SRC_ALPHA, gl.ONE);
-    }
-    else {
-      gl.disable(gl.BLEND);
-    }
-  };
-
-  /**
-   * Sets depth testing; disabling it is useful when handling transparency.
-   *
-   * @param {boolean} mode: true if depth testing should be enabled
-   */
-  this.depthTest = function(mode) {
-    if (mode) {
-      gl.enable(gl.DEPTH_TEST);
-    }
-    else {
-      gl.disable(gl.DEPTH_TEST);
-    }
   };
 
   /**
@@ -994,27 +952,12 @@ Tilt.Draw = function(canvas, failCallback, successCallback) {
   this.size = function(width, height) {
     canvas.width = width;
     canvas.height = height;
-    gl.viewport(0, 0, width, height);
+    engine.viewport(width, height);
 
     that.origin();
     that.perspective();
   };
-  
-  /**
-   * Simple closures wrapping some engine functions for easier access.
-   */
-  this.initProgram = engine.initProgram;
-  this.useProgram = engine.useProgram;  
-  this.shaderIO = engine.shaderIO;
-  this.bindUniformMatrix = engine.bindUniformMatrix;
-  this.bindUniformVec4 = engine.bindUniformVec4;
-  this.bindTexture = engine.bindTexture;
-  this.initBuffer = engine.initBuffer;
-  this.initIndexBuffer = engine.initIndexBuffer;
-  this.initTexture = engine.initTexture;
-  this.drawVertices = engine.drawVertices;
-  this.drawIndexedVertices = engine.drawIndexedVertices;
-  
+    
   /**
    * Destroys this object.
    */
