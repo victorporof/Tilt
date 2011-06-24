@@ -387,25 +387,27 @@ Tilt.Draw = function(canvas, failCallback, successCallback) {
 		  0, 8, 8, 4,
 		  7, 8]);
     
+    // override these functions in a Tilt environment
+    that.mousePressed = function() { };
+    that.mouseReleased = function() { };
+    that.mouseClicked = function() { };
+    that.mouseMoved = function() { };
+    that.mouseOver = function() { };
+    that.mouseOut = function() { };
+
     // handles the onmousedown event
-    canvas.onmousedown = function(e) {      
-      if ("function" === typeof(that.mousePressed)) {
-        that.mousePressed(that.mouseX, that.mouseY);
-      }
+    canvas.onmousedown = function(e) {
+      that.mousePressed(that.mouseX, that.mouseY);
     }
     
     // handles the onmouseup event
     canvas.onmouseup = function(e) {      
-      if ("function" === typeof(that.mouseReleased)) {
-        that.mouseReleased(that.mouseX, that.mouseY);
-      }
+      that.mouseReleased(that.mouseX, that.mouseY);
     }
     
     // handle the onclick event
     canvas.onclick = function(e) {
-      if ("function" === typeof(that.mouseClicked)) {
-        that.mouseClicked(that.mouseX, that.mouseY);
-      }
+      that.mouseClicked(that.mouseX, that.mouseY);
     }
     
     // handle the onmousemove event
@@ -413,23 +415,17 @@ Tilt.Draw = function(canvas, failCallback, successCallback) {
       that.mouseX = e.pageX - canvas.offsetLeft;
       that.mouseY = e.pageY - canvas.offsetTop;
       
-      if ("function" === typeof(that.mouseMoved)) {
-        that.mouseMoved(that.mouseX, that.mouseY);
-      }
+      that.mouseMoved(that.mouseX, that.mouseY);
     }
     
     // handle the onmouseover event
     canvas.onmouseover = function(e) {
-      if ("function" === typeof(that.mouseOver)) {
-        that.mouseOver(that.mouseX, that.mouseY);
-      }
+      that.mouseOver(that.mouseX, that.mouseY);
     }
     
     // handle the onmouseout event
     canvas.onmouseout = function(e) {
-      if ("function" === typeof(that.mouseOut)) {
-        that.mouseOut(that.mouseX, that.mouseY);
-      }
+      that.mouseOut(that.mouseX, that.mouseY);
     }
     
     // handle the resize event
