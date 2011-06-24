@@ -75,7 +75,6 @@ TiltChrome.Visualization = function(tilt, canvas, image, controller) {
   tilt.setup = function() {
     // set a reference in the controller for this visualization
     controller.visualization = that;
-    controller.canvas = canvas;
     
     // convert the dom image to a texture
     tilt.initTexture(image, function(texture) {
@@ -110,15 +109,15 @@ TiltChrome.Visualization = function(tilt, canvas, image, controller) {
         // they can be reused from the bottom and top faces; we do, however,
         // duplicate some vertices from front face, because it has custom
         // texture coordinates which are not shared by the other faces
-        mesh.vertices.push(x,     y + h, z - thickness); /* bottom */   // 4
-        mesh.vertices.push(x + w, y + h, z - thickness);                // 5
+        mesh.vertices.push(x,     y + h, 0);             /* bottom */   // 4
+        mesh.vertices.push(x + w, y + h, 0);                            // 5
         mesh.vertices.push(x + w, y + h, z);                            // 6
         mesh.vertices.push(x,     y + h, z);                            // 7
         
         mesh.vertices.push(x,     y,     z);             /* top */      // 8
         mesh.vertices.push(x + w, y,     z);                            // 9
-        mesh.vertices.push(x + w, y,     z - thickness);                // 10
-        mesh.vertices.push(x,     y,     z - thickness);                // 11
+        mesh.vertices.push(x + w, y,     0);                            // 10
+        mesh.vertices.push(x,     y,     0);                            // 11
         
         // compute the texture coordinates
         mesh.texCoord.push(
@@ -165,7 +164,7 @@ TiltChrome.Visualization = function(tilt, canvas, image, controller) {
     transforms.translation = [0, -50, -400];
     transforms.rotation = [0.5, 0.5, 0];
     
-    tilt.strokeWeight(2);
+    tilt.strokeWeight(4);
   };
   
   /**
@@ -191,15 +190,14 @@ TiltChrome.Visualization = function(tilt, canvas, image, controller) {
         tilt.background("#434344");
       }
       
-      // reset the model view matrix to identity
-      tilt.origin();
-      
       // if the dom texture is available, the visualization can be drawn
       if (dom) {
         that.renderVisualization();
       }
     }
     
+    controller.width = tilt.width;
+    controller.height = tilt.height;
     if ("function" === typeof(controller.loop)) {
       controller.loop();
     }

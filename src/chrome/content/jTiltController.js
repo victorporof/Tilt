@@ -42,8 +42,8 @@ TiltChrome.Controller.MouseAndKeyboard = function() {
   
   this.loop = function() {
     if (mousePressed) {
-      var y = mouseX - this.canvas.width / 2;
-      var x = mouseY - this.canvas.height / 2;
+      var y = mouseX - this.width / 2;
+      var x = mouseY - this.height / 2;
       
       x /= -500000;
       y /= 500000;
