@@ -47,8 +47,6 @@ TiltChrome.BrowserOverlay = {
    * @param {object XULCommandEvent} aEvent: the event firing this function
    */
   initialize: function(aEvent) { 
-    Components.utils.forceGC();
-    
     // get the Tilt menu item, to change the title if the visualization is on
     let tiltMenu = document.getElementById("tilt-menuItemInitialize");  
     let that = this;
@@ -61,8 +59,8 @@ TiltChrome.BrowserOverlay = {
       // use an extension to get the image representation of the document
       Tilt.Extensions.WebGL.initDocumentImage(function(image) {
         // set the width and height to mach the content window dimensions
-        var w = gBrowser.contentWindow.innerWidth * 2;
-        var h = gBrowser.contentWindow.innerHeight * 2;
+        var w = gBrowser.contentWindow.innerWidth;
+        var h = gBrowser.contentWindow.innerHeight;
 
         // initialize an iframe containing a canvas element
         Tilt.Create(w, h, function(tilt, canvas, iframe) {
