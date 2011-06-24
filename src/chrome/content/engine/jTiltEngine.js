@@ -69,7 +69,7 @@ Tilt.Engine = function() {
       }
     }
     else {
-      Tilt.Utils.Console.log(Tilt.Utils.StringBundle.get("webgl.init.error"));
+      Tilt.Utils.Console.log(Tilt.Utils.StringBundle.get("initWebGL.error"));
       if ("function" === typeof(failCallback)) {
         failCallback();
       }
@@ -185,8 +185,10 @@ Tilt.Engine = function() {
     gl.compileShader(shader);
 
     if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
+      var status = gl.getShaderInfoLog(shader);
+
       Tilt.Utils.Console.error(Tilt.Utils.StringBundle.format(
-        "compileShader.compile.error"), [gl.getShaderInfoLog(shader)]);
+        "compileShader.compile.error"), [status]);
 
       return null;
     }
@@ -208,8 +210,10 @@ Tilt.Engine = function() {
     gl.linkProgram(program);
 
     if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
+      var status = gl.getProgramInfoLog(shader);
+      
       Tilt.Utils.Console.error(Tilt.Utils.StringBundle.format(
-        "linkProgram.error", [vertShader.src, fragShader.src]));
+        "linkProgram.error", [status, vertShader.src, fragShader.src]));
     }
     
     return program;
@@ -291,67 +295,35 @@ Tilt.Engine = function() {
   };
   
   /**
-   * Binds a uniform matrix if not already cached.
+   * Binds a uniform matrix.
    *
    * @param {object} uniform: the uniform to bind the variable to
    * @param {object} variable: the variable to be binded
    */
   this.bindUniformMatrix = function(uniform, variable) {
-    var cached;
-
-    if (uniform.cache.length) {
-      cached = 
-        uniform.cache[0] == variable[0] && // first 3 elements from the 
-        uniform.cache[1] == variable[5] && // matrix primary diagonal are 
-        uniform.cache[2] == variable[10];  // most likely to be very volatile
-    }    
-    if (!cached) {
-      uniform.cache[0] = variable[0];
-      uniform.cache[1] = variable[5];
-      uniform.cache[2] = variable[10];
-      that.gl.uniformMatrix4fv(uniform, false, variable);
-    }
+    that.gl.uniformMatrix4fv(uniform, false, variable);
   };
   
   /**
-   * Binds a uniform vector of 4 elements if not already cached.
+   * Binds a uniform vector of 4 elements.
    *
    * @param {object} uniform: the uniform to bind the variable to
    * @param {object} variable: the variable to be binded
    */
   this.bindUniformVec4 = function(uniform, variable) {
-    var cached;
-    
-    if (uniform.cache.length) {
-      cached = 
-        uniform.cache[0] == variable[0] && // first 3 elements from the 
-        uniform.cache[1] == variable[1] && // vector ({r, g, b} or {x, y, z}) 
-        uniform.cache[2] == variable[2];   // most likely to be very volatile
-    }
-    
-    if (!cached) {
-      uniform.cache[0] = variable[0];
-      uniform.cache[1] = variable[1];
-      uniform.cache[2] = variable[2];
-      that.gl.uniform4fv(uniform, variable);
-    }
+    that.gl.uniform4fv(uniform, variable);
   };
   
   /**
-   * Binds a uniform texture to a sampler if not already cached.
+   * Binds a uniform texture to a sampler.
    *
    * @param {object} sampler: the sampler to bind the texture to
    * @param {object} texture: the texture to be binded
-   * @param {boolean} clearCache: pass true if the texture pixels have changed
    */
-  this.bindTexture = function(sampler, texture, clearCache) {
+  this.bindTexture = function(sampler, texture) {
     var gl = that.gl;
-
-    if (clearCache || sampler.chache != texture) {
-      sampler.cache = texture;
-      gl.bindTexture(gl.TEXTURE_2D, texture);
-      gl.uniform1i(sampler, 0);
-    }
+    gl.bindTexture(gl.TEXTURE_2D, texture);
+    gl.uniform1i(sampler, 0);
   };
   
   /**
@@ -360,7 +332,8 @@ Tilt.Engine = function() {
    * @param {object} framebuffer: the framebuffer to bind
    */
   this.bindFramebuffer = function(framebuffer) {
-    that.gl.bindFramebuffer(gl.FRAMEBUFFER, framebuffer);
+    var gl = that.gl;    
+    gl.bindFramebuffer(gl.FRAMEBUFFER, framebuffer);
   };
   
   /**
@@ -434,22 +407,21 @@ Tilt.Engine = function() {
     framebuffer.height = height;
     
     // TODO: add custom texture format
-    var texture = gl.createTexture();    
+    var texture = gl.createTexture();
     texture.framebuffer = framebuffer;
     gl.bindTexture(gl.TEXTURE_2D, texture);
     gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA,
                   framebuffer.width, framebuffer.height, 0,
                   gl.RGBA, gl.UNSIGNED_BYTE, null);
+                  
+    that.setTextureParams("linear", "linear", false, "clamp", "clamp");
     
-    that.setTextureParams(minFilter, magFilter, mipmap,
-                          wrapS, wrapT, flipY);
-
     // TODO: add custom depth format (16, 24, 32)
     var depth = gl.createRenderbuffer();
     gl.bindRenderbuffer(gl.RENDERBUFFER, depth);
     gl.renderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_COMPONENT16, 
-                           texture.width, texture.height);
-
+                           framebuffer.width, framebuffer.height);
+                           
     // TODO: add support for stencil buffer
     var stencil = null;
 
@@ -459,7 +431,14 @@ Tilt.Engine = function() {
                             
     gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, 
                                gl.RENDERBUFFER, depth);
+                               
+  	if (!gl.checkFramebufferStatus(gl.FRAMEBUFFER)) {
+        var status = gl.checkFramebufferStatus(GL_FRAMEBUFFER);
 
+        Tilt.Utils.Console.error(Tilt.Utils.StringBundle.format(
+          "initOffscreenBuffer.framebuffer.error"), [status]);
+  	}
+  	
     gl.bindTexture(gl.TEXTURE_2D, null);
     gl.bindRenderbuffer(gl.RENDERBUFFER, null);
     gl.bindFramebuffer(gl.FRAMEBUFFER, null);
@@ -484,18 +463,17 @@ Tilt.Engine = function() {
    * @param {number} strokeWeight: optional, the width of the outline
    * @param {string} minFilter: either 'nearest' or 'linear'
    * @param {string} magFilter: either 'nearest' or 'linear'
-   * @param {object} mipmap: either 'mipmap' or null
+   * @param {boolean} mipmap: true if should generate mipmap
    * @param {string} wrapS: either 'repeat' or null
    * @param {string} wrapT: either 'repeat' or null
-   * @param {object} flipY: either 'flipY' or null
    */
   this.initTexture = function(textureSource, readyCallback,
                               fillColor, strokeColor, strokeWeight,
                               minFilter, magFilter, mipmap,
-                              wrapS, wrapT, flipY) {
+                              wrapS, wrapT) {
     var gl = that.gl;
     var texture = gl.createTexture();
-
+    
     if ("object" === typeof(textureSource)) {
       texture.image = textureSource;
       bindTextureImage();
@@ -513,19 +491,11 @@ Tilt.Engine = function() {
       Tilt.Utils.Image.resizeToPowerOfTwo(texture.image, function(image) {
         texture.image = image;
         
-        if (flipY) {
-          gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
-        }
         gl.bindTexture(gl.TEXTURE_2D, texture);
         gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE,
                       texture.image);
-                      
-        that.setTextureParams(minFilter, magFilter, mipmap,
-                              wrapS, wrapT, flipY);
-                              
-        if (mipmap) {
-          gl.generateMipmap(gl.TEXTURE_2D);
-        }
+
+        that.setTextureParams(minFilter, magFilter, mipmap, wrapS, wrapT);
         gl.bindTexture(gl.TEXTURE_2D, null);
         
         if ("function" === typeof(readyCallback)) {
@@ -553,7 +523,7 @@ Tilt.Engine = function() {
     if (texture) {
       gl.bindTexture(gl.TEXTURE_2D, texture);
     }
-
+        
     if ("nearest" === minFilter) {
       gl.texParameteri(gl.TEXTURE_2D,
                        gl.TEXTURE_MIN_FILTER, gl.NEAREST);
@@ -597,7 +567,22 @@ Tilt.Engine = function() {
       gl.texParameteri(gl.TEXTURE_2D,
                        gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
     }
+
+    if (mipmap) {
+      gl.generateMipmap(gl.TEXTURE_2D);
+    }
   };
+
+  /**
+   * Set if the textures should be rotated around the X axis (that is, they
+   * will be used upside down).
+   *
+   * @param {boolean} flipY: true if the textures should be flipped
+   */
+  this.setTextureFlipY = function(flipY) {
+    var gl = that.gl;
+    gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, flipY);
+  }
 
   /**
    * Draws binded vertex buffers using the specified parameters.
