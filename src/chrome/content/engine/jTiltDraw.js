@@ -67,7 +67,7 @@ Tilt.Create = function(width, height, readyCallback) {
   Tilt.Utils.Document.initCanvas(function(canvas, iframe) {
     canvas.width = width;
     canvas.height = height;
-
+    
     var tilt = new Tilt.Draw(canvas);    
     
     tilt.initialize(function() {
@@ -388,13 +388,21 @@ Tilt.Draw = function(canvas, failCallback, successCallback) {
 		  7, 8]);
     
     // override these functions in a Tilt environment
-    that.mousePressed = function() { };
-    that.mouseReleased = function() { };
-    that.mouseClicked = function() { };
-    that.mouseMoved = function() { };
-    that.mouseOver = function() { };
-    that.mouseOut = function() { };
-
+    that.resize = function(width, height) { };
+    that.mousePressed = function(mouseX, mouseY) { };
+    that.mouseReleased = function(mouseX, mouseY) { };
+    that.mouseClicked = function(mouseX, mouseY) { };
+    that.mouseMoved = function(mouseX, mouseY) { };
+    that.mouseOver = function(mouseX, mouseY) { };
+    that.mouseOut = function(mouseX, mouseY) { };
+    
+    // handle the resize event
+    document.onresize = function(e) {
+      that.width = this.width;
+      that.height = this.height;
+      that.resize(that.width, that.height);
+    }
+    
     // handles the onmousedown event
     canvas.onmousedown = function(e) {
       that.mousePressed(that.mouseX, that.mouseY);
@@ -426,12 +434,6 @@ Tilt.Draw = function(canvas, failCallback, successCallback) {
     // handle the onmouseout event
     canvas.onmouseout = function(e) {
       that.mouseOut(that.mouseX, that.mouseY);
-    }
-    
-    // handle the resize event
-    document.onresize = function(e) {
-      that.width = this.width;
-      that.height = this.height;
     }
         
     // call the ready callback function if it was passed as a valid parameter
@@ -533,7 +535,7 @@ Tilt.Draw = function(canvas, failCallback, successCallback) {
     var z = that.height / Math.tan(Tilt.Utils.Math.radians(45) / 2) / 2;
     var znear = z / 10;
     var zfar = z * 10;
-    var aspect = canvas.width / canvas.height;
+    var aspect = that.width / that.height;
     
     engine.viewport(canvas.width, canvas.height);
     mat4.perspective(fov, aspect, znear, zfar, projMatrix, true);
