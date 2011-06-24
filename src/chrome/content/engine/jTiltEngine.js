@@ -50,7 +50,7 @@ Tilt.Engine = function() {
    * The current shader used by the WebGL context. Used for caching.
    */
   this.program = null;
-
+  
   /**
    * Initializes a WebGL context, and runs fail or success callback functions.
    *
@@ -355,6 +355,15 @@ Tilt.Engine = function() {
   };
   
   /**
+   * Binds a framebuffer to the current WebGL context.
+   * 
+   * @param {object} framebuffer: the framebuffer to bind
+   */
+  this.bindFramebuffer = function(framebuffer) {
+    that.gl.bindFramebuffer(gl.FRAMEBUFFER, framebuffer);
+  };
+  
+  /**
    * Initializes buffer data to be used for drawing, using an array of floats.
    * The 'numItems' can be specified to use only a portion of the array.
    *
@@ -407,7 +416,62 @@ Tilt.Engine = function() {
 
     return buffer;
   };
+  
+  /**
+   * Initializes a framebuffer, with an attached texture and depth buffer.
+   * The returned object contains the framebuffer, texture, depth and stencil
+   * objects.
+   * 
+   * @param {number} width: the width of the framebuffer
+   * @param {number} height: the height of the framebuffer
+   */
+  this.initOffscreenBuffer = function(width, height) {
+    var gl = that.gl;
     
+    var framebuffer = gl.createFramebuffer();
+    gl.bindFramebuffer(gl.FRAMEBUFFER, framebuffer);
+    framebuffer.width = width;
+    framebuffer.height = height;
+    
+    // TODO: add custom texture format
+    var texture = gl.createTexture();    
+    texture.framebuffer = framebuffer;
+    gl.bindTexture(gl.TEXTURE_2D, texture);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA,
+                  framebuffer.width, framebuffer.height, 0,
+                  gl.RGBA, gl.UNSIGNED_BYTE, null);
+    
+    that.setTextureParams(minFilter, magFilter, mipmap,
+                          wrapS, wrapT, flipY);
+
+    // TODO: add custom depth format (16, 24, 32)
+    var depth = gl.createRenderbuffer();
+    gl.bindRenderbuffer(gl.RENDERBUFFER, depth);
+    gl.renderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_COMPONENT16, 
+                           texture.width, texture.height);
+
+    // TODO: add support for stencil buffer
+    var stencil = null;
+
+
+    gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, 
+                            gl.TEXTURE_2D, texture, 0);
+                            
+    gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, 
+                               gl.RENDERBUFFER, depth);
+
+    gl.bindTexture(gl.TEXTURE_2D, null);
+    gl.bindRenderbuffer(gl.RENDERBUFFER, null);
+    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+    
+    return {
+      framebuffer: framebuffer,
+      texture: texture,
+      depth: depth,
+      stencil: stencil
+    };
+  };
+  
   /**
    * Initializes a texture from a source, calls a callback function when
    * ready. The source may be an url or a pre-existing image or canvas. If the
@@ -611,7 +675,72 @@ Tilt.Engine = function() {
     
     return mode;
   };
+  
+  /**
+   * Sets up the WebGL context viewport.
+   * This defines the width and height of the gl drawing canvas context (but
+   * not the size of the actual canvas element).
+   *
+   * @param {number} width: the width of the viewport area
+   * @param {number} height: the height of the viewport area
+   */
+  this.viewport = function(width, height) {
+    that.gl.viewport(0, 0, width, height);
+  };
 
+  /**
+   * Clears the WebGL context to a specific color.
+   * The color components are represented in the 0..1 range.
+   *
+   * @param {number} r: the red component of the clear color
+   * @param {number} g: the green component of the clear color
+   * @param {number} b: the blue component of the clear color
+   * @param {number} a: the alpha component of the clear color
+   */
+  this.clear = function(r, g, b, a) {
+    var gl = that.gl;
+    
+    gl.clearColor(r, g, b, a);
+    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+  };
+  
+  /**
+   * Sets blending, either 'alpha' or 'add'; anything else disables blending.
+   *
+   * @param {string} mode: blending, either 'alpha', 'add' or undefined
+   */
+  this.blendMode = function(mode) {
+    var gl = that.gl;
+    
+    if ("alpha" === mode) {
+      gl.enable(gl.BLEND);
+      gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+    }
+    else if ("add" === mode || "additive" === mode) {
+      gl.enable(gl.BLEND);
+      gl.blendFunc(gl.SRC_ALPHA, gl.ONE);
+    }
+    else {
+      gl.disable(gl.BLEND);
+    }
+  };
+  
+  /**
+   * Sets depth testing; disabling it is useful when handling transparency.
+   *
+   * @param {boolean} mode: true if depth testing should be enabled
+   */
+  this.depthTest = function(mode) {
+    var gl = that.gl;
+    
+    if (mode) {
+      gl.enable(gl.DEPTH_TEST);
+    }
+    else {
+      gl.disable(gl.DEPTH_TEST);
+    }
+  };
+  
   /**
    * Handles a generic get request, performed on a specified url. When done,
    * it fires the ready callback function if it exists, & passes the http
