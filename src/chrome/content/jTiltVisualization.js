@@ -80,7 +80,7 @@ TiltChrome.Visualization = function(tilt, canvas, image, controller) {
     // convert the dom image to a texture
     tilt.initTexture(image, function(texture) {
       dom = texture;
-    }, "white", "#aaa", 8); // using a white background & gray margins of 8px
+    }, "white", "#aaa", 8); // use a white background & gray margins of 8px
     
     // create the combined mesh representing the document visualization by
     // traversing the dom and adding a shape for each node that is drawable    
@@ -88,11 +88,11 @@ TiltChrome.Visualization = function(tilt, canvas, image, controller) {
       // get the x, y, width and height of a node
       var coord = Tilt.Utils.Document.getNodeCoordinates(node);
       var thickness = 12;
-
+      
       // use this node only if it actually has any dimensions
       if ((coord.width > 1 || coord.height > 1) && depth) {
-        var x = coord.x;
-        var y = coord.y;
+        var x = coord.x - tilt.width / 2;
+        var y = coord.y - tilt.height / 2;
         var z = depth * thickness;
         var w = coord.width;
         var h = coord.height;
@@ -122,10 +122,14 @@ TiltChrome.Visualization = function(tilt, canvas, image, controller) {
         
         // compute the texture coordinates
         mesh.texCoord.push(
-          (x    ) / canvas.clientWidth, (y    ) / canvas.clientHeight, 
-          (x + w) / canvas.clientWidth, (y    ) / canvas.clientHeight,
-          (x + w) / canvas.clientWidth, (y + h) / canvas.clientHeight, 
-          (x    ) / canvas.clientWidth, (y + h) / canvas.clientHeight);
+          (x + tilt.width / 2     ) / tilt.width,
+          (y + tilt.height / 2    ) / tilt.height, 
+          (x + tilt.width / 2 + w ) / tilt.width,
+          (y + tilt.height / 2    ) / tilt.height,
+          (x + tilt.width / 2 + w ) / tilt.width,
+          (y + tilt.height / 2 + h) / tilt.height, 
+          (x + tilt.width / 2     ) / tilt.width,
+          (y + tilt.height / 2 + h) / tilt.height);
         
         for (var k = 0; k < 2; k++) {
           mesh.texCoord.push(0, 0, 0, 0, 0, 0, 0, 0);
@@ -159,7 +163,7 @@ TiltChrome.Visualization = function(tilt, canvas, image, controller) {
     
     // set the transformations at initialization
     transforms.translation = [0, -50, -400];
-    transforms.rotation = [0, 0, 0];
+    transforms.rotation = [0.5, 0.5, 0];
     
     tilt.strokeWeight(2);
   };
@@ -189,28 +193,10 @@ TiltChrome.Visualization = function(tilt, canvas, image, controller) {
       
       // reset the model view matrix to identity
       tilt.origin();
-
+      
       // if the dom texture is available, the visualization can be drawn
       if (dom) {
-        // this is just a test case for now, actual implementation soon
-        tilt.translate(transforms.translation[0] + canvas.clientWidth / 2,
-                       transforms.translation[1] + canvas.clientHeight / 2,
-                       transforms.translation[2]);
-
-        tilt.rotateY(transforms.rotation[1]);
-        tilt.rotateX(transforms.rotation[0]);
-        tilt.rotateZ(transforms.rotation[2]);
-        
-        tilt.translate(-canvas.clientWidth / 2, -canvas.clientHeight / 2, 0);
-        
-        tilt.mesh(mesh.vertices,
-                  mesh.texCoord, null, 
-                  "triangles", "#fff", dom,
-                  mesh.indices);
-        
-        tilt.mesh(mesh.vertices, null, null, 
-                  "lines", "#899", null,
-                  mesh.wireframeIndices);      
+        that.renderVisualization();
       }
     }
     
@@ -220,21 +206,44 @@ TiltChrome.Visualization = function(tilt, canvas, image, controller) {
   };
   
   /**
+   * Renders the visualization mesh.
+   */
+  this.renderVisualization = function() {
+    // this is just a test case for now, actual implementation soon
+    tilt.translate(transforms.translation[0] + tilt.width / 2,
+                   transforms.translation[1] + tilt.height / 2,
+                   transforms.translation[2]);
+
+    tilt.rotateY(transforms.rotation[1]);
+    tilt.rotateX(transforms.rotation[0]);
+    tilt.rotateZ(transforms.rotation[2]);
+    
+    tilt.mesh(mesh.vertices,
+              mesh.texCoord, null, 
+              "triangles", "#fff", dom,
+              mesh.indices);
+    
+    tilt.mesh(mesh.vertices, null, null, 
+              "lines", "#899", null,
+              mesh.wireframeIndices); 
+  };
+  
+  /**
    * Delegate translation method, used by the controller.
    */
   this.translate = function(x, y, z) {
-    transforms.translation[0] += x * tilt.getFrameDelta();
-    transforms.translation[1] += y * tilt.getFrameDelta();
-    transforms.translation[2] += z * tilt.getFrameDelta();
+    transforms.translation[0] += x * tilt.frameDelta;
+    transforms.translation[1] += y * tilt.frameDelta;
+    transforms.translation[2] += z * tilt.frameDelta;
   };
   
   /**
    * Delegate rotation method, used by the controller.
    */
   this.rotate = function(x, y, z) {
-    transforms.rotation[0] += x * tilt.getFrameDelta();
-    transforms.rotation[1] += y * tilt.getFrameDelta();
-    transforms.rotation[2] += z * tilt.getFrameDelta();
+    transforms.rotation[0] += x * tilt.frameDelta;
+    transforms.rotation[1] += y * tilt.frameDelta;
+    transforms.rotation[2] += z * tilt.frameDelta;
   };
   
   /**
