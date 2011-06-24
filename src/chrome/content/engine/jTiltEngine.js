@@ -44,12 +44,12 @@ Tilt.Engine = function() {
   /**
    * WebGL context to be used.
    */
-  this.gl = null;
+  var gl = null;
 
   /**
    * The current shader used by the WebGL context. Used for caching.
    */
-  this.program = null;
+  var program = null;
   
   /**
    * Initializes a WebGL context, and runs fail or success callback functions.
@@ -60,12 +60,12 @@ Tilt.Engine = function() {
    * @return {object} the created gl context if successful, null otherwise
    */
   this.initWebGL = function(canvas, failCallback, successCallback) {
-    var gl = create3DContext(canvas, { 
+    gl = create3DContext(canvas, { 
       antialias: true,
       antialiasHint: true });
     
     if (gl) {
-      that.gl = gl;
+      gl = gl;
       if ("function" === typeof(successCallback)) {
         successCallback();
       }
@@ -92,7 +92,6 @@ Tilt.Engine = function() {
       }
       return context;
     }
-    
     return gl;
   };
   
@@ -159,7 +158,6 @@ Tilt.Engine = function() {
    * @return {object} the compiled shader
    */
   this.compileShader = function(shaderSource, shaderType) {
-    var gl = that.gl;
     var shader;
 
     if (!shaderSource) {
@@ -205,7 +203,6 @@ Tilt.Engine = function() {
    * @return {object} the newly created and linked shader program
    */
   this.linkProgram = function(vertShader, fragShader) {
-    var gl = that.gl;
     var program = gl.createProgram();
     gl.attachShader(program, vertShader);
     gl.attachShader(program, fragShader);
@@ -227,11 +224,9 @@ Tilt.Engine = function() {
    * @param {object} program: the shader program to be used by the engine
    * @param {array} attributes: array of attributes to enable for this shader
    */
-  this.useProgram = function(program, attributes) {
-    var gl = that.gl;
-    
-    if (that.program !== program) {
-      gl.useProgram(that.program = program);
+  this.useProgram = function(program_, attributes) {
+    if (program !== program_) {
+      gl.useProgram(program = program_);
       
       for (var i = 0, len = attributes.length; i < len; i++) {
         gl.enableVertexAttribArray(attributes[i]);
@@ -247,7 +242,7 @@ Tilt.Engine = function() {
    * @return {number} the attribute location from the program
    */
   this.shaderAttribute = function(program, attribute) {
-    var value = that.gl.getAttribLocation(program, attribute);
+    var value = gl.getAttribLocation(program, attribute);
     value.cache = [];
     
     return value;
@@ -261,7 +256,7 @@ Tilt.Engine = function() {
    * @return {object} the uniform object from the program
    */
   this.shaderUniform = function(program, uniform) {
-    var value = that.gl.getUniformLocation(program, uniform);
+    var value = gl.getUniformLocation(program, uniform);
     value.cache = [];
     
     return value;
@@ -290,8 +285,6 @@ Tilt.Engine = function() {
    * @param {object} buffer: the buffer to bind
    */
   this.bindVertexBuffer = function(attribute, buffer) {
-    var gl = that.gl;
-    
     gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
     gl.vertexAttribPointer(attribute, buffer.itemSize, gl.FLOAT, false, 0, 0);    
   };
@@ -303,7 +296,7 @@ Tilt.Engine = function() {
    * @param {object} variable: the variable to be binded
    */
   this.bindUniformMatrix = function(uniform, variable) {
-    that.gl.uniformMatrix4fv(uniform, false, variable);
+    gl.uniformMatrix4fv(uniform, false, variable);
   };
   
   /**
@@ -313,7 +306,7 @@ Tilt.Engine = function() {
    * @param {object} variable: the variable to be binded
    */
   this.bindUniformVec4 = function(uniform, variable) {
-    that.gl.uniform4fv(uniform, variable);
+    gl.uniform4fv(uniform, variable);
   };
   
   /**
@@ -323,7 +316,6 @@ Tilt.Engine = function() {
    * @param {object} texture: the texture to be binded
    */
   this.bindTexture = function(sampler, texture) {
-    var gl = that.gl;
     gl.bindTexture(gl.TEXTURE_2D, texture);
     gl.uniform1i(sampler, 0);
   };
@@ -334,7 +326,6 @@ Tilt.Engine = function() {
    * @param {object} framebuffer: the framebuffer to bind
    */
   this.bindFramebuffer = function(framebuffer) {
-    var gl = that.gl;    
     gl.bindFramebuffer(gl.FRAMEBUFFER, framebuffer);
   };
   
@@ -352,7 +343,6 @@ Tilt.Engine = function() {
       numItems = elementsArray.length / itemSize;
     }
     
-    var gl = that.gl;
     var buffer = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
     gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(elementsArray),
@@ -379,7 +369,6 @@ Tilt.Engine = function() {
       numItems = elementsArray.length;
     }
     
-    var gl = that.gl;
     var buffer = gl.createBuffer();
     gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, buffer);
     gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(elementsArray),
@@ -401,8 +390,6 @@ Tilt.Engine = function() {
    * @param {number} height: the height of the framebuffer
    */
   this.initOffscreenBuffer = function(width, height) {
-    var gl = that.gl;
-    
     var framebuffer = gl.createFramebuffer();
     gl.bindFramebuffer(gl.FRAMEBUFFER, framebuffer);
     framebuffer.width = width;
@@ -426,7 +413,6 @@ Tilt.Engine = function() {
                            
     // TODO: add support for stencil buffer
     var stencil = null;
-
 
     gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, 
                             gl.TEXTURE_2D, texture, 0);
@@ -473,7 +459,7 @@ Tilt.Engine = function() {
                               fillColor, strokeColor, strokeWeight,
                               minFilter, magFilter, mipmap,
                               wrapS, wrapT) {
-    var gl = that.gl;
+                                
     var texture = gl.createTexture();
     
     if ("object" === typeof(textureSource)) {
@@ -520,8 +506,6 @@ Tilt.Engine = function() {
    */
   this.setTextureParams = function(minFilter, magFilter, mipmap,
                                    wrapS, wrapT, texture) {
-    var gl = that.gl;
-    
     if (texture) {
       gl.bindTexture(gl.TEXTURE_2D, texture);
     }
@@ -582,7 +566,6 @@ Tilt.Engine = function() {
    * @param {boolean} flipY: true if the textures should be flipped
    */
   this.setTextureFlipY = function(flipY) {
-    var gl = that.gl;
     gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, flipY);
   }
 
@@ -595,7 +578,7 @@ Tilt.Engine = function() {
    * @param {number} count: the number of indices to be rendered
    */
   this.drawVertices = function(drawMode, first, count) {
-    that.gl.drawArrays(that.getDrawModeEnum(drawMode), first, count);
+    gl.drawArrays(that.getDrawModeEnum(drawMode), first, count);
   };
   
   /**
@@ -608,7 +591,6 @@ Tilt.Engine = function() {
    * the indices buffer is specified, the first and count values are ignored
    */
   this.drawIndexedVertices = function(drawMode, indicesBuffer) {
-    var gl = that.gl;
     gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indicesBuffer);
     gl.drawElements(that.getDrawModeEnum(drawMode),                      
                     indicesBuffer.numItems, gl.UNSIGNED_SHORT, 0);
@@ -624,7 +606,6 @@ Tilt.Engine = function() {
    * @return {number} the corresponding value
    */
   this.getDrawModeEnum = function(drawMode) {
-    var gl = that.gl;
     var mode;
     
     if ("string" === typeof drawMode) {
@@ -672,7 +653,7 @@ Tilt.Engine = function() {
    * @param {number} height: the height of the viewport area
    */
   this.viewport = function(width, height) {
-    that.gl.viewport(0, 0, width, height);
+    gl.viewport(0, 0, width, height);
   };
 
   /**
@@ -685,8 +666,6 @@ Tilt.Engine = function() {
    * @param {number} a: the alpha component of the clear color
    */
   this.clear = function(r, g, b, a) {
-    var gl = that.gl;
-    
     gl.clearColor(r, g, b, a);
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
   };
@@ -697,8 +676,6 @@ Tilt.Engine = function() {
    * @param {string} mode: blending, either 'alpha', 'add' or undefined
    */
   this.blendMode = function(mode) {
-    var gl = that.gl;
-    
     if ("alpha" === mode) {
       gl.enable(gl.BLEND);
       gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
@@ -718,8 +695,6 @@ Tilt.Engine = function() {
    * @param {boolean} mode: true if depth testing should be enabled
    */
   this.depthTest = function(mode) {
-    var gl = that.gl;
-    
     if (mode) {
       gl.enable(gl.DEPTH_TEST);
     }
@@ -787,8 +762,8 @@ Tilt.Engine = function() {
    * Destroys this object.
    */
   this.destroy = function() {
-    that.gl = null;
-    that.program = null;
+    gl = null;
+    program = null;
     
     that = null;
   };
