@@ -60,7 +60,9 @@ Tilt.Engine = function() {
    * @return {object} the created gl context if successful, null otherwise
    */
   this.initWebGL = function(canvas, failCallback, successCallback) {
-    var gl = create3DContext(canvas, { antialias: true });
+    var gl = create3DContext(canvas, { 
+      antialias: true,
+      antialiasHint: true });
     
     if (gl) {
       that.gl = gl;
@@ -74,7 +76,7 @@ Tilt.Engine = function() {
         failCallback();
       }
     }
-
+    
     // helper function to create a 3D context in a cross browser way
     function create3DContext(canvas, opt_attribs) {
       var names = ["experimental-webgl", "webgl", "webkit-3d", "moz-webgl"];
