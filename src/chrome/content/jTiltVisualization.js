@@ -51,6 +51,11 @@ TiltChrome.Visualization = function(tilt, canvas, image, controller) {
   var dom = null;
   
   /**
+   * A background texture.
+   */
+  var background = null;
+  
+  /**
    * The combined mesh representing the document visualization.
    */
   var mesh = {
@@ -80,6 +85,11 @@ TiltChrome.Visualization = function(tilt, canvas, image, controller) {
     tilt.initTexture(image, function(texture) {
       dom = texture;
     }, "white", "#aaa", 8); // use a white background & gray margins of 8px
+    
+    // load the background
+    tilt.initTexture("chrome://tilt/skin/background.png", function(texture) {
+      background = texture;
+    });
     
     // create the combined mesh representing the document visualization by
     // traversing the dom and adding a shape for each node that is drawable    
@@ -154,17 +164,17 @@ TiltChrome.Visualization = function(tilt, canvas, image, controller) {
       }
     }, function() {
       // when finished, initialize the buffers
-      mesh.vertices = tilt.initBuffer(mesh.vertices, 3);
-      mesh.texCoord = tilt.initBuffer(mesh.texCoord, 2);
-      mesh.indices = tilt.initIndexBuffer(mesh.indices);
-      mesh.wireframeIndices = tilt.initIndexBuffer(mesh.wireframeIndices);
+      mesh.verticesBuff = tilt.initBuffer(mesh.vertices, 3);
+      mesh.texCoordBuff = tilt.initBuffer(mesh.texCoord, 2);
+      mesh.indicesBuff = tilt.initIndexBuffer(mesh.indices);
+      mesh.wireframeIndicesBuff = tilt.initIndexBuffer(mesh.wireframeIndices);
     });
     
     // set the transformations at initialization
     transforms.translation = [0, -50, -400];
     transforms.rotation = [0.5, 0.5, 0];
     
-    tilt.strokeWeight(4);
+    tilt.strokeWeight(2);
   };
   
   /**
@@ -186,12 +196,16 @@ TiltChrome.Visualization = function(tilt, canvas, image, controller) {
       if (!dom) {
         tilt.background("#0000");
       }
-      else {
-        tilt.background("#434344");
+      else if (background) {
+        tilt.background("#3e3e3e");
       }
       
       // if the dom texture is available, the visualization can be drawn
-      if (dom) {
+      if (dom && background) {
+        tilt.depthTest(false);
+        tilt.image(background, 0, 0, tilt.width, tilt.height);
+
+        tilt.depthTest(true);
         that.renderVisualization();
       }
     }
@@ -216,14 +230,14 @@ TiltChrome.Visualization = function(tilt, canvas, image, controller) {
     tilt.rotateX(transforms.rotation[0]);
     tilt.rotateZ(transforms.rotation[2]);
     
-    tilt.mesh(mesh.vertices,
-              mesh.texCoord, null, 
+    tilt.mesh(mesh.verticesBuff,
+              mesh.texCoordBuff, null, 
               "triangles", "#fff", dom,
-              mesh.indices);
+              mesh.indicesBuff);
     
-    tilt.mesh(mesh.vertices, null, null, 
+    tilt.mesh(mesh.verticesBuff, null, null, 
               "lines", "#899", null,
-              mesh.wireframeIndices); 
+              mesh.wireframeIndicesBuff); 
   };
   
   /**
@@ -277,24 +291,6 @@ TiltChrome.Visualization = function(tilt, canvas, image, controller) {
   tilt.mouseMoved = function(x, y) {
     if ("function" === typeof(controller.mouseMoved)) {
       controller.mouseMoved(x, y);
-    }
-  };
-  
-  /**
-   * Override the mouseOver function to handle the event.
-   */
-  tilt.mouseOver = function(x, y) {
-    if ("function" === typeof(controller.mouseOver)) {
-      controller.mouseOver(x, y);
-    }
-  };
-  
-  /**
-   * Override the mouseMoved function to handle the event.
-   */
-  tilt.mouseOut = function(x, y) {
-    if ("function" === typeof(controller.mouseOut)) {
-      controller.mouseOut(x, y);
     }
   };
   
