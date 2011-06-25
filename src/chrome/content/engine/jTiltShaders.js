@@ -40,6 +40,9 @@ if ("undefined" === typeof(Tilt.Shaders)) {
  */  
 Tilt.Shaders.Color = {
 
+  /**
+   * Vertex shader.
+   */
   vs: [
 "attribute vec3 vertexPosition;",
 
@@ -51,6 +54,9 @@ Tilt.Shaders.Color = {
 "}"
 ].join("\n"),
 
+  /**
+   * Fragment shader.
+   */
   fs: [
 "#ifdef GL_ES",
 "precision highp float;",
@@ -75,6 +81,9 @@ Tilt.Shaders.Color = {
  */
 Tilt.Shaders.Texture = {
 
+  /**
+   * Vertex shader.
+   */
   vs: [
 "attribute vec3 vertexPosition;",
 "attribute vec2 vertexTexCoord;",
@@ -90,6 +99,9 @@ Tilt.Shaders.Texture = {
 "}"
 ].join("\n"),
 
+  /**
+   * Fragment shader.
+   */
   fs: [
 "#ifdef GL_ES",
 "precision highp float;",
