@@ -52,7 +52,7 @@ TiltChrome.BrowserOverlay = {
     let that = this;
     
     // if the visualization is not currently running
-    if (!this.iframe) {
+    if (!that.iframe) {
       // change the menu label acrodingly
       tiltMenu.label = Tilt.Utils.StringBundle.get("menuItemHide.label");
       
@@ -62,7 +62,7 @@ TiltChrome.BrowserOverlay = {
         var w = gBrowser.contentWindow.innerWidth;
         var h = gBrowser.contentWindow.innerHeight;
 
-        // initialize an iframe containing a canvas element
+        // initialize a Tilt environment: a canvas element inside an iframe
         Tilt.Create(w, h, function(tilt, canvas, iframe) {
           // remember the iframe so that it can be destroyed later
           that.iframe = iframe;
@@ -70,13 +70,13 @@ TiltChrome.BrowserOverlay = {
           // construct the visualization using the canvas and the dom image
           that.visualization = 
             new TiltChrome.Visualization(tilt, canvas, image,
-            new TiltChrome.Controller.MouseAndKeyboard());
+            new TiltChrome.Controller.MouseAndKeyboard()); // default controls
         });
       });
     }
     else {
       // if the visualization is running destroy it
-      this.destroy();
+      that.destroy();
       // change the menu label to the default initialization string
       tiltMenu.label =Tilt.Utils.StringBundle.get("menuItemInitialize.label");
     }
