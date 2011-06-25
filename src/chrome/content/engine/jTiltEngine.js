@@ -514,6 +514,9 @@ Tilt.Engine = function() {
     
     // used internally for binding an image to a texture object
     function bindTextureImage() {
+      texture.width = texture.image.width;
+      texture.height = texture.image.height;
+
       // make sure the image is power of two
       Tilt.Utils.Image.resizeToPowerOfTwo(texture.image, function(image) {
         texture.image = image;
