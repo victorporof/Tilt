@@ -517,7 +517,7 @@ Tilt.Utils.StringBundle = {
     if (!args) {
       return string;
     }
-
+    
     var elem = document.getElementById(this.bundle);
     if (elem) {
       return elem.getFormattedString(string, args);
@@ -586,7 +586,7 @@ Tilt.Utils.Console = {
       if (!aMessage) {
         aMessage = "undefined";
       }
-
+      
       var consoleService = Components.classes["@mozilla.org/consoleservice;1"]
       .getService(Components.interfaces.nsIConsoleService);
 
