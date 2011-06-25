@@ -4,7 +4,7 @@
  *
  * Copyright (c) 2011 Victor Porof
  *
- * This software is provided 'as-is', without any express or implied
+ * This software is provided "as-is", without any express or implied
  * warranty. In no event will the authors be held liable for any damages
  * arising from the use of this software.
  *
@@ -30,18 +30,18 @@ if ("undefined" === typeof(TiltChrome)) {
 var EXPORTED_SYMBOLS = ["TiltChrome.Visualization"];
 
 /**
- * Tilt visualization constructor.
+ * TiltChrome visualization constructor.
  * 
  * @param {object} tilt: helper functions for easy drawing and abstraction
  * @param {object} canvas: the canvas element used for rendering
  * @param {object} image: image representing the document object model
- * @param {object} controller: the controller responsable for handling events
+ * @param {object} controller: the controller responsible for handling events
  * @return {object} the created object
  */
 TiltChrome.Visualization = function(tilt, canvas, image, controller) {
 
   /**
-   * By convention, we make a private 'that' variable.
+   * By convention, we make a private "that" variable.
    */
   var that = this;
   
@@ -94,14 +94,15 @@ TiltChrome.Visualization = function(tilt, canvas, image, controller) {
     });
     
     // create the combined mesh representing the document visualization by
-    // traversing the dom and adding a shape for each node that is drawable    
+    // traversing the dom and adding a stack for each node that is drawable    
     Tilt.Utils.Document.traverse(function(node, depth) {
-      // get the x, y, width and height of a node
+      // get the x, y, width and height coordinates of a node
       var coord = Tilt.Utils.Document.getNodeCoordinates(node);
       var thickness = 12;
       
       // use this node only if it actually has any dimensions
       if ((coord.width > 1 || coord.height > 1) && depth) {
+        // the entire mesh's pivot is the screen center
         var x = coord.x - tilt.width / 2;
         var y = coord.y - tilt.height / 2;
         var z = depth * thickness;
@@ -125,7 +126,6 @@ TiltChrome.Visualization = function(tilt, canvas, image, controller) {
         mesh.vertices.push(x + w, y + h, z - thickness);                // 5
         mesh.vertices.push(x + w, y + h, z);                            // 6
         mesh.vertices.push(x,     y + h, z);                            // 7
-        
         mesh.vertices.push(x,     y,     z);             /* top */      // 8
         mesh.vertices.push(x + w, y,     z);                            // 9
         mesh.vertices.push(x + w, y,     z - thickness);                // 10
@@ -133,15 +133,16 @@ TiltChrome.Visualization = function(tilt, canvas, image, controller) {
                 
         // compute the texture coordinates
         mesh.texCoord.push(
-          (x + tilt.width / 2     ) / tilt.width,
+          (x + tilt.width  / 2    ) / tilt.width,
           (y + tilt.height / 2    ) / tilt.height, 
-          (x + tilt.width / 2 + w ) / tilt.width,
+          (x + tilt.width  / 2 + w) / tilt.width,
           (y + tilt.height / 2    ) / tilt.height,
-          (x + tilt.width / 2 + w ) / tilt.width,
+          (x + tilt.width  / 2 + w) / tilt.width,
           (y + tilt.height / 2 + h) / tilt.height, 
-          (x + tilt.width / 2     ) / tilt.width,
+          (x + tilt.width  / 2    ) / tilt.width,
           (y + tilt.height / 2 + h) / tilt.height);
         
+        // the stack margins should not be textured
         for (var k = 0; k < 2; k++) {
           mesh.texCoord.push(0, 0, 0, 0, 0, 0, 0, 0);
         }
@@ -153,10 +154,12 @@ TiltChrome.Visualization = function(tilt, canvas, image, controller) {
         mesh.indices.push(i + 10, i + 9,  i + 6,  i + 10, i + 6,  i + 5);
         mesh.indices.push(i + 8,  i + 11, i + 4,  i + 8,  i + 4,  i + 7);
         
+        // close the stack adding a back face if it's the first layer
         if (depth === 1) {
           mesh.indices.push(11, 10, 5, 11, 5, 4);
         }
 
+        // compute the wireframe indices
         mesh.wireframeIndices.push(
           i + 0,  i + 1,  i + 1,  i + 2,  i + 2,  i + 3,  i + 3,  i + 0);
         mesh.wireframeIndices.push(
@@ -179,7 +182,6 @@ TiltChrome.Visualization = function(tilt, canvas, image, controller) {
     // set the transformations at initialization
     transforms.translation = [0, -50, -400];
     transforms.rotation = [0.5, 0.5, 0];
-    
     tilt.strokeWeight(2);
   };
   
@@ -187,7 +189,7 @@ TiltChrome.Visualization = function(tilt, canvas, image, controller) {
    * The rendering animation logic and loop.
    */
   tilt.draw = function() {
-    // if the visualization was destroyed, don't continue rendering
+    // if the visualization was destroyed, don"t continue rendering
     if (!tilt) {
       return;
     }
@@ -216,6 +218,7 @@ TiltChrome.Visualization = function(tilt, canvas, image, controller) {
       }
     }
     
+    // when rendering is finished, call a loop function in the controller
     if ("function" === typeof(controller.loop)) {
       controller.loop();
     }
@@ -225,7 +228,7 @@ TiltChrome.Visualization = function(tilt, canvas, image, controller) {
    * Renders the visualization mesh.
    */
   this.renderVisualization = function() {
-    // this is just a test case for now, actual implementation soon
+    // apply the necessary transformations to the model view
     tilt.translate(transforms.translation[0] + tilt.width / 2,
                    transforms.translation[1] + tilt.height / 2,
                    transforms.translation[2]);
@@ -234,6 +237,7 @@ TiltChrome.Visualization = function(tilt, canvas, image, controller) {
     tilt.rotateX(transforms.rotation[0]);
     tilt.rotateZ(transforms.rotation[2]);
     
+    // draw the visualization mesh
     tilt.mesh(mesh.verticesBuff,
               mesh.texCoordBuff, null, 
               "triangles", "#fff", dom,
