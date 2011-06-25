@@ -4,7 +4,7 @@
  *
  * Copyright (c) 2011 Victor Porof
  *
- * This software is provided 'as-is', without any express or implied
+ * This software is provided "as-is", without any express or implied
  * warranty. In no event will the authors be held liable for any damages
  * arising from the use of this software.
  *
@@ -39,7 +39,7 @@ Tilt.Extensions.WebGL = {
 
   /**
    * JavaScript implementation of WebGL MOZ_dom_element_texture (#653656)
-   * extension. It requres a callback function, a window, width & height.
+   * extension. It requires a callback function, a window, width & height.
    * If unspecified, contentWindow will default to the gBrowser.contentWindow.
    * Also, if unspecified, the width and height default to the contentWindow 
    * innerWidth and innerHeight. The newly created image will be passed as a  
@@ -51,27 +51,29 @@ Tilt.Extensions.WebGL = {
    * @param {object} window: optional, the window to draw
    */
   initDocumentImage: function(readyCallback, contentWindow, width, height) {
-    // Using a custom iframe with a canvas context element to draw the window
+    // Using a custom canvas element and a 2d context to draw the window
     Tilt.Utils.Document.initCanvas(function initCallback(canvas) {
       if (!contentWindow) {
-        contentWindow = gBrowser.contentWindow;
+        contentWindow = window.content;
       }
       if (!width) {
-        width = contentWindow.innerWidth;
+        width = Tilt.Utils.Math.clamp(contentWindow.innerWidth + 
+                                      contentWindow.scrollMaxX, 0, 4096);
       }
       if (!height) {
-        height = contentWindow.innerHeight;
+        height = Tilt.Utils.Math.clamp(contentWindow.innerHeight + 
+                                       contentWindow.scrollMaxY, 0, 4096);
       }
-    
+      
       canvas.width = width;
       canvas.height = height;
-    
-      var context = canvas.getContext('2d');
+      
+      var context = canvas.getContext("2d");
       context.drawWindow(contentWindow, 0, 0, width, height, "#fff");
-    
-      if (readyCallback) {
+      
+      if ("function" === typeof(readyCallback)) {
         readyCallback(canvas);
       } 
     }, false);
   }
-}
+};
