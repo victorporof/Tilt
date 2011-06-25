@@ -351,7 +351,7 @@ Tilt.Utils.Image = {
  * Various math functions required by the engine.
  */
 Tilt.Utils.Math = {
-
+  
   /**
    * Helper function, converts degrees to radians.
    *
@@ -361,7 +361,7 @@ Tilt.Utils.Math = {
   radians: function(degrees) {
     return degrees * Math.PI / 180;
   },
-
+  
   /**
    * Returns if parameter is a power of two.
    *
@@ -371,7 +371,7 @@ Tilt.Utils.Math = {
   isPowerOfTwo: function (x) {
     return (x & (x - 1)) === 0;
   },
-
+  
   /**
    * Returns the next closest power of two greater than a number.
    *
@@ -385,7 +385,18 @@ Tilt.Utils.Math = {
     }
     return x + 1;
   },
-
+  
+  /**
+   * A convenient way of limiting values to a set boundary.
+   *
+   * @param {number} value: the number to be limited
+   * @param {number} min: the minimum allowed value for the number
+   * @param {number} max: the maximum allowed value for the number
+   */
+  clamp: function(value, min, max) {
+    return Math.max(min, Math.min(max, value));
+  },
+  
   /**
    * Converts a hex color to rgba.
    *
