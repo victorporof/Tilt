@@ -6,8 +6,7 @@
 <?xml-stylesheet type="text/css"
                  href="chrome://tilt/skin/browserOverlay.css"?>
 
-<!DOCTYPE overlay SYSTEM
-  "chrome://tilt/locale/browserOverlay.dtd">
+<!DOCTYPE overlay SYSTEM "chrome://tilt/locale/browserOverlay.dtd">
 
 <overlay id="tilt-browser-overlay"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
@@ -54,6 +53,7 @@
     </menu>
   </menupopup>
 
+  <!-- place the Tilt menu inside the web developer popup -->
   <!-- <menupopup id="menuWebDeveloperPopup">
     <menu class="menu-iconic"
           id="tilt-menu"
@@ -67,5 +67,4 @@
       </menupopup>
     </menu>
   </menupopup> -->
-
 </overlay>
