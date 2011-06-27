@@ -207,6 +207,7 @@ TiltChrome.Visualization = function(tilt, canvas, image, controller) {
     
     // when rendering is finished, call a loop function in the controller
     if ("function" === typeof(controller.loop)) {
+      controller.frameDelta = tilt.frameDelta;
       controller.loop();
     }
     
