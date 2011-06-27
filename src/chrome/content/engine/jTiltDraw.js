@@ -34,7 +34,7 @@ var EXPORTED_SYMBOLS = ["Tilt.Draw"];
  * initialization is complete, along with the canvas and additionally, an 
  * instance of Tilt.Draw passed as a parameter. If this is running inside an
  * extension environment, a container iframe is also returned. For other more 
- * complex initialization scenarios, use Tilt.Utils.Document.initCanvas and 
+ * complex initialization scenarios, use Tilt.Document.initCanvas and 
  * create a Tilt.Draw object manually with the constructor.
  * Use this function to append a canvas element to the document, like this:
  *
@@ -62,10 +62,11 @@ var EXPORTED_SYMBOLS = ["Tilt.Draw"];
  * @param {number} width: specify the initial width of the canvas
  * @param {number} height: specify the initial height of the canvas
  * @param {function} readyCallback: function called when initialization ready
+ * @return {object} the created object
  */
 Tilt.Create = function(width, height, readyCallback) {
   // initialize the canvas element
-  Tilt.Utils.Document.initCanvas(function(canvas, iframe) {
+  Tilt.Document.initCanvas(function(canvas, iframe) {
     canvas.width = width;
     canvas.height = height;
     
@@ -148,13 +149,13 @@ Tilt.Draw = function(canvas, failCallback, successCallback) {
   /**
    * The current model view matrix;
    */
-  var mvMatrix = null;
-
+  var mvMatrix = mat4.identity(mat4.create());
+  
   /**
    * The current projection matrix;
    */
-  var projMatrix = null;
-
+  var projMatrix = mat4.identity(mat4.create());
+  
   /**
    * Vertices buffer representing the corners of a rectangle.
    */
@@ -314,8 +315,8 @@ Tilt.Draw = function(canvas, failCallback, successCallback) {
     engine.depthTest(true);
 
     // model view and projection matrices used for transformations
-    mat4.identity(mvMatrix = mat4.create());
-    mat4.identity(projMatrix = mat4.create());
+    mat4.identity(mvMatrix);
+    mat4.identity(projMatrix);
     
     // set the default model view and projection matrices
     that.origin();
@@ -473,8 +474,8 @@ Tilt.Draw = function(canvas, failCallback, successCallback) {
 
   // Helpers for managing variables like frameCount, frameRate, frameDelta
   // Used internally, in the requestAnimFrame function
-  var currentTime = 0;
   var lastTime = 0;
+  var currentTime = 0;
 
   /**
    * Requests the next animation frame in an efficient way.
@@ -550,7 +551,7 @@ Tilt.Draw = function(canvas, failCallback, successCallback) {
     var x = w / 2;
     var y = h / 2;
     
-    var z = y / Math.tan(Tilt.Utils.Math.radians(45) / 2);
+    var z = y / Math.tan(Tilt.Math.radians(60) / 2);
     var znear = z / 10;
     var zfar = z * 10;
     var aspect = w / h;
@@ -609,6 +610,16 @@ Tilt.Draw = function(canvas, failCallback, successCallback) {
   this.origin = function() {
     mat4.identity(mvMatrix);
   };
+  
+  /**
+   * Transforms the model view matrix with a new matrix.
+   * Useful for creating custom transformations.
+   * 
+   * @param {object} matrix: the matrix to be multiply the model view with
+   */
+  this.transform = function(matrix) {
+    mat4.multiply(mvMatrix, matrix);
+  };
 
   /**
    * Translates the model view by the x, y and z coordinates.
@@ -624,12 +635,12 @@ Tilt.Draw = function(canvas, failCallback, successCallback) {
   /**
    * Rotates the model view by a specified angle on the x, y and z axis.
    *
+   * @param {number} angle: the angle expressed in radians
    * @param {number} x: the x axis of the rotation
    * @param {number} y: the y axis of the rotation
    * @param {number} z: the z axis of the rotation
-   * @param {number} angle: the angle expressed in radians
    */
-  this.rotate = function(x, y, z, angle) {
+  this.rotate = function(angle, x, y, z) {
     mat4.rotate(mvMatrix, angle, [x, y, z]);
   };
 
@@ -677,7 +688,7 @@ Tilt.Draw = function(canvas, failCallback, successCallback) {
    * @param {string} color: the color, defined in hex or as rgb() or rgba()
    */
   this.tint = function(color) {
-    tint = Tilt.Utils.Math.hex2rgba(color);
+    tint = Tilt.Math.hex2rgba(color);
   };
 
   /**
@@ -693,7 +704,7 @@ Tilt.Draw = function(canvas, failCallback, successCallback) {
    * @param {string} color: the color, defined in hex or as rgb() or rgba()
    */
   this.fill = function(color) {
-    fill = Tilt.Utils.Math.hex2rgba(color);
+    fill = Tilt.Math.hex2rgba(color);
   };
 
   /**
@@ -709,7 +720,7 @@ Tilt.Draw = function(canvas, failCallback, successCallback) {
    * @param {string} color: the color, defined in hex or as rgb() or rgba()
    */
   this.stroke = function(color) {
-    stroke = Tilt.Utils.Math.hex2rgba(color);
+    stroke = Tilt.Math.hex2rgba(color);
   };
 
   /**
@@ -741,10 +752,10 @@ Tilt.Draw = function(canvas, failCallback, successCallback) {
     var rgba;
     
     if ("undefined" === typeof(color)) {
-      rgba = Tilt.Utils.Math.hex2rgba("#d6d6d6ff");
+      rgba = Tilt.Math.hex2rgba("#d6d6d6ff");
     }
     else if ("string" === typeof(color)) {
-      rgba = Tilt.Utils.Math.hex2rgba(color);
+      rgba = Tilt.Math.hex2rgba(color);
     }
     else if ("number" === typeof(color)) {
       rgba = [color / 255, color / 255, color / 255, 1];
@@ -934,12 +945,12 @@ Tilt.Draw = function(canvas, failCallback, successCallback) {
     if (texture) {
       textureShader.use(verticesBuffer, texCoordBuffer,
                         mvMatrix, projMatrix, "string" === typeof color ? 
-                        Tilt.Utils.Math.hex2rgba(color) : color, texture);
+                        Tilt.Math.hex2rgba(color) : color, texture);
     }
     else {
       colorShader.use(verticesBuffer,
                       mvMatrix, projMatrix, "string" === typeof color ? 
-                      Tilt.Utils.Math.hex2rgba(color) : color);
+                      Tilt.Math.hex2rgba(color) : color);
     }
     
     // draw the vertices as indexed elements or simple arrays
