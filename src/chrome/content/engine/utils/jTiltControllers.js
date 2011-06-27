@@ -85,10 +85,15 @@ Tilt.Arcball = function(width, height, radius) {
    *
    * @param {number} x: the current horizontal coordinate of the mouse
    * @param {number} y: the current vertical coordinate of the mouse
+   * @param {number} frameDelta: optional, pass deltas for smooth animations
    */
-  this.mouseDragged = function(x, y) {
-    mouseX += (x - mouseX) / 8;
-    mouseY += (y - mouseY) / 8;
+  this.mouseDragged = function(x, y, frameDelta) {
+    if ("undefined" === typeof(frameDelta)) {
+      frameDelta = 30;
+    }
+
+    mouseX += (x - mouseX) * frameDelta / 30;
+    mouseY += (y - mouseY) * frameDelta / 30;
     
     that.pointToSphere(mouseX, mouseY, endVec);
     
