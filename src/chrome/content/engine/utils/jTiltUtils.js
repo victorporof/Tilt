@@ -26,21 +26,18 @@
 if ("undefined" === typeof(Tilt)) {
   var Tilt = {};
 }
-if ("undefined" === typeof(Tilt.Utils)) {
-  Tilt.Utils = {};
-}
 
 var EXPORTED_SYMBOLS = [
-  "Tilt.Utils.Iframe",
-  "Tilt.Utils.Document",
-  "Tilt.Utils.Image",
-  "Tilt.Utils.Math",
-  "Tilt.Utils.String"];
+  "Tilt.Iframe",
+  "Tilt.Document",
+  "Tilt.Image",
+  "Tilt.Math",
+  "Tilt.String"];
 
 /** 
  * Utilities for accessing and manipulating a document.
  */
-Tilt.Utils.Document = {
+Tilt.Document = {
 
   /**
    * Helper method, allowing to easily create an iframe with a canvas element
@@ -284,8 +281,8 @@ Tilt.Utils.Document = {
 /**
  * Utilities for manipulating images.
  */
-Tilt.Utils.Image = {
-
+Tilt.Image = {
+  
   /**
    * Scales an image to power of two width and height.
    * If the image already has power of two dimensions, the readyCallback
@@ -304,8 +301,8 @@ Tilt.Utils.Image = {
                                fillColor, strokeColor, strokeWeight,
                                forceResize) {
                                  
-    if (Tilt.Utils.Math.isPowerOfTwo(image.width) &&
-        Tilt.Utils.Math.isPowerOfTwo(image.height) && !forceResize) {
+    if (Tilt.Math.isPowerOfTwo(image.width) &&
+        Tilt.Math.isPowerOfTwo(image.height) && !forceResize) {
 
       if ("function" === typeof(readyCallback)) {
         readyCallback(image);
@@ -316,9 +313,9 @@ Tilt.Utils.Image = {
     var canvas_id = "tilt-canvas-" + image.src;
     var iframe_id = "tilt-iframe-" + image.src;
 
-    Tilt.Utils.Document.initCanvas(function initCallback(canvas) {
-      canvas.width = Tilt.Utils.Math.nextPowerOfTwo(image.width);
-      canvas.height = Tilt.Utils.Math.nextPowerOfTwo(image.height);
+    Tilt.Document.initCanvas(function initCallback(canvas) {
+      canvas.width = Tilt.Math.nextPowerOfTwo(image.width);
+      canvas.height = Tilt.Math.nextPowerOfTwo(image.height);
 
       var context = canvas.getContext('2d');
 
@@ -350,7 +347,7 @@ Tilt.Utils.Image = {
 /**
  * Various math functions required by the engine.
  */
-Tilt.Utils.Math = {
+Tilt.Math = {
   
   /**
    * Helper function, converts degrees to radians.
@@ -448,7 +445,7 @@ Tilt.Utils.Math = {
 /**
  * Helper functions for manipulating strings.
  */
-Tilt.Utils.String = {
+Tilt.String = {
   
   /**
    * Trims whitespace characters from the left and right side of a string.
@@ -485,7 +482,7 @@ Tilt.Utils.String = {
  * Easy way to access the string bundle.
  * Usually useful only when this is used inside an extension evironment.
  */
-Tilt.Utils.StringBundle = {
+Tilt.StringBundle = {
   
   /** 
    * The bundle name used.
@@ -500,7 +497,7 @@ Tilt.Utils.StringBundle = {
    * @return {string} the equivalent string from the bundle
    */
   get: function(string) {
-    if (!string) {
+    if ("undefined" === typeof(string)) {
       return "undefined";
     }
     
@@ -522,10 +519,10 @@ Tilt.Utils.StringBundle = {
    * @return {string} the equivalent formatted string from the bundle
    */
   format: function(string, args) {
-    if (!string) {
+    if ("undefined" === typeof(string)) {
       return "undefined";
     }
-    if (!args) {
+    if ("undefined" === typeof(args)) {
       return string;
     }
     
@@ -542,7 +539,7 @@ Tilt.Utils.StringBundle = {
 /**
  * Various console functions required by the engine.
  */
-Tilt.Utils.Console = {
+Tilt.Console = {
   
   /**
    * Logs a message to the console.
@@ -552,7 +549,7 @@ Tilt.Utils.Console = {
    */
   log: function(aMessage) {
     try {
-      if (!aMessage) {
+      if ("undefined" === typeof(aMessage)) {
         aMessage = "undefined";
       }
       
@@ -594,7 +591,7 @@ Tilt.Utils.Console = {
   error: function(aMessage, aSourceName, aSourceLine, 
                   aLineNumber, aColumnNumber, aFlags, aCategory) {
     try {
-      if (!aMessage) {
+      if ("undefined" === typeof(aMessage)) {
         aMessage = "undefined";
       }
       
