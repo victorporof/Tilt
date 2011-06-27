@@ -18,17 +18,19 @@
           src="chrome://tilt/content/engine/utils/jTiltUtils.js"/>
   <script type="application/x-javascript"
           src="chrome://tilt/content/engine/utils/jTiltExtensions.js"/>
+  <script type="application/x-javascript"
+          src="chrome://tilt/content/engine/utils/jTiltControllers.js"/>
 
   <script type="application/x-javascript"
-          src="chrome://tilt/content/engine/jTiltShaders.js"/>
+          src="chrome://tilt/content/engine/shaders/jTiltShaders.js"/>
   <script type="application/x-javascript"
           src="chrome://tilt/content/engine/jTiltEngine.js"/>
   <script type="application/x-javascript"
           src="chrome://tilt/content/engine/jTiltDraw.js"/>
   <script type="application/x-javascript"
-          src="chrome://tilt/content/jTiltController.js"/>
+          src="chrome://tilt/content/TiltChromeController.js"/>
   <script type="application/x-javascript"
-          src="chrome://tilt/content/jTiltVisualization.js"/>
+          src="chrome://tilt/content/TiltChromeVisualization.js"/>
           
   <script type="application/x-javascript"
           src="chrome://tilt/content/browserOverlay.js"/>
