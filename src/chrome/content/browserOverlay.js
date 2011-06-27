@@ -53,17 +53,17 @@ TiltChrome.BrowserOverlay = {
     
     // if the visualization is not currently running
     if (!that.iframe) {
-      // change the menu label acrodingly
-      tiltMenu.label = Tilt.Utils.StringBundle.get("menuItemHide.label");
+      // change the menu label accordingly
+      tiltMenu.label = Tilt.StringBundle.get("menuItemHide.label");
       
       // use an extension to get the image representation of the document
       Tilt.Extensions.WebGL.initDocumentImage(function(image) {
         // set the width and height to mach the content window dimensions
-        var w = gBrowser.contentWindow.innerWidth;
-        var h = gBrowser.contentWindow.innerHeight;
+        var width = gBrowser.contentWindow.innerWidth;
+        var height = gBrowser.contentWindow.innerHeight;
 
         // initialize a Tilt environment: a canvas element inside an iframe
-        Tilt.Create(w, h, function(tilt, canvas, iframe) {
+        Tilt.Create(width, height, function(tilt, canvas, iframe) {
           // remember the iframe so that it can be destroyed later
           that.iframe = iframe;
           
@@ -78,7 +78,7 @@ TiltChrome.BrowserOverlay = {
       // if the visualization is running destroy it
       that.destroy();
       // change the menu label to the default initialization string
-      tiltMenu.label =Tilt.Utils.StringBundle.get("menuItemInitialize.label");
+      tiltMenu.label =Tilt.StringBundle.get("menuItemInitialize.label");
     }
   },
   
@@ -91,13 +91,13 @@ TiltChrome.BrowserOverlay = {
     // issue a destroy call through all the visualization children
     that.visualization.destroy(function() {
       that.visualization = null; // when done, do some cleanup
-
+      
       // remove the iframe from the browser stack
-      Tilt.Utils.Document.remove(that.iframe);
+      Tilt.Document.remove(that.iframe);
       that.iframe = null;
 
       // collect any remaining garbage
-      Components.utils.forceGC();
+      Components.Utils.forceGC();
     });
   }
 };
