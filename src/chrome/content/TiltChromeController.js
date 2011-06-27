@@ -1,5 +1,5 @@
 /* 
- * jTiltController.js - Scalable controllers handling various events for Tilt
+ * TiltChromeControllers.js - Controller implementations handling events
  * version 0.1
  *
  * Copyright (c) 2011 Victor Porof
@@ -36,35 +36,70 @@ var EXPORTED_SYMBOLS = ["TiltChrome.Controller.MouseAndKeyboard"];
  * A mouse and keyboard implementation
  */
 TiltChrome.Controller.MouseAndKeyboard = function() {
-  var mousePressed = false;
+
+  /**
+   * Arcball used to control the visualization using the mouse.
+   */
+  var arcball = null;
+
+  /**
+   * Retain the mouse drag state and position, to manipulate the arcball.
+   */  
+  var mouseDragged = false;
   var mouseX = 0;
   var mouseY = 0;
   
+  /**
+   * Function called automatically by the visualization at the setup().
+   */  
+  this.init = function() {
+    arcball = new Tilt.Arcball(this.width, this.height);
+  };
+
+  /**
+   * Function called automatically by the visualization each frame in draw().
+   */
   this.loop = function() {
-    if (mousePressed) {
-      var y = mouseX - this.width / 2;
-      var x = mouseY - this.height / 2;
-      
-      x /= -500000;
-      y /= 500000;
-      
-      this.visualization.rotate(x, y, 0);
+    if (mouseDragged) {
+      this.visualization.setRotation(arcball.mouseDragged(mouseX, mouseY));
     }
-  }
-  
+  };
+
+  /**
+   * Called once after every time a mouse button is pressed.
+   *
+   * @param {number} x: the current horizontal coordinate of the mouse
+   * @param {number} y: the current vertical coordinate of the mouse
+   */  
   this.mousePressed = function(x, y) {
-    mousePressed = true;
+    arcball.mousePressed(x, y);
+    mouseDragged = true;
   };
   
+  /**
+   * Called every time a mouse button is released.
+   *
+   * @param {number} x: the current horizontal coordinate of the mouse
+   * @param {number} y: the current vertical coordinate of the mouse
+   */  
   this.mouseReleased = function(x, y) {
-    mousePressed = false;
+    mouseDragged = false;
   };
   
+  /**
+   * Called every time the mouse moves.
+   *
+   * @param {number} x: the current horizontal coordinate of the mouse
+   * @param {number} y: the current vertical coordinate of the mouse
+   */
   this.mouseMoved = function(x, y) {
     mouseX = x;
     mouseY = y;
   };
-  
+
+  /**
+   * TODO: implementation
+   */  
   this.keyPressed = function(key) {
   };
 }

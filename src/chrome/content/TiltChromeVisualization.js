@@ -1,5 +1,5 @@
 /* 
- * jTiltVisualization.js - Visualization logic and drawing loop for Tilt
+ * TiltChromeVisualization.js - Visualization logic and drawing loop for Tilt
  * version 0.1
  *
  * Copyright (c) 2011 Victor Porof
@@ -70,8 +70,8 @@ TiltChrome.Visualization = function(tilt, canvas, image, controller) {
    * Modified by events in the controller through delegate functions.
    */
   var transforms = {
-    translation: [], // scene translation, on the [x, y, z] axis
-    rotation: []     // scene rotation, expressed in radians as [x, y, z]
+    translation: vec3.create(), // scene translation, on the [x, y, z] axis
+    rotation: quat4.create()    // scene rotation, expressed as a quaternion
   };
   
   /**
@@ -82,6 +82,11 @@ TiltChrome.Visualization = function(tilt, canvas, image, controller) {
     controller.visualization = that;
     controller.width = tilt.width;
     controller.height = tilt.height;
+    
+    // call the init function on the controller if available
+    if ("function" === typeof(controller.init)) {
+      controller.init();
+    }
     
     // convert the dom image to a texture
     tilt.initTexture(image, function(texture) {
@@ -97,9 +102,9 @@ TiltChrome.Visualization = function(tilt, canvas, image, controller) {
     // create the combined mesh representing the document visualization by
     // traversing the dom and adding a stack for each node that is drawable    
     function createVisualizationMesh() {
-      Tilt.Utils.Document.traverse(function(node, depth) {
+      Tilt.Document.traverse(function(node, depth) {
         // get the x, y, width and height coordinates of a node
-        var coord = Tilt.Utils.Document.getNodeCoordinates(node);
+        var coord = Tilt.Document.getNodeCoordinates(node);
         var thickness = 12;
         
         // use this node only if it actually has any dimensions
@@ -183,8 +188,8 @@ TiltChrome.Visualization = function(tilt, canvas, image, controller) {
     }
     
     // set the transformations at initialization
-    transforms.translation = [0, -50, -400];
-    transforms.rotation = [0.5, 0.5, 0];
+    transforms.translation = [0, -100, -700];
+    transforms.rotation = [0, 0, 0, 1];
     tilt.strokeWeight(2);
   };
   
@@ -199,6 +204,11 @@ TiltChrome.Visualization = function(tilt, canvas, image, controller) {
     
     // prepare for the next frame of the animation loop
     tilt.requestAnimFrame(tilt.draw);
+    
+    // when rendering is finished, call a loop function in the controller
+    if ("function" === typeof(controller.loop)) {
+      controller.loop();
+    }
     
     // only after the draw object has finished initializing
     if (tilt.isInitialized()) {
@@ -220,11 +230,6 @@ TiltChrome.Visualization = function(tilt, canvas, image, controller) {
         that.renderVisualization();
       }
     }
-    
-    // when rendering is finished, call a loop function in the controller
-    if ("function" === typeof(controller.loop)) {
-      controller.loop();
-    }
   };
   
   /**
@@ -236,9 +241,7 @@ TiltChrome.Visualization = function(tilt, canvas, image, controller) {
                    transforms.translation[1] + tilt.height / 2,
                    transforms.translation[2]);
                    
-    tilt.rotateY(transforms.rotation[1]);
-    tilt.rotateX(transforms.rotation[0]);
-    tilt.rotateZ(transforms.rotation[2]);
+    tilt.transform(quat4.toMat4(transforms.rotation));
     
     // draw the visualization mesh
     tilt.mesh(mesh.verticesB,
@@ -250,23 +253,21 @@ TiltChrome.Visualization = function(tilt, canvas, image, controller) {
               "lines", "#899", null,
               mesh.wireframeIndicesB); 
   };
-    
+  
   /**
    * Delegate translation method, used by the controller.
    */
-  this.translate = function(x, y, z) {
-    transforms.translation[0] += x * tilt.frameDelta;
-    transforms.translation[1] += y * tilt.frameDelta;
-    transforms.translation[2] += z * tilt.frameDelta;
+  this.setTranslation = function(x, y, z) {
+    transforms.translation[0] = x;
+    transforms.translation[1] = y;
+    transforms.translation[2] = z;
   };
     
   /**
    * Delegate rotation method, used by the controller.
    */
-  this.rotate = function(x, y, z) {
-    transforms.rotation[0] += x * tilt.frameDelta;
-    transforms.rotation[1] += y * tilt.frameDelta;
-    transforms.rotation[2] += z * tilt.frameDelta;
+  this.setRotation = function(quaternion) {
+    quat4.set(quaternion, transforms.rotation);
   };
   
   /**
