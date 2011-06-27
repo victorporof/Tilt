@@ -69,7 +69,7 @@ Tilt.Engine = function() {
     }
     else {
       // if unsuccessful, log the error and run a fail callback if available
-      Tilt.Utils.Console.log(Tilt.Utils.StringBundle.get("initWebGL.error"));
+      Tilt.Console.log(Tilt.StringBundle.get("initWebGL.error"));
       if ("function" === typeof(failCallback)) {
         failCallback();
       }
@@ -168,7 +168,7 @@ Tilt.Engine = function() {
 
     // make sure the shader source is valid
     if ("string" !== typeof(shaderSource) || shaderSource.length < 1) {
-      Tilt.Utils.Console.error(Tilt.Utils.StringBundle.get(
+      Tilt.Console.error(Tilt.StringBundle.get(
         "compileShader.source.error"));
 
       return null;
@@ -182,7 +182,7 @@ Tilt.Engine = function() {
       shader = gl.createShader(gl.FRAGMENT_SHADER);
     }
     else {
-      Tilt.Utils.Console.error(Tilt.Utils.StringBundle.format(
+      Tilt.Console.error(Tilt.StringBundle.format(
         "compileShader.type.error"), [shaderSource]);
         
       return null;
@@ -196,7 +196,7 @@ Tilt.Engine = function() {
     if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
       var status = gl.getShaderInfoLog(shader);
 
-      Tilt.Utils.Console.error(Tilt.Utils.StringBundle.format(
+      Tilt.Console.error(Tilt.StringBundle.format(
         "compileShader.compile.error"), [status]);
 
       return null;
@@ -222,7 +222,7 @@ Tilt.Engine = function() {
     if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
       var status = gl.getProgramInfoLog(shader);
       
-      Tilt.Utils.Console.error(Tilt.Utils.StringBundle.format(
+      Tilt.Console.error(Tilt.StringBundle.format(
         "linkProgram.error", [status, vertShader.src, fragShader.src]));
     }
     return program;
@@ -458,7 +458,7 @@ Tilt.Engine = function() {
   	if (!gl.checkFramebufferStatus(gl.FRAMEBUFFER)) {
         var status = gl.checkFramebufferStatus(GL_FRAMEBUFFER);
 
-        Tilt.Utils.Console.error(Tilt.Utils.StringBundle.format(
+        Tilt.Console.error(Tilt.StringBundle.format(
           "initOffscreenBuffer.framebuffer.error"), [status]);
   	}
 
@@ -518,7 +518,7 @@ Tilt.Engine = function() {
       texture.height = texture.image.height;
 
       // make sure the image is power of two
-      Tilt.Utils.Image.resizeToPowerOfTwo(texture.image, function(image) {
+      Tilt.Image.resizeToPowerOfTwo(texture.image, function(image) {
         texture.image = image;
 
         // finally, do the actual binding and apply the pixels
