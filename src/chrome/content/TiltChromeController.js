@@ -61,7 +61,8 @@ TiltChrome.Controller.MouseAndKeyboard = function() {
    */
   this.loop = function() {
     if (mouseDragged) {
-      this.visualization.setRotation(arcball.mouseDragged(mouseX, mouseY));
+      this.visualization.setRotation(
+        arcball.mouseDragged(mouseX, mouseY, this.frameDelta));
     }
   };
 
