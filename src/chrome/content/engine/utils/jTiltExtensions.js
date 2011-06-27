@@ -1,5 +1,5 @@
 /*
- * jTiltExtensions.js - various JavaScript shims and extensions
+ * jTiltExtensions.js - Various JavaScript shims and extensions
  * version 0.1
  *
  * Copyright (c) 2011 Victor Porof
@@ -39,32 +39,27 @@ Tilt.Extensions.WebGL = {
 
   /**
    * JavaScript implementation of WebGL MOZ_dom_element_texture (#653656)
-   * extension. It requires a callback function, a window, width & height.
-   * If unspecified, contentWindow will default to the gBrowser.contentWindow.
-   * Also, if unspecified, the width and height default to the contentWindow 
-   * innerWidth and innerHeight. The newly created image will be passed as a  
-   * parameter to the readyCallback function.
+   * extension. It requires a callback function & optionally a contentWindow.
+   * If unspecified, the contentWindow will default to the window.content.
+   * The newly created image will be passed as a parameter to readyCallback.
    * 
    * @param {function} readyCallback: function called when drawing is finished
-   * @param {number} width: the width of the MOZ_dom_element_texture
-   * @param {number} height: the height of the MOZ_dom_element_texture
-   * @param {object} window: optional, the window to draw
+   * @param {object} contentWindow: optional, the window to draw
    */
-  initDocumentImage: function(readyCallback, contentWindow, width, height) {
+  initDocumentImage: function(readyCallback, contentWindow) {
     // Using a custom canvas element and a 2d context to draw the window
-    Tilt.Utils.Document.initCanvas(function initCallback(canvas) {
+    Tilt.Document.initCanvas(function initCallback(canvas) {
       if (!contentWindow) {
         contentWindow = window.content;
       }
-      if (!width) {
-        width = Tilt.Utils.Math.clamp(contentWindow.innerWidth + 
-                                      contentWindow.scrollMaxX, 0, 4096);
-      }
-      if (!height) {
-        height = Tilt.Utils.Math.clamp(contentWindow.innerHeight + 
-                                       contentWindow.scrollMaxY, 0, 4096);
-      }
       
+      // FIXME: set the maximum texture size dynamically
+      var width = Tilt.Math.clamp(contentWindow.innerWidth + 
+                                  contentWindow.scrollMaxX, 0, 4096);
+                                        
+      var height = Tilt.Math.clamp(contentWindow.innerHeight + 
+                                   contentWindow.scrollMaxY, 0, 4096);
+                                         
       canvas.width = width;
       canvas.height = height;
       
