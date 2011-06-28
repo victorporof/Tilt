@@ -91,10 +91,9 @@ Tilt.Arcball = function(width, height, radius) {
     if ("undefined" === typeof(frameDelta)) {
       frameDelta = 30;
     }
-
-    mouseX += (x - mouseX) * frameDelta / 30;
-    mouseY += (y - mouseY) * frameDelta / 30;
     
+    mouseX += (x - mouseX) * Tilt.Math.clamp(frameDelta / 30, 0.01, 0.99);
+    mouseY += (y - mouseY) * Tilt.Math.clamp(frameDelta / 30, 0.01, 0.99);    
     that.pointToSphere(mouseX, mouseY, endVec);
     
 		// compute the vector perpendicular to the start & end vectors
@@ -168,5 +167,7 @@ Tilt.Arcball = function(width, height, radius) {
     that.width = width;
     that.height = height;
     that.radius = "undefined" !== typeof(radius) ? radius : height;
+    
+    // automatically call this function
   })(width, height, radius);
 };
