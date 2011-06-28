@@ -8,10 +8,7 @@
 > The implementation consists of a Firefox extension containing a 3D representation of a web page, as both a fun visualization tool and a developer-friendly environment for debugging the document’s structure, contents and nesting of the DOM tree. Various information besides the actual contents will be displayed on request, regarding each node’s type, class, id, and other attributes if available. The rendering will be dynamic, in-browser, using WebGL and GLSL shaders.
 #### [Additional info](http://bit.ly/gsoc-mozilla-application)
 
-### Project Proposal
-I propose implementing a Firefox extension containing a 3D representation of a web page, as both a fun visualization tool and a developer-friendly environment for debugging the document’s structure, contents and nesting of the DOM tree. Various information besides the actual contents will be displayed on request, regarding each node’s type, class, id, and other attributes if available. The rendering will be dynamic, in-browser, using WebGL and GLSL shaders.
-
-#### Principles
+### Principles
 Before submitting this proposal, I’ve experimented with various techniques of achieving the desired visualization results and polished user experience, by implementing a few of the required features and asking for feedback from knowledgeable people working in the domain. As a result, some key aspects must be pointed out:
 
 *		Building an internal representation of the DOM shall be achieved by creating an iFrame overlay in XUL as a Firefox extension. From experience, other techniques like injecting code into a web page, using already existing extensions (like Firebug), or depending on cloud services or CGI scripts are all bad ideas, as they are not scalable, deliver inconsistent user experience and don’t leave the original DOM intact.
@@ -26,7 +23,7 @@ Before submitting this proposal, I’ve experimented with various techniques of 
 * 	Ways of exporting the visualization to other WebGL compatible browsers should be implemented, for cross-platform and cross-browser user experience. This can be done by saving the representation parameters and passing them to other browsers. In the end, the export feature will actually be an URL.
 * 	As Tilt is designed to also be fun, a few easter-eggs could be implemented :)
 
-#### The final deliverables
+### The final deliverables
 1. A stand-alone Firefox extension which will contain the visualization
 2. A WebGL javascript library designed to facilitate creating web page DOM visualizations
 3. Examples, test-cases, stress-tests and documentation, so that the tool will continue to be developed even after the finalization of GSoC, both by me and the desiring community.
