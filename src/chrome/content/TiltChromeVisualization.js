@@ -278,7 +278,7 @@ TiltChrome.Visualization = function(tilt, canvas, image, controller) {
   };
   
   /**
-   * Override the resize function to handle the event.
+   * Overriding the resize function to handle the event.
    *
    * @param {number} width: the new canvas width
    * @param {number} height: the new canvas height
@@ -289,7 +289,7 @@ TiltChrome.Visualization = function(tilt, canvas, image, controller) {
   };
   
   /**
-   * Override the mousePressed function to handle the event.
+   * Overriding the mousePressed function to handle the event.
    *
    * @param {number} x: the current horizontal coordinate of the mouse
    * @param {number} y: the current vertical coordinate of the mouse
@@ -301,7 +301,7 @@ TiltChrome.Visualization = function(tilt, canvas, image, controller) {
   };
 
   /**
-   * Override the mouseReleased function to handle the event.
+   * Overriding the mouseReleased function to handle the event.
    *
    * @param {number} x: the current horizontal coordinate of the mouse
    * @param {number} y: the current vertical coordinate of the mouse
@@ -313,7 +313,7 @@ TiltChrome.Visualization = function(tilt, canvas, image, controller) {
   };
 
   /**
-   * Override the mouseClicked function to handle the event.
+   * Overriding the mouseClicked function to handle the event.
    *
    * @param {number} x: the current horizontal coordinate of the mouse
    * @param {number} y: the current vertical coordinate of the mouse
@@ -325,7 +325,7 @@ TiltChrome.Visualization = function(tilt, canvas, image, controller) {
   };
   
   /**
-   * Override the mouseMoved function to handle the event.
+   * Overriding the mouseMoved function to handle the event.
    *
    * @param {number} x: the current horizontal coordinate of the mouse
    * @param {number} y: the current vertical coordinate of the mouse
@@ -337,7 +337,7 @@ TiltChrome.Visualization = function(tilt, canvas, image, controller) {
   };
   
   /**
-   * Override the mouseScroll function to handle the event.
+   * Overriding the mouseScroll function to handle the event.
    *
    * @param {number} scroll: the mouse wheel direction and speed
    */
@@ -348,7 +348,7 @@ TiltChrome.Visualization = function(tilt, canvas, image, controller) {
   };
   
   /**
-   * Override the keyPressed function to handle the event.
+   * Overriding the keyPressed function to handle the event.
    *
    * TODO: implementation
    */

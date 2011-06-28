@@ -215,7 +215,7 @@ Tilt.Draw = function(canvas, failCallback, successCallback) {
   this.mouseY = 0;
   
   /**
-   * Variables representing the current frame buffer width and height.
+   * Variables representing the current framebuffer width and height.
    * For example, these will be updated or changed when rendering offscreen.
    */
   this.width = canvas.clientWidth;
@@ -836,7 +836,7 @@ Tilt.Draw = function(canvas, failCallback, successCallback) {
    */
   this.image = function(texture, x, y, width, height) {
     // if the width and height are not specified, we use the embedded
-    // texture dimensions, from the source image or frame buffer
+    // texture dimensions, from the source image or framebuffer
     if (!width || !height) {
       if (!texture.framebuffer) {
         width = texture.image.width;

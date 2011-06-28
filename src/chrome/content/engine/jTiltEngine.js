@@ -343,10 +343,10 @@ Tilt.Engine = function() {
   };
   
   /**
-   * Binds a frame buffer to the current WebGL context.
+   * Binds a framebuffer to the current WebGL context.
    * This is very useful when, for example, rendering offscreen.
    * 
-   * @param {object} buffer: the frame buffer to be bound
+   * @param {object} buffer: the framebuffer to be bound
    */
   this.bindFramebuffer = function(buffer) {
     gl.bindFramebuffer(gl.FRAMEBUFFER, buffer);
@@ -411,15 +411,15 @@ Tilt.Engine = function() {
   };
   
   /**
-   * Initializes a frame buffer, with an attached texture and depth buffer.
-   * The returned object contains the frame buffer, texture, depth and stencil
+   * Initializes a framebuffer, with an attached texture and depth buffer.
+   * The returned object contains the framebuffer, texture, depth and stencil
    * objects as properties.
    * 
    * @param {number} width: the width of the buffer
    * @param {number} height: the height of the buffer
    */
   this.initOffscreenBuffer = function(width, height) {
-    // create the frame buffer and set the width and height as properties
+    // create the framebuffer and set the width and height as properties
     var framebuffer = gl.createFramebuffer();
     gl.bindFramebuffer(gl.FRAMEBUFFER, framebuffer);
     framebuffer.width = width;
