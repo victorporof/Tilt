@@ -47,28 +47,34 @@ Tilt.Extensions.WebGL = {
    * @param {object} contentWindow: optional, the window to draw
    */
   initDocumentImage: function(readyCallback, contentWindow) {
-    // Using a custom canvas element and a 2d context to draw the window
-    Tilt.Document.initCanvas(function initCallback(canvas) {
-      if (!contentWindow) {
-        contentWindow = window.content;
-      }
+    // use a canvas and a WebGL context to get the maximum texture size
+    Tilt.Document.initCanvas(function(temporary) {
+      // create the WebGL context
+      let gl = new Tilt.Engine().initWebGL(temporary);
+      let max_size = gl.getParameter(gl.MAX_TEXTURE_SIZE);
       
-      // FIXME: set the maximum texture size dynamically
-      var width = Tilt.Math.clamp(contentWindow.innerWidth + 
-                                  contentWindow.scrollMaxX, 0, 4096);
-                                        
-      var height = Tilt.Math.clamp(contentWindow.innerHeight + 
-                                   contentWindow.scrollMaxY, 0, 4096);
-                                         
-      canvas.width = width;
-      canvas.height = height;
-      
-      var context = canvas.getContext("2d");
-      context.drawWindow(contentWindow, 0, 0, width, height, "#fff");
-      
-      if ("function" === typeof(readyCallback)) {
-        readyCallback(canvas);
-      } 
+      // use a custom canvas element and a 2d context to draw the window
+      Tilt.Document.initCanvas(function(canvas) {
+        if (!contentWindow) {
+          contentWindow = window.content;
+        }
+        
+        let width = Tilt.Math.clamp(contentWindow.innerWidth + 
+                                    contentWindow.scrollMaxX, 0, max_size);
+                                    
+        let height = Tilt.Math.clamp(contentWindow.innerHeight + 
+                                     contentWindow.scrollMaxY, 0, max_size);
+                                     
+        canvas.width = width;
+        canvas.height = height;
+        
+        let context = canvas.getContext("2d");
+        context.drawWindow(contentWindow, 0, 0, width, height, "#fff");
+        
+        if ("function" === typeof(readyCallback)) {
+          readyCallback(canvas);
+        } 
+      }, false);
     }, false);
   }
 };
