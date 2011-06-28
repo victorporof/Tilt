@@ -84,7 +84,7 @@ Tilt.Arcball = function(width, height, radius) {
    */
   this.loop = function(frameDelta) {
     if ("undefined" === typeof(frameDelta)) {
-      frameDelta = 30;
+      frameDelta = 0.25;
     }
     else {
       // this should be in the (0..1) interval
