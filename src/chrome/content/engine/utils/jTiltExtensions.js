@@ -51,7 +51,7 @@ Tilt.Extensions.WebGL = {
     Tilt.Document.initCanvas(function(temporary) {
       // create the WebGL context
       let gl = new Tilt.Engine().initWebGL(temporary);
-      let max_size = gl.getParameter(gl.MAX_TEXTURE_SIZE);
+      let max_size = gl.getParameter(gl.MAX_TEXTURE_SIZE); // important stuff!
       
       // use a custom canvas element and a 2d context to draw the window
       Tilt.Document.initCanvas(function(canvas) {
@@ -59,18 +59,22 @@ Tilt.Extensions.WebGL = {
           contentWindow = window.content;
         }
         
-        let width = Tilt.Math.clamp(contentWindow.innerWidth + 
-                                    contentWindow.scrollMaxX, 0, max_size);
-                                    
-        let height = Tilt.Math.clamp(contentWindow.innerHeight + 
-                                     contentWindow.scrollMaxY, 0, max_size);
-                                     
+        // calculate the total width of the content window
+        let width = Tilt.Math.clamp(
+          contentWindow.innerWidth + contentWindow.scrollMaxX, 0, max_size);
+          
+        // calculate the total height of the content window
+        let height = Tilt.Math.clamp(
+          contentWindow.innerHeight + contentWindow.scrollMaxY, 0, max_size);
+          
         canvas.width = width;
         canvas.height = height;
         
+        // use the 2d context.drawWindow() magic
         let context = canvas.getContext("2d");
         context.drawWindow(contentWindow, 0, 0, width, height, "#fff");
-        
+
+        // run a ready callback function with the rendering passed as a param
         if ("function" === typeof(readyCallback)) {
           readyCallback(canvas);
         } 
