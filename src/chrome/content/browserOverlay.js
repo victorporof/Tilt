@@ -78,12 +78,12 @@ TiltChrome.BrowserOverlay = {
       // if the visualization is running destroy it
       that.destroy();
       // change the menu label to the default initialization string
-      tiltMenu.label =Tilt.StringBundle.get("menuItemInitialize.label");
+      tiltMenu.label = Tilt.StringBundle.get("menuItemInitialize.label");
     }
   },
   
   /**
-   * Destroys Tilt, removing the iframe from the stack.
+   * Destroys this object, removes the iframe and sets all members to null.
    */
   destroy: function() {  
     let that = this;
