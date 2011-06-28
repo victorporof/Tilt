@@ -55,35 +55,46 @@ Tilt.Document = {
    * @return {object} the newly created iframe or canvas
    */
   initCanvas: function(readyCallback, keepInStack, canvas_id, iframe_id) {
+    // set the canvas id and the iframe id, should they be necessary
     if ("undefined" === typeof(canvas_id)) {
       canvas_id = "tilt-canvas";
     }    
     if ("undefined" === typeof(iframe_id)) {
       iframe_id = "tilt-iframe";
     }
-    
+
+    // remember who we are
     var that = this;
 
+    // if inside a chrome environment
     if ("undefined" !== typeof(gBrowser)) {
+      // create an iframe to contain the canvas element
       var iframe = document.createElement("iframe");
-      iframe.setAttribute("style", "visibility: hidden;");
+      iframe.setAttribute("style", "visibility: hidden;"); // initially hidden
       iframe.id = iframe_id;
 
+      // only after the iframe has finished loading, continue logic
       iframe.addEventListener("load", function loadCallback() {
         iframe.removeEventListener("load", loadCallback, true);
-
+        
+        // run a ready callback function with the canvas and the parent iframe
         if ("function" === typeof(readyCallback)) {
           var canvas = iframe.contentDocument.getElementById(canvas_id);
           readyCallback(canvas, iframe);
         }
+        
+        // it is not obligatory to keep the iframe visible, remove if desired
+        // (this will also remove the canvas)
         if (!keepInStack) {
           that.remove(iframe);
         }
         else {
+          // assure the iframe is now visible
           iframe.setAttribute("style", "visibility: visible;");
         }
       }, true);
 
+      // the iframe will contain a simple html source containing a canvas
       iframe.setAttribute("src", 'data:text/html,\
       <html>\
         <body style="margin: 0px 0px 0px 0px;">\
@@ -91,25 +102,34 @@ Tilt.Document = {
         </body>\
       </html>');
 
+      // append the iframe to the browser parent node and return it
       return that.append(iframe);
     }
-    else {
+    else { 
+      // were in a plain web page, not a privileged environment, so just
+      // create the canvas directly and follow roughly the same logic
       var canvas = document.createElement("canvas");
-      canvas.setAttribute("style", "visibility: hidden;");
+      canvas.setAttribute("style", "visibility: hidden;"); // initially hidden
       canvas.id = canvas_id;
 
+      // no need for a load listener, append the canvas to the document now
       that.append(canvas);
 
+      // run a ready callback function with the canvas
       if ("function" === typeof(readyCallback)) {
         readyCallback(canvas);
       }
+
+      // it is not obligatory to keep the canvas visible, remove if desired
       if (!keepInStack) {
         that.remove(canvas);
       }
       else {
+        // assure the canvas is now visible
         canvas.setAttribute("style", "visibility: visible;");
       }
       
+      // in this case, we return the canvas, not the parent iframe
       return canvas;
     }
   },
@@ -124,9 +144,11 @@ Tilt.Document = {
    */
   append: function(element, node) {
     if (!node) {
+      // inside a chrome environment
       if ("undefined" !== typeof(gBrowser)) {
         node = gBrowser.selectedBrowser.parentNode;
       }
+      // not a privileged environment
       else {
         node = document.body;
       }
@@ -140,15 +162,13 @@ Tilt.Document = {
    * Removes an element from it's parent node.
    *
    * @param {object} iframe: the iframe to be removed
-   * @return {object} the same iframe
    */
   remove: function(element) {
     element.parentNode.removeChild(element);
-    return element;
   },
   
   /**
-   * Returns the current content document.
+   * Returns the current content document inside the active window.
    *
    * @return {object} the current content document
    */
@@ -172,9 +192,10 @@ Tilt.Document = {
       recursive(nodeCallback, dom ? dom : this.get(), 0);
     }
     
+    // used to calculate the maximum depth of a dom node
     var maxDepth = 0;
 
-    // Used internally for recursively traversing a document object model
+    // used internally for recursively traversing a document object model
     function recursive(nodeCallback, dom, depth) {
       for (var i = 0, len = dom.childNodes.length; i < len; i++) {
         var child = dom.childNodes[i];
@@ -183,11 +204,15 @@ Tilt.Document = {
           maxDepth = depth;
         }
         
+        // run the node callback function for each node, pass the depth, and 
+        // also continue the recursion with all the children
         nodeCallback(child, depth);
         recursive(nodeCallback, child, depth + 1);
       }
     }
     
+    // once we recursively traversed all the dom nodes, run a callback 
+    // function with the maximum depth and the entire dom passed as parameters
     if ("function" === typeof(readyCallback)) {
       readyCallback(maxDepth, dom ? dom : this.get());
     }
@@ -204,13 +229,16 @@ Tilt.Document = {
     var w = node.clientWidth;
     var h = node.clientHeight;
     
+    // if the node isn't the parent of everything
     if (node.offsetParent) {
+      // calculate the offset recursively
       do {
         x += node.offsetLeft;
         y += node.offsetTop;
     	} while (node = node.offsetParent);
     }
     else {
+      // just get the x and y coordinates of this node if available
       if (node.x) {
         x = node.x;
       }
@@ -219,6 +247,7 @@ Tilt.Document = {
       }
     }
     
+    // a bit more verbose than a simple array
     return {
       x: x,
       y: y,
@@ -301,6 +330,8 @@ Tilt.Image = {
                                fillColor, strokeColor, strokeWeight,
                                forceResize) {
                                  
+    // first check if the image is not already power of two, and continue to
+    // scale the image only if forceResize is true
     if (Tilt.Math.isPowerOfTwo(image.width) &&
         Tilt.Math.isPowerOfTwo(image.height) && !forceResize) {
 
@@ -310,24 +341,31 @@ Tilt.Image = {
       }
     }
 
+    // set the canvas id and the iframe id, should they be necessary
     var canvas_id = "tilt-canvas-" + image.src;
     var iframe_id = "tilt-iframe-" + image.src;
 
+    // create a canvas, then we will use a 2d context to scale the image
     Tilt.Document.initCanvas(function initCallback(canvas) {
+      // calculate the power of two dimensions for the npot image
       canvas.width = Tilt.Math.nextPowerOfTwo(image.width);
       canvas.height = Tilt.Math.nextPowerOfTwo(image.height);
+      
+      // do some 2d context magic
+      var context = canvas.getContext("2d");
 
-      var context = canvas.getContext('2d');
-
+      // optional fill (useful when handling transparent images)
       if (fillColor) {
         context.fillStyle = fillColor;
         context.fillRect(0, 0, canvas.width, canvas.height);
       }
       
+      // draw the image with power of two dimensions
       context.drawImage(image,
         0, 0, image.width, image.height,
         0, 0, canvas.width, canvas.height);
 
+      // optional stroke (useful when creating textures for edges)
       if (strokeColor) {
         if (strokeWeight <= 0) {
           strokeWeight = 1;
@@ -337,6 +375,7 @@ Tilt.Image = {
         context.strokeRect(0, 0, canvas.width, canvas.height);
       }
 
+      // run a ready callback function with the resized image as a parameter
       if ("function" === typeof(readyCallback)) {
         readyCallback(canvas);
       }
@@ -404,12 +443,14 @@ Tilt.Math = {
   hex2rgba: function(hex) {
     hex = hex.charAt(0) === "#" ? hex.substring(1) : hex;
 
+    // e.g. "f00"
     if (hex.length === 3) {
       var cr = hex.charAt(0);
       var cg = hex.charAt(1);
       var cb = hex.charAt(2);
       hex = cr + cr + cg + cg + cb + cb + "ff";
     }
+    // e.g. "f008" 
     else if (hex.length === 4) {
       var cr = hex.charAt(0);
       var cg = hex.charAt(1);
@@ -417,6 +458,7 @@ Tilt.Math = {
       var ca = hex.charAt(3);
       hex = cr + cr + cg + cg + cb + cb + ca + ca;
     }
+    // e.g. "rgba(255, 0, 0, 128)"
     else if (hex.match("^rgba") == "rgba") {
       var rgba = hex.substring(5, hex.length - 1).split(',');
       rgba[0] /= 255;
@@ -425,6 +467,7 @@ Tilt.Math = {
       rgba[3] /= 255;
       return rgba;
     }
+    // e.g. "rgb(255, 0, 0)"
     else if (hex.match("^rgb") == "rgb") {
       var rgba = hex.substring(4, hex.length - 1).split(',');
       rgba[0] /= 255;
@@ -497,15 +540,18 @@ Tilt.StringBundle = {
    * @return {string} the equivalent string from the bundle
    */
   get: function(string) {
+    // undesired, you should always pass a defined string for the bundle
     if ("undefined" === typeof(string)) {
       return "undefined";
     }
     
     var elem = document.getElementById(this.bundle);
     if (elem) {
+      // return the equivalent string from the bundle
       return elem.getString(string);
     }
     else {
+      // this should never happen when inside a chrome environment
       return string;
     }
   },
@@ -519,18 +565,22 @@ Tilt.StringBundle = {
    * @return {string} the equivalent formatted string from the bundle
    */
   format: function(string, args) {
+    // undesired, you should always pass a defined string for the bundle
     if ("undefined" === typeof(string)) {
       return "undefined";
     }
+    // undesired, you should always pass arguments when formatting strings
     if ("undefined" === typeof(args)) {
       return string;
     }
     
     var elem = document.getElementById(this.bundle);
     if (elem) {
+      // return the equivalent formatted string from the bundle
       return elem.getFormattedString(string, args);
     }
     else {
+      // this should never happen when inside a chrome environment
       return string + " " + args;
     }
   }
@@ -543,7 +593,7 @@ Tilt.Console = {
   
   /**
    * Logs a message to the console.
-   * If this is not inside an extension environment, an alert() is used
+   * If this is not inside an extension environment, an alert() is used.
    *
    * @param {string} aMessage: the message to be logged
    */
@@ -553,19 +603,22 @@ Tilt.Console = {
         aMessage = "undefined";
       }
       
+      // get the console service
       var consoleService = Components.classes["@mozilla.org/consoleservice;1"]
         .getService(Components.interfaces.nsIConsoleService);
     
+      // log the message
       consoleService.logStringMessage(aMessage);
     }
     catch(exception) {
+      // running from an unprivileged environment
       alert(aMessage);      
     }
   },
 
   /**
    * Logs an error to the console.
-   * If this is not inside an extension environment, an alert() is used
+   * If this is not inside an extension environment, an alert() is used.
    *
    * @param {string} aMessage: the message to be logged
    * @param {string} aSourceName: the URL of file with error. This will be a 
@@ -595,18 +648,23 @@ Tilt.Console = {
         aMessage = "undefined";
       }
       
+      // get the console service
       var consoleService = Components.classes["@mozilla.org/consoleservice;1"]
-      .getService(Components.interfaces.nsIConsoleService);
+        .getService(Components.interfaces.nsIConsoleService);
 
+      // also the script error service
       var scriptError = Components.classes["@mozilla.org/scripterror;1"]
         .createInstance(Components.interfaces.nsIScriptError);
 
+      // initialize a script error
       scriptError.init(aMessage, aSourceName, aSourceLine,
                        aLineNumber, aColumnNumber, aFlags, aCategory);
 
+      // log the error
       consoleService.logMessage(scriptError);
     }
     catch(exception) {
+      // running from an unprivileged environment
       alert(aMessage);
     }
   }
