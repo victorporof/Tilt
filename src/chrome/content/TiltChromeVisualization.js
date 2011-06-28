@@ -162,9 +162,9 @@ TiltChrome.Visualization = function(tilt, canvas, image, controller) {
           mesh.indices.push(i + 8,  i + 11, i + 4,  i + 8,  i + 4,  i + 7);
           
           // close the stack adding a back face if it's the first layer
-          if (depth === 1) {
-            mesh.indices.push(11, 10, 5, 11, 5, 4);
-          }
+          // if (depth === 1) {
+          //   mesh.indices.push(11, 10, 5, 11, 5, 4);
+          // }
           
           // compute the wireframe indices
           mesh.wireframeIndices.push(
@@ -188,7 +188,7 @@ TiltChrome.Visualization = function(tilt, canvas, image, controller) {
     }
     
     // set the transformations at initialization
-    transforms.translation = [0, -100, -700];
+    transforms.translation = [0, -100, -400];
     transforms.rotation = [0, 0, 0, 1];
     tilt.strokeWeight(2);
   };
