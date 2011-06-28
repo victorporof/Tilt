@@ -188,7 +188,7 @@ TiltChrome.Visualization = function(tilt, canvas, image, controller) {
     }
     
     // set the transformations at initialization
-    transforms.translation = [0, -100, -400];
+    transforms.translation = [0, 0, 0];
     transforms.rotation = [0, 0, 0, 1];
     tilt.strokeWeight(2);
   };
@@ -239,8 +239,8 @@ TiltChrome.Visualization = function(tilt, canvas, image, controller) {
   this.renderVisualization = function() {
     // apply the necessary transformations to the model view
     tilt.translate(transforms.translation[0] + tilt.width / 2,
-                   transforms.translation[1] + tilt.height / 2,
-                   transforms.translation[2]);
+                   transforms.translation[1] + tilt.height / 2 - 50,
+                   transforms.translation[2]                   - 400);
                    
     tilt.transform(quat4.toMat4(transforms.rotation));
     
@@ -257,15 +257,21 @@ TiltChrome.Visualization = function(tilt, canvas, image, controller) {
   
   /**
    * Delegate translation method, used by the controller.
+   *
+   * @param {number} x: the new translation on the x axis
+   * @param {number} y: the new translation on the y axis
+   * @param {number} z: the new translation on the z axis
    */
   this.setTranslation = function(x, y, z) {
     transforms.translation[0] = x;
     transforms.translation[1] = y;
     transforms.translation[2] = z;
   };
-    
+  
   /**
    * Delegate rotation method, used by the controller.
+   *
+   * @param {object} quaternion: the rotation quaternion, as [x, y, z, w]
    */
   this.setRotation = function(quaternion) {
     quat4.set(quaternion, transforms.rotation);
@@ -273,6 +279,9 @@ TiltChrome.Visualization = function(tilt, canvas, image, controller) {
   
   /**
    * Override the resize function to handle the event.
+   *
+   * @param {number} width: the new canvas width
+   * @param {number} height: the new canvas height
    */
   this.resize = function(width, height) {
     controller.width = width;
@@ -281,6 +290,9 @@ TiltChrome.Visualization = function(tilt, canvas, image, controller) {
   
   /**
    * Override the mousePressed function to handle the event.
+   *
+   * @param {number} x: the current horizontal coordinate of the mouse
+   * @param {number} y: the current vertical coordinate of the mouse
    */
   tilt.mousePressed = function(x, y) {
     if ("function" === typeof(controller.mousePressed)) {
@@ -290,6 +302,9 @@ TiltChrome.Visualization = function(tilt, canvas, image, controller) {
 
   /**
    * Override the mouseReleased function to handle the event.
+   *
+   * @param {number} x: the current horizontal coordinate of the mouse
+   * @param {number} y: the current vertical coordinate of the mouse
    */
   tilt.mouseReleased = function(x, y) {
     if ("function" === typeof(controller.mouseReleased)) {
@@ -299,6 +314,9 @@ TiltChrome.Visualization = function(tilt, canvas, image, controller) {
 
   /**
    * Override the mouseClicked function to handle the event.
+   *
+   * @param {number} x: the current horizontal coordinate of the mouse
+   * @param {number} y: the current vertical coordinate of the mouse
    */
   tilt.mouseClicked = function(x, y) {
     if ("function" === typeof(controller.mouseClicked)) {
@@ -308,6 +326,9 @@ TiltChrome.Visualization = function(tilt, canvas, image, controller) {
   
   /**
    * Override the mouseMoved function to handle the event.
+   *
+   * @param {number} x: the current horizontal coordinate of the mouse
+   * @param {number} y: the current vertical coordinate of the mouse
    */
   tilt.mouseMoved = function(x, y) {
     if ("function" === typeof(controller.mouseMoved)) {
@@ -316,7 +337,20 @@ TiltChrome.Visualization = function(tilt, canvas, image, controller) {
   };
   
   /**
+   * Override the mouseScroll function to handle the event.
+   *
+   * @param {number} scroll: the mouse wheel direction and speed
+   */
+  tilt.mouseScroll = function(scroll) {
+    if ("function" === typeof(controller.mouseScroll)) {
+      controller.mouseScroll(scroll);
+    }
+  };
+  
+  /**
    * Override the keyPressed function to handle the event.
+   *
+   * TODO: implementation
    */
   tilt.keyPressed = function(key) {
     if ("function" === typeof(controller.keyPressed)) {
@@ -325,7 +359,7 @@ TiltChrome.Visualization = function(tilt, canvas, image, controller) {
   };
     
   /**
-   * Destroys this object.
+   * Destroys this object and sets all members to null.
    *
    * @param {function} readyCallback: function to be called when finished
    */
