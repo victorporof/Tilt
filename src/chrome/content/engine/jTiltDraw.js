@@ -96,8 +96,7 @@ Tilt.Create = function(width, height, readyCallback) {
  * Tilt.Draw constructor.
  * When created, nothing is loaded (no shaders, no matrices, no buffers..).
  * Use the initialize() function to perform mandatory initialization of 
- * shaders and other objects required for drawing.
- *
+ * shaders, vertex buffers, events and other objects required for drawing.
  * Override these functions to handle events:
  *
  *      tilt.resize = function(width, height) { };
@@ -107,6 +106,7 @@ Tilt.Create = function(width, height, readyCallback) {
  *      tilt.mouseMoved = function(mouseX, mouseY) { };
  *      tilt.mouseOver = function(mouseX, mouseY) { };
  *      tilt.mouseOut = function(mouseX, mouseY) { };
+ *      tilt.mouseScroll = function(scroll) { };
  * 
  * @param {object} canvas: the canvas element used for rendering
  * @param {function} successCallback: to be called if gl initialization worked
@@ -114,7 +114,7 @@ Tilt.Create = function(width, height, readyCallback) {
  * @return {object} the created object
  */ 
 Tilt.Draw = function(canvas, failCallback, successCallback) {
-
+  
   /**
    * By convention, we make a private "that" variable.
    */
@@ -413,6 +413,7 @@ Tilt.Draw = function(canvas, failCallback, successCallback) {
     that.mouseMoved = function(mouseX, mouseY) { };
     that.mouseOver = function(mouseX, mouseY) { };
     that.mouseOut = function(mouseX, mouseY) { };
+    that.mouseScroll = function(scroll) { };
     
     // handle the resize event
     document.onresize = function(e) {
@@ -453,7 +454,12 @@ Tilt.Draw = function(canvas, failCallback, successCallback) {
     canvas.onmouseout = function(e) {
       that.mouseOut(that.mouseX, that.mouseY);
     }
-        
+    
+    // handle the onmousescroll event
+    canvas.addEventListener('DOMMouseScroll', function(e) {
+      that.mouseScroll(e.detail);
+    }, false);
+    
     // call the ready callback function if it was passed as a valid parameter
     if ("function" === typeof(readyCallback)) {
       readyCallback();
@@ -575,7 +581,7 @@ Tilt.Draw = function(canvas, failCallback, successCallback) {
   /**
    * Sets a custom projection matrix.
    *
-   * @param {object} matrix the custom projection matrix to be used
+   * @param {object} matrix: the custom projection matrix to be used
    */
   this.projection = function(matrix) {
     engine.viewport(canvas.width, canvas.height);
@@ -980,7 +986,7 @@ Tilt.Draw = function(canvas, failCallback, successCallback) {
   };
   
   /**
-   * Destroys this object.
+   * Destroys this object and sets all members to null.
    */
   this.destroy = function() {
     engine.destroy();
