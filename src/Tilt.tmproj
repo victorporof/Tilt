@@ -3,7 +3,7 @@
 <plist version="1.0">
 <dict>
 	<key>currentDocument</key>
-	<string>chrome/content/engine/utils/jTiltControllers.js</string>
+	<string>chrome/content/TiltChromeVisualization.js</string>
 	<key>documents</key>
 	<array>
 		<dict>
@@ -26,14 +26,14 @@
 			<key>caret</key>
 			<dict>
 				<key>column</key>
-				<integer>23</integer>
+				<integer>50</integer>
 				<key>line</key>
-				<integer>49</integer>
+				<integer>64</integer>
 			</dict>
 			<key>firstVisibleColumn</key>
 			<integer>0</integer>
 			<key>firstVisibleLine</key>
-			<integer>29</integer>
+			<integer>12</integer>
 		</dict>
 		<key>chrome/content/TiltChromeVisualization.js</key>
 		<dict>
@@ -42,40 +42,54 @@
 				<key>column</key>
 				<integer>2</integer>
 				<key>line</key>
-				<integer>262</integer>
+				<integer>194</integer>
 			</dict>
 			<key>firstVisibleColumn</key>
 			<integer>0</integer>
 			<key>firstVisibleLine</key>
-			<integer>237</integer>
+			<integer>0</integer>
 		</dict>
 		<key>chrome/content/browserOverlay.js</key>
 		<dict>
 			<key>caret</key>
 			<dict>
 				<key>column</key>
-				<integer>33</integer>
+				<integer>18</integer>
 				<key>line</key>
-				<integer>65</integer>
+				<integer>99</integer>
 			</dict>
 			<key>firstVisibleColumn</key>
 			<integer>0</integer>
 			<key>firstVisibleLine</key>
-			<integer>59</integer>
+			<integer>60</integer>
+		</dict>
+		<key>chrome/content/browserOverlay.xul</key>
+		<dict>
+			<key>caret</key>
+			<dict>
+				<key>column</key>
+				<integer>0</integer>
+				<key>line</key>
+				<integer>23</integer>
+			</dict>
+			<key>firstVisibleColumn</key>
+			<integer>0</integer>
+			<key>firstVisibleLine</key>
+			<integer>29</integer>
 		</dict>
 		<key>chrome/content/engine/jTiltDraw.js</key>
 		<dict>
 			<key>caret</key>
 			<dict>
 				<key>column</key>
-				<integer>2</integer>
+				<integer>28</integer>
 				<key>line</key>
-				<integer>570</integer>
+				<integer>576</integer>
 			</dict>
 			<key>firstVisibleColumn</key>
 			<integer>0</integer>
 			<key>firstVisibleLine</key>
-			<integer>619</integer>
+			<integer>960</integer>
 		</dict>
 		<key>chrome/content/engine/jTiltEngine.js</key>
 		<dict>
@@ -84,100 +98,82 @@
 				<key>column</key>
 				<integer>2</integer>
 				<key>line</key>
-				<integer>47</integer>
+				<integer>811</integer>
 			</dict>
 			<key>firstVisibleColumn</key>
 			<integer>0</integer>
 			<key>firstVisibleLine</key>
-			<integer>26</integer>
+			<integer>792</integer>
 		</dict>
 		<key>chrome/content/engine/lib/glMatrix-0.9.5.js</key>
 		<dict>
 			<key>caret</key>
 			<dict>
 				<key>column</key>
-				<integer>7</integer>
+				<integer>9</integer>
 				<key>line</key>
-				<integer>1692</integer>
+				<integer>1783</integer>
 			</dict>
-			<key>columnSelection</key>
-			<false/>
 			<key>firstVisibleColumn</key>
 			<integer>0</integer>
 			<key>firstVisibleLine</key>
-			<integer>1671</integer>
-			<key>selectFrom</key>
+			<integer>0</integer>
+		</dict>
+		<key>chrome/content/engine/shaders/jTiltShaders.js</key>
+		<dict>
+			<key>caret</key>
 			<dict>
 				<key>column</key>
-				<integer>8</integer>
+				<integer>53</integer>
 				<key>line</key>
-				<integer>1692</integer>
+				<integer>73</integer>
 			</dict>
-			<key>selectTo</key>
-			<dict>
-				<key>column</key>
-				<integer>7</integer>
-				<key>line</key>
-				<integer>1692</integer>
-			</dict>
+			<key>firstVisibleColumn</key>
+			<integer>0</integer>
+			<key>firstVisibleLine</key>
+			<integer>77</integer>
 		</dict>
 		<key>chrome/content/engine/utils/jTiltControllers.js</key>
 		<dict>
 			<key>caret</key>
 			<dict>
 				<key>column</key>
-				<integer>8</integer>
+				<integer>4</integer>
 				<key>line</key>
-				<integer>90</integer>
+				<integer>134</integer>
 			</dict>
-			<key>columnSelection</key>
-			<false/>
 			<key>firstVisibleColumn</key>
 			<integer>0</integer>
 			<key>firstVisibleLine</key>
-			<integer>74</integer>
-			<key>selectFrom</key>
-			<dict>
-				<key>column</key>
-				<integer>42</integer>
-				<key>line</key>
-				<integer>90</integer>
-			</dict>
-			<key>selectTo</key>
-			<dict>
-				<key>column</key>
-				<integer>8</integer>
-				<key>line</key>
-				<integer>90</integer>
-			</dict>
+			<integer>130</integer>
 		</dict>
 		<key>chrome/content/engine/utils/jTiltExtensions.js</key>
 		<dict>
 			<key>caret</key>
 			<dict>
 				<key>column</key>
-				<integer>35</integer>
+				<integer>2</integer>
 				<key>line</key>
-				<integer>60</integer>
+				<integer>79</integer>
 			</dict>
 			<key>firstVisibleColumn</key>
 			<integer>0</integer>
 			<key>firstVisibleLine</key>
-			<integer>29</integer>
+			<integer>37</integer>
 		</dict>
 		<key>chrome/content/engine/utils/jTiltUtils.js</key>
 		<dict>
 			<key>caret</key>
 			<dict>
 				<key>column</key>
-				<integer>39</integer>
+				<integer>14</integer>
 				<key>line</key>
-				<integer>499</integer>
+				<integer>1</integer>
 			</dict>
 			<key>firstVisibleColumn</key>
 			<integer>0</integer>
 			<key>firstVisibleLine</key>
-			<integer>489</integer>
+			<integer>0</integer>
 		</dict>
 		<key>testunits/testTiltEngine.js</key>
 		<dict>
@@ -213,16 +209,18 @@
 		<string>chrome/content/TiltChromeController.js</string>
 		<string>chrome/content/engine/utils/jTiltExtensions.js</string>
 		<string>chrome/content/engine/utils/jTiltControllers.js</string>
-		<string>chrome/content/engine/lib/glMatrix-0.9.5.js</string>
 		<string>chrome/content/engine/jTiltDraw.js</string>
-		<string>chrome/content/browserOverlay.js</string>
 		<string>chrome/content/engine/utils/jTiltUtils.js</string>
 		<string>chrome/content/TiltChromeVisualization.js</string>
+		<string>chrome/content/browserOverlay.js</string>
+		<string>chrome/content/browserOverlay.xul</string>
 		<string>chrome/content/engine/jTiltEngine.js</string>
+		<string>chrome/content/engine/lib/glMatrix-0.9.5.js</string>
+		<string>chrome/content/engine/shaders/jTiltShaders.js</string>
 	</array>
 	<key>showFileHierarchyDrawer</key>
 	<true/>
 	<key>windowFrame</key>
-	<string>{{718, 68}, {668, 810}}</string>
+	<string>{{591, 68}, {668, 810}}</string>
 </dict>
 </plist>
