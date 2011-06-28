@@ -1,5 +1,3 @@
-## TODO
-
 ### soon
 * implement keyboard controls
 * add menu keyboard shortcuts
