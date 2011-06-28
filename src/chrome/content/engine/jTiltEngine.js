@@ -52,7 +52,7 @@ Tilt.Engine = function() {
   var program = null;
   
   /**
-   * Initializes a WebGL context and calls fail or success callback functions.
+   * Initializes a WebGL context and runs fail or success callback functions.
    *
    * @param {object} canvas: the canvas used to create the WebGL context
    * @param {function} successCallback: to be called if initialization worked
@@ -811,7 +811,7 @@ Tilt.Engine = function() {
   };
   
   /**
-   * Destroys this object.
+   * Destroys this object and sets all members to null.
    */
   this.destroy = function() {
     gl = null;
