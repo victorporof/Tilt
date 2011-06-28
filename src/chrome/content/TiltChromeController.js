@@ -61,9 +61,13 @@ TiltChrome.Controller.MouseAndKeyboard = function() {
    */
   this.loop = function() {
     if (mouseDragged) {
-      this.visualization.setRotation(
-        arcball.mouseDragged(mouseX, mouseY, this.frameDelta));
+      arcball.mouseDragged(mouseX, mouseY);
     }
+    
+    var coord = arcball.loop(this.frameDelta);
+    
+    this.visualization.setRotation(coord.rotation);
+    this.visualization.setTranslation(0, 0, coord.zoom);
   };
 
   /**
@@ -98,6 +102,15 @@ TiltChrome.Controller.MouseAndKeyboard = function() {
     mouseY = y;
   };
 
+  /**
+   * Called when the the mouse wheel is used.
+   *
+   * @param {number} scroll: the mouse wheel direction and speed
+   */
+  this.mouseScroll = function(scroll) {
+    arcball.mouseScroll(scroll);
+  };
+  
   /**
    * TODO: implementation
    */  
