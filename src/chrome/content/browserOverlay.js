@@ -97,7 +97,7 @@ TiltChrome.BrowserOverlay = {
       that.iframe = null;
 
       // collect any remaining garbage
-      Components.Utils.forceGC();
+      Components.utils.forceGC();
     });
   }
 };
