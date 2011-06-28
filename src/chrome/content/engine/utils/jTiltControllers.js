@@ -49,6 +49,9 @@ Tilt.Arcball = function(width, height, radius) {
    */
   var mouseX = 0;
   var mouseY = 0;
+  var mouseDragX = 0;
+  var mouseDragY = 0;
+  var mouseScroll = 0; // additionally, this implementation also handles zoom
   
   /**
    * The vectors representing the mouse coordinates mapped on the arcball
@@ -65,35 +68,35 @@ Tilt.Arcball = function(width, height, radius) {
   var lastRot = quat4.create([0, 0, 0, 1]);
   var deltaRot = quat4.create([0, 0, 0, 1]);
   var currentRot = quat4.create([0, 0, 0, 1]);
-    
-  /**
-   * Function handling the mousePressed event.
-   *
-   * @param {number} x: the current horizontal coordinate of the mouse
-   * @param {number} y: the current vertical coordinate of the mouse
-   */
-  this.mousePressed = function(x, y) {
-    mouseX = x;
-    mouseY = y;
-
-    that.pointToSphere(mouseX, mouseY, startVec);
-    quat4.set(currentRot, lastRot);
-  };
   
   /**
-   * Function handling the mouseDragged event.
-   *
-   * @param {number} x: the current horizontal coordinate of the mouse
-   * @param {number} y: the current vertical coordinate of the mouse
-   * @param {number} frameDelta: optional, pass deltas for smooth animations
+   * The zoom, calculated using mouse scroll deltas.
    */
-  this.mouseDragged = function(x, y, frameDelta) {
+  var currentZoom = 0;
+
+  /**
+   * Call this function whenever you need the updated rotation quaternion
+   * and the zoom amount. These values will be returned as "rotation" & "zoom"
+   * properties inside an object.
+   *
+   * @param {number} frameDelta: optional, pass deltas for smooth animations
+   * @return {object} the rotation quaternion and the zoom amount
+   */
+  this.loop = function(frameDelta) {
     if ("undefined" === typeof(frameDelta)) {
       frameDelta = 30;
     }
+    else {
+      // this should be in the (0..1) interval
+      frameDelta = Tilt.Math.clamp(frameDelta / 100, 0.01, 0.99);
+    }
     
-    mouseX += (x - mouseX) * Tilt.Math.clamp(frameDelta / 30, 0.01, 0.99);
-    mouseY += (y - mouseY) * Tilt.Math.clamp(frameDelta / 30, 0.01, 0.99);    
+	  // update the zoom based on the mouse scroll
+    currentZoom += (mouseScroll - currentZoom) * frameDelta;
+        
+    // update the mouse coordinates
+    mouseX += (mouseDragX - mouseX) * frameDelta;
+    mouseY += (mouseDragY - mouseY) * frameDelta;    
     that.pointToSphere(mouseX, mouseY, endVec);
     
 		// compute the vector perpendicular to the start & end vectors
@@ -118,7 +121,47 @@ Tilt.Arcball = function(width, height, radius) {
 	  }
 	  
 	  // calculate the current rotation using the delta quaternion
-    return quat4.multiply(lastRot, deltaRot, currentRot);
+    return {
+      rotation: quat4.multiply(lastRot, deltaRot, currentRot),
+      zoom: currentZoom
+    };
+  };
+  
+  /**
+   * Function handling the mousePressed event.
+   * Call this when the mouse was pressed.
+   *
+   * @param {number} x: the current horizontal coordinate of the mouse
+   * @param {number} y: the current vertical coordinate of the mouse
+   */
+  this.mousePressed = function(x, y) {
+    mouseX = x;
+    mouseY = y;
+    
+    that.pointToSphere(mouseX, mouseY, startVec);
+    quat4.set(currentRot, lastRot);
+  };
+  
+  /**
+   * Function handling the mouseDragged event.
+   * Call this when the mouse was dragged.
+   *
+   * @param {number} x: the current horizontal coordinate of the mouse
+   * @param {number} y: the current vertical coordinate of the mouse
+   */
+  this.mouseDragged = function(x, y) {
+    mouseDragX = x;
+    mouseDragY = y;
+  };
+  
+  /**
+   * Function handling the mouseScroll event.
+   * Call this when the mouse wheel was scrolled.
+   *
+   * @param {number} scroll: the mouse wheel direction and speed
+   */
+  this.mouseScroll = function(scroll) {
+    mouseScroll -= scroll * 10;
   };
   
   /**
