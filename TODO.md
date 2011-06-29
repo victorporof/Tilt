@@ -1,6 +1,4 @@
 ### Soon
-* implement keyboard controls
-* add menu keyboard shortcuts
 * handle page load, tab closed and other events
 
 ### Next weeks
