@@ -46,7 +46,7 @@ TiltChrome.BrowserOverlay = {
    * Initializes Tilt.
    * @param {object XULCommandEvent} aEvent: the event firing this function
    */
-  initialize: function(aEvent) { 
+  initialize: function(aEvent) {
     // get the Tilt menu item, to change the title if the visualization is on
     let tiltMenu = document.getElementById("tilt-menuItemInitialize");  
     let that = this;
@@ -77,16 +77,19 @@ TiltChrome.BrowserOverlay = {
     else {
       // if the visualization is running destroy it
       that.destroy();
-      // change the menu label to the default initialization string
-      tiltMenu.label = Tilt.StringBundle.get("menuItemInitialize.label");
     }
   },
   
   /**
    * Destroys this object, removes the iframe and sets all members to null.
    */
-  destroy: function() {  
+  destroy: function() {
+    // get the Tilt menu item, to change the title if the visualization is off
+    let tiltMenu = document.getElementById("tilt-menuItemInitialize");  
     let that = this;
+    
+    // change the menu label to the default initialization string
+    tiltMenu.label = Tilt.StringBundle.get("menuItemInitialize.label");
     
     // issue a destroy call through all the visualization children
     that.visualization.destroy(function() {

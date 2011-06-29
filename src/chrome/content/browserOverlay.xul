@@ -39,7 +39,12 @@
     <stringbundle id="tilt-string-bundle"
                   src="chrome://tilt/locale/browserOverlay.properties"/>
   </stringbundleset>
-
+  
+  <keyset>
+    <key id="tilt-menu-key" modifiers="accel shift" key="I"
+         oncommand="TiltChrome.BrowserOverlay.initialize(event);"/>
+  </keyset>
+  
   <menupopup id="menu_ToolsPopup">
     <menu class="menu-iconic"
           id="tilt-menu"
@@ -50,6 +55,7 @@
         <menuitem id="tilt-menuItemInitialize"
                   label="&tilt.menuItemInitialize.label;"
                   accesskey="&tilt.menuItemInitialize.accesskey;"
+                  key="tilt-menu-key"
                   oncommand="TiltChrome.BrowserOverlay.initialize(event);"/>
       </menupopup>
     </menu>
