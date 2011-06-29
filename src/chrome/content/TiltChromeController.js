@@ -155,7 +155,7 @@ TiltChrome.Controller.MouseAndKeyboard = function() {
   };
   
   /**
-   * Overriding the keyReleased function to handle the event.
+   * Called when a key is released.
    *
    * @param {string} char: the key character as a string
    * @param {number} code: the corresponding character code for the key
