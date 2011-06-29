@@ -72,20 +72,23 @@ Tilt.Document = {
       var iframe = document.createElement("iframe");
       iframe.setAttribute("style", "visibility: hidden;"); // initially hidden
       iframe.id = iframe_id;
-
+      
       // only after the iframe has finished loading, continue logic
       iframe.addEventListener("load", function loadCallback() {
         iframe.removeEventListener("load", loadCallback, true);
         
+        // get the canvas element from the iframe
+        var canvas = iframe.contentDocument.getElementById(canvas_id);
+        
         // run a ready callback function with the canvas and the parent iframe
         if ("function" === typeof(readyCallback)) {
-          var canvas = iframe.contentDocument.getElementById(canvas_id);
           readyCallback(canvas, iframe);
         }
         
         // it is not obligatory to keep the iframe visible, remove if desired
         // (this will also remove the canvas)
         if (!keepInStack) {
+          that.remove(canvas);
           that.remove(iframe);
         }
         else {
