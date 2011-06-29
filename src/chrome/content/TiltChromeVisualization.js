@@ -78,42 +78,6 @@ TiltChrome.Visualization = function(tilt, canvas, image, controller) {
    * The initialization logic.
    */
   tilt.setup = function() {
-    // set a reference in the controller for this visualization
-    controller.visualization = that;
-    controller.width = tilt.width;
-    controller.height = tilt.height;
-    
-    // bind the common mouse and keyboard events to the controller
-    if ("function" === typeof(controller.mousePressed)) {
-      tilt.mousePressed = controller.mousePressed;
-    }
-    if ("function" === typeof(controller.mouseReleased)) {
-      tilt.mouseReleased = controller.mouseReleased;
-    }
-    if ("function" === typeof(controller.mouseClicked)) {
-      tilt.mouseClicked = controller.mouseClicked;
-    }
-    if ("function" === typeof(controller.mouseMoved)) {
-      tilt.mouseMoved = controller.mouseMoved;
-    }
-    if ("function" === typeof(controller.mouseScroll)) {
-      tilt.mouseScroll = controller.mouseScroll;
-    }
-    if ("function" === typeof(controller.keyPressed)) {
-      tilt.keyPressed = controller.keyPressed;
-    }
-    if ("function" === typeof(controller.keyTyped)) {
-      tilt.keyReleased = controller.keyTyped;
-    }
-    if ("function" === typeof(controller.keyReleased)) {
-      tilt.keyReleased = controller.keyReleased;
-    }
-    
-    // call the init function on the controller if available
-    if ("function" === typeof(controller.init)) {
-      controller.init();
-    }
-    
     // convert the dom image to a texture
     tilt.initTexture(image, function(texture) {
       dom = texture;
@@ -217,6 +181,42 @@ TiltChrome.Visualization = function(tilt, canvas, image, controller) {
     transforms.translation = [0, 0, 0];
     transforms.rotation = [0, 0, 0, 1];
     tilt.strokeWeight(2);
+    
+    // set a reference in the controller for this visualization
+    controller.visualization = that;
+    controller.width = tilt.width;
+    controller.height = tilt.height;
+    
+    // bind the common mouse and keyboard events to the controller
+    if ("function" === typeof(controller.mousePressed)) {
+      tilt.mousePressed = controller.mousePressed;
+    }
+    if ("function" === typeof(controller.mouseReleased)) {
+      tilt.mouseReleased = controller.mouseReleased;
+    }
+    if ("function" === typeof(controller.mouseClicked)) {
+      tilt.mouseClicked = controller.mouseClicked;
+    }
+    if ("function" === typeof(controller.mouseMoved)) {
+      tilt.mouseMoved = controller.mouseMoved;
+    }
+    if ("function" === typeof(controller.mouseScroll)) {
+      tilt.mouseScroll = controller.mouseScroll;
+    }
+    if ("function" === typeof(controller.keyPressed)) {
+      tilt.keyPressed = controller.keyPressed;
+    }
+    if ("function" === typeof(controller.keyTyped)) {
+      tilt.keyReleased = controller.keyTyped;
+    }
+    if ("function" === typeof(controller.keyReleased)) {
+      tilt.keyReleased = controller.keyReleased;
+    }
+    
+    // call the init function on the controller if available
+    if ("function" === typeof(controller.init)) {
+      controller.init();
+    }
   };
   
   /**
