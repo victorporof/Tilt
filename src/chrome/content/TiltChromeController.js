@@ -61,8 +61,8 @@ TiltChrome.Controller.MouseAndKeyboard = function() {
    * Retain the keyboard state.
    */
   var keyPressed = false;
-  var keyChar = "";
-  var keyCode = 0;
+  var keyChar = [];
+  var keyCode = [];
     
   /**
    * Function called automatically by the visualization at the setup().
@@ -82,16 +82,16 @@ TiltChrome.Controller.MouseAndKeyboard = function() {
     }
     
     if (keyPressed) {
-      if (keyCode === 37 || keyCode === 65) {
+      if (keyCode[37] || keyCode[65]) {
         translationX += 5;
       }
-      else if (keyCode === 39 || keyCode === 68) {
+      if (keyCode[39] || keyCode[68]) {
         translationX -= 5;
       }
-      else if (keyCode === 38 || keyCode === 87) {
+      if (keyCode[38] || keyCode[87]) {
         translationY += 5;
       }
-      else if (keyCode === 40 || keyCode === 83) {
+      if (keyCode[40] || keyCode[83]) {
         translationY -= 5;
       }
     }
@@ -134,6 +134,25 @@ TiltChrome.Controller.MouseAndKeyboard = function() {
   };
   
   /**
+   * Called when the the mouse enters the visualization bounds.
+   *
+   * @param {number} x: the current horizontal coordinate of the mouse
+   * @param {number} y: the current vertical coordinate of the mouse
+   */
+  this.mouseOver = function(x, y) {
+  };
+  
+  /**
+   * Called when the the mouse leaves the visualization bounds.
+   *
+   * @param {number} x: the current horizontal coordinate of the mouse
+   * @param {number} y: the current vertical coordinate of the mouse
+   */
+  this.mouseOut = function(x, y) {
+    mouseDragged = false;
+  };
+  
+  /**
    * Called when the the mouse wheel is used.
    *
    * @param {number} scroll: the mouse wheel direction and speed
@@ -150,8 +169,8 @@ TiltChrome.Controller.MouseAndKeyboard = function() {
    */
   this.keyPressed = function(char, code) {
     keyPressed = true;
-    keyChar = char;
-    keyCode = code;
+    keyChar[char] = true;
+    keyCode[code] = true;
   };
   
   /**
@@ -162,10 +181,10 @@ TiltChrome.Controller.MouseAndKeyboard = function() {
    */
   this.keyReleased = function(char, code) {
     keyPressed = false;
-    keyChar = char;
-    keyCode = code;
+    keyChar[char] = false;
+    keyCode[code] = false;
     
-    if (keyCode === 27) {
+    if (code === 27) {
       TiltChrome.BrowserOverlay.destroy();
     }
   };
