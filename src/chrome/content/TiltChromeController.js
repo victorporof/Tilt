@@ -42,27 +42,27 @@ TiltChrome.Controller.MouseAndKeyboard = function() {
   /**
    * Arcball used to control the visualization using the mouse.
    */
-  var arcball = null;
+  let arcball = null;
   
   /**
    * Visualization translation on the X and Y axis.
    */
-  var translationX = 0;
-  var translationY = 0;
+  let translationX = 0;
+  let translationY = 0;
 
   /**
    * Retain the mouse drag state and position, to manipulate the arcball.
    */  
-  var mouseDragged = false;
-  var mouseX = 0;
-  var mouseY = 0;
+  let mouseDragged = false;
+  let mouseX = 0;
+  let mouseY = 0;
   
   /**
    * Retain the keyboard state.
    */
-  var keyPressed = false;
-  var keyChar = [];
-  var keyCode = [];
+  let keyPressed = false;
+  let keyChar = [];
+  let keyCode = [];
     
   /**
    * Function called automatically by the visualization at the setup().
@@ -96,7 +96,7 @@ TiltChrome.Controller.MouseAndKeyboard = function() {
       }
     }
     
-    var coord = arcball.loop(frameDelta);
+    let coord = arcball.loop(frameDelta);
     this.visualization.setRotation(coord.rotation);
     this.visualization.setTranslation(translationX, translationY, coord.zoom);
   };
