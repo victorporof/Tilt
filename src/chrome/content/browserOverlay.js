@@ -88,9 +88,6 @@ TiltChrome.BrowserOverlay = {
       // remove the iframe from the browser stack
       Tilt.Document.remove(that.iframe);
       that.iframe = null;
-
-      // collect any remaining garbage
-      Components.utils.forceGC();
     });
   }
 };
