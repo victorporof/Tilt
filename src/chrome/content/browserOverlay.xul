@@ -41,7 +41,7 @@
   </stringbundleset>
   
   <keyset>
-    <key id="tilt-menu-key" modifiers="accel shift" key="I"
+    <key id="tilt-menu-key" modifiers="accel shift" key="L"
          oncommand="TiltChrome.BrowserOverlay.initialize(event);"/>
   </keyset>
   
