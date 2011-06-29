@@ -59,9 +59,9 @@ TiltChrome.BrowserOverlay = {
       // use an extension to get the image representation of the document
       Tilt.Extensions.WebGL.initDocumentImage(function(image) {
         // set the width and height to mach the content window dimensions
-        var width = gBrowser.contentWindow.innerWidth;
-        var height = gBrowser.contentWindow.innerHeight;
-
+        var width = window.content.innerWidth;
+        var height = window.content.innerHeight;
+        
         // initialize a Tilt environment: a canvas element inside an iframe
         Tilt.Create(width, height, function(tilt, canvas, iframe) {
           // remember the iframe so that it can be destroyed later
