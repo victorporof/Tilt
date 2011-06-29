@@ -43,22 +43,23 @@ TiltChrome.Visualization = function(tilt, canvas, image, controller) {
   /**
    * By convention, we make a private "that" variable.
    */
-  var that = this;
+  let that = this;
   
   /**
    * A texture representing the contents of a document object model window.
    */
-  var dom = null;
+  let dom = null;
   
   /**
    * A background texture.
    */
-  var background = null;
+  let background = null;
   
   /**
    * The combined mesh representing the document visualization.
    */
-  var mesh = {
+  let mesh = {
+    thickness: 12,
     vertices: [],
     texCoord: [],
     indices: [],
@@ -69,7 +70,7 @@ TiltChrome.Visualization = function(tilt, canvas, image, controller) {
    * Scene transformations, expressing translation, rotation etc.
    * Modified by events in the controller through delegate functions.
    */
-  var transforms = {
+  let transforms = {
     translation: vec3.create(), // scene translation, on the [x, y, z] axis
     rotation: quat4.create()    // scene rotation, expressed as a quaternion
   };
@@ -94,20 +95,20 @@ TiltChrome.Visualization = function(tilt, canvas, image, controller) {
     function createVisualizationMesh() {
       Tilt.Document.traverse(function(node, depth) {
         // get the x, y, width and height coordinates of a node
-        var coord = Tilt.Document.getNodeCoordinates(node);
-        var thickness = 12;
+        let coord = Tilt.Document.getNodeCoordinates(node);
+        let thickness = mesh.thickness;
         
         // use this node only if it actually has any dimensions
-        if ((coord.width > 1 || coord.height > 1) && depth) {
+        if ((coord.width > 1 && coord.height > 1) && depth) {
           // the entire mesh's pivot is the screen center
-          var x = coord.x - tilt.width / 2;
-          var y = coord.y - tilt.height / 2;
-          var z = depth * thickness;
-          var w = coord.width;
-          var h = coord.height;
+          let x = coord.x - tilt.width / 2;
+          let y = coord.y - tilt.height / 2;
+          let z = depth * thickness;
+          let w = coord.width;
+          let h = coord.height;
           
           // number of vertex points, used for creating the indices array
-          var i = mesh.vertices.length / 3; // a vertex has 3 coords: x, y & z
+          let i = mesh.vertices.length / 3; // a vertex has 3 coords: x, y & z
           
           // compute the vertices
           mesh.vertices.push(x,     y,     z);             /* front */  // 0
@@ -140,7 +141,7 @@ TiltChrome.Visualization = function(tilt, canvas, image, controller) {
             (y + tilt.height / 2 + h) / dom.height);
             
           // the stack margins should not be textured
-          for (var k = 0; k < 2; k++) {
+          for (let k = 0; k < 2; k++) {
             mesh.texCoord.push(0, 0, 0, 0, 0, 0, 0, 0);
           }
           
@@ -260,7 +261,7 @@ TiltChrome.Visualization = function(tilt, canvas, image, controller) {
         
         // apply the necessary transformations to the model view
         tilt.translate(tilt.width / 2, tilt.height / 2,
-                       transforms.translation[2] - 200);
+                       transforms.translation[2] - mesh.thickness * 15);
 
         tilt.transform(quat4.toMat4(transforms.rotation));
         tilt.translate(transforms.translation[0],
