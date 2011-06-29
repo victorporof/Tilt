@@ -168,7 +168,5 @@ TiltChrome.Controller.MouseAndKeyboard = function() {
     if (keyCode === 27) {
       TiltChrome.BrowserOverlay.destroy();
     }
-    
-    Tilt.Console.error(code);
   };
 }
