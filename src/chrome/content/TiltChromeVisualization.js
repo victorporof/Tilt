@@ -200,6 +200,12 @@ TiltChrome.Visualization = function(tilt, canvas, image, controller) {
     if ("function" === typeof(controller.mouseMoved)) {
       tilt.mouseMoved = controller.mouseMoved;
     }
+    if ("function" === typeof(controller.mouseOver)) {
+      tilt.mouseOver = controller.mouseOver;
+    }
+    if ("function" === typeof(controller.mouseOut)) {
+      tilt.mouseOut = controller.mouseOut;
+    }
     if ("function" === typeof(controller.mouseScroll)) {
       tilt.mouseScroll = controller.mouseScroll;
     }
@@ -253,11 +259,12 @@ TiltChrome.Visualization = function(tilt, canvas, image, controller) {
         tilt.image(background, 0, 0, tilt.width, tilt.height);
         
         // apply the necessary transformations to the model view
-        tilt.translate(tilt.width / 2, tilt.height / 2 - 50, -400);
+        tilt.translate(tilt.width / 2, tilt.height / 2,
+                       transforms.translation[2] - 200);
+
         tilt.transform(quat4.toMat4(transforms.rotation));
         tilt.translate(transforms.translation[0],
-                       transforms.translation[1],
-                       transforms.translation[2]);
+                       transforms.translation[1], 0);
                        
         // draw the visualization mesh
         tilt.depthTest(true);
