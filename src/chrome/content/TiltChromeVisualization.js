@@ -83,6 +83,32 @@ TiltChrome.Visualization = function(tilt, canvas, image, controller) {
     controller.width = tilt.width;
     controller.height = tilt.height;
     
+    // bind the common mouse and keyboard events to the controller
+    if ("function" === typeof(controller.mousePressed)) {
+      tilt.mousePressed = controller.mousePressed;
+    }
+    if ("function" === typeof(controller.mouseReleased)) {
+      tilt.mouseReleased = controller.mouseReleased;
+    }
+    if ("function" === typeof(controller.mouseClicked)) {
+      tilt.mouseClicked = controller.mouseClicked;
+    }
+    if ("function" === typeof(controller.mouseMoved)) {
+      tilt.mouseMoved = controller.mouseMoved;
+    }
+    if ("function" === typeof(controller.mouseScroll)) {
+      tilt.mouseScroll = controller.mouseScroll;
+    }
+    if ("function" === typeof(controller.keyPressed)) {
+      tilt.keyPressed = controller.keyPressed;
+    }
+    if ("function" === typeof(controller.keyTyped)) {
+      tilt.keyReleased = controller.keyTyped;
+    }
+    if ("function" === typeof(controller.keyReleased)) {
+      tilt.keyReleased = controller.keyReleased;
+    }
+    
     // call the init function on the controller if available
     if ("function" === typeof(controller.init)) {
       controller.init();
@@ -207,8 +233,7 @@ TiltChrome.Visualization = function(tilt, canvas, image, controller) {
     
     // when rendering is finished, call a loop function in the controller
     if ("function" === typeof(controller.loop)) {
-      controller.frameDelta = tilt.frameDelta;
-      controller.loop();
+      controller.loop(tilt.frameDelta);
     }
     
     // only after the draw object has finished initializing
@@ -227,32 +252,25 @@ TiltChrome.Visualization = function(tilt, canvas, image, controller) {
         tilt.depthTest(false);
         tilt.image(background, 0, 0, tilt.width, tilt.height);
         
+        // apply the necessary transformations to the model view
+        tilt.translate(tilt.width / 2, tilt.height / 2 - 50, -400);
+        tilt.transform(quat4.toMat4(transforms.rotation));
+        tilt.translate(transforms.translation[0],
+                       transforms.translation[1],
+                       transforms.translation[2]);
+                       
+        // draw the visualization mesh
         tilt.depthTest(true);
-        that.renderVisualization();
+        tilt.mesh(mesh.verticesB,
+                  mesh.texCoordB, null, 
+                  "triangles", "#fff", dom,
+                  mesh.indicesB);
+    
+        tilt.mesh(mesh.verticesB, null, null, 
+                  "lines", "#899", null,
+                  mesh.wireframeIndicesB); 
       }
     }
-  };
-  
-  /**
-   * Renders the visualization mesh.
-   */
-  this.renderVisualization = function() {
-    // apply the necessary transformations to the model view
-    tilt.translate(transforms.translation[0] + tilt.width / 2,
-                   transforms.translation[1] + tilt.height / 2 - 50,
-                   transforms.translation[2]                   - 400);
-                   
-    tilt.transform(quat4.toMat4(transforms.rotation));
-    
-    // draw the visualization mesh
-    tilt.mesh(mesh.verticesB,
-              mesh.texCoordB, null, 
-              "triangles", "#fff", dom,
-              mesh.indicesB);
-    
-    tilt.mesh(mesh.verticesB, null, null, 
-              "lines", "#899", null,
-              mesh.wireframeIndicesB); 
   };
   
   /**
@@ -283,81 +301,11 @@ TiltChrome.Visualization = function(tilt, canvas, image, controller) {
    * @param {number} width: the new canvas width
    * @param {number} height: the new canvas height
    */
-  this.resize = function(width, height) {
+  tilt.resize = function(width, height) {
     controller.width = width;
     controller.height = height;
   };
   
-  /**
-   * Overriding the mousePressed function to handle the event.
-   *
-   * @param {number} x: the current horizontal coordinate of the mouse
-   * @param {number} y: the current vertical coordinate of the mouse
-   */
-  tilt.mousePressed = function(x, y) {
-    if ("function" === typeof(controller.mousePressed)) {
-      controller.mousePressed(x, y);
-    }
-  };
-
-  /**
-   * Overriding the mouseReleased function to handle the event.
-   *
-   * @param {number} x: the current horizontal coordinate of the mouse
-   * @param {number} y: the current vertical coordinate of the mouse
-   */
-  tilt.mouseReleased = function(x, y) {
-    if ("function" === typeof(controller.mouseReleased)) {
-      controller.mouseReleased(x, y);
-    }
-  };
-
-  /**
-   * Overriding the mouseClicked function to handle the event.
-   *
-   * @param {number} x: the current horizontal coordinate of the mouse
-   * @param {number} y: the current vertical coordinate of the mouse
-   */
-  tilt.mouseClicked = function(x, y) {
-    if ("function" === typeof(controller.mouseClicked)) {
-      controller.mouseClicked(x, y);
-    }
-  };
-  
-  /**
-   * Overriding the mouseMoved function to handle the event.
-   *
-   * @param {number} x: the current horizontal coordinate of the mouse
-   * @param {number} y: the current vertical coordinate of the mouse
-   */
-  tilt.mouseMoved = function(x, y) {
-    if ("function" === typeof(controller.mouseMoved)) {
-      controller.mouseMoved(x, y);
-    }
-  };
-  
-  /**
-   * Overriding the mouseScroll function to handle the event.
-   *
-   * @param {number} scroll: the mouse wheel direction and speed
-   */
-  tilt.mouseScroll = function(scroll) {
-    if ("function" === typeof(controller.mouseScroll)) {
-      controller.mouseScroll(scroll);
-    }
-  };
-  
-  /**
-   * Overriding the keyPressed function to handle the event.
-   *
-   * TODO: implementation
-   */
-  tilt.keyPressed = function(key) {
-    if ("function" === typeof(controller.keyPressed)) {
-      controller.keyPressed(key);
-    }
-  };
-    
   /**
    * Destroys this object and sets all members to null.
    *
