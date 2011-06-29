@@ -31,10 +31,10 @@ var EXPORTED_SYMBOLS = ["Tilt.Draw"];
 
 /**
  * Creates a Tilt environment. The readyCallback function is called when
- * initialization is complete, along with the canvas and additionally, an 
+ * initialization is complete, along with the canvas and additionally, an
  * instance of Tilt.Draw passed as a parameter. If this is running inside an
- * extension environment, a container iframe is also returned. For other more 
- * complex initialization scenarios, use Tilt.Document.initCanvas and 
+ * extension environment, a container iframe is also returned. For other more
+ * complex initialization scenarios, use Tilt.Document.initCanvas and
  * create a Tilt.Draw object manually with the constructor.
  * Use this function to append a canvas element to the document, like this:
  *
@@ -69,18 +69,18 @@ Tilt.Create = function(width, height, readyCallback) {
   Tilt.Document.initCanvas(function(canvas, iframe) {
     canvas.width = width;
     canvas.height = height;
-    
+
     // create the Tilt object, containing useful functions for easy drawing
     var tilt = new Tilt.Draw(canvas);
-    
-    // perform mandatory initialization of shaders and other objects required 
+
+    // perform mandatory initialization of shaders and other objects required
     // for drawing, like vertex buffers and primitives
     tilt.initialize(function() {
       // the readyCallback function is mandatory, but we check nevertheless
       if ("function" === typeof(readyCallback)) {
         readyCallback(tilt, canvas, iframe);
       }
-      
+
       // automatically call the setup and/or draw functions if overridden
       if ("function" === typeof(tilt.setup)) {
         tilt.setup();
@@ -95,36 +95,39 @@ Tilt.Create = function(width, height, readyCallback) {
 /**
  * Tilt.Draw constructor.
  * When created, nothing is loaded (no shaders, no matrices, no buffers..).
- * Use the initialize() function to perform mandatory initialization of 
+ * Use the initialize() function to perform mandatory initialization of
  * shaders, vertex buffers, events and other objects required for drawing.
  * Override these functions to handle events:
  *
  *      tilt.resize = function(width, height) { };
  *      tilt.mousePressed = function(mouseX, mouseY) { };
- *      tilt.mouseReleased = function(mouseX, mouseY) { };
  *      tilt.mouseClicked = function(mouseX, mouseY) { };
+ *      tilt.mouseReleased = function(mouseX, mouseY) { };
  *      tilt.mouseMoved = function(mouseX, mouseY) { };
  *      tilt.mouseOver = function(mouseX, mouseY) { };
  *      tilt.mouseOut = function(mouseX, mouseY) { };
  *      tilt.mouseScroll = function(scroll) { };
- * 
+ *      tilt.keyPressed = function(keyChar, keyCode) { };
+ *      tilt.keyTyped = function(keyChar, keyCode, charCode) { };
+ *      tilt.keyReleased = function(keyChar, keyCode) { };
+ *
  * @param {object} canvas: the canvas element used for rendering
  * @param {function} successCallback: to be called if gl initialization worked
  * @param {function} failCallback: to be called if gl initialization failed
  * @return {object} the created object
- */ 
+ */
 Tilt.Draw = function(canvas, failCallback, successCallback) {
-  
+
   /**
    * By convention, we make a private "that" variable.
    */
   var that = this;
-  
+
   /**
    * Helper low level functions for WebGL.
    */
   var engine = new Tilt.Engine();
-  
+
   /**
    * WebGL context for the canvas.
    */
@@ -140,7 +143,7 @@ Tilt.Draw = function(canvas, failCallback, successCallback) {
    * texture coordinates.
    */
   var textureShader = null;
-  
+
   /**
    * A model view matrix stack, used for push/pop operations.
    */
@@ -150,12 +153,12 @@ Tilt.Draw = function(canvas, failCallback, successCallback) {
    * The current model view matrix;
    */
   var mvMatrix = mat4.identity(mat4.create());
-  
+
   /**
    * The current projection matrix;
    */
   var projMatrix = mat4.identity(mat4.create());
-  
+
   /**
    * Vertices buffer representing the corners of a rectangle.
    */
@@ -177,7 +180,7 @@ Tilt.Draw = function(canvas, failCallback, successCallback) {
    * These are rectangles, circles, boxes, 2d or 3d primitives in general.
    */
   var fill = [];
-  
+
   /**
    * The current stroke color applied to any objects which can be stroked.
    * This property mostly refers to lines.
@@ -204,7 +207,7 @@ Tilt.Draw = function(canvas, failCallback, successCallback) {
    * Use this to create smooth animations regardless of the frame rate.
    */
   this.frameDelta = 0;
-  
+
   /**
    * Variables defining the x and y coordinates of the mouse position. They
    * are updated automatically using canvas.onmousemove. If you need to handle
@@ -213,7 +216,7 @@ Tilt.Draw = function(canvas, failCallback, successCallback) {
    */
   this.mouseX = 0;
   this.mouseY = 0;
-  
+
   /**
    * Variables representing the current framebuffer width and height.
    * For example, these will be updated or changed when rendering offscreen.
@@ -224,20 +227,20 @@ Tilt.Draw = function(canvas, failCallback, successCallback) {
   /**
    * Performs mandatory initialization of shaders and other objects required
    * for drawing, like vertex buffers and primitives.
-   * 
+   *
    * @param {function} readyCallback: function called when initialization done
    * @return {object} this object initialized
    */
   this.initialize = function(readyCallback) {
-    // extend this object with closures representing all the engine functions     
+    // extend this object with closures representing all the engine functions
     for (var i in engine) {
-      if ("function" === typeof(engine[i])) {
+      if ("function" === typeof(engine[i]) && "destroy" !== engine[i].name) {
         that[i] = engine[i];
       }
     }
-    
+
     // initializing a color shader
-    engine.initProgram(Tilt.Shaders.Color.vs, 
+    engine.initProgram(Tilt.Shaders.Color.vs,
                        Tilt.Shaders.Color.fs, function(p) {
       colorShader = p;
       colorShader.vertexPosition = engine.shaderIO(p, "vertexPosition");
@@ -245,12 +248,12 @@ Tilt.Draw = function(canvas, failCallback, successCallback) {
       colorShader.mvMatrix = engine.shaderIO(p, "mvMatrix");
       colorShader.projMatrix = engine.shaderIO(p, "projMatrix");
       colorShader.color = engine.shaderIO(p, "color");
-      
+
       // function to set the attributes for the color shader
       colorShader.setAttributes = function(verticesBuffer) {
         engine.bindVertexBuffer(colorShader.vertexPosition, verticesBuffer);
       };
-      
+
       // function to set the uniforms for the color shader
       colorShader.setUniforms = function(mvMatrix, projMatrix, color) {
         engine.bindUniformMatrix(colorShader.mvMatrix, mvMatrix);
@@ -258,19 +261,19 @@ Tilt.Draw = function(canvas, failCallback, successCallback) {
         engine.bindUniformVec4(colorShader.color, color);
       };
 
-      // helper function to use the color shader with the required params   
+      // helper function to use the color shader with the required params
       colorShader.use = function(verticesBuffer,
                                  mvMatrix, projMatrix, color) {
-        
+
         // use this program
-        engine.useProgram(colorShader, 
+        engine.useProgram(colorShader,
           [colorShader.vertexPosition]);
-        
+
         colorShader.setAttributes(verticesBuffer);
         colorShader.setUniforms(mvMatrix, projMatrix, color);
       };
     });
-    
+
     // initializing a texture shader
     engine.initProgram(Tilt.Shaders.Texture.vs,
                        Tilt.Shaders.Texture.fs, function(p) {
@@ -282,13 +285,13 @@ Tilt.Draw = function(canvas, failCallback, successCallback) {
       textureShader.projMatrix = engine.shaderIO(p, "projMatrix");
       textureShader.color = engine.shaderIO(p, "color");
       textureShader.sampler = engine.shaderIO(p, "sampler");
-            
+
       // function to set the attributes for the texture shader
       textureShader.setAttributes = function(verticesBuffer, texCoordBuffer) {
         engine.bindVertexBuffer(textureShader.vertexPosition, verticesBuffer);
         engine.bindVertexBuffer(textureShader.vertexTexCoord, texCoordBuffer);
       };
-      
+
       // function to set the uniforms for the texture shader
       textureShader.setUniforms = function(mvMatrix, projMatrix, col, tex) {
         engine.bindUniformMatrix(textureShader.mvMatrix, mvMatrix);
@@ -297,14 +300,14 @@ Tilt.Draw = function(canvas, failCallback, successCallback) {
         engine.bindTexture(textureShader.sampler, tex);
       };
 
-      // helper function to use the texture shader with the required params   
+      // helper function to use the texture shader with the required params
       textureShader.use = function(verticesBuffer, texCoordBuffer,
                                    mvMatrix, projMatrix, color, texture) {
 
         // use this program
-        engine.useProgram(textureShader, 
+        engine.useProgram(textureShader,
           [textureShader.vertexPosition, textureShader.vertexTexCoord]);
-        
+
         textureShader.setAttributes(verticesBuffer, texCoordBuffer);
         textureShader.setUniforms(mvMatrix, projMatrix, color, texture);
       };
@@ -317,17 +320,17 @@ Tilt.Draw = function(canvas, failCallback, successCallback) {
     // model view and projection matrices used for transformations
     mat4.identity(mvMatrix);
     mat4.identity(projMatrix);
-    
+
     // set the default model view and projection matrices
     that.origin();
     that.perspective();
-        
+
     // set the default tint, fill, stroke and stroke weight
     that.tint("#fff");
     that.fill("#fff");
     that.stroke("#000");
     that.strokeWeight(1);
-    
+
     // buffer of 2-component vertices (x, y) as the corners of a rectangle
     rectangle.vertices = engine.initBuffer([
       0, 0, 1, 0, 0, 1, 1, 1], 2);
@@ -335,11 +338,11 @@ Tilt.Draw = function(canvas, failCallback, successCallback) {
     // buffer of 2-component vertices (x, y) as the outline of a rectangle
     rectangle.wireframe = engine.initBuffer([
       0, 0, 1, 0, 1, 1, 0, 1, 0, 0], 2);
-      
+
     // buffer of 2-component texture coordinates (u, v) for the rectangle
     rectangle.texCoord = engine.initBuffer([
       0, 0, 1, 0, 0, 1, 1, 1], 2);
-    
+
     // buffer of 3-component vertices (x, y, z) as the corners of a cube
     cube.vertices = engine.initBuffer([
       -0.5, -0.5,  0.5, /* front */
@@ -366,18 +369,18 @@ Tilt.Draw = function(canvas, failCallback, successCallback) {
       -0.5, -0.5,  0.5,
       -0.5,  0.5,  0.5,
       -0.5,  0.5, -0.5], 3);
-    
+
     // buffer of 3-component vertices (x, y, z) as the outline of a cube
     cube.wireframe = engine.initBuffer([
       -0.5, -0.5,  0.5, /* front */
-		   0.5, -0.5,  0.5, 
-		   0.5,  0.5,  0.5, 
-		  -0.5,  0.5,  0.5,
+       0.5, -0.5,  0.5,
+       0.5,  0.5,  0.5,
+      -0.5,  0.5,  0.5,
        0.5, -0.5, -0.5, /* back */
       -0.5, -0.5, -0.5,
       -0.5,  0.5, -0.5,
        0.5,  0.5, -0.5], 3);
-    
+
     // buffer of 2-component texture coordinates (u, v) for the cube
     cube.texCoord = engine.initBuffer([
       0, 0, 1, 0, 1, 1, 0, 1,
@@ -386,7 +389,7 @@ Tilt.Draw = function(canvas, failCallback, successCallback) {
       0, 0, 1, 0, 1, 1, 0, 1,
       0, 0, 1, 0,	1, 1, 0, 1,
       0, 0, 1, 0,	1, 1, 0, 1], 2);
-      
+
     // vertex indices for the cube vertices, defining the order for which
     // these points can create a cube from triangles
     cube.indices = engine.initIndexBuffer([
@@ -396,69 +399,92 @@ Tilt.Draw = function(canvas, failCallback, successCallback) {
       12, 13, 14, 12, 14, 15,
       16, 17, 18, 16, 18, 19,
       20, 21, 22, 20, 22, 23]);
-      
+
     // vertex indices for the cube vertices, defining the order for which
     // these points can create a wireframe cube from lines
     cube.wireframeIndices = engine.initIndexBuffer([
       0, 1, 1, 2, 2, 3, 3, 0, /* front */
-		  4, 5, 5, 6, 6, 7, 7, 4, /* back */
-		  0, 5, 1, 4,
-		  2, 7, 3, 6]);
-    
+      4, 5, 5, 6, 6, 7, 7, 4, /* back */
+      0, 5, 1, 4,
+      2, 7, 3, 6]);
+
     // override these functions in a Tilt environment
     that.resize = function(width, height) { };
     that.mousePressed = function(mouseX, mouseY) { };
-    that.mouseReleased = function(mouseX, mouseY) { };
     that.mouseClicked = function(mouseX, mouseY) { };
+    that.mouseReleased = function(mouseX, mouseY) { };
     that.mouseMoved = function(mouseX, mouseY) { };
     that.mouseOver = function(mouseX, mouseY) { };
     that.mouseOut = function(mouseX, mouseY) { };
     that.mouseScroll = function(scroll) { };
-    
+    that.keyPressed = function(keyChar, keyCode) { };
+    that.keyTyped = function(keyChar, keyCode, charCode) { };
+    that.keyReleased = function(keyChar, keyCode) { };
+
     // handle the resize event
-    document.onresize = function(e) {
+    canvas.onresize = function(e) {
       that.width = this.width;
       that.height = this.height;
       that.resize(that.width, that.height);
     }
-    
-    // handles the onmousedown event
+
+    // handles the mousedown event
     canvas.onmousedown = function(e) {
       that.mousePressed(that.mouseX, that.mouseY);
     }
-    
-    // handles the onmouseup event
-    canvas.onmouseup = function(e) {      
+
+    // handles the mouseup event
+    canvas.onmouseup = function(e) {
       that.mouseReleased(that.mouseX, that.mouseY);
     }
-    
-    // handle the onclick event
+
+    // handle the click event
     canvas.onclick = function(e) {
       that.mouseClicked(that.mouseX, that.mouseY);
     }
-    
-    // handle the onmousemove event
+
+    // handle the mousemove event
     canvas.onmousemove = function(e) {
       that.mouseX = e.pageX - canvas.offsetLeft;
       that.mouseY = e.pageY - canvas.offsetTop;
-      
       that.mouseMoved(that.mouseX, that.mouseY);
     }
-    
-    // handle the onmouseover event
+
+    // handle the mouseover event
     canvas.onmouseover = function(e) {
       that.mouseOver(that.mouseX, that.mouseY);
     }
-    
-    // handle the onmouseout event
+
+    // handle the mouseout event
     canvas.onmouseout = function(e) {
       that.mouseOut(that.mouseX, that.mouseY);
     }
-    
-    // handle the onmousescroll event
+
+    // handle the mousescroll event
     canvas.addEventListener('DOMMouseScroll', function(e) {
       that.mouseScroll(e.detail);
     }, false);
+    
+    // handle the keydown event
+    window.onkeydown = function(e) {
+      var keyCode = e.keyCode || e.which;
+      var keyChar = String.fromCharCode(e.keyCode || e.which);
+      that.keyPressed(keyChar, keyCode);
+    };
+    
+    // handle the keypress event
+    window.onkeypress = function(e) {
+      var keyCode = e.keyCode || e.which;
+      var keyChar = String.fromCharCode(e.keyCode || e.which);
+      that.keyTyped(keyChar, keyCode, e.charCode);
+    };
+    
+    // handle the keyup event
+    window.onkeyup = function(e) {
+      var keyCode = e.keyCode || e.which;
+      var keyChar = String.fromCharCode(e.keyCode || e.which);
+      that.keyReleased(keyChar, keyCode);
+    };
     
     // call the ready callback function if it was passed as a valid parameter
     if ("function" === typeof(readyCallback)) {
@@ -467,9 +493,9 @@ Tilt.Draw = function(canvas, failCallback, successCallback) {
     
     return that;
   };
-  
+
   /**
-   * Returns true if the initialization is complete (currently, this means 
+   * Returns true if the initialization is complete (currently, this means
    * that both the color and the texture shader are loaded).
    *
    * @return {boolean} true if the initialization is complete
@@ -499,30 +525,30 @@ Tilt.Draw = function(canvas, failCallback, successCallback) {
    */
   this.requestAnimFrame = function(draw) {
     window.requestAnimFrame(draw, canvas);
-    
+
     // do other work only after this object was completely initialized
     if (that.isInitialized()) {
       // reset the model view and projection matrices
       that.origin();
       that.perspective();
-      
+
       // calculate the frame delta and frame rate using the current time
       currentTime = new Date().getTime();
-      
+
       if (lastTime !== 0) {
         that.frameDelta = currentTime - lastTime;
         that.frameRate = 1000 / that.frameDelta;
       }
       lastTime = currentTime;
-      
+
       // increment the elapsed time and total frame count
       that.elapsedTime += that.frameDelta;
       that.frameCount++;
     }
   };
-  
+
   /**
-   * Binds an offscreen rendering context. 
+   * Binds an offscreen rendering context.
    * Therefore, anything will be drawn offscreen using a specific buffer.
    * To create an offscreen rendering context, use initOffscreenBuffer().
    * Pass null to revert to on-screen rendering.
@@ -545,7 +571,7 @@ Tilt.Draw = function(canvas, failCallback, successCallback) {
     that.origin();
     that.perspective();
   };
-  
+
   /**
    * Sets a default perspective projection, with the near frustum rectangle
    * mapped to the canvas width and height bounds.
@@ -556,17 +582,17 @@ Tilt.Draw = function(canvas, failCallback, successCallback) {
     var h = that.height;
     var x = w / 2;
     var y = h / 2;
-    
+
     var z = y / Math.tan(Tilt.Math.radians(45) / 2);
     var znear = z / 10;
     var zfar = z * 10;
     var aspect = w / h;
-    
+
     engine.viewport(canvas.width, canvas.height);
     mat4.perspective(fov, aspect, znear, zfar, projMatrix, true);
     mat4.translate(projMatrix, [-x, -y, -z]);
   };
-  
+
   /**
    * Sets a default orthographic projection (recommended for 2d rendering).
    */
@@ -577,7 +603,7 @@ Tilt.Draw = function(canvas, failCallback, successCallback) {
     engine.viewport(canvas.width, canvas.height);
     mat4.ortho(0, w, h, 0, -100, 100, projMatrix);
   };
-  
+
   /**
    * Sets a custom projection matrix.
    *
@@ -590,7 +616,7 @@ Tilt.Draw = function(canvas, failCallback, successCallback) {
 
   /**
    * Pushes the current model view matrix on a stack, to be popped out later.
-   * This can be used, for example, to create complex animations and be able 
+   * This can be used, for example, to create complex animations and be able
    * to revert back to the current model view.
    */
   this.pushMatrix = function() {
@@ -616,11 +642,11 @@ Tilt.Draw = function(canvas, failCallback, successCallback) {
   this.origin = function() {
     mat4.identity(mvMatrix);
   };
-  
+
   /**
    * Transforms the model view matrix with a new matrix.
    * Useful for creating custom transformations.
-   * 
+   *
    * @param {object} matrix: the matrix to be multiply the model view with
    */
   this.transform = function(matrix) {
@@ -658,7 +684,7 @@ Tilt.Draw = function(canvas, failCallback, successCallback) {
   this.rotateX = function(angle) {
     mat4.rotateX(mvMatrix, angle);
   };
-  
+
   /**
    * Rotates the model view by a specified angle on the y axis.
    *
@@ -735,7 +761,7 @@ Tilt.Draw = function(canvas, failCallback, successCallback) {
   this.noStroke = function() {
     stroke = [0, 0, 0, 0];
   };
-  
+
   /**
    * Sets the current stroke weight (line width).
    *
@@ -744,7 +770,7 @@ Tilt.Draw = function(canvas, failCallback, successCallback) {
   this.strokeWeight = function(weight) {
     gl.lineWidth(weight);
   };
-  
+
   /**
    * Clears the canvas context (usually at the beginning of each frame).
    * If the color is undefined, it will default to opaque light gray.
@@ -756,7 +782,7 @@ Tilt.Draw = function(canvas, failCallback, successCallback) {
    */
   this.background = function(color) {
     var rgba;
-    
+
     if ("undefined" === typeof(color)) {
       rgba = Tilt.Math.hex2rgba("#d6d6d6ff");
     }
@@ -773,7 +799,7 @@ Tilt.Draw = function(canvas, failCallback, successCallback) {
     // clear the color and depth buffers
     engine.clear(rgba[0], rgba[1], rgba[2], rgba[3]);
   };
-  
+
   /**
    * Draws a rectangle using the specified parameters.
    *
@@ -794,7 +820,7 @@ Tilt.Draw = function(canvas, failCallback, successCallback) {
     that.pushMatrix();
     that.translate(x, y, 0);
     that.scale(width, height, 1);
-    
+
     // draw the rectangle only if the fill alpha channel is not transparent
     if (fill[3]) {
       // use the necessary shader and draw the vertices
@@ -810,12 +836,12 @@ Tilt.Draw = function(canvas, failCallback, successCallback) {
     }
     that.popMatrix();
   };
-  
+
   /**
-   * Modifies the location from which rectangles draw. The default mode is 
-   * rectMode("corner"), which specifies the location to be the upper left 
-   * corner of the shape and uses the third and fourth parameters of rect() to 
-   * specify the width and height. Use rectMode("center") to draw centered 
+   * Modifies the location from which rectangles draw. The default mode is
+   * rectMode("corner"), which specifies the location to be the upper left
+   * corner of the shape and uses the third and fourth parameters of rect() to
+   * specify the width and height. Use rectMode("center") to draw centered
    * at the given x and y position.
    *
    * @param {string} mode: either "corner" or "center"
@@ -823,7 +849,7 @@ Tilt.Draw = function(canvas, failCallback, successCallback) {
   this.rectMode = function(mode) {
     rectangle.rectMode = mode;
   };
-  
+
   /**
    * Draws an image using the specified parameters.
    *
@@ -847,7 +873,7 @@ Tilt.Draw = function(canvas, failCallback, successCallback) {
         height = texture.framebuffer.height;
       }
     }
-    
+
     // if imageMode is set to "center", we need to offset the origin
     if ("center" === rectangle.imageMode) {
       x -= width / 2;
@@ -855,28 +881,28 @@ Tilt.Draw = function(canvas, failCallback, successCallback) {
     }
 
     // draw the image only if the tint alpha channel is not transparent
-    if (tint[3]) {      
+    if (tint[3]) {
       // in memory, the rectangle is represented as a perfect 1x1 square, so
       // some transformations are applied to achieve the desired shape
       that.pushMatrix();
       that.translate(x, y, 0);
       that.scale(width, height, 1);
-    
+
       // use the necessary shader and draw the vertices
-      textureShader.use(rectangle.vertices, 
+      textureShader.use(rectangle.vertices,
                         rectangle.texCoord,
                         mvMatrix, projMatrix, tint, texture);
-    
+
       engine.drawVertices(gl.TRIANGLE_STRIP, 0, rectangle.vertices.numItems);
       that.popMatrix();
     }
   };
-  
+
   /**
-   * Modifies the location from which images draw. The default mode is 
-   * imageMode("corner"), which specifies the location to be the upper left 
-   * corner and uses the fourth and fifth parameters of image() to set the 
-   * image"s width and height. Use imageMode("center") to draw images centered 
+   * Modifies the location from which images draw. The default mode is
+   * imageMode("corner"), which specifies the location to be the upper left
+   * corner and uses the fourth and fifth parameters of image() to set the
+   * image"s width and height. Use imageMode("center") to draw images centered
    * at the given x and y position.
    *
    * @param {string} mode: either "corner" or "center"
@@ -884,7 +910,7 @@ Tilt.Draw = function(canvas, failCallback, successCallback) {
   this.imageMode = function(mode) {
     rectangle.imageMode = mode;
   };
-  
+
   /**
    * Draws a box using the specified parameters.
    *
@@ -893,7 +919,7 @@ Tilt.Draw = function(canvas, failCallback, successCallback) {
    * @param {number} depth: the depth of the object
    * @param {object} texture: the texture to be used
    */
-  this.box = function(width, height, depth, texture) {      
+  this.box = function(width, height, depth, texture) {
     // in memory, the box is represented as a simple perfect 1x1 cube, so
     // some transformations are applied to achieve the desired shape
     that.pushMatrix();
@@ -917,23 +943,23 @@ Tilt.Draw = function(canvas, failCallback, successCallback) {
         colorShader.use(cube.vertices,
                         mvMatrix, projMatrix, fill);
 
-        engine.drawIndexedVertices(gl.TRIANGLES, cube.indices);    
+        engine.drawIndexedVertices(gl.TRIANGLES, cube.indices);
       }
-    }    
+    }
     // draw the outline only if the stroke alpha channel is not transparent
     if (stroke[3]) {
         // use the necessary shader and draw the vertices
         colorShader.use(cube.wireframe,
                         mvMatrix, projMatrix, stroke);
-                        
-        engine.drawIndexedVertices(gl.LINES, cube.wireframeIndices);    
+
+        engine.drawIndexedVertices(gl.LINES, cube.wireframeIndices);
     }
     that.popMatrix();
   };
-  
+
   /**
    * Draws a custom mesh, using only the built-in shaders.
-   * For more complex techniques, create your own shaders and drawing logic. 
+   * For more complex techniques, create your own shaders and drawing logic.
    *
    * @param {object} verticesBuffer: the vertices buffer (x, y and z)
    * @param {object} texCoordBuffer: the texture coordinates buffer (u, v)
@@ -946,27 +972,27 @@ Tilt.Draw = function(canvas, failCallback, successCallback) {
    */
   this.mesh = function(verticesBuffer, texCoordBuffer, normalsBuffer,
                        drawMode, color, texture, indicesBuffer) {
-    
+
     // use the necessary shader
     if (texture) {
       textureShader.use(verticesBuffer, texCoordBuffer,
-                        mvMatrix, projMatrix, "string" === typeof color ? 
+                        mvMatrix, projMatrix, "string" === typeof color ?
                         Tilt.Math.hex2rgba(color) : color, texture);
     }
     else {
       colorShader.use(verticesBuffer,
-                      mvMatrix, projMatrix, "string" === typeof color ? 
+                      mvMatrix, projMatrix, "string" === typeof color ?
                       Tilt.Math.hex2rgba(color) : color);
     }
-    
+
     // draw the vertices as indexed elements or simple arrays
     if (indicesBuffer) {
-      engine.drawIndexedVertices(drawMode, indicesBuffer);          
+      engine.drawIndexedVertices(drawMode, indicesBuffer);
     }
     else {
-      engine.drawVertices(drawMode, 0, verticesBuffer.numItems);    
+      engine.drawVertices(drawMode, 0, verticesBuffer.numItems);
     }
-    
+
     // TODO: use the normals buffer, add some lighting
   };
 
@@ -984,27 +1010,38 @@ Tilt.Draw = function(canvas, failCallback, successCallback) {
     that.origin();
     that.perspective();
   };
-  
+
   /**
    * Destroys this object and sets all members to null.
    */
-  this.destroy = function() {
+  this.destroy = function destroy() {
     engine.destroy();
     engine = null;
     gl = null;
-    
+
     colorShader = null;
     textureShader = null;
     mvMatrixStack = null;
     mvMatrix = null;
     projMatrix = null;
-    
+
     rectangle = null;
     cube = null;
     tint = null;
     fill = null;
     stroke = null;
     
+    canvas.onresize = null;
+    canvas.onmousedown = null;
+    canvas.onmouseup = null;
+    canvas.onclick = null;
+    canvas.onmousemove = null;
+    canvas.onmouseover = null;
+    canvas.onmouseout = null;
+    window.onkeydown = null;
+    window.onkeypress = null;
+    window.onkeyup = null;
+
     that = null;
   };
 };
