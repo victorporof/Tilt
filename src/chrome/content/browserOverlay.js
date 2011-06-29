@@ -47,20 +47,15 @@ TiltChrome.BrowserOverlay = {
    * @param {object XULCommandEvent} aEvent: the event firing this function
    */
   initialize: function(aEvent) {
-    // get the Tilt menu item, to change the title if the visualization is on
-    let tiltMenu = document.getElementById("tilt-menuItemInitialize");  
     let that = this;
     
     // if the visualization is not currently running
     if (!that.iframe) {
-      // change the menu label accordingly
-      tiltMenu.label = Tilt.StringBundle.get("menuItemHide.label");
-      
       // use an extension to get the image representation of the document
       Tilt.Extensions.WebGL.initDocumentImage(function(image) {
         // set the width and height to mach the content window dimensions
-        var width = window.content.innerWidth;
-        var height = window.content.innerHeight;
+        let width = window.content.innerWidth;
+        let height = window.content.innerHeight;
         
         // initialize a Tilt environment: a canvas element inside an iframe
         Tilt.Create(width, height, function(tilt, canvas, iframe) {
@@ -84,12 +79,7 @@ TiltChrome.BrowserOverlay = {
    * Destroys this object, removes the iframe and sets all members to null.
    */
   destroy: function() {
-    // get the Tilt menu item, to change the title if the visualization is off
-    let tiltMenu = document.getElementById("tilt-menuItemInitialize");  
     let that = this;
-    
-    // change the menu label to the default initialization string
-    tiltMenu.label = Tilt.StringBundle.get("menuItemInitialize.label");
     
     // issue a destroy call through all the visualization children
     that.visualization.destroy(function() {

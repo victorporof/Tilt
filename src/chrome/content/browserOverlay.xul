@@ -46,33 +46,24 @@
   </keyset>
   
   <menupopup id="menu_ToolsPopup">
-    <menu class="menu-iconic"
-          id="tilt-menu"
-          label="&tilt.menu.label;"
-          accesskey="&tilt.menu.accesskey;"
-          insertafter="devToolsSeparator">
-      <menupopup>
-        <menuitem id="tilt-menuItemInitialize"
-                  label="&tilt.menuItemInitialize.label;"
-                  accesskey="&tilt.menuItemInitialize.accesskey;"
-                  key="tilt-menu-key"
-                  oncommand="TiltChrome.BrowserOverlay.initialize(event);"/>
-      </menupopup>
-    </menu>
+    <menuitem class="menu-iconic"
+              id="tilt-menu"
+              label="&tilt.menu.label;"
+              accesskey="&tilt.menu.accesskey;"
+              key="tilt-menu-key"
+              insertafter="devToolsSeparator"
+              oncommand="TiltChrome.BrowserOverlay.initialize(event);">
+    </menuitem>
   </menupopup>
-
+  
   <!-- place the Tilt menu inside the web developer popup -->
   <!-- <menupopup id="menuWebDeveloperPopup">
-    <menu class="menu-iconic"
-          id="tilt-menu"
-          label="&tilt.menu.label;"
-          accesskey="&tilt.menu.accesskey;">
-      <menupopup>
-        <menuitem id="tilt-menuItemInitialize"
-                  label="&tilt.menuItemInitialize.label;"
-                  accesskey="&tilt.menuItemInitialize.accesskey;"
-                  oncommand="TiltChrome.BrowserOverlay.initialize(event);"/>
-      </menupopup>
-    </menu>
+    <menuitem class="menu-iconic"
+              id="tilt-menu"
+              label="&tilt.menu.label;"
+              accesskey="&tilt.menu.accesskey;"
+              key="tilt-menu-key"
+              oncommand="TiltChrome.BrowserOverlay.initialize(event);">
+    </menuitem>
   </menupopup> -->
 </overlay>

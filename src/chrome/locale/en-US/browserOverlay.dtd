@@ -1,5 +1,2 @@
 <!ENTITY tilt.menu.label     "Tilt">
 <!ENTITY tilt.menu.accesskey "T">
-
-<!ENTITY tilt.menuItemInitialize.label     "Initialize Tilt">
-<!ENTITY tilt.menuItemInitialize.accesskey "I">
