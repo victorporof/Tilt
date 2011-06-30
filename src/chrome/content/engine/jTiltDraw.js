@@ -585,7 +585,7 @@ Tilt.Draw = function(canvas, failCallback, successCallback) {
 
     var z = y / Math.tan(Tilt.Math.radians(45) / 2);
     var znear = z / 10;
-    var zfar = z * 10;
+    var zfar = z * 100;
     var aspect = w / h;
 
     engine.viewport(canvas.width, canvas.height);
