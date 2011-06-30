@@ -22,7 +22,7 @@
           src="chrome://tilt/content/engine/utils/jTiltControllers.js"/>
 
   <script type="application/x-javascript"
-          src="chrome://tilt/content/engine/shaders/jTiltShaders.js"/>
+          src="chrome://tilt/content/engine/jTiltShaders.js"/>
   <script type="application/x-javascript"
           src="chrome://tilt/content/engine/jTiltEngine.js"/>
   <script type="application/x-javascript"

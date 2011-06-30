@@ -94,8 +94,8 @@ Tilt.Shaders.Texture = {
 "varying vec2 texCoord;",
 
 "void main(void) {",
-"    gl_Position = projMatrix * mvMatrix * vec4(vertexPosition, 1.0);",
-"    texCoord = vertexTexCoord;",
+"  gl_Position = projMatrix * mvMatrix * vec4(vertexPosition, 1.0);",
+"  texCoord = vertexTexCoord;",
 "}"
 ].join("\n"),
 
@@ -113,8 +113,8 @@ Tilt.Shaders.Texture = {
 "varying vec2 texCoord;",
 
 "void main(void) {",
-"    vec4 tex = texture2D(sampler, vec2(texCoord.s, texCoord.t));",
-"    gl_FragColor = color * tex;",
+"  vec4 tex = texture2D(sampler, vec2(texCoord.s, texCoord.t));",
+"  gl_FragColor = color * tex;",
 "}"
 ].join("\n")
 };
