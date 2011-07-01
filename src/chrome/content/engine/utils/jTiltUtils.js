@@ -88,8 +88,8 @@ Tilt.Document = {
         // it is not obligatory to keep the iframe visible, remove if desired
         // (this will also remove the canvas)
         if (!keepInStack) {
-          that.remove(canvas);
-          that.remove(iframe);
+          that.remove(canvas); canvas = null;
+          that.remove(iframe); iframe = null;
         }
         else {
           // assure the iframe is now visible
@@ -125,7 +125,7 @@ Tilt.Document = {
 
       // it is not obligatory to keep the canvas visible, remove if desired
       if (!keepInStack) {
-        that.remove(canvas);
+        that.remove(canvas); canvas = null;
       }
       else {
         // assure the canvas is now visible
@@ -160,7 +160,7 @@ Tilt.Document = {
     node.appendChild(element);
     return element;
   },
-
+  
   /**
    * Removes an element from it's parent node.
    *
@@ -176,7 +176,7 @@ Tilt.Document = {
    * @return {object} the current content document
    */
   get: function() {
-    return content.document;
+    return window.content.document;
   },
   
   /**
@@ -609,7 +609,7 @@ Tilt.Console = {
       // get the console service
       var consoleService = Components.classes["@mozilla.org/consoleservice;1"]
         .getService(Components.interfaces.nsIConsoleService);
-    
+        
       // log the message
       consoleService.logStringMessage(aMessage);
     }
@@ -654,15 +654,15 @@ Tilt.Console = {
       // get the console service
       var consoleService = Components.classes["@mozilla.org/consoleservice;1"]
         .getService(Components.interfaces.nsIConsoleService);
-
+        
       // also the script error service
       var scriptError = Components.classes["@mozilla.org/scripterror;1"]
         .createInstance(Components.interfaces.nsIScriptError);
-
+        
       // initialize a script error
       scriptError.init(aMessage, aSourceName, aSourceLine,
                        aLineNumber, aColumnNumber, aFlags, aCategory);
-
+                       
       // log the error
       consoleService.logMessage(scriptError);
     }
