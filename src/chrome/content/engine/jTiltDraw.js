@@ -1030,19 +1030,16 @@ Tilt.Draw = function(canvas, failCallback, successCallback) {
     fill = null;
     stroke = null;
     
-    try {
-      canvas.onresize = null;
-      canvas.onmousedown = null;
-      canvas.onmouseup = null;
-      canvas.onclick = null;
-      canvas.onmousemove = null;
-      canvas.onmouseover = null;
-      canvas.onmouseout = null;
-      window.onkeydown = null;
-      window.onkeypress = null;
-      window.onkeyup = null;
-    }
-    catch (e) { }
+    canvas.onresize = null;
+    canvas.onmousedown = null;
+    canvas.onmouseup = null;
+    canvas.onclick = null;
+    canvas.onmousemove = null;
+    canvas.onmouseover = null;
+    canvas.onmouseout = null;
+    window.onkeydown = null;
+    window.onkeypress = null;
+    window.onkeyup = null;
     
     that = null;
   };
