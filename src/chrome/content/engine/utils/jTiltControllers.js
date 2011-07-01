@@ -211,6 +211,9 @@ Tilt.Arcball = function(width, height, radius) {
     that.height = height;
     that.radius = "undefined" !== typeof(radius) ? radius : height;
     
+    that.pointToSphere(mouseX, mouseY, startVec);
+    quat4.set(currentRot, lastRot);
+    
     // automatically call this function
   })(width, height, radius);
 };
