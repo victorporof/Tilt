@@ -421,9 +421,9 @@ Tilt.Draw = function(canvas, failCallback, successCallback) {
     that.keyReleased = function(keyChar, keyCode) { };
 
     // handle the resize event
-    canvas.onresize = function(e) {
-      that.width = this.width;
-      that.height = this.height;
+    document.onresize = function(e) {
+      that.width = window.content.innerWidth;
+      that.height = window.content.innerHeight;
       that.resize(that.width, that.height);
     }
     
@@ -1030,7 +1030,7 @@ Tilt.Draw = function(canvas, failCallback, successCallback) {
     fill = null;
     stroke = null;
     
-    canvas.onresize = null;
+    document.onresize = null;
     canvas.onmousedown = null;
     canvas.onmouseup = null;
     canvas.onclick = null;
