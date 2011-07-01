@@ -33,6 +33,11 @@ if ("undefined" === typeof(TiltChrome)) {
 TiltChrome.BrowserOverlay = {
   
   /**
+   * Content location of the current tab containing the visualization.
+   */
+  href: null,
+  
+  /**
    * The iframe containing the canvas element, used for rendering.
    */
   iframe: null,
@@ -41,19 +46,22 @@ TiltChrome.BrowserOverlay = {
    * Visualization logic and drawing loop.
    */
   visualization: null,
-    
+
   /**
    * Initializes Tilt.
-   * @param {object XULCommandEvent} aEvent: the event firing this function
+   * @param {object XULCommandEvent} event: the event firing this function
    */
-  initialize: function(aEvent) {
+  initialize: function(event) {
     let that = this;
     
     // if the visualization is not currently running
     if (!that.iframe) {
+      // remember the current tab location href
+      that.href = window.content.location.href;
+      
       // set the width and height to mach the content window dimensions
-      let width = content.innerWidth;
-      let height = content.innerHeight;
+      let width = window.content.innerWidth;
+      let height = window.content.innerHeight;
       
       // initialize a Tilt environment: a canvas element inside an iframe
       Tilt.Create(width, height, function(tilt, canvas, iframe) {
@@ -85,6 +93,7 @@ TiltChrome.BrowserOverlay = {
       // remove the iframe from the browser stack
       Tilt.Document.remove(that.iframe);
       that.iframe = null;
+      that.href = null;
     });
   }
 };

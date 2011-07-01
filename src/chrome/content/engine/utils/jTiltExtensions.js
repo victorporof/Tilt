@@ -58,7 +58,7 @@ Tilt.Extensions.WebGL = {
       Tilt.Document.initCanvas(function(canvas) {
         // get the default content window if not specified
         if ("undefined" === typeof(contentWindow)) {
-          contentWindow = content;
+          contentWindow = window.content;
         }
         
         // calculate the total width of the content window
@@ -79,7 +79,7 @@ Tilt.Extensions.WebGL = {
         // run a ready callback function with the rendering passed as a param
         if ("function" === typeof(readyCallback)) {
           readyCallback(canvas);
-        } 
+        }
       }, false);
     }, false);
   }

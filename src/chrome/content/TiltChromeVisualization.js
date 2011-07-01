@@ -152,7 +152,7 @@ TiltChrome.Visualization = function(tilt, canvas, controller) {
    * Create the combined mesh representing the document visualization by
    * traversing the document & adding a stack for each node that is drawable.
    */
-  var setupVisualization = function() {
+  function setupVisualization() {
     // reset the mesh arrays
     mesh.vertices = [];
     mesh.texCoord = [];
@@ -247,29 +247,32 @@ TiltChrome.Visualization = function(tilt, canvas, controller) {
   /**
    * Handle some browser and basic controller events.
    */
-  var setupEventHandlers = function() {
-    // gBrowser.tabContainer.addEventListener("load", function() {
-    // }, true);
-
-    // gBrowser.tabContainer.addEventListener("TabAttrModified", function() {
-    // }, false);
-    
-    // gBrowser.tabContainer.addEventListener("TabSelect", function() {
-    // }, false);
-    
+  function setupEventHandlers() {
     // handle some browser events
-    gBrowser.tabContainer.addEventListener("TabClose", function tabClose() {
-      gBrowser.tabContainer.removeEventListener("TabClose", tabClose, false);
+    let tabContainer = gBrowser.tabContainer;
+    
+    tabContainer.addEventListener("load", function loadEvent(event) {
+      // when the url changes, automatically destroy the visualization
+      if (TiltChrome.BrowserOverlay.href !== window.content.location.href) {
+        tabContainer.removeEventListener("load", loadEvent, true);
+        TiltChrome.BrowserOverlay.destroy();
+      }
+    }, true);
+    
+    tabContainer.addEventListener("TabClose", function tabCloseEvent(event) {
+      tabContainer.removeEventListener("TabClose", tabCloseEvent, false);
       
       // when the tab is closed, automatically destroy the visualization
-      TiltChrome.BrowserOverlay.destroy();
+      if (TiltChrome.BrowserOverlay.href === window.content.location.href) {
+        TiltChrome.BrowserOverlay.destroy();
+      }
     }, false);
   }
   
   /**
    * Setup the controller, referencing this visualization.
    */
-  var setupController = function() {
+  function setupController() {
     // set a reference in the controller for this visualization
     controller.visualization = that;
     controller.width = tilt.width;
