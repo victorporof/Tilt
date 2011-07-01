@@ -79,7 +79,7 @@ TiltChrome.Visualization = function(tilt, canvas, controller) {
         
         // setup the visualization, browser event handlers and the controller
         setupVisualization();
-        setupEventHandlers();
+        setupBrowserEvents();
         setupController();
         
         // use a white background & gray margins of 8 pixels
@@ -245,28 +245,24 @@ TiltChrome.Visualization = function(tilt, canvas, controller) {
   };
   
   /**
-   * Handle some browser and basic controller events.
+   * Handle some browser events, when the tabs are selected or closed.
    */
-  function setupEventHandlers() {
-    // handle some browser events
+  function setupBrowserEvents() {
     let tabContainer = gBrowser.tabContainer;
     
-    tabContainer.addEventListener("load", function loadEvent(event) {
-      // when the url changes, automatically destroy the visualization
+    // when another tab is focused or the tab is closed, destroy visualization
+    function destroy(e) {
       if (TiltChrome.BrowserOverlay.href !== window.content.location.href) {
-        tabContainer.removeEventListener("load", loadEvent, true);
         TiltChrome.BrowserOverlay.destroy();
+        
+        // remove event listeners
+        tabContainer.removeEventListener("TabSelect", destroy, false);
+        tabContainer.removeEventListener("TabClose", destroy, false);
       }
-    }, true);
+    }
     
-    tabContainer.addEventListener("TabClose", function tabCloseEvent(event) {
-      tabContainer.removeEventListener("TabClose", tabCloseEvent, false);
-      
-      // when the tab is closed, automatically destroy the visualization
-      if (TiltChrome.BrowserOverlay.href === window.content.location.href) {
-        TiltChrome.BrowserOverlay.destroy();
-      }
-    }, false);
+    tabContainer.addEventListener("TabSelect", destroy, false);
+    tabContainer.addEventListener("TabClose", destroy, false);
   }
   
   /**
