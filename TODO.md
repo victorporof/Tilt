@@ -1,5 +1,4 @@
 ### Soon
-* handle page load, tab closed and other events
 * add some GUI (zoom and rotation sliders, thickness & spacing, auto rotation)
 * customize the visualization (transparency, view & draw mode, texture on/off)
 
