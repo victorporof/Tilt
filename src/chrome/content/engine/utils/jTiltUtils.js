@@ -146,7 +146,7 @@ Tilt.Document = {
    * @return {object} the same iframe
    */
   append: function(element, node) {
-    if (!node) {
+    if ("undefined" === typeof(node)) {
       // inside a chrome environment
       if ("undefined" !== typeof(gBrowser)) {
         node = gBrowser.selectedBrowser.parentNode;
@@ -157,7 +157,9 @@ Tilt.Document = {
       }
     }
     
-    node.appendChild(element);
+    if (node !== null) {
+      node.appendChild(element);
+    }
     return element;
   },
   
@@ -166,8 +168,19 @@ Tilt.Document = {
    *
    * @param {object} iframe: the iframe to be removed
    */
-  remove: function(element) {
-    element.parentNode.removeChild(element);
+  remove: function(element, node) {
+    if ("undefined" === typeof(node)) {
+      if ("undefined" !== typeof(element.parentNode)) {
+        node = element.parentNode;
+      }
+      else {
+        return;
+      }
+    }
+    
+    if (node !== null) {
+      node.removeChild(element);
+    }
   },
   
   /**
