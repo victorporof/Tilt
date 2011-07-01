@@ -24,7 +24,7 @@
  *    distribution.
  */
 if ("undefined" == typeof(Tilt)) {
-  let Tilt = {};
+  var Tilt = {};
 };
 
 /**
@@ -42,37 +42,37 @@ Tilt.Arcball = function(width, height, radius) {
   /**
    * By convention, we make a private "that" variable.
    */
-  let that = this;
+  var that = this;
   
   /**
    * Values retaining the current horizontal and vertical mouse coordinates.
    */
-  let mouseX = 0;
-  let mouseY = 0;
-  let mouseDragX = 0;
-  let mouseDragY = 0;
-  let mouseScroll = 0; // additionally, this implementation also handles zoom
+  var mouseX = 0;
+  var mouseY = 0;
+  var mouseDragX = 0;
+  var mouseDragY = 0;
+  var mouseScroll = 0; // additionally, this implementation also handles zoom
   
   /**
    * The vectors representing the mouse coordinates mapped on the arcball
    * and their perpendicular converted from (x, y) to (x, y, z) at specific 
    * events like mousePressed and mouseDragged.
    */
-  let startVec = vec3.create();
-  let endVec = vec3.create();
-  let pVec = vec3.create();
+  var startVec = vec3.create();
+  var endVec = vec3.create();
+  var pVec = vec3.create();
   
   /**
    * The corresponding rotation quaternions created using the mouse vectors.
    */
-  let lastRot = quat4.create([0, 0, 0, 1]);
-  let deltaRot = quat4.create([0, 0, 0, 1]);
-  let currentRot = quat4.create([0, 0, 0, 1]);
+  var lastRot = quat4.create([0, 0, 0, 1]);
+  var deltaRot = quat4.create([0, 0, 0, 1]);
+  var currentRot = quat4.create([0, 0, 0, 1]);
   
   /**
    * The zoom, calculated using mouse scroll deltas.
    */
-  let currentZoom = 0;
+  var currentZoom = 0;
 
   /**
    * Call this function whenever you need the updated rotation quaternion
@@ -177,12 +177,12 @@ Tilt.Arcball = function(width, height, radius) {
     y = (y - this.height / 2) / this.radius;
     
     // compute the square length of the vector to the point from the center
-    let length = x * x + y * y;
+    var length = x * x + y * y;
     
     // if the point is mapped outside of the sphere  
     if (length > 1) {    
       // calculate the normalization factor
-      let normal = 1 / Math.sqrt(length);
+      var normal = 1 / Math.sqrt(length);
 
       // set the normalized vector (a point on the sphere)
       sphereVec[0] = x * normal;
