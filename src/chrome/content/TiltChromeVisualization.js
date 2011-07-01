@@ -117,7 +117,7 @@ TiltChrome.Visualization = function(tilt, canvas, controller) {
       }
       else if (background) {
         // clear the context and draw a background gradient
-        tilt.background("#3e3e3e");
+        tilt.clear(0, 0, 0, 1);
         tilt.depthTest(false);
         tilt.image(background, 0, 0, tilt.width, tilt.height);
         
@@ -310,6 +310,9 @@ TiltChrome.Visualization = function(tilt, canvas, controller) {
     if ("function" === typeof(controller.keyReleased)) {
       tilt.keyReleased = controller.keyReleased;
     }
+    if ("function" === typeof(controller.resize)) {
+      tilt.resize = controller.resize;
+    }
   };
   
   /**
@@ -332,17 +335,6 @@ TiltChrome.Visualization = function(tilt, canvas, controller) {
    */
   this.setRotation = function(quaternion) {
     quat4.set(quaternion, transforms.rotation);
-  };
-  
-  /**
-   * Overriding the resize function to handle the event.
-   *
-   * @param {number} width: the new canvas width
-   * @param {number} height: the new canvas height
-   */
-  tilt.resize = function(width, height) {
-    controller.width = width;
-    controller.height = height;
   };
   
   /**
