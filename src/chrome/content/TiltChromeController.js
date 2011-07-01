@@ -77,10 +77,12 @@ TiltChrome.Controller.MouseAndKeyboard = function() {
    * @param {number} frameDelta: the delta time elapsed between frames
    */
   this.loop = function(frameDelta) {
+    // handle mouse dragged events
     if (mouseDragged) {
       arcball.mouseDragged(mouseX, mouseY);
     }
     
+    // handle key pressed events
     if (keyPressed) {
       if (keyCode[37] || keyCode[65]) {
         translationX += 5;
@@ -96,6 +98,7 @@ TiltChrome.Controller.MouseAndKeyboard = function() {
       }
     }
     
+    // update the visualization
     let coord = arcball.loop(frameDelta);
     this.visualization.setRotation(coord.rotation);
     this.visualization.setTranslation(translationX, translationY, coord.zoom);
