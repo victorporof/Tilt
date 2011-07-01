@@ -51,22 +51,19 @@ TiltChrome.BrowserOverlay = {
     
     // if the visualization is not currently running
     if (!that.iframe) {
-      // use an extension to get the image representation of the document
-      Tilt.Extensions.WebGL.initDocumentImage(function(image) {
-        // set the width and height to mach the content window dimensions
-        let width = window.content.innerWidth;
-        let height = window.content.innerHeight;
+      // set the width and height to mach the content window dimensions
+      let width = content.innerWidth;
+      let height = content.innerHeight;
+      
+      // initialize a Tilt environment: a canvas element inside an iframe
+      Tilt.Create(width, height, function(tilt, canvas, iframe) {
+        // remember the iframe so that it can be destroyed later
+        that.iframe = iframe;
         
-        // initialize a Tilt environment: a canvas element inside an iframe
-        Tilt.Create(width, height, function(tilt, canvas, iframe) {
-          // remember the iframe so that it can be destroyed later
-          that.iframe = iframe;
-          
-          // construct the visualization using the canvas and the dom image
-          that.visualization = 
-            new TiltChrome.Visualization(tilt, canvas, image,
-            new TiltChrome.Controller.MouseAndKeyboard()); // default controls
-        });
+        // construct the visualization using the canvas
+        that.visualization = 
+          new TiltChrome.Visualization(tilt, canvas,
+          new TiltChrome.Controller.MouseAndKeyboard()); // default controls
       });
     }
     else {
