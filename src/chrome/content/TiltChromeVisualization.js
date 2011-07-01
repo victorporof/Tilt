@@ -263,7 +263,7 @@ TiltChrome.Visualization = function(tilt, canvas, controller) {
       
       // when the tab is closed, automatically destroy the visualization
       TiltChrome.BrowserOverlay.destroy();
-    });
+    }, false);
   }
   
   /**
