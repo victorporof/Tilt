@@ -3,6 +3,7 @@
 * customize the visualization (transparency, view & draw mode, texture on/off)
 
 ### Next weeks
+* implement the MOZ_dom_element_texture WebGL extension once it's finished
 * context menu: "export as image"
 * handle the CSS z-index of nodes
 * render some nodes differently based on their positioning (absolute/relative)
