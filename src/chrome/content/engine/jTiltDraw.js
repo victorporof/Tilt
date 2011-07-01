@@ -243,27 +243,27 @@ Tilt.Draw = function(canvas, failCallback, successCallback) {
                        Tilt.Shaders.Color.fs, function(p) {
       colorShader = p;
       colorShader.vertexPosition = engine.shaderIO(p, "vertexPosition");
-
+      
       colorShader.mvMatrix = engine.shaderIO(p, "mvMatrix");
       colorShader.projMatrix = engine.shaderIO(p, "projMatrix");
       colorShader.color = engine.shaderIO(p, "color");
-
+      
       // function to set the attributes for the color shader
       colorShader.setAttributes = function(verticesBuffer) {
         engine.bindVertexBuffer(colorShader.vertexPosition, verticesBuffer);
       };
-
+      
       // function to set the uniforms for the color shader
       colorShader.setUniforms = function(mvMatrix, projMatrix, color) {
         engine.bindUniformMatrix(colorShader.mvMatrix, mvMatrix);
         engine.bindUniformMatrix(colorShader.projMatrix, projMatrix);
         engine.bindUniformVec4(colorShader.color, color);
       };
-
+      
       // helper function to use the color shader with the required params
       colorShader.use = function(verticesBuffer,
                                  mvMatrix, projMatrix, color) {
-
+                                   
         // use this program
         engine.useProgram(colorShader,
           [colorShader.vertexPosition]);
@@ -272,19 +272,19 @@ Tilt.Draw = function(canvas, failCallback, successCallback) {
         colorShader.setUniforms(mvMatrix, projMatrix, color);
       };
     });
-
+    
     // initializing a texture shader
     engine.initProgram(Tilt.Shaders.Texture.vs,
                        Tilt.Shaders.Texture.fs, function(p) {
       textureShader = p;
       textureShader.vertexPosition = engine.shaderIO(p, "vertexPosition");
       textureShader.vertexTexCoord = engine.shaderIO(p, "vertexTexCoord");
-
+      
       textureShader.mvMatrix = engine.shaderIO(p, "mvMatrix");
       textureShader.projMatrix = engine.shaderIO(p, "projMatrix");
       textureShader.color = engine.shaderIO(p, "color");
       textureShader.sampler = engine.shaderIO(p, "sampler");
-
+      
       // function to set the attributes for the texture shader
       textureShader.setAttributes = function(verticesBuffer, texCoordBuffer) {
         engine.bindVertexBuffer(textureShader.vertexPosition, verticesBuffer);
@@ -298,50 +298,50 @@ Tilt.Draw = function(canvas, failCallback, successCallback) {
         engine.bindUniformVec4(textureShader.color, col);
         engine.bindTexture(textureShader.sampler, tex);
       };
-
+      
       // helper function to use the texture shader with the required params
       textureShader.use = function(verticesBuffer, texCoordBuffer,
                                    mvMatrix, projMatrix, color, texture) {
-
+                                     
         // use this program
         engine.useProgram(textureShader,
           [textureShader.vertexPosition, textureShader.vertexTexCoord]);
-
+          
         textureShader.setAttributes(verticesBuffer, texCoordBuffer);
         textureShader.setUniforms(mvMatrix, projMatrix, color, texture);
       };
     });
-
+    
     // set the default rendering properties
     engine.blendMode("alpha");
     engine.depthTest(true);
-
+    
     // model view and projection matrices used for transformations
     mat4.identity(mvMatrix);
     mat4.identity(projMatrix);
-
+    
     // set the default model view and projection matrices
     that.origin();
     that.perspective();
-
+    
     // set the default tint, fill, stroke and stroke weight
     that.tint("#fff");
     that.fill("#fff");
     that.stroke("#000");
     that.strokeWeight(1);
-
+    
     // buffer of 2-component vertices (x, y) as the corners of a rectangle
     rectangle.vertices = engine.initBuffer([
       0, 0, 1, 0, 0, 1, 1, 1], 2);
-
+      
     // buffer of 2-component vertices (x, y) as the outline of a rectangle
     rectangle.wireframe = engine.initBuffer([
       0, 0, 1, 0, 1, 1, 0, 1, 0, 0], 2);
-
+      
     // buffer of 2-component texture coordinates (u, v) for the rectangle
     rectangle.texCoord = engine.initBuffer([
       0, 0, 1, 0, 0, 1, 1, 1], 2);
-
+      
     // buffer of 3-component vertices (x, y, z) as the corners of a cube
     cube.vertices = engine.initBuffer([
       -0.5, -0.5,  0.5, /* front */
@@ -368,7 +368,7 @@ Tilt.Draw = function(canvas, failCallback, successCallback) {
       -0.5, -0.5,  0.5,
       -0.5,  0.5,  0.5,
       -0.5,  0.5, -0.5], 3);
-
+      
     // buffer of 3-component vertices (x, y, z) as the outline of a cube
     cube.wireframe = engine.initBuffer([
       -0.5, -0.5,  0.5, /* front */
@@ -379,15 +379,15 @@ Tilt.Draw = function(canvas, failCallback, successCallback) {
       -0.5, -0.5, -0.5,
       -0.5,  0.5, -0.5,
        0.5,  0.5, -0.5], 3);
-
+       
     // buffer of 2-component texture coordinates (u, v) for the cube
     cube.texCoord = engine.initBuffer([
       0, 0, 1, 0, 1, 1, 0, 1,
-      0, 0, 1, 0,	1, 1, 0, 1,
-      0, 0, 1, 0,	1, 1, 0, 1,
       0, 0, 1, 0, 1, 1, 0, 1,
-      0, 0, 1, 0,	1, 1, 0, 1,
-      0, 0, 1, 0,	1, 1, 0, 1], 2);
+      0, 0, 1, 0, 1, 1, 0, 1,
+      0, 0, 1, 0, 1, 1, 0, 1,
+      0, 0, 1, 0, 1, 1, 0, 1,
+      0, 0, 1, 0, 1, 1, 0, 1], 2);
 
     // vertex indices for the cube vertices, defining the order for which
     // these points can create a cube from triangles
@@ -398,7 +398,7 @@ Tilt.Draw = function(canvas, failCallback, successCallback) {
       12, 13, 14, 12, 14, 15,
       16, 17, 18, 16, 18, 19,
       20, 21, 22, 20, 22, 23]);
-
+      
     // vertex indices for the cube vertices, defining the order for which
     // these points can create a wireframe cube from lines
     cube.wireframeIndices = engine.initIndexBuffer([
@@ -500,13 +500,13 @@ Tilt.Draw = function(canvas, failCallback, successCallback) {
    * @return {boolean} true if the initialization is complete
    */
   this.isInitialized = function() {
-    return colorShader && textureShader;
+    return colorShader !== null && textureShader !== null;
   };
-
+  
   // Helpers for managing variables like frameCount, frameRate, frameDelta
   // Used internally, in the requestAnimFrame function
-  var lastTime = 0;
-  var currentTime = 0;
+  var lastTime;
+  var currentTime;
 
   /**
    * Requests the next animation frame in an efficient way.
@@ -524,28 +524,28 @@ Tilt.Draw = function(canvas, failCallback, successCallback) {
    */
   this.requestAnimFrame = function(draw) {
     window.requestAnimFrame(draw, canvas);
-
+    
     // do other work only after this object was completely initialized
     if (that.isInitialized()) {
       // reset the model view and projection matrices
       that.origin();
       that.perspective();
-
+      
       // calculate the frame delta and frame rate using the current time
       currentTime = new Date().getTime();
-
+      
       if (lastTime !== 0) {
         that.frameDelta = currentTime - lastTime;
         that.frameRate = 1000 / that.frameDelta;
       }
       lastTime = currentTime;
-
+      
       // increment the elapsed time and total frame count
       that.elapsedTime += that.frameDelta;
       that.frameCount++;
     }
   };
-
+  
   /**
    * Binds an offscreen rendering context.
    * Therefore, anything will be drawn offscreen using a specific buffer.
@@ -797,8 +797,9 @@ Tilt.Draw = function(canvas, failCallback, successCallback) {
     
     // clear the color and depth buffers
     engine.clear(rgba[0], rgba[1], rgba[2], rgba[3]);
+    rgba = null;
   };
-
+  
   /**
    * Draws a rectangle using the specified parameters.
    *
@@ -813,7 +814,7 @@ Tilt.Draw = function(canvas, failCallback, successCallback) {
       x -= width / 2;
       y -= height / 2;
     }
-
+    
     // in memory, the rectangle is represented as a perfect 1x1 square, so
     // some transformations are applied to achieve the desired shape
     that.pushMatrix();
@@ -826,7 +827,7 @@ Tilt.Draw = function(canvas, failCallback, successCallback) {
       colorShader.use(rectangle.vertices, mvMatrix, projMatrix, fill);
       engine.drawVertices(gl.TRIANGLE_STRIP, 0, rectangle.vertices.numItems);
     }
-
+    
     // draw the outline only if the stroke alpha channel is not transparent
     if (stroke[3]) {
       // use the necessary shader and draw the vertices
@@ -835,7 +836,7 @@ Tilt.Draw = function(canvas, failCallback, successCallback) {
     }
     that.popMatrix();
   };
-
+  
   /**
    * Modifies the location from which rectangles draw. The default mode is
    * rectMode("corner"), which specifies the location to be the upper left
@@ -848,7 +849,7 @@ Tilt.Draw = function(canvas, failCallback, successCallback) {
   this.rectMode = function(mode) {
     rectangle.rectMode = mode;
   };
-
+  
   /**
    * Draws an image using the specified parameters.
    *
@@ -872,13 +873,13 @@ Tilt.Draw = function(canvas, failCallback, successCallback) {
         height = texture.framebuffer.height;
       }
     }
-
+    
     // if imageMode is set to "center", we need to offset the origin
     if ("center" === rectangle.imageMode) {
       x -= width / 2;
       y -= height / 2;
     }
-
+    
     // draw the image only if the tint alpha channel is not transparent
     if (tint[3]) {
       // in memory, the rectangle is represented as a perfect 1x1 square, so
@@ -886,17 +887,17 @@ Tilt.Draw = function(canvas, failCallback, successCallback) {
       that.pushMatrix();
       that.translate(x, y, 0);
       that.scale(width, height, 1);
-
+      
       // use the necessary shader and draw the vertices
       textureShader.use(rectangle.vertices,
                         rectangle.texCoord,
                         mvMatrix, projMatrix, tint, texture);
-
+                        
       engine.drawVertices(gl.TRIANGLE_STRIP, 0, rectangle.vertices.numItems);
       that.popMatrix();
     }
   };
-
+  
   /**
    * Modifies the location from which images draw. The default mode is
    * imageMode("corner"), which specifies the location to be the upper left
@@ -909,7 +910,7 @@ Tilt.Draw = function(canvas, failCallback, successCallback) {
   this.imageMode = function(mode) {
     rectangle.imageMode = mode;
   };
-
+  
   /**
    * Draws a box using the specified parameters.
    *
@@ -923,7 +924,7 @@ Tilt.Draw = function(canvas, failCallback, successCallback) {
     // some transformations are applied to achieve the desired shape
     that.pushMatrix();
     that.scale(width, height, depth);
-
+    
     if (texture) {
       // draw the box only if the tint alpha channel is not transparent
       if (tint[3]) {
@@ -931,7 +932,7 @@ Tilt.Draw = function(canvas, failCallback, successCallback) {
         textureShader.use(cube.vertices,
                           cube.texCoord,
                           mvMatrix, projMatrix, tint, texture);
-
+                          
         engine.drawIndexedVertices(gl.TRIANGLES, cube.indices);
       }
     }
@@ -941,7 +942,7 @@ Tilt.Draw = function(canvas, failCallback, successCallback) {
         // use the necessary shader and draw the vertices
         colorShader.use(cube.vertices,
                         mvMatrix, projMatrix, fill);
-
+                        
         engine.drawIndexedVertices(gl.TRIANGLES, cube.indices);
       }
     }
@@ -950,7 +951,7 @@ Tilt.Draw = function(canvas, failCallback, successCallback) {
         // use the necessary shader and draw the vertices
         colorShader.use(cube.wireframe,
                         mvMatrix, projMatrix, stroke);
-
+                        
         engine.drawIndexedVertices(gl.LINES, cube.wireframeIndices);
     }
     that.popMatrix();
@@ -971,7 +972,7 @@ Tilt.Draw = function(canvas, failCallback, successCallback) {
    */
   this.mesh = function(verticesBuffer, texCoordBuffer, normalsBuffer,
                        drawMode, color, texture, indicesBuffer) {
-
+                         
     // use the necessary shader
     if (texture) {
       textureShader.use(verticesBuffer, texCoordBuffer,
@@ -983,7 +984,7 @@ Tilt.Draw = function(canvas, failCallback, successCallback) {
                       mvMatrix, projMatrix, "string" === typeof color ?
                       Tilt.Math.hex2rgba(color) : color);
     }
-
+    
     // draw the vertices as indexed elements or simple arrays
     if (indicesBuffer) {
       engine.drawIndexedVertices(drawMode, indicesBuffer);
@@ -991,7 +992,7 @@ Tilt.Draw = function(canvas, failCallback, successCallback) {
     else {
       engine.drawVertices(drawMode, 0, verticesBuffer.numItems);
     }
-
+    
     // TODO: use the normals buffer, add some lighting
   };
 
@@ -1008,7 +1009,7 @@ Tilt.Draw = function(canvas, failCallback, successCallback) {
     that.origin();
     that.perspective();
   };
-
+  
   /**
    * Destroys this object and sets all members to null.
    */
@@ -1022,24 +1023,27 @@ Tilt.Draw = function(canvas, failCallback, successCallback) {
     mvMatrixStack = null;
     mvMatrix = null;
     projMatrix = null;
-
+    
     rectangle = null;
     cube = null;
     tint = null;
     fill = null;
     stroke = null;
     
-    canvas.onresize = null;
-    canvas.onmousedown = null;
-    canvas.onmouseup = null;
-    canvas.onclick = null;
-    canvas.onmousemove = null;
-    canvas.onmouseover = null;
-    canvas.onmouseout = null;
-    window.onkeydown = null;
-    window.onkeypress = null;
-    window.onkeyup = null;
-
+    try {
+      canvas.onresize = null;
+      canvas.onmousedown = null;
+      canvas.onmouseup = null;
+      canvas.onclick = null;
+      canvas.onmousemove = null;
+      canvas.onmouseover = null;
+      canvas.onmouseout = null;
+      window.onkeydown = null;
+      window.onkeypress = null;
+      window.onkeyup = null;
+    }
+    catch (e) { }
+    
     that = null;
   };
 };
