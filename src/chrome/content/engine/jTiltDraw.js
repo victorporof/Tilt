@@ -80,7 +80,6 @@ Tilt.Create = function(width, height, readyCallback) {
       if ("function" === typeof(readyCallback)) {
         readyCallback(tilt, canvas, iframe);
       }
-
       // automatically call the setup and/or draw functions if overridden
       if ("function" === typeof(tilt.setup)) {
         tilt.setup();
@@ -427,39 +426,39 @@ Tilt.Draw = function(canvas, failCallback, successCallback) {
       that.height = this.height;
       that.resize(that.width, that.height);
     }
-
+    
     // handles the mousedown event
     canvas.onmousedown = function(e) {
       that.mousePressed(that.mouseX, that.mouseY);
     }
-
+    
     // handles the mouseup event
     canvas.onmouseup = function(e) {
       that.mouseReleased(that.mouseX, that.mouseY);
     }
-
+    
     // handle the click event
     canvas.onclick = function(e) {
       that.mouseClicked(that.mouseX, that.mouseY);
     }
-
+    
     // handle the mousemove event
     canvas.onmousemove = function(e) {
       that.mouseX = e.pageX - canvas.offsetLeft;
       that.mouseY = e.pageY - canvas.offsetTop;
       that.mouseMoved(that.mouseX, that.mouseY);
     }
-
+    
     // handle the mouseover event
     canvas.onmouseover = function(e) {
       that.mouseOver(that.mouseX, that.mouseY);
     }
-
+    
     // handle the mouseout event
     canvas.onmouseout = function(e) {
       that.mouseOut(that.mouseX, that.mouseY);
     }
-
+    
     // handle the mousescroll event
     canvas.addEventListener('DOMMouseScroll', function(e) {
       that.mouseScroll(e.detail);
@@ -571,7 +570,7 @@ Tilt.Draw = function(canvas, failCallback, successCallback) {
     that.origin();
     that.perspective();
   };
-
+  
   /**
    * Sets a default perspective projection, with the near frustum rectangle
    * mapped to the canvas width and height bounds.
@@ -582,17 +581,17 @@ Tilt.Draw = function(canvas, failCallback, successCallback) {
     var h = that.height;
     var x = w / 2;
     var y = h / 2;
-
+    
     var z = y / Math.tan(Tilt.Math.radians(45) / 2);
     var znear = z / 10;
     var zfar = z * 100;
     var aspect = w / h;
-
+    
     engine.viewport(canvas.width, canvas.height);
     mat4.perspective(fov, aspect, znear, zfar, projMatrix, true);
     mat4.translate(projMatrix, [-x, -y, -z]);
   };
-
+  
   /**
    * Sets a default orthographic projection (recommended for 2d rendering).
    */
@@ -773,7 +772,7 @@ Tilt.Draw = function(canvas, failCallback, successCallback) {
 
   /**
    * Clears the canvas context (usually at the beginning of each frame).
-   * If the color is undefined, it will default to opaque light gray.
+   * If the color is undefined, it will default to opaque black.
    * It is not recommended but possible to pass a number as a parameter,
    * in which case the color will be [n, n, n, 255], or directly an array of
    * [r, g, b, a] values, all in the 0..255 interval.
@@ -782,12 +781,12 @@ Tilt.Draw = function(canvas, failCallback, successCallback) {
    */
   this.background = function(color) {
     var rgba;
-
-    if ("undefined" === typeof(color)) {
-      rgba = Tilt.Math.hex2rgba("#d6d6d6ff");
-    }
-    else if ("string" === typeof(color)) {
+    
+    if ("string" === typeof(color)) {
       rgba = Tilt.Math.hex2rgba(color);
+    }
+    else if ("undefined" === typeof(color)) {
+      rgba = [0, 0, 0, 1]
     }
     else if ("number" === typeof(color)) {
       rgba = [color / 255, color / 255, color / 255, 1];
@@ -795,7 +794,7 @@ Tilt.Draw = function(canvas, failCallback, successCallback) {
     else {
       rgba = [color[0] / 255, color[1] / 255, color[2] / 255, color[3] / 255];
     }
-
+    
     // clear the color and depth buffers
     engine.clear(rgba[0], rgba[1], rgba[2], rgba[3]);
   };
@@ -1006,7 +1005,6 @@ Tilt.Draw = function(canvas, failCallback, successCallback) {
   this.size = function(width, height) {
     canvas.width = width;
     canvas.height = height;
-
     that.origin();
     that.perspective();
   };
@@ -1018,7 +1016,7 @@ Tilt.Draw = function(canvas, failCallback, successCallback) {
     engine.destroy();
     engine = null;
     gl = null;
-
+    
     colorShader = null;
     textureShader = null;
     mvMatrixStack = null;
