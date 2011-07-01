@@ -176,12 +176,12 @@ Tilt.Document = {
    * @return {object} the current content document
    */
   get: function() {
-    return window.content.document;
+    return content.document;
   },
   
   /**
    * Traverses a document object model and calls function for each node.
-   * If the dom parameter is ommited, then the window.content.document will
+   * If the dom parameter is omitted, then the current content.document will
    * be used. The nodeCallback function will have the current node and depth
    * passed as parameters, and the readyCallback function will have the 
    * maximum depth and the entire dom passed as parameters.
