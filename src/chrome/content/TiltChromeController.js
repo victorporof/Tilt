@@ -191,4 +191,17 @@ TiltChrome.Controller.MouseAndKeyboard = function() {
       TiltChrome.BrowserOverlay.destroy();
     }
   };
+  
+  /**
+   * Overriding the resize function to handle the event.
+   *
+   * @param {number} width: the new canvas width
+   * @param {number} height: the new canvas height
+   */
+  this.resize = function(width, height) {
+    this.width = width;
+    this.height = height;
+    
+    arcball.resize(width, height);
+  };
 }
