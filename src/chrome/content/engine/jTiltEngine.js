@@ -106,11 +106,11 @@ Tilt.Engine = function() {
     // compile the two shaders
     var vertShader = that.compileShader(vertShaderSrc, "x-shader/x-vertex");
     var fragShader = that.compileShader(fragShaderSrc, "x-shader/x-fragment");
-
+    
     // also remember their sources (useful for debugging)
     vertShader.src = vertShaderSrc;
     fragShader.src = fragShaderSrc;
-
+    
     if ("function" === typeof(readyCallback)) {
       readyCallback(that.linkProgram(vertShader, fragShader));
     }
@@ -136,20 +136,20 @@ Tilt.Engine = function() {
       fragShaderURL = vertShaderURL + ".fs";
       vertShaderURL = vertShaderURL + ".vs";
     }
-
+    
     // request the shader sources asynchronously
     that.requests([vertShaderURL, fragShaderURL], function(http) {
       // compile the two shaders
       var vertShader = that.compileShader(http[0].responseText,
                                           "x-shader/x-vertex");
-
+                                          
       var fragShader = that.compileShader(http[1].responseText,
                                           "x-shader/x-fragment");
-
+                                          
       // also remember their sources (useful for debugging)
       vertShader.src = http[0].responseText;
       fragShader.src = http[1].responseText;
-
+      
       if ("function" === typeof(readyCallback)) {
         readyCallback(that.linkProgram(vertShader, fragShader));
       }
@@ -165,12 +165,12 @@ Tilt.Engine = function() {
    */
   this.compileShader = function(shaderSource, shaderType) {
     var shader;
-
+    
     // make sure the shader source is valid
     if ("string" !== typeof(shaderSource) || shaderSource.length < 1) {
       Tilt.Console.error(Tilt.StringBundle.get(
         "compileShader.source.error"));
-
+        
       return null;
     }
 
@@ -184,21 +184,21 @@ Tilt.Engine = function() {
     else {
       Tilt.Console.error(Tilt.StringBundle.format(
         "compileShader.type.error"), [shaderSource]);
-
+        
       return null;
     }
 
     // set the shader source and compile it
     gl.shaderSource(shader, shaderSource);
     gl.compileShader(shader);
-
+    
     // verify the compile status; if something went wrong, log the error
     if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
       var status = gl.getShaderInfoLog(shader);
-
+      
       Tilt.Console.error(Tilt.StringBundle.format(
         "compileShader.compile.error"), [status]);
-
+        
       return null;
     }
     return shader;
@@ -217,11 +217,11 @@ Tilt.Engine = function() {
     gl.attachShader(program, vertShader);
     gl.attachShader(program, fragShader);
     gl.linkProgram(program);
-
+    
     // verify the link status; if something went wrong, log the error
     if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
       var status = gl.getProgramInfoLog(shader);
-
+      
       Tilt.Console.error(Tilt.StringBundle.format(
         "linkProgram.error", [status, vertShader.src, fragShader.src]));
     }
@@ -241,14 +241,14 @@ Tilt.Engine = function() {
     // use the the program if it wasn't already set
     if (program !== program_) {
       gl.useProgram(program = program_);
-
+      
       // enable any necessary vertex attributes
       for (var i = 0, len = attributes.length; i < len; i++) {
         gl.enableVertexAttribArray(attributes[i]);
       }
     }
   };
-
+  
   /**
    * Gets a shader attribute location from a program.
    *
@@ -259,7 +259,7 @@ Tilt.Engine = function() {
   this.shaderAttribute = function(program, attribute) {
     return gl.getAttribLocation(program, attribute);
   };
-
+  
   /**
    * Gets a shader uniform location from a program.
    *
@@ -270,7 +270,7 @@ Tilt.Engine = function() {
   this.shaderUniform = function(program, uniform) {
     return gl.getUniformLocation(program, uniform);
   };
-
+  
   /**
    * Gets a generic shader variable (attribute or uniform) from a program.
    * If an attribute is found, the attribute location will be returned.
@@ -289,7 +289,7 @@ Tilt.Engine = function() {
     }
     return location;
   };
-
+  
   /**
    * Binds a vertex buffer as an array buffer for a specific shader attribute
    *
@@ -300,7 +300,7 @@ Tilt.Engine = function() {
     gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
     gl.vertexAttribPointer(attribute, buffer.itemSize, gl.FLOAT, false, 0, 0);
   };
-
+  
   /**
    * Binds a uniform matrix to the current shader.
    *
@@ -310,7 +310,7 @@ Tilt.Engine = function() {
   this.bindUniformMatrix = function(uniform, variable) {
     gl.uniformMatrix4fv(uniform, false, variable);
   };
-
+  
   /**
    * Binds a uniform vector of 4 elements to the current shader.
    *
@@ -320,7 +320,7 @@ Tilt.Engine = function() {
   this.bindUniformVec4 = function(uniform, variable) {
     gl.uniform4fv(uniform, variable);
   };
-
+  
   /**
    * Binds a simple float element to the current shader.
    *
@@ -330,7 +330,7 @@ Tilt.Engine = function() {
   this.bindUniformFloat = function(uniform, variable) {
     gl.uniform1f(uniform, variable);
   };
-
+  
   /**
    * Binds a uniform texture for a sampler to the current shader.
    *
@@ -341,7 +341,7 @@ Tilt.Engine = function() {
     gl.bindTexture(gl.TEXTURE_2D, texture);
     gl.uniform1i(sampler, 0);
   };
-
+  
   /**
    * Binds a framebuffer to the current WebGL context.
    * This is very useful when, for example, rendering offscreen.
@@ -351,7 +351,7 @@ Tilt.Engine = function() {
   this.bindFramebuffer = function(buffer) {
     gl.bindFramebuffer(gl.FRAMEBUFFER, buffer);
   };
-
+  
   /**
    * Initializes buffer data to be used for drawing, using an array of floats.
    * The "numItems" param can be specified to use only a portion of the array.
@@ -366,18 +366,18 @@ Tilt.Engine = function() {
     if ("undefined" === typeof(numItems)) {
       numItems = elementsArray.length / itemSize;
     }
-
+    
     // create an array buffer and bind the elements as a Float32Array
     var buffer = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
     gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(elementsArray),
                   gl.STATIC_DRAW);
-
+                  
     // remember some properties, useful when binding the buffer to a shader
     buffer.itemSize = itemSize;
     buffer.numItems = numItems;
     buffer.array = elementsArray;
-
+    
     return buffer;
   };
 
@@ -395,18 +395,18 @@ Tilt.Engine = function() {
     if ("undefined" === typeof(numItems)) {
       numItems = elementsArray.length;
     }
-
+    
     // create an array buffer and bind the elements as a Uint16Array
     var buffer = gl.createBuffer();
     gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, buffer);
     gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(elementsArray),
                   gl.STATIC_DRAW);
-
+                  
     // remember some properties, useful when binding the buffer to a shader
     buffer.itemSize = 1;
     buffer.numItems = numItems;
     buffer.array = elementsArray;
-
+    
     return buffer;
   };
 
@@ -424,7 +424,7 @@ Tilt.Engine = function() {
     gl.bindFramebuffer(gl.FRAMEBUFFER, framebuffer);
     framebuffer.width = width;
     framebuffer.height = height;
-
+    
     // TODO: add custom texture format
     // initialize the texture to be used as a color buffer to render to
     var texture = gl.createTexture();
@@ -433,40 +433,40 @@ Tilt.Engine = function() {
     gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA,
                   framebuffer.width, framebuffer.height, 0,
                   gl.RGBA, gl.UNSIGNED_BYTE, null);
-
+                  
     that.setTextureParams("linear", "linear", false, "clamp", "clamp");
-
+    
     // TODO: add custom depth format (16, 24, 32)
     // initialize a depth buffer, used by the WebGL context for z-sorting
     var depth = gl.createRenderbuffer();
     gl.bindRenderbuffer(gl.RENDERBUFFER, depth);
     gl.renderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_COMPONENT16,
                            framebuffer.width, framebuffer.height);
-
+                           
     // TODO: add support for stencil buffer
     // initialize a stencil buffer, used for various effects (if necessary)
     var stencil = null;
-
+    
     // attach the render buffers
     gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0,
                             gl.TEXTURE_2D, texture, 0);
-
+                            
     gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT,
                                gl.RENDERBUFFER, depth);
-
+                               
     // verify the buffer status; if something went wrong, log the error
   	if (!gl.checkFramebufferStatus(gl.FRAMEBUFFER)) {
         var status = gl.checkFramebufferStatus(GL_FRAMEBUFFER);
-
+        
         Tilt.Console.error(Tilt.StringBundle.format(
           "initOffscreenBuffer.framebuffer.error"), [status]);
   	}
-
+  	
   	// cleanup: unbind anything we set
     gl.bindTexture(gl.TEXTURE_2D, null);
     gl.bindRenderbuffer(gl.RENDERBUFFER, null);
     gl.bindFramebuffer(gl.FRAMEBUFFER, null);
-
+    
     return {
       framebuffer: framebuffer,
       texture: texture,
@@ -499,7 +499,7 @@ Tilt.Engine = function() {
     // create the texture and handle the case in which the texture source is
     // an already loaded image or an URL path
     var texture = gl.createTexture();
-
+    
     if ("object" === typeof(textureSource)) {
       texture.image = textureSource;
       bindTextureImage();
@@ -511,25 +511,25 @@ Tilt.Engine = function() {
         bindTextureImage();
       };
     }
-
+    
     // used internally for binding an image to a texture object
     function bindTextureImage() {
       texture.width = texture.image.width;
       texture.height = texture.image.height;
-
+      
       // make sure the image is power of two
       Tilt.Image.resizeToPowerOfTwo(texture.image, function(image) {
         texture.image = image;
-
+        
         // finally, do the actual binding and apply the pixels
         gl.bindTexture(gl.TEXTURE_2D, texture);
         gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE,
                       texture.image);
-
+                      
         // set the required texture params and cleanup
         that.setTextureParams(minFilter, magFilter, mipmap, wrapS, wrapT);
         gl.bindTexture(gl.TEXTURE_2D, null);
-
+        
         // the readyCallback function is mandatory, but we check nevertheless
         if ("function" === typeof(readyCallback)) {
           readyCallback(texture);
@@ -537,7 +537,7 @@ Tilt.Engine = function() {
       }, fillColor, strokeColor, strokeWeight, true);
     }
   };
-
+  
   /**
    * Sets texture parameters for the current texture binding.
    * Optionally, you can also (re)set the current texture binding manually.
@@ -555,7 +555,7 @@ Tilt.Engine = function() {
     if (texture) {
       gl.bindTexture(gl.TEXTURE_2D, texture);
     }
-
+    
     // set the minification filter
     if ("nearest" === minFilter) {
       gl.texParameteri(gl.TEXTURE_2D,
@@ -569,7 +569,7 @@ Tilt.Engine = function() {
       gl.texParameteri(gl.TEXTURE_2D,
                        gl.TEXTURE_MIN_FILTER, gl.LINEAR);
     }
-
+    
     // set the magnification filter
     if ("nearest" === magFilter) {
       gl.texParameteri(gl.TEXTURE_2D,
@@ -583,7 +583,7 @@ Tilt.Engine = function() {
       gl.texParameteri(gl.TEXTURE_2D,
                        gl.TEXTURE_MAG_FILTER, gl.LINEAR);
     }
-
+    
     // set the wrapping on the x-axis for the texture
     if ("repeat" === wrapS) {
       gl.texParameteri(gl.TEXTURE_2D,
@@ -593,7 +593,7 @@ Tilt.Engine = function() {
       gl.texParameteri(gl.TEXTURE_2D,
                        gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
     }
-
+    
     // set the wrapping on the y-axis for the texture
     if ("repeat" === wrapT) {
       gl.texParameteri(gl.TEXTURE_2D,
@@ -603,7 +603,7 @@ Tilt.Engine = function() {
       gl.texParameteri(gl.TEXTURE_2D,
                        gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
     }
-
+    
     // generate mipmap if necessary
     if (mipmap) {
       gl.generateMipmap(gl.TEXTURE_2D);
@@ -618,8 +618,8 @@ Tilt.Engine = function() {
    */
   this.setTextureFlipY = function(flipY) {
     gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, flipY);
-  }
-
+  };
+  
   /**
    * Draws bound vertex buffers using the specified parameters.
    *
@@ -631,7 +631,7 @@ Tilt.Engine = function() {
   this.drawVertices = function(drawMode, first, count) {
     gl.drawArrays(that.getDrawModeEnum(drawMode), first, count);
   };
-
+  
   /**
    * Draws bound vertex buffers using the specified parameters.
    * This function also makes use of an index buffer.
@@ -645,7 +645,7 @@ Tilt.Engine = function() {
     gl.drawElements(that.getDrawModeEnum(drawMode),
                     indicesBuffer.numItems, gl.UNSIGNED_SHORT, 0);
   };
-
+  
   /**
    * Converts from a string describing the draw mode to the corresponding
    * value as a WebGL enum. If "drawMode" is undefined, it is defaulted to
@@ -657,7 +657,7 @@ Tilt.Engine = function() {
    */
   this.getDrawModeEnum = function(drawMode) {
     var mode;
-
+    
     if ("string" === typeof drawMode) {
       if ("triangles" === drawMode) {
         mode = gl.TRIANGLES;
@@ -690,7 +690,7 @@ Tilt.Engine = function() {
     else {
       return drawMode;
     }
-
+    
     return mode;
   };
 
@@ -705,7 +705,7 @@ Tilt.Engine = function() {
   this.viewport = function(width, height) {
     gl.viewport(0, 0, width, height);
   };
-
+  
   /**
    * Clears the color and depth buffers to a specific color.
    * The color components are represented in the 0..1 range.
@@ -719,7 +719,7 @@ Tilt.Engine = function() {
     gl.clearColor(r, g, b, a);
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
   };
-
+  
   /**
    * Sets blending, either "alpha" or "add" (additive blending).
    * Anything else disables blending.
@@ -739,7 +739,7 @@ Tilt.Engine = function() {
       gl.disable(gl.BLEND);
     }
   };
-
+  
   /**
    * Sets if depth testing should be enabled or not.
    * Disabling could be useful when handling transparency (for example).
@@ -754,7 +754,7 @@ Tilt.Engine = function() {
       gl.disable(gl.DEPTH_TEST);
     }
   };
-
+  
   /**
    * Handles a generic get request, performed on a specified url. When done,
    * it fires the ready callback function if it exists, & passes the http
@@ -767,7 +767,7 @@ Tilt.Engine = function() {
    */
   this.request = function(url, readyCallback, aParam) {
     var http = new XMLHttpRequest();
-
+    
     http.open("GET", url, true);
     http.send(null);
     http.onreadystatechange = function() {
@@ -778,7 +778,7 @@ Tilt.Engine = function() {
       }
     };
   };
-
+  
   /**
    * Handles multiple get requests from specified urls. When all requests are
    * completed, it fires the ready callback function if it exists, & passes
@@ -792,7 +792,7 @@ Tilt.Engine = function() {
   this.requests = function(urls, readyCallback, aParam) {
     var http = [];
     var finished = 0;
-
+    
     function requestReady() {
       finished++;
       if (finished === urls.length) {
@@ -801,7 +801,7 @@ Tilt.Engine = function() {
         }
       }
     }
-
+    
     for (var i = 0, size = urls.length; i < size; i++) {
       that.request(urls[i], function(request, index) {
         http[index] = request;
@@ -809,7 +809,7 @@ Tilt.Engine = function() {
       }, i);
     }
   };
-
+  
   /**
    * Destroys this object and sets all members to null.
    */
