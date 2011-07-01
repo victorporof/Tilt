@@ -40,11 +40,12 @@ Tilt.Extensions.WebGL = {
   /**
    * JavaScript implementation of WebGL MOZ_dom_element_texture (#653656)
    * extension. It requires a callback function & optionally a contentWindow.
-   * If unspecified, the contentWindow will default to the window.content.
-   * The newly created image will be passed as a parameter to readyCallback.
+   * If unspecified, the contentWindow will default to the content document of 
+   * the currently selected tab. The newly created image will be passed as a 
+   * parameter to readyCallback.
    * 
    * @param {function} readyCallback: function called when drawing is finished
-   * @param {object} contentWindow: optional, the window to draw
+   * @param {object} contentWindow: optional, the window content to draw
    */
   initDocumentImage: function(readyCallback, contentWindow) {
     // use a canvas and a WebGL context to get the maximum texture size
@@ -55,8 +56,9 @@ Tilt.Extensions.WebGL = {
       
       // use a custom canvas element and a 2d context to draw the window
       Tilt.Document.initCanvas(function(canvas) {
-        if (!contentWindow) {
-          contentWindow = window.content;
+        // get the default content window if not specified
+        if ("undefined" === typeof(contentWindow)) {
+          contentWindow = content;
         }
         
         // calculate the total width of the content window
