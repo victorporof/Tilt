@@ -23,6 +23,8 @@
  *    3. This notice may not be removed or altered from any source
  *    distribution.
  */
+"use strict";
+
 if ("undefined" == typeof(Tilt)) {
   var Tilt = {};
 };
@@ -73,7 +75,7 @@ Tilt.Arcball = function(width, height, radius) {
    * The zoom, calculated using mouse scroll deltas.
    */
   var currentZoom = 0;
-
+  
   /**
    * Call this function whenever you need the updated rotation quaternion
    * and the zoom amount. These values will be returned as "rotation" & "zoom"
@@ -93,10 +95,10 @@ Tilt.Arcball = function(width, height, radius) {
     
 	  // update the zoom based on the mouse scroll
     currentZoom += (mouseScroll - currentZoom) * frameDelta;
-        
+    
     // update the mouse coordinates
     mouseX += (mouseDragX - mouseX) * frameDelta;
-    mouseY += (mouseDragY - mouseY) * frameDelta;    
+    mouseY += (mouseDragY - mouseY) * frameDelta;
     that.pointToSphere(mouseX, mouseY, endVec);
     
 		// compute the vector perpendicular to the start & end vectors
@@ -109,7 +111,7 @@ Tilt.Arcball = function(width, height, radius) {
   	  deltaRot[2] = pVec[2];
   	  
   	  // in the quaternion values, w is cosine (theta / 2),
-  	  // where theta is rotation angle
+  	  // where theta is the rotation angle
   	  deltaRot[3] = -vec3.dot(startVec, endVec);
 	  }
 	  else {
@@ -183,7 +185,7 @@ Tilt.Arcball = function(width, height, radius) {
     if (length > 1) {    
       // calculate the normalization factor
       var normal = 1 / Math.sqrt(length);
-
+      
       // set the normalized vector (a point on the sphere)
       sphereVec[0] = x * normal;
       sphereVec[1] = y * normal;
@@ -216,4 +218,23 @@ Tilt.Arcball = function(width, height, radius) {
     
     // automatically call this function
   })(width, height, radius);
+  
+  /**
+   * Destroys this object and sets all members to null.
+   */
+  this.destroy = function() {
+    for (var i in that) {
+      that[i] = null;
+    }
+    
+    startVec = null;
+    endVec = null;
+    pVec = null;
+    
+    lastRot = null;
+    deltaRot = null;
+    currentRot = null;
+    
+    that = null;
+  };
 };

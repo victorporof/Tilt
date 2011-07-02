@@ -23,6 +23,8 @@
  *    3. This notice may not be removed or altered from any source
  *    distribution.
  */
+"use strict";
+
 if ("undefined" === typeof(TiltChrome)) {
   var TiltChrome = {};
 }
@@ -64,7 +66,7 @@ TiltChrome.BrowserOverlay = {
       let height = window.content.innerHeight;
       
       // initialize a Tilt environment: a canvas element inside an iframe
-      Tilt.Create(width, height, function(tilt, canvas, iframe) {
+      Tilt.create(width, height, function(tilt, canvas, iframe) {
         // remember the iframe so that it can be destroyed later
         that.iframe = iframe;
         
@@ -88,7 +90,7 @@ TiltChrome.BrowserOverlay = {
     
     // issue a destroy call through all the visualization children
     that.visualization.destroy(function() {
-      that.visualization = null; // when done, do some cleanup
+      that.visualization = null; // when done, do more cleanup
       
       // remove the iframe from the browser stack
       Tilt.Document.remove(that.iframe);

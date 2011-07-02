@@ -22,77 +22,55 @@
  *
  *    3. This notice may not be removed or altered from any source
  *    distribution.
- */
+ */ 
+"use strict";
+
 if ("undefined" === typeof(Tilt)) {
   var Tilt = {};
 }
 
-var EXPORTED_SYMBOLS = ["Tilt.Engine"];
+var EXPORTED_SYMBOLS = ["GL", "Tilt.Engine"];
+
+/**
+ * WebGL draw mode vars used for drawVertices() and drawIndexedVertices().
+ */
+var GL = {
+  TRIANGLES: 0,
+  TRIANGLE_STRIP: 0,
+  TRIANGLE_FAN: 0,
+  LINES: 0,
+  LINE_STRIP: 0,
+  LINE_LOOP: 0,
+  POINTS: 0,
+  MAX_TEXTURE_SIZE: 0,
+  MAX_VERTEX_TEXTURE_IMAGE_UNITS: 0
+};
 
 /**
  * Tilt engine constructor.
  *
+ * @param {object} canvas: the canvas used to create the WebGL context
+ * @param {function} successCallback: to be called if initialization worked
+ * @param {function} failCallback: to be called if initialization failed
  * @return {object} the created object
  */
-Tilt.Engine = function() {
-
+Tilt.Engine = function(canvas, failCallback, successCallback) {
+  
   /**
    * By convention, we make a private "that" variable.
    */
   var that = this;
-
+  
   /**
-   * WebGL context to be used.
+   * WebGL context to be used, not exposed outside this object.
    */
   var gl = null;
-
+  
   /**
    * The current shader used by the WebGL context. Used for caching.
    */
   var program = null;
-
-  /**
-   * Initializes a WebGL context and runs fail or success callback functions.
-   *
-   * @param {object} canvas: the canvas used to create the WebGL context
-   * @param {function} successCallback: to be called if initialization worked
-   * @param {function} failCallback: to be called if initialization failed
-   * @return {object} the created WebGL context if successful, null otherwise
-   */
-  this.initWebGL = function(canvas, failCallback, successCallback) {
-    // create the WebGL context and store it in the private gl variable
-    if (gl = create3DContext(canvas, { antialias: true })) {
-      // if successful, run a success callback function if available
-      if ("function" === typeof(successCallback)) {
-        successCallback();
-      }
-    }
-    else {
-      // if unsuccessful, log the error and run a fail callback if available
-      Tilt.Console.log(Tilt.StringBundle.get("initWebGL.error"));
-      if ("function" === typeof(failCallback)) {
-        failCallback();
-      }
-    }
-
-    // helper function to create a 3D context in a cross browser way
-    function create3DContext(canvas, opt_attribs) {
-      var names = ["experimental-webgl", "webgl", "webkit-3d", "moz-webgl"];
-      var context = null;
-      for (var i = 0; i < names.length; ++i) {
-        try {
-          context = canvas.getContext(names[i], opt_attribs);
-        } catch(e) { }
-
-        if (context) {
-          break;
-        }
-      }
-      return context;
-    }
-    return gl;
-  };
-
+  
   /**
    * Initializes a shader program, using specified source code as strings.
    * The ready callback function will have as a parameter the newly created
@@ -113,9 +91,10 @@ Tilt.Engine = function() {
     
     if ("function" === typeof(readyCallback)) {
       readyCallback(that.linkProgram(vertShader, fragShader));
+      readyCallback = null;
     }
   };
-
+  
   /**
    * Initializes a shader program, using sources located at a specific url.
    * If only two params are specified (the shader name and the readyCallback
@@ -138,20 +117,21 @@ Tilt.Engine = function() {
     }
     
     // request the shader sources asynchronously
-    that.requests([vertShaderURL, fragShaderURL], function(http) {
+    that.requests([vertShaderURL, fragShaderURL], function requests(xhr) {
       // compile the two shaders
-      var vertShader = that.compileShader(http[0].responseText,
+      var vertShader = that.compileShader(xhr[0].responseText,
                                           "x-shader/x-vertex");
                                           
-      var fragShader = that.compileShader(http[1].responseText,
+      var fragShader = that.compileShader(xhr[1].responseText,
                                           "x-shader/x-fragment");
                                           
       // also remember their sources (useful for debugging)
-      vertShader.src = http[0].responseText;
-      fragShader.src = http[1].responseText;
+      vertShader.src = xhr[0].responseText;
+      fragShader.src = xhr[1].responseText;
       
       if ("function" === typeof(readyCallback)) {
         readyCallback(that.linkProgram(vertShader, fragShader));
+        readyCallback = null;
       }
     });
   };
@@ -173,7 +153,7 @@ Tilt.Engine = function() {
         
       return null;
     }
-
+    
     // also make sure (and use) the necessary shader mime type
     if ("x-shader/x-vertex" === shaderType) {
       shader = gl.createShader(gl.VERTEX_SHADER);
@@ -187,7 +167,7 @@ Tilt.Engine = function() {
         
       return null;
     }
-
+    
     // set the shader source and compile it
     gl.shaderSource(shader, shaderSource);
     gl.compileShader(shader);
@@ -201,9 +181,10 @@ Tilt.Engine = function() {
         
       return null;
     }
+    
     return shader;
   };
-
+  
   /**
    * Links two compiled vertex or fragment shaders together to form a program.
    *
@@ -224,10 +205,13 @@ Tilt.Engine = function() {
       
       Tilt.Console.error(Tilt.StringBundle.format(
         "linkProgram.error", [status, vertShader.src, fragShader.src]));
+        
+      return null;
     }
+    
     return program;
   };
-
+  
   /**
    * Uses the shader program as current one for the WebGL context; also, pass
    * the vertex attributes necessary to enable when using this program.
@@ -235,16 +219,17 @@ Tilt.Engine = function() {
    * could take quite a lot of time.
    *
    * @param {object} program_: the shader program to be used by the engine
-   * @param {array} attributes: array of attributes to enable for this program
+   * @param {number} count: the total number of attributes to be enabled
    */
-  this.useProgram = function(program_, attributes) {
+  this.useProgram = function(program_, count) {
     // use the the program if it wasn't already set
     if (program !== program_) {
       gl.useProgram(program = program_);
       
       // enable any necessary vertex attributes
-      for (var i = 0, len = attributes.length; i < len; i++) {
-        gl.enableVertexAttribArray(attributes[i]);
+      while (count) {
+        count--;
+        gl.enableVertexAttribArray(count);
       }
     }
   };
@@ -257,7 +242,8 @@ Tilt.Engine = function() {
    * @return {number} the attribute location from the program
    */
   this.shaderAttribute = function(program, attribute) {
-    return gl.getAttribLocation(program, attribute);
+    var loc = gl.getAttribLocation(program, attribute);
+    return loc;
   };
   
   /**
@@ -268,7 +254,8 @@ Tilt.Engine = function() {
    * @return {object} the uniform object from the program
    */
   this.shaderUniform = function(program, uniform) {
-    return gl.getUniformLocation(program, uniform);
+    var loc = gl.getUniformLocation(program, uniform);
+    return loc;
   };
   
   /**
@@ -282,12 +269,12 @@ Tilt.Engine = function() {
    */
   this.shaderIO = function(program, variable) {
     // try to get a shader attribute
-    var location = that.shaderAttribute(program, variable);
+    var loc = that.shaderAttribute(program, variable);
     // if unavailable, search for a shader uniform
-    if (location < 0) {
-      location = that.shaderUniform(program, variable);
+    if (loc < 0) {
+      loc = that.shaderUniform(program, variable);
     }
-    return location;
+    return loc;
   };
   
   /**
@@ -376,11 +363,10 @@ Tilt.Engine = function() {
     // remember some properties, useful when binding the buffer to a shader
     buffer.itemSize = itemSize;
     buffer.numItems = numItems;
-    buffer.array = elementsArray;
     
     return buffer;
   };
-
+  
   /**
    * Initializes a buffer of vertex indices, using an array of unsigned ints.
    * The item size will automatically default to 1, and the "numItems" will be
@@ -405,11 +391,10 @@ Tilt.Engine = function() {
     // remember some properties, useful when binding the buffer to a shader
     buffer.itemSize = 1;
     buffer.numItems = numItems;
-    buffer.array = elementsArray;
     
     return buffer;
   };
-
+  
   /**
    * Initializes a framebuffer, with an attached texture and depth buffer.
    * The returned object contains the framebuffer, texture, depth and stencil
@@ -428,7 +413,8 @@ Tilt.Engine = function() {
     // TODO: add custom texture format
     // initialize the texture to be used as a color buffer to render to
     var texture = gl.createTexture();
-    texture.framebuffer = framebuffer; // remember this buffer for easy access
+    texture.width = width;
+    texture.height = height;
     gl.bindTexture(gl.TEXTURE_2D, texture);
     gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA,
                   framebuffer.width, framebuffer.height, 0,
@@ -456,10 +442,12 @@ Tilt.Engine = function() {
                                
     // verify the buffer status; if something went wrong, log the error
   	if (!gl.checkFramebufferStatus(gl.FRAMEBUFFER)) {
-        var status = gl.checkFramebufferStatus(GL_FRAMEBUFFER);
+      var status = gl.checkFramebufferStatus(gl.FRAMEBUFFER);
+      
+      Tilt.Console.error(Tilt.StringBundle.format(
+        "initOffscreenBuffer.framebuffer.error"), [status]);
         
-        Tilt.Console.error(Tilt.StringBundle.format(
-          "initOffscreenBuffer.framebuffer.error"), [status]);
+      return null;
   	}
   	
   	// cleanup: unbind anything we set
@@ -474,7 +462,7 @@ Tilt.Engine = function() {
       stencil: stencil
     };
   };
-
+  
   /**
    * Initializes a texture from a source, runs a callback function when ready.
    * The source may be an URL or a pre-existing image or canvas. When the
@@ -495,46 +483,57 @@ Tilt.Engine = function() {
                               fillColor, strokeColor, strokeWeight,
                               minFilter, magFilter, mipmap,
                               wrapS, wrapT) {
-
+                                
     // create the texture and handle the case in which the texture source is
     // an already loaded image or an URL path
-    var texture = gl.createTexture();
+    var texture;
+    var image;
     
     if ("object" === typeof(textureSource)) {
-      texture.image = textureSource;
-      bindTextureImage();
+      image = textureSource;
+      resizeImage();
     }
     else if ("string" === typeof(textureSource)) {
-      texture.image = new Image();
-      texture.image.src = textureSource;
-      texture.image.onload = function() {
-        bindTextureImage();
-      };
+      image = new Image();
+      image.src = textureSource;
+      image.onload = resizeImage;
+    }
+    else {
+      Tilt.Console.error(Tilt.StringBundle.get(
+        "initTexture.source.error"));
     }
     
-    // used internally for binding an image to a texture object
-    function bindTextureImage() {
-      texture.width = texture.image.width;
-      texture.height = texture.image.height;
+    // make sure the image is power of two before binding to a texture
+    function resizeImage() {
+      Tilt.Image.resizeToPowerOfTwo(
+        image, attachImage, fillColor, strokeColor, strokeWeight, true);
+    }
+    
+    // this used internally for binding a power-of-two image to a texture
+    function attachImage(i) {
+      // first, create the texture to hold the image data
+      texture = gl.createTexture();
       
-      // make sure the image is power of two
-      Tilt.Image.resizeToPowerOfTwo(texture.image, function(image) {
-        texture.image = image;
-        
-        // finally, do the actual binding and apply the pixels
-        gl.bindTexture(gl.TEXTURE_2D, texture);
-        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE,
-                      texture.image);
-                      
-        // set the required texture params and cleanup
-        that.setTextureParams(minFilter, magFilter, mipmap, wrapS, wrapT);
-        gl.bindTexture(gl.TEXTURE_2D, null);
-        
-        // the readyCallback function is mandatory, but we check nevertheless
-        if ("function" === typeof(readyCallback)) {
-          readyCallback(texture);
-        }
-      }, fillColor, strokeColor, strokeWeight, true);
+      gl.bindTexture(gl.TEXTURE_2D, texture);
+      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, i);
+      
+      // set the required texture params and cleanup
+      that.setTextureParams(minFilter, magFilter, mipmap, wrapS, wrapT);
+      gl.bindTexture(gl.TEXTURE_2D, null);
+      
+      // remember the width and height of the image
+      var w = image.width;
+      var h = image.height;
+      
+      // the readyCallback function is mandatory, but we check nevertheless
+      if ("function" === typeof(readyCallback)) {
+        readyCallback({ ref: texture, width: w, height: h });
+        readyCallback = null;
+      }
+      
+      textureSource = null;
+      image = null;
+      i = null;
     }
   };
   
@@ -623,75 +622,23 @@ Tilt.Engine = function() {
   /**
    * Draws bound vertex buffers using the specified parameters.
    *
-   * @param {number} or {string} drawMode: WebGL enum, like gl.TRIANGLES, or
-   * "triangles", "triangle-strip, "triangle-fan, "points", "lines" etc.
-   * @param {number} first: the starting index in the enabled arrays
+   * @param {number} or {string} drawMode: WebGL enum, like Tilt.TRIANGLES
    * @param {number} count: the number of indices to be rendered
    */
-  this.drawVertices = function(drawMode, first, count) {
-    gl.drawArrays(that.getDrawModeEnum(drawMode), first, count);
+  this.drawVertices = function(drawMode, count) {
+    gl.drawArrays(drawMode, 0, count);
   };
   
   /**
    * Draws bound vertex buffers using the specified parameters.
    * This function also makes use of an index buffer.
    *
-   * @param {number} or {string} drawMode: WebGL enum, like gl.TRIANGLES, or
-   * "triangles", "triangle-strip, "triangle-fan, "points", "lines" etc.
+   * @param {number} or {string} drawMode: WebGL enum, like Tilt.TRIANGLES
    * @param {object} indicesBuffer: indices for the passed vertices buffer
    */
   this.drawIndexedVertices = function(drawMode, indicesBuffer) {
     gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indicesBuffer);
-    gl.drawElements(that.getDrawModeEnum(drawMode),
-                    indicesBuffer.numItems, gl.UNSIGNED_SHORT, 0);
-  };
-  
-  /**
-   * Converts from a string describing the draw mode to the corresponding
-   * value as a WebGL enum. If "drawMode" is undefined, it is defaulted to
-   * gl.TRIANGLE_STRIP. If it is already a number, that number is returned.
-   *
-   * @param {number} or {string} drawMode: WebGL enum, like gl.TRIANGLES, or
-   * "triangles", "triangle-strip, "triangle-fan, "points", "lines" etc.
-   * @return {number} the corresponding value as a WebGL enum
-   */
-  this.getDrawModeEnum = function(drawMode) {
-    var mode;
-    
-    if ("string" === typeof drawMode) {
-      if ("triangles" === drawMode) {
-        mode = gl.TRIANGLES;
-      }
-      else if ("triangle-strip" === drawMode) {
-        mode = gl.TRIANGLE_STRIP;
-      }
-      else if ("triangle-fan" === drawMode) {
-        mode = gl.TRIANGLE_FAN;
-      }
-      else if ("points" === drawMode) {
-        mode = gl.POINTS;
-      }
-      else if ("points" === drawMode) {
-        mode = gl.POINTS;
-      }
-      else if ("lines" === drawMode) {
-        mode = gl.LINES;
-      }
-      else if ("line-strip" === drawMode) {
-        mode = gl.LINE_STRIP;
-      }
-      else if ("line-loop" === drawMode) {
-        mode = gl.LINE_LOOP;
-      }
-    }
-    else if ("undefined" === typeof(drawMode)) {
-      mode = gl.TRIANGLE_STRIP;
-    }
-    else {
-      return drawMode;
-    }
-    
-    return mode;
+    gl.drawElements(drawMode, indicesBuffer.numItems, gl.UNSIGNED_SHORT, 0);
   };
 
   /**
@@ -756,6 +703,27 @@ Tilt.Engine = function() {
   };
   
   /**
+   * Sets the current stroke weight (line width).
+   *
+   * @param {number} weight: the stroke weight
+   */
+  this.strokeWeight = function(weight) {
+    gl.lineWidth(weight);
+  };
+  
+  /**
+   * Get a parameter from inside the WebGL context.
+   * Because doing this is highly not recommended due to performance reasons, 
+   * only MAX_TEXTURE_SIZE and MAX_VERTEX_TEXTURE_IMAGE_UNITS are supported.
+   *
+   * @param {number} p: GL.MAX_TEXTURE_SIZE, GL.MAX_VERTEX_TEXTURE_IMAGE_UNITS
+   * @return {number} the requested parameter value
+   */
+  this.getParameter = function(p) {
+    return gl.getParameter(p);
+  };
+  
+  /**
    * Handles a generic get request, performed on a specified url. When done,
    * it fires the ready callback function if it exists, & passes the http
    * request object and also an optional auxiliary parameter if available.
@@ -766,14 +734,15 @@ Tilt.Engine = function() {
    * @param {object} aParam: optional parameter passed to readyCallback
    */
   this.request = function(url, readyCallback, aParam) {
-    var http = new XMLHttpRequest();
+    var xhr = new XMLHttpRequest();
     
-    http.open("GET", url, true);
-    http.send(null);
-    http.onreadystatechange = function() {
-      if (http.readyState === 4) {
+    xhr.open("GET", url, true);
+    xhr.send(null);
+    xhr.onreadystatechange = function() {
+      if (xhr.readyState === 4) {
         if ("function" === typeof(readyCallback)) {
-          readyCallback(http, aParam);
+          readyCallback(xhr, aParam);
+          readyCallback = null;
         }
       }
     };
@@ -790,32 +759,91 @@ Tilt.Engine = function() {
    * @param {object} aParam: optional parameter passed to readyCallback
    */
   this.requests = function(urls, readyCallback, aParam) {
-    var http = [];
+    var xhrs = [];
     var finished = 0;
     
     function requestReady() {
       finished++;
       if (finished === urls.length) {
         if ("function" === typeof(readyCallback)) {
-          readyCallback(http, aParam);
+          readyCallback(xhrs, aParam);
+          readyCallback = null;
         }
       }
     }
     
     for (var i = 0, size = urls.length; i < size; i++) {
-      that.request(urls[i], function(request, index) {
-        http[index] = request;
+      that.request(urls[i], function(xhr, index) {
+        xhrs[index] = xhr;
         requestReady();
       }, i);
     }
   };
   
   /**
+   * Initializes a WebGL context and runs fail or success callback functions.
+   */
+  (function initialize() {
+    // create the WebGL context and store it in the private gl variable
+    if (gl = create3DContext(canvas)) {
+      // set up some global enums
+      GL.TRIANGLES = gl.TRIANGLES;
+      GL.TRIANGLE_STRIP = gl.TRIANGLE_STRIP;
+      GL.TRIANGLE_FAN = gl.TRIANGLE_FAN;
+      GL.LINES = gl.LINES;
+      GL.LINE_STRIP = gl.LINE_STRIP;
+      GL.LINE_LOOP = gl.LINE_LOOP;
+      GL.POINTS = gl.POINTS;
+      GL.MAX_TEXTURE_SIZE = gl.MAX_TEXTURE_SIZE;
+      GL.MAX_VERTEX_TEXTURE_IMAGE_UNITS = gl.MAX_VERTEX_TEXTURE_IMAGE_UNITS;
+      
+      // if successful, run a success callback function if available
+      if ("function" === typeof(successCallback)) {
+        successCallback();
+        successCallback = null;
+      }
+    }
+    else {
+      // if unsuccessful, log the error and run a fail callback if available
+      Tilt.Console.log(Tilt.StringBundle.get("initWebGL.error"));
+      if ("function" === typeof(failCallback)) {
+        failCallback();
+        failCallback = null;
+      }
+    }
+    
+    // helper function to create a 3D context in a cross browser way
+    function create3DContext(canvas, opt_attribs) {
+      var names = ["experimental-webgl", "webgl", "webkit-3d", "moz-webgl"];
+      var context = null;
+      for (var i = 0; i < names.length; ++i) {
+        try {
+          context = canvas.getContext(names[i], opt_attribs);
+        } catch(e) { }
+
+        if (context) {
+          break;
+        }
+      }
+      return context;
+    }
+  })();
+  
+  /**
    * Destroys this object and sets all members to null.
    */
   this.destroy = function destroy() {
+    for (var i in that) {
+      that[i] = null;
+    }
+    
+    canvas = null;
+    failCallback = null;
+    successCallback = null;
+    
     gl = null;
     program = null;
+    
     that = null;
   };
 }
@@ -824,12 +852,12 @@ Tilt.Engine = function() {
  * Provides requestAnimationFrame in a cross browser way.
  */
 window.requestAnimFrame = (function() {
-  return window.requestAnimFrame ||
+  return window.requestAnimationFrame ||
          window.webkitRequestAnimationFrame ||
          window.mozRequestAnimationFrame ||
          window.oRequestAnimationFrame ||
          window.msRequestAnimationFrame ||
-         function(callback, Element) {
+         function(callback, element) {
            window.setTimeout(callback, 1000 / 60);
          };
 })();

@@ -23,6 +23,8 @@
  *    3. This notice may not be removed or altered from any source
  *    distribution.
  */
+"use strict";
+
 if ("undefined" === typeof(Tilt)) {
   var Tilt = {};
 }
@@ -33,12 +35,12 @@ var EXPORTED_SYMBOLS = [
   "Tilt.Image",
   "Tilt.Math",
   "Tilt.String"];
-
+  
 /** 
  * Utilities for accessing and manipulating a document.
  */
 Tilt.Document = {
-
+  
   /**
    * Helper method, allowing to easily create an iframe with a canvas element
    * if running in a chrome environment. If this is running from a html page, 
@@ -62,12 +64,11 @@ Tilt.Document = {
     if ("undefined" === typeof(iframe_id)) {
       iframe_id = "tilt-iframe";
     }
-
+    
     // remember who we are
     var that = this;
-
-    // if inside a chrome environment
-    if ("undefined" !== typeof(gBrowser)) {
+    
+    if ("undefined" !== typeof(gBrowser)) { // inside a chrome environment
       // create an iframe to contain the canvas element
       var iframe = document.createElement("iframe");
       iframe.setAttribute("style", "visibility: hidden;"); // initially hidden
@@ -96,7 +97,7 @@ Tilt.Document = {
           iframe.setAttribute("style", "visibility: visible;");
         }
       }, true);
-
+      
       // the iframe will contain a simple html source containing a canvas
       iframe.setAttribute("src", 'data:text/html,\
       <html>\
@@ -104,7 +105,7 @@ Tilt.Document = {
           <canvas style="width: 100%; height: 100%;" id="' + canvas_id + '"/>\
         </body>\
       </html>');
-
+      
       // append the iframe to the browser parent node and return it
       return that.append(iframe);
     }
@@ -114,15 +115,15 @@ Tilt.Document = {
       var canvas = document.createElement("canvas");
       canvas.setAttribute("style", "visibility: hidden;"); // initially hidden
       canvas.id = canvas_id;
-
+      
       // no need for a load listener, append the canvas to the document now
       that.append(canvas);
-
+      
       // run a ready callback function with the canvas
       if ("function" === typeof(readyCallback)) {
         readyCallback(canvas);
       }
-
+      
       // it is not obligatory to keep the canvas visible, remove if desired
       if (!keepInStack) {
         that.remove(canvas); canvas = null;
@@ -147,8 +148,7 @@ Tilt.Document = {
    */
   append: function(element, node) {
     if ("undefined" === typeof(node)) {
-      // inside a chrome environment
-      if ("undefined" !== typeof(gBrowser)) {
+      if ("undefined" !== typeof(gBrowser)) { // inside a chrome environment
         node = gBrowser.selectedBrowser.parentNode;
       }
       // not a privileged environment
@@ -206,11 +206,12 @@ Tilt.Document = {
   traverse: function(nodeCallback, readyCallback, dom) {
     if ("function" === typeof(nodeCallback)) {
       recursive(nodeCallback, dom ? dom : this.get(), 0);
+      nodeCallback = null;
     }
     
     // used to calculate the maximum depth of a dom node
     var maxDepth = 0;
-
+    
     // used internally for recursively traversing a document object model
     function recursive(nodeCallback, dom, depth) {
       for (var i = 0, len = dom.childNodes.length; i < len; i++) {
@@ -231,6 +232,7 @@ Tilt.Document = {
     // function with the maximum depth and the entire dom passed as parameters
     if ("function" === typeof(readyCallback)) {
       readyCallback(maxDepth, dom ? dom : this.get());
+      readyCallback = null;
     }
   },
   
@@ -241,7 +243,8 @@ Tilt.Document = {
    * @return {object} an object containing the x, y, width and height coords
    */
   getNodeCoordinates: function(node) {
-    var x = y = 0;
+    var x = 0;
+    var y = 0;
     var w = node.clientWidth;
     var h = node.clientHeight;
     
@@ -350,26 +353,26 @@ Tilt.Image = {
     // scale the image only if forceResize is true
     if (Tilt.Math.isPowerOfTwo(image.width) &&
         Tilt.Math.isPowerOfTwo(image.height) && !forceResize) {
-
+          
       if ("function" === typeof(readyCallback)) {
         readyCallback(image);
         return;
       }
     }
-
+    
     // set the canvas id and the iframe id, should they be necessary
     var canvas_id = "tilt-canvas-" + image.src;
     var iframe_id = "tilt-iframe-" + image.src;
-
+    
     // create a canvas, then we will use a 2d context to scale the image
-    Tilt.Document.initCanvas(function initCallback(canvas) {
+    Tilt.Document.initCanvas(function(canvas) {
       // calculate the power of two dimensions for the npot image
       canvas.width = Tilt.Math.nextPowerOfTwo(image.width);
       canvas.height = Tilt.Math.nextPowerOfTwo(image.height);
       
       // do some 2d context magic
       var context = canvas.getContext("2d");
-
+      
       // optional fill (useful when handling transparent images)
       if (fillColor) {
         context.fillStyle = fillColor;
@@ -380,7 +383,7 @@ Tilt.Image = {
       context.drawImage(image,
         0, 0, image.width, image.height,
         0, 0, canvas.width, canvas.height);
-
+        
       // optional stroke (useful when creating textures for edges)
       if (strokeColor) {
         if (strokeWeight <= 0) {
@@ -390,10 +393,11 @@ Tilt.Image = {
         context.lineWidth = strokeWeight;
         context.strokeRect(0, 0, canvas.width, canvas.height);
       }
-
+      
       // run a ready callback function with the resized image as a parameter
       if ("function" === typeof(readyCallback)) {
         readyCallback(canvas);
+        readyCallback = null;
       }
     }, false, canvas_id, iframe_id);
   }
@@ -412,6 +416,74 @@ Tilt.Math = {
    */
   radians: function(degrees) {
     return degrees * Math.PI / 180;
+  },
+  
+  /**
+   * Creates a rotation quaternion from axis-angle.
+   * This function implies that the axis is a normalized vector.
+   *
+   * @param {array} axis: an array of elements representing the [x, y, z] axis
+   * @param {number} angle: the angle of rotation
+   * @param {array} out: optional parameter, the array to write the values to
+   * @return {array} the quaternion as [x, y, z, w]
+   */
+  quat4fromAxis: function(axis, angle, out) {
+  	angle *= 0.5;
+  	
+  	var sin = Math.sin(angle);
+  	var x = (axis[0] * sin);
+  	var y = (axis[1] * sin);
+  	var z = (axis[2] * sin);
+  	var w = Math.cos(angle);
+  	
+  	if ("undefined" === typeof(out)) {
+      return [x, y, z, w];
+  	}
+  	else {
+  	  out[0] = x;
+  	  out[1] = y;
+  	  out[2] = z;
+  	  out[3] = w;
+  	}
+  },
+  
+  /**
+   * Creates a rotation quaternion from Euler angles.
+   *
+   * @param {number} yaw: the yaw angle of rotation
+   * @param {number} pitch: the pitch angle of rotation
+   * @param {number} roll: the roll angle of rotation
+   * @param {array} out: optional parameter, the array to write the values to   
+   * @return {array} the quaternion as [x, y, z, w]
+   */
+  quat4fromEuler: function(yaw, pitch, roll, out) {
+  	// basically we create 3 quaternions, for pitch, yaw and roll
+	  // and multiply those together
+  	var y = yaw   * 0.5;
+  	var x = pitch * 0.5;
+  	var z = roll  * 0.5;
+  	
+  	var siny = Math.sin(z);
+  	var sinp = Math.sin(y);
+    var sinr = Math.sin(x);
+    var cosy = Math.cos(z);
+  	var cosp = Math.cos(y);
+  	var cosr = Math.cos(x);
+  	
+  	var x = sinr * cosp * cosy - cosr * sinp * siny;
+  	var y = cosr * sinp * cosy + sinr * cosp * siny;
+  	var z = cosr * cosp * siny - sinr * sinp * cosy;
+  	var w = cosr * cosp * cosy + sinr * sinp * siny;
+  	
+  	if ("undefined" === typeof(out)) {
+      return [x, y, z, w];
+  	}
+  	else {
+  	  out[0] = x;
+  	  out[1] = y;
+  	  out[2] = z;
+  	  out[3] = w;
+  	}
   },
   
   /**
@@ -458,13 +530,13 @@ Tilt.Math = {
    */
   hex2rgba: function(hex) {
     hex = hex.charAt(0) === "#" ? hex.substring(1) : hex;
-
+    
     // e.g. "f00"
     if (hex.length === 3) {
       var cr = hex.charAt(0);
       var cg = hex.charAt(1);
       var cb = hex.charAt(2);
-      hex = cr + cr + cg + cg + cb + cb + "ff";
+      hex = [cr, cr, cg, cg, cb, cb, "ff"].join('');
     }
     // e.g. "f008" 
     else if (hex.length === 4) {
@@ -472,7 +544,7 @@ Tilt.Math = {
       var cg = hex.charAt(1);
       var cb = hex.charAt(2);
       var ca = hex.charAt(3);
-      hex = cr + cr + cg + cg + cb + cb + ca + ca;
+      hex = [cr, cr, cg, cg, cb, cb, ca, ca].join('');
     }
     // e.g. "rgba(255, 0, 0, 128)"
     else if (hex.match("^rgba") == "rgba") {
@@ -492,7 +564,7 @@ Tilt.Math = {
       rgba[3] = 1;
       return rgba;
     }
-
+    
     var r = parseInt(hex.substring(0, 2), 16) / 255;
     var g = parseInt(hex.substring(2, 4), 16) / 255;
     var b = parseInt(hex.substring(4, 6), 16) / 255;
@@ -539,7 +611,7 @@ Tilt.String = {
 
 /**
  * Easy way to access the string bundle.
- * Usually useful only when this is used inside an extension evironment.
+ * Usually useful only when this is used inside an extension environment.
  */
 Tilt.StringBundle = {
   
@@ -597,7 +669,7 @@ Tilt.StringBundle = {
     }
     else {
       // this should never happen when inside a chrome environment
-      return string + " " + args;
+      return [string, args].join(" ");
     }
   }
 };

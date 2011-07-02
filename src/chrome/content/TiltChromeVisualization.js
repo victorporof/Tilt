@@ -23,6 +23,8 @@
  *    3. This notice may not be removed or altered from any source
  *    distribution.
  */
+"use strict";
+
 if ("undefined" === typeof(TiltChrome)) {
   var TiltChrome = {};
 }
@@ -38,11 +40,17 @@ var EXPORTED_SYMBOLS = ["TiltChrome.Visualization"];
  * @return {object} the created object
  */
 TiltChrome.Visualization = function(tilt, canvas, controller) {
-
+  
   /**
    * By convention, we make a private "that" variable.
    */
   let that = this;
+  
+  /**
+   * Variable specifying if the scene should be redrawn.
+   * This happens, for example, when the visualization is rotated.
+   */
+  let redraw = true;
   
   /**
    * A background texture.
@@ -53,6 +61,10 @@ TiltChrome.Visualization = function(tilt, canvas, controller) {
    * The combined mesh representing the document visualization.
    */
   let mesh = {
+    vertices: [],
+    texCoord: [],
+    indices: [],
+    wireframeIndices: [],
     thickness: 12,
     texture: null
   };
@@ -102,20 +114,22 @@ TiltChrome.Visualization = function(tilt, canvas, controller) {
    */
   tilt.draw = function() {
     // if the visualization was destroyed, don't continue rendering
-    if (!tilt) {
+    if (tilt === null) {
       return;
     }
     // prepare for the next frame of the animation loop
     tilt.requestAnimFrame(tilt.draw);
     
-    // only after the draw object has finished initializing
-    if (tilt.isInitialized()) {
-      // clear context with a transparent black background if the dom texture 
-      // has not finished loading, or opaque grayish otherwise
-      if (!mesh.texture) {
-        tilt.clear(0, 0, 0, 0);
-      }
-      else if (background) {
+    // clear context with a transparent black background if the dom texture 
+    // has not finished loading, or opaque grayish otherwise
+    if (mesh.texture === null) {
+      tilt.clear(0, 0, 0, 0);
+    }
+    else if (background !== null) {
+      // only update if we really have to
+      if (redraw) {
+        redraw = false;
+        
         // clear the context and draw a background gradient
         tilt.clear(0, 0, 0, 1);
         tilt.depthTest(false);
@@ -133,17 +147,16 @@ TiltChrome.Visualization = function(tilt, canvas, controller) {
         tilt.depthTest(true);
         tilt.mesh(mesh.verticesBuff,
                   mesh.texCoordBuff, null, 
-                  "triangles", "#fff", mesh.texture,
+                  GL.TRIANGLES, "#fff", mesh.texture,
                   mesh.indicesBuff);
                   
         tilt.mesh(mesh.verticesBuff, null, null, 
-                  "lines", "#899", null,
-                  mesh.wireframeIndicesBuff); 
-                      
-        // when rendering is finished, call a loop function in the controller
-        if ("function" === typeof(controller.loop)) {
-          controller.loop(tilt.frameDelta);
-        }
+                  GL.LINES, "#899", null,
+                  mesh.wireframeIndicesBuff);
+      }
+      // when rendering is finished, call a loop function in the controller
+      if ("function" === typeof(controller.loop)) {
+        controller.loop(tilt.frameDelta);
       }
     }
   };
@@ -251,6 +264,9 @@ TiltChrome.Visualization = function(tilt, canvas, controller) {
     let tabContainer = gBrowser.tabContainer;
     
     // when another tab is focused or the tab is closed, destroy visualization
+    tabContainer.addEventListener("TabSelect", destroy, false);
+    tabContainer.addEventListener("TabClose", destroy, false);
+    
     function destroy(e) {
       if (TiltChrome.BrowserOverlay.href !== window.content.location.href) {
         TiltChrome.BrowserOverlay.destroy();
@@ -260,9 +276,6 @@ TiltChrome.Visualization = function(tilt, canvas, controller) {
         tabContainer.removeEventListener("TabClose", destroy, false);
       }
     }
-    
-    tabContainer.addEventListener("TabSelect", destroy, false);
-    tabContainer.addEventListener("TabClose", destroy, false);
   }
   
   /**
@@ -323,18 +336,31 @@ TiltChrome.Visualization = function(tilt, canvas, controller) {
    * @param {number} z: the new translation on the z axis
    */
   this.setTranslation = function(x, y, z) {
-    transforms.translation[0] = x;
-    transforms.translation[1] = y;
-    transforms.translation[2] = z;
+    if (transforms.translation[0] != x ||
+        transforms.translation[1] != y ||
+        transforms.translation[2] != z) {
+          
+      transforms.translation[0] = x;
+      transforms.translation[1] = y;
+      transforms.translation[2] = z;
+      redraw = true;
+    }
   };
   
   /**
    * Delegate rotation method, used by the controller.
    *
-   * @param {object} quaternion: the rotation quaternion, as [x, y, z, w]
+   * @param {array} quaternion: the rotation quaternion, as [x, y, z, w]
    */
   this.setRotation = function(quaternion) {
-    quat4.set(quaternion, transforms.rotation);
+    if (transforms.rotation[0] != quaternion[0] || 
+        transforms.rotation[1] != quaternion[1] || 
+        transforms.rotation[2] != quaternion[2] || 
+        transforms.rotation[3] != quaternion[3]) {
+          
+      quat4.set(quaternion, transforms.rotation);
+      redraw = true;
+    }
   };
   
   /**
@@ -343,17 +369,29 @@ TiltChrome.Visualization = function(tilt, canvas, controller) {
    * @param {function} readyCallback: function to be called when finished
    */
   this.destroy = function(readyCallback) {
+    for (var i in that) {
+      that[i] = null;
+    }
+    
+    redraw = false;
     background = null;
     mesh = null;
     transforms = null;
     
     tilt.destroy();
     tilt = null;
+    canvas = null;
+    
+    if ("function" === typeof(controller.destroy)) {
+      controller.destroy();
+    }
     
     if ("function" === typeof(readyCallback)) {
       readyCallback();
+      readyCallback = null;
     }
     
+    controller = null;
     that = null;
   };
 }

@@ -23,6 +23,8 @@
  *    3. This notice may not be removed or altered from any source
  *    distribution.
  */
+"use strict";
+
 if ("undefined" === typeof(TiltChrome)) {
   var TiltChrome = {};
 }
@@ -38,18 +40,26 @@ var EXPORTED_SYMBOLS = ["TiltChrome.Controller.MouseAndKeyboard"];
  * width and height of the canvas, but not at the engine or canvas directly.
  */
 TiltChrome.Controller.MouseAndKeyboard = function() {
-
+  
+  /**
+   * By convention, we make a private "that" variable.
+   */
+  let that = this;
+  
   /**
    * Arcball used to control the visualization using the mouse.
    */
   let arcball = null;
   
   /**
-   * Visualization translation on the X and Y axis.
+   * Visualization translation and rotation on the X and Y axis.
    */
   let translationX = 0;
   let translationY = 0;
-
+  let rotationX = 0;
+  let rotationY = 0;
+  let euler = quat4.create();
+  
   /**
    * Retain the mouse drag state and position, to manipulate the arcball.
    */  
@@ -60,13 +70,12 @@ TiltChrome.Controller.MouseAndKeyboard = function() {
   /**
    * Retain the keyboard state.
    */
-  let keyPressed = false;
   let keyChar = [];
   let keyCode = [];
-    
+  
   /**
    * Function called automatically by the visualization at the setup().
-   */  
+   */
   this.init = function() {
     arcball = new Tilt.Arcball(this.width, this.height);
   };
@@ -83,27 +92,42 @@ TiltChrome.Controller.MouseAndKeyboard = function() {
     }
     
     // handle key pressed events
-    if (keyPressed) {
-      if (keyCode[37] || keyCode[65]) {
-        translationX += 5;
-      }
-      if (keyCode[39] || keyCode[68]) {
-        translationX -= 5;
-      }
-      if (keyCode[38] || keyCode[87]) {
-        translationY += 5;
-      }
-      if (keyCode[40] || keyCode[83]) {
-        translationY -= 5;
-      }
+    if (keyCode[37]) { // left
+      translationX += 5;
+    }
+    if (keyCode[39]) { // right
+      translationX -= 5;
+    }
+    if (keyCode[38]) { // up
+      translationY += 5;
+    }
+    if (keyCode[40]) { // down
+      translationY -= 5;
+    }
+    if (keyCode[65]) { // w
+      rotationY -= Tilt.Math.radians(frameDelta) / 10;
+    }
+    if (keyCode[68]) { // s
+      rotationY += Tilt.Math.radians(frameDelta) / 10;
+    }
+    if (keyCode[87]) { // a
+      rotationX += Tilt.Math.radians(frameDelta) / 10;
+    }
+    if (keyCode[83]) { // d
+      rotationX -= Tilt.Math.radians(frameDelta) / 10;
     }
     
-    // update the visualization
+    // get the arcball rotation and zoom coordinates
     let coord = arcball.loop(frameDelta);
-    this.visualization.setRotation(coord.rotation);
+    
+    // create another custom rotation
+    Tilt.Math.quat4fromEuler(rotationY, rotationX, 0, euler);
+    
+    // update the visualization
+    this.visualization.setRotation(quat4.multiply(euler, coord.rotation));
     this.visualization.setTranslation(translationX, translationY, coord.zoom);
   };
-
+  
   /**
    * Called once after every time a mouse button is pressed.
    *
@@ -120,7 +144,7 @@ TiltChrome.Controller.MouseAndKeyboard = function() {
    *
    * @param {number} x: the current horizontal coordinate of the mouse
    * @param {number} y: the current vertical coordinate of the mouse
-   */  
+   */
   this.mouseReleased = function(x, y) {
     mouseDragged = false;
   };
@@ -166,12 +190,11 @@ TiltChrome.Controller.MouseAndKeyboard = function() {
   
   /**
    * Called when a key is pressed.
-   * 
+   *
    * @param {string} char: the key character as a string
    * @param {number} code: the corresponding character code for the key
    */
   this.keyPressed = function(char, code) {
-    keyPressed = true;
     keyChar[char] = true;
     keyCode[code] = true;
   };
@@ -183,11 +206,10 @@ TiltChrome.Controller.MouseAndKeyboard = function() {
    * @param {number} code: the corresponding character code for the key
    */
   this.keyReleased = function(char, code) {
-    keyPressed = false;
     keyChar[char] = false;
     keyCode[code] = false;
     
-    if (code === 27) {
+    if (code === 27) { // escape
       TiltChrome.BrowserOverlay.destroy();
     }
   };
@@ -204,4 +226,21 @@ TiltChrome.Controller.MouseAndKeyboard = function() {
     
     arcball.resize(width, height);
   };
+  
+  /**
+   * Destroys this object and sets all members to null.
+   */
+  this.destroy = function() {
+    for (var i in that) {
+      that[i] = null;
+    }
+    
+    arcball.destroy();
+    arcball = null;
+    euler = null;
+    keyChar = null;
+    keyCode = null;
+    
+    that = null;
+  }
 }

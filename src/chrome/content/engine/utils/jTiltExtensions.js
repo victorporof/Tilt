@@ -22,7 +22,9 @@
  *
  *    3. This notice may not be removed or altered from any source
  *    distribution.
- */
+ */ 
+"use strict";
+
 if ("undefined" == typeof(Tilt)) {
   var Tilt = {};
 };
@@ -36,7 +38,7 @@ var EXPORTED_SYMBOLS = ["Tilt.Extensions.WebGL"];
  * WebGL extensions
  */
 Tilt.Extensions.WebGL = {
-
+  
   /**
    * JavaScript implementation of WebGL MOZ_dom_element_texture (#653656)
    * extension. It requires a callback function & optionally a contentWindow.
@@ -51,8 +53,11 @@ Tilt.Extensions.WebGL = {
     // use a canvas and a WebGL context to get the maximum texture size
     Tilt.Document.initCanvas(function(temporary) {
       // create the WebGL context
-      let gl = new Tilt.Engine().initWebGL(temporary);
-      let max_size = gl.getParameter(gl.MAX_TEXTURE_SIZE); // important stuff!
+      let engine = new Tilt.Engine(temporary);
+      let max_size = engine.getParameter(GL.MAX_TEXTURE_SIZE); // important!
+      
+      // we got our max texture size, the engine no longer needed, so destroy
+      engine.destroy();
       
       // use a custom canvas element and a 2d context to draw the window
       Tilt.Document.initCanvas(function(canvas) {
@@ -75,12 +80,12 @@ Tilt.Extensions.WebGL = {
         // use the 2d context.drawWindow() magic
         let context = canvas.getContext("2d");
         context.drawWindow(contentWindow, 0, 0, width, height, "#fff");
-
+        
         // run a ready callback function with the rendering passed as a param
         if ("function" === typeof(readyCallback)) {
           readyCallback(canvas);
         }
-      }, false);
-    }, false);
+      });
+    });
   }
 };
