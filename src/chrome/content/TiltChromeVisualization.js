@@ -133,7 +133,7 @@ TiltChrome.Visualization = function(canvas, controller) {
     else if (background !== null) {
       // only update if we really have to
       if (redraw) {
-        redraw = true;
+        redraw = false;
         
         // clear the context and draw a background gradient
         tilt.clear(0, 0, 0, 1);
@@ -159,8 +159,8 @@ TiltChrome.Visualization = function(canvas, controller) {
         tilt.mesh(mesh.verticesBuff, null, null, 
                  tilt.LINES, "#899", null,
                  mesh.wireframeIndicesBuff);
-        }
-        
+      }
+      
       // when rendering is finished, call a loop function in the controller
       if ("function" === typeof controller.loop) {
         controller.loop(tilt.frameDelta);
@@ -482,5 +482,11 @@ TiltChrome.Visualization = function(canvas, controller) {
     if ("function" === typeof tilt.destroy) {
       tilt.destroy();
     }
+    
+    tilt = null;
+    canvas = null;
+    controller = null;
+    
+    self = null;
   };
 };

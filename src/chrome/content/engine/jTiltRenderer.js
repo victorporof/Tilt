@@ -64,6 +64,11 @@ Tilt.Renderer = function(canvas, failCallback, successCallback) {
   this.projMatrix = mat4.identity(mat4.create());
   
   /**
+   * The current clear color used to clear the color buffer bit.
+   */
+  this.clearColor = [0, 0, 0, 0];
+  
+  /**
    * The current tint color applied to any objects which can be tinted.
    * These mostly represent images or primitives which are textured.
    */
@@ -974,7 +979,17 @@ Tilt.Renderer.prototype = {
    * @param {number} a: the alpha component of the clear color
    */
    clear: function(r, g, b, a) {
-    this.gl.clearColor(r, g, b, a);
+     if (this.clearColor[0] !== r ||
+         this.clearColor[1] !== g ||
+         this.clearColor[2] !== b ||
+         this.clearColor[3] !== a) {
+      
+      this.clearColor[0] = r;     
+      this.clearColor[1] = g;     
+      this.clearColor[2] = b;     
+      this.clearColor[3] = a;     
+      this.gl.clearColor(r, g, b, a);
+    }
     this.gl.clear(this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT);
   },
   
@@ -1022,7 +1037,6 @@ Tilt.Renderer.prototype = {
         zfar = z * 100,
         aspect = w / h;
         
-    this.viewport(w, h);
     mat4.perspective(fov, aspect, znear, zfar, this.projMatrix, true);
     mat4.translate(this.projMatrix, [-x, -y, -z]);
   },
@@ -1034,7 +1048,6 @@ Tilt.Renderer.prototype = {
     var w = this.width,
         h = this.height;
         
-    this.viewport(w, h);
     mat4.ortho(0, w, h, 0, -100, 100, this.projMatrix);
   },
   
