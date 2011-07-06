@@ -1,0 +1,50 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+    <title>Tilt</title>
+    
+    <script type="application/x-javascript" src="../chrome/content/engine/lib/glMatrix-0.9.5.js"></script>
+    <script type="application/x-javascript" src="../chrome/content/engine/utils/jTiltUtils.js"></script>
+    <script type="application/x-javascript" src="../chrome/content/engine/utils/jTiltControllers.js"></script>
+    <script type="application/x-javascript" src="../chrome/content/engine/jTiltShaders.js"></script>
+    <script type="application/x-javascript" src="../chrome/content/engine/jTiltEngine.js"></script>
+    <script type="application/x-javascript" src="../chrome/content/engine/jTiltRenderer.js"></script>
+    
+    <script type="text/javascript">
+      function init() {
+        
+        var tilt;
+        
+        setup();
+        draw();
+        
+        function setup() {
+          var canvas = document.getElementById("canvas");
+          canvas.width = 800;
+          canvas.height = 600;
+          
+          tilt = new Tilt.Renderer(canvas);
+        };
+        
+        function draw() {
+          tilt.requestAnimFrame(draw);
+          
+          tilt.clear(1, 0, 0, 1);
+          
+          tilt.origin();
+          tilt.translate(tilt.width / 2, tilt.height / 2, 0);
+          tilt.rotateX(Tilt.Math.radians(tilt.elapsedTime / 10));
+          tilt.rotateY(Tilt.Math.radians(tilt.elapsedTime / 10));
+          tilt.rotateZ(Tilt.Math.radians(tilt.elapsedTime / 10));
+          tilt.scale(2, 2, 2);
+        
+          tilt.box(100, 100, 100);
+        };
+      }
+    </script>
+  </head>
+  <body onload="init()">
+    <canvas id="canvas"/>
+  </body>
+</html>
