@@ -25,12 +25,10 @@
  */
 "use strict";
 
-if ("undefined" === typeof(Tilt)) {
-  var Tilt = {};
-}
-if ("undefined" === typeof(Tilt.Shaders)) {
-  Tilt.Shaders = {};
-}
+var Tilt = Tilt || {};
+var EXPORTED_SYMBOLS = ["Tilt.Shaders.Color"];
+
+Tilt.Shaders = {};
 
 /**
  * A color shader. The only useful thing it does is set the gl_FragColor.

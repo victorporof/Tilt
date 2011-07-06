@@ -25,67 +25,48 @@
  */ 
 "use strict";
 
-if ("undefined" == typeof(Tilt)) {
-  var Tilt = {};
-};
-if ("undefined" == typeof(Tilt.Extensions)) {
-  Tilt.Extensions = {};
-};
-
+var Tilt = Tilt || {};
 var EXPORTED_SYMBOLS = ["Tilt.Extensions.WebGL"];
 
 /**
  * WebGL extensions
  */
+Tilt.Extensions = {};
 Tilt.Extensions.WebGL = {
   
   /**
-   * JavaScript implementation of WebGL MOZ_dom_element_texture (#653656)
-   * extension. It requires a callback function & optionally a contentWindow.
-   * If unspecified, the contentWindow will default to the content document of 
-   * the currently selected tab. The newly created image will be passed as a 
-   * parameter to readyCallback.
+   * JavaScript implementation of WebGL MOZ_dom_element_texture (#653656).
+   * This shim renders a content window to a canvas element, but clamps the
+   * maximum width and height of the canvas to MAX_TEXTURE_SIZE.
    * 
-   * @param {function} readyCallback: function called when drawing is finished
-   * @param {object} contentWindow: optional, the window content to draw
+   * @param {object} contentWindow: the window content to draw
    */
-  initDocumentImage: function(readyCallback, contentWindow) {
+  initDocumentImage: function(contentWindow) {
     // use a canvas and a WebGL context to get the maximum texture size
-    Tilt.Document.initCanvas(function(temporary) {
-      // create the WebGL context
-      let engine = new Tilt.Engine(temporary);
-      let max_size = engine.getParameter(GL.MAX_TEXTURE_SIZE); // important!
+    let canvasgl = Tilt.Document.initCanvas();
+
+    // use a custom canvas element and a 2d context to draw the window
+    let canvas2d = Tilt.Document.initCanvas();
+    
+    // create the WebGL context
+    let gl = Tilt.Renderer.prototype.create3DContext(canvasgl);
+    let maxSize = gl.getParameter(gl.MAX_TEXTURE_SIZE); // important!
+    
+    // calculate the total width of the content window
+    let width = Tilt.Math.clamp(
+      contentWindow.innerWidth + contentWindow.scrollMaxX, 0, maxSize);
       
-      // we got our max texture size, the engine no longer needed, so destroy
-      engine.destroy();
+    // calculate the total height of the content window
+    let height = Tilt.Math.clamp(
+      contentWindow.innerHeight + contentWindow.scrollMaxY, 0, maxSize);
       
-      // use a custom canvas element and a 2d context to draw the window
-      Tilt.Document.initCanvas(function(canvas) {
-        // get the default content window if not specified
-        if ("undefined" === typeof(contentWindow)) {
-          contentWindow = window.content;
-        }
-        
-        // calculate the total width of the content window
-        let width = Tilt.Math.clamp(
-          contentWindow.innerWidth + contentWindow.scrollMaxX, 0, max_size);
-          
-        // calculate the total height of the content window
-        let height = Tilt.Math.clamp(
-          contentWindow.innerHeight + contentWindow.scrollMaxY, 0, max_size);
-          
-        canvas.width = width;
-        canvas.height = height;
-        
-        // use the 2d context.drawWindow() magic
-        let context = canvas.getContext("2d");
-        context.drawWindow(contentWindow, 0, 0, width, height, "#fff");
-        
-        // run a ready callback function with the rendering passed as a param
-        if ("function" === typeof(readyCallback)) {
-          readyCallback(canvas);
-        }
-      });
-    });
+    canvas2d.width = width;
+    canvas2d.height = height;
+    
+    // use the 2d context.drawWindow() magic
+    let context = canvas2d.getContext("2d");
+    context.drawWindow(contentWindow, 0, 0, width, height, "#fff");
+    
+    return canvas2d;
   }
 };

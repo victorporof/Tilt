@@ -25,9 +25,8 @@
  */
 "use strict";
 
-if ("undefined" == typeof(Tilt)) {
-  var Tilt = {};
-};
+var Tilt = Tilt || {};
+var EXPORTED_SYMBOLS = ["Tilt.Arcball"];
 
 /**
  * This is a general purpose 3D rotation controller described by Ken Shoemake
@@ -42,39 +41,42 @@ if ("undefined" == typeof(Tilt)) {
 Tilt.Arcball = function(width, height, radius) {
   
   /**
-   * By convention, we make a private "that" variable.
-   */
-  var that = this;
-  
-  /**
    * Values retaining the current horizontal and vertical mouse coordinates.
    */
-  var mouseX = 0;
-  var mouseY = 0;
-  var mouseDragX = 0;
-  var mouseDragY = 0;
-  var mouseScroll = 0; // additionally, this implementation also handles zoom
+  this.mouseX = 0;
+  this.mouseY = 0;
+  this.mouseDragX = 0;
+  this.mouseDragY = 0;
+  this.scrollValue = 0; // additionally, this implementation also handles zoom
   
   /**
    * The vectors representing the mouse coordinates mapped on the arcball
    * and their perpendicular converted from (x, y) to (x, y, z) at specific 
    * events like mousePressed and mouseDragged.
    */
-  var startVec = vec3.create();
-  var endVec = vec3.create();
-  var pVec = vec3.create();
+  this.startVec = vec3.create();
+  this.endVec = vec3.create();
+  this.pVec = vec3.create();
   
   /**
    * The corresponding rotation quaternions created using the mouse vectors.
    */
-  var lastRot = quat4.create([0, 0, 0, 1]);
-  var deltaRot = quat4.create([0, 0, 0, 1]);
-  var currentRot = quat4.create([0, 0, 0, 1]);
+  this.lastRot = quat4.create([0, 0, 0, 1]);
+  this.deltaRot = quat4.create([0, 0, 0, 1]);
+  this.currentRot = quat4.create([0, 0, 0, 1]);
   
   /**
    * The zoom, calculated using mouse scroll deltas.
    */
-  var currentZoom = 0;
+  this.currentZoom = 0;
+  
+  /**
+   * Set the current dimensions of the arcball.
+   */
+  this.resize(width, height, radius);
+};
+
+Tilt.Arcball.prototype = {
   
   /**
    * Call this function whenever you need the updated rotation quaternion
@@ -84,8 +86,8 @@ Tilt.Arcball = function(width, height, radius) {
    * @param {number} frameDelta: optional, pass deltas for smooth animations
    * @return {object} the rotation quaternion and the zoom amount
    */
-  this.loop = function(frameDelta) {
-    if ("undefined" === typeof(frameDelta)) {
+  loop: function(frameDelta) {
+    if ("undefined" === typeof frameDelta) {
       frameDelta = 0.25;
     }
     else {
@@ -94,40 +96,41 @@ Tilt.Arcball = function(width, height, radius) {
     }
     
 	  // update the zoom based on the mouse scroll
-    currentZoom += (mouseScroll - currentZoom) * frameDelta;
+    this.currentZoom += (this.scrollValue - this.currentZoom) * frameDelta;
     
     // update the mouse coordinates
-    mouseX += (mouseDragX - mouseX) * frameDelta;
-    mouseY += (mouseDragY - mouseY) * frameDelta;
-    that.pointToSphere(mouseX, mouseY, endVec);
+    this.mouseX += (this.mouseDragX - this.mouseX) * frameDelta;
+    this.mouseY += (this.mouseDragY - this.mouseY) * frameDelta;
+    this.pointToSphere(this.mouseX, this.mouseY,
+                       this.width, this.height, this.radius, this.endVec);
     
 		// compute the vector perpendicular to the start & end vectors
-		vec3.cross(startVec, endVec, pVec);
+		vec3.cross(this.startVec, this.endVec, this.pVec);
 		
 		// if the begin and end vectors don't coincide
-		if (vec3.length(pVec) > 0) {
-  	  deltaRot[0] = pVec[0];
-  	  deltaRot[1] = pVec[1];
-  	  deltaRot[2] = pVec[2];
-  	  
-  	  // in the quaternion values, w is cosine (theta / 2),
-  	  // where theta is the rotation angle
-  	  deltaRot[3] = -vec3.dot(startVec, endVec);
+		if (vec3.length(this.pVec) > 0) {
+		  this.deltaRot[0] = this.pVec[0];
+		  this.deltaRot[1] = this.pVec[1];
+		  this.deltaRot[2] = this.pVec[2];
+		  
+		  // in the quaternion values, w is cosine (theta / 2),
+		  // where theta is the rotation angle
+		  this.deltaRot[3] = -vec3.dot(this.startVec, this.endVec);
 	  }
 	  else {
 	    // return an identity rotation quaternion
-	    deltaRot[0] = 0;
-	    deltaRot[1] = 0;
-	    deltaRot[2] = 0;
-	    deltaRot[3] = 1;
+	    this.deltaRot[0] = 0;
+	    this.deltaRot[1] = 0;
+	    this.deltaRot[2] = 0;
+	    this.deltaRot[3] = 1;
 	  }
 	  
 	  // calculate the current rotation using the delta quaternion
     return {
-      rotation: quat4.multiply(lastRot, deltaRot, currentRot),
-      zoom: currentZoom
+      rotation: quat4.multiply(this.lastRot, this.deltaRot, this.currentRot),
+      zoom: this.currentZoom
     };
-  };
+  },
   
   /**
    * Function handling the mousePressed event.
@@ -136,13 +139,15 @@ Tilt.Arcball = function(width, height, radius) {
    * @param {number} x: the current horizontal coordinate of the mouse
    * @param {number} y: the current vertical coordinate of the mouse
    */
-  this.mousePressed = function(x, y) {
-    mouseX = x;
-    mouseY = y;
+  mousePressed: function(x, y) {
+    this.mouseX = x;
+    this.mouseY = y;
     
-    that.pointToSphere(mouseX, mouseY, startVec);
-    quat4.set(currentRot, lastRot);
-  };
+    this.pointToSphere(this.mouseX, this.mouseY,
+                       this.width, this.height, this.radius, this.startVec);
+                       
+    quat4.set(this.currentRot, this.lastRot);
+  },
   
   /**
    * Function handling the mouseDragged event.
@@ -151,10 +156,10 @@ Tilt.Arcball = function(width, height, radius) {
    * @param {number} x: the current horizontal coordinate of the mouse
    * @param {number} y: the current vertical coordinate of the mouse
    */
-  this.mouseDragged = function(x, y) {
-    mouseDragX = x;
-    mouseDragY = y;
-  };
+  mouseDragged: function(x, y) {
+    this.mouseDragX = x;
+    this.mouseDragY = y;
+  },
   
   /**
    * Function handling the mouseScroll event.
@@ -162,29 +167,32 @@ Tilt.Arcball = function(width, height, radius) {
    *
    * @param {number} scroll: the mouse wheel direction and speed
    */
-  this.mouseScroll = function(scroll) {
-    mouseScroll -= scroll * 10;
-  };
+  mouseScroll: function(scroll) {
+    this.scrollValue -= scroll * 10;
+  },
   
   /**
    * Maps the 2d coordinates of the mouse location to a 3d point on a sphere.
    *
    * @param {number} x: the current horizontal coordinate of the mouse
    * @param {number} y: the current vertical coordinate of the mouse
+   * @param {number} width: the width of canvas
+   * @param {number} height: the height of canvas
+   * @param {number} radius: optional, the radius of the arcball
    * @param {array} sphereVec: a 3d vector to store the sphere coordinates
    */
-  this.pointToSphere = function(x, y, sphereVec) {
+  pointToSphere: function(x, y, width, height, radius, sphereVec) {
     // adjust point coords and scale down to range of [-1..1]
-    x = (x - this.width / 2) / this.radius;
-    y = (y - this.height / 2) / this.radius;
+    x = (x - width / 2) / radius;
+    y = (y - height / 2) / radius;
     
     // compute the square length of the vector to the point from the center
-    var length = x * x + y * y;
+    var sqlength = x * x + y * y, normal = 0;
     
     // if the point is mapped outside of the sphere  
-    if (length > 1) {    
+    if (sqlength > 1) {    
       // calculate the normalization factor
-      var normal = 1 / Math.sqrt(length);
+      normal = 1 / Math.sqrt(sqlength);
       
       // set the normalized vector (a point on the sphere)
       sphereVec[0] = x * normal;
@@ -195,9 +203,9 @@ Tilt.Arcball = function(width, height, radius) {
       // set the vector to a point mapped inside the sphere
       sphereVec[0] = x;
       sphereVec[1] = y;
-      sphereVec[2] = Math.sqrt(1 - length);
+      sphereVec[2] = Math.sqrt(1 - sqlength);
     }
-  };
+  },
   
   /**
    * Resize this implementation to use different bounds.
@@ -207,34 +215,24 @@ Tilt.Arcball = function(width, height, radius) {
    * @param {number} height: the height of canvas
    * @param {number} radius: optional, the radius of the arcball
    */
-  (this.resize = function(width, height, radius) {
+  resize: function(width, height, radius) {
     // set the new width, height and radius dimensions
-    that.width = width;
-    that.height = height;
-    that.radius = "undefined" !== typeof(radius) ? radius : height;
+    this.width = width;
+    this.height = height;
+    this.radius = "undefined" !== typeof radius ? radius : height;
     
-    that.pointToSphere(mouseX, mouseY, startVec);
-    quat4.set(currentRot, lastRot);
-    
-    // automatically call this function
-  })(width, height, radius);
+    this.pointToSphere(this.mouseX, this.mouseY, 
+                       this.width, this.height, this.radius, this.startVec);
+                       
+    quat4.set(this.currentRot, this.lastRot);
+  },
   
   /**
    * Destroys this object and sets all members to null.
    */
-  this.destroy = function() {
-    for (var i in that) {
-      that[i] = null;
+  destroy: function() {
+    for (var i in this) {
+      this[i] = null;
     }
-    
-    startVec = null;
-    endVec = null;
-    pVec = null;
-    
-    lastRot = null;
-    deltaRot = null;
-    currentRot = null;
-    
-    that = null;
-  };
+  }
 };

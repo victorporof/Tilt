@@ -9,7 +9,8 @@
 <!DOCTYPE overlay SYSTEM "chrome://tilt/locale/browserOverlay.dtd">
 
 <overlay id="tilt-browser-overlay"
-  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+  xmlns:html="http://www.w3.org/1999/xhtml">
 
   <script type="application/x-javascript"
           src="chrome://tilt/content/engine/lib/glMatrix-0.9.5.js"/>
@@ -26,7 +27,7 @@
   <script type="application/x-javascript"
           src="chrome://tilt/content/engine/jTiltEngine.js"/>
   <script type="application/x-javascript"
-          src="chrome://tilt/content/engine/jTiltDraw.js"/>
+          src="chrome://tilt/content/engine/jTiltRenderer.js"/>
   <script type="application/x-javascript"
           src="chrome://tilt/content/TiltChromeController.js"/>
   <script type="application/x-javascript"
@@ -55,6 +56,10 @@
               oncommand="TiltChrome.BrowserOverlay.initialize(event);">
     </menuitem>
   </menupopup>
+  
+  <window>
+    <html:iframe id="tilt-iframe" width="0px" height="0px"/>
+  </window>
   
   <!-- place the Tilt menu inside the web developer popup -->
   <!-- <menupopup id="menuWebDeveloperPopup">

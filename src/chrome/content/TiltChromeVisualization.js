@@ -25,26 +25,27 @@
  */
 "use strict";
 
-if ("undefined" === typeof(TiltChrome)) {
-  var TiltChrome = {};
-}
-
+var TiltChrome = TiltChrome || {};
 var EXPORTED_SYMBOLS = ["TiltChrome.Visualization"];
 
 /**
  * TiltChrome visualization constructor.
  * 
- * @param {object} tilt: helper functions for easy drawing and abstraction
  * @param {object} canvas: the canvas element used for rendering
  * @param {object} controller: the controller responsible for handling events
  * @return {object} the created object
  */
-TiltChrome.Visualization = function(tilt, canvas, controller) {
+TiltChrome.Visualization = function(canvas, controller) {
   
   /**
    * By convention, we make a private "that" variable.
    */
-  let that = this;
+  let self = this;
+  
+  /**
+   * Create the Tilt object, containing useful functions for easy drawing
+   */
+  let tilt = new Tilt.Renderer(canvas);
   
   /**
    * Variable specifying if the scene should be redrawn.
@@ -62,9 +63,13 @@ TiltChrome.Visualization = function(tilt, canvas, controller) {
    */
   let mesh = {
     vertices: [],
+    verticesBuff: {},
     texCoord: [],
+    texCoordBuff: {},
     indices: [],
+    indicesBuff: {},
     wireframeIndices: [],
+    wireframeIndicesBuff: {},
     thickness: 12,
     texture: null
   };
@@ -81,26 +86,25 @@ TiltChrome.Visualization = function(tilt, canvas, controller) {
   /**
    * The initialization logic.
    */
-  tilt.setup = function() {
+  function setup() {
     // use an extension to get the image representation of the document
-    Tilt.Extensions.WebGL.initDocumentImage(function(image) {
-      // this will be removed once the MOZ_dom_element_texture WebGL extension
-      // is finished; currently converting the document image to a texture
-      tilt.initTexture(image, function(texture) {
-        mesh.texture = texture;
-        
-        // setup the visualization, browser event handlers and the controller
-        setupVisualization();
-        setupBrowserEvents();
-        setupController();
-        
-        // use a white background & gray margins of 8 pixels
-      }, "white", "#aaa", 8);
+    // this will be removed once the MOZ_dom_element_texture WebGL extension
+    // is finished; currently converting the document image to a texture
+    let image = Tilt.Extensions.WebGL.initDocumentImage(window.content);
+    
+    // create a static texture using the previously created document image
+    mesh.texture = tilt.initTexture(image, {
+      fill: "white", stroke: "#aaa", strokeWeight: 8
     });
     
+    // setup the visualization, browser event handlers and the controller
+    setupVisualization();
+    setupBrowserEvents();
+    setupController();
+    
     // load the background
-    tilt.initTexture("chrome://tilt/skin/background.png", function(texture) {
-      background = texture;
+    tilt.initTextureAt("chrome://tilt/skin/background.png", function(tex) {
+      background = tex;
     });
     
     // set the transformations at initialization
@@ -112,13 +116,14 @@ TiltChrome.Visualization = function(tilt, canvas, controller) {
   /**
    * The rendering animation logic and loop.
    */
-  tilt.draw = function() {
+  function draw() {
     // if the visualization was destroyed, don't continue rendering
     if (tilt === null) {
       return;
     }
+    
     // prepare for the next frame of the animation loop
-    tilt.requestAnimFrame(tilt.draw);
+    tilt.requestAnimFrame(draw);
     
     // clear context with a transparent black background if the dom texture 
     // has not finished loading, or opaque grayish otherwise
@@ -128,38 +133,50 @@ TiltChrome.Visualization = function(tilt, canvas, controller) {
     else if (background !== null) {
       // only update if we really have to
       if (redraw) {
-        redraw = false;
+        redraw = true;
         
         // clear the context and draw a background gradient
         tilt.clear(0, 0, 0, 1);
         tilt.depthTest(false);
         tilt.image(background, 0, 0, tilt.width, tilt.height);
-        
+      
         // apply the necessary transformations to the model view
         tilt.translate(tilt.width / 2, tilt.height / 2,
-                       transforms.translation[2] - mesh.thickness * 15);
-                       
+                      transforms.translation[2] - mesh.thickness * 15);
+                    
         tilt.transform(quat4.toMat4(transforms.rotation));
         tilt.translate(transforms.translation[0],
-                       transforms.translation[1], 0);
-                       
+                      transforms.translation[1], 0);
+                    
         // draw the visualization mesh
         tilt.depthTest(true);
         tilt.mesh(mesh.verticesBuff,
-                  mesh.texCoordBuff, null, 
-                  GL.TRIANGLES, "#fff", mesh.texture,
-                  mesh.indicesBuff);
-                  
+                 mesh.texCoordBuff, null, 
+                 tilt.TRIANGLES, "#fff", 
+                 mesh.texture,
+                 mesh.indicesBuff);
+               
         tilt.mesh(mesh.verticesBuff, null, null, 
-                  GL.LINES, "#899", null,
-                  mesh.wireframeIndicesBuff);
-      }
+                 tilt.LINES, "#899", null,
+                 mesh.wireframeIndicesBuff);
+        }
+        
       // when rendering is finished, call a loop function in the controller
-      if ("function" === typeof(controller.loop)) {
+      if ("function" === typeof controller.loop) {
         controller.loop(tilt.frameDelta);
       }
     }
+    
+    if (tilt.frameCount % 1000 === 0) {
+      window.QueryInterface(Ci.nsIInterfaceRequestor)
+        .getInterface(Ci.nsIDOMWindowUtils)
+        .garbageCollect();
+    }
   };
+  
+  // run the setup and draw functions
+  setup();
+  draw();
   
   /**
    * Create the combined mesh representing the document visualization by
@@ -178,7 +195,7 @@ TiltChrome.Visualization = function(tilt, canvas, controller) {
       let coord = Tilt.Document.getNodeCoordinates(node);
       
       // use this node only if it actually has any dimensions
-      if ((coord.width > 1 && coord.height > 1) && depth) {
+      if ((coord.width > 1 && coord.height > 1) && depth > 0) {
         // the entire mesh's pivot is the screen center
         let x = coord.x - tilt.width / 2;
         let y = coord.y - tilt.height / 2;
@@ -207,7 +224,7 @@ TiltChrome.Visualization = function(tilt, canvas, controller) {
         mesh.vertices.push(x + w, y,     z);                            // 9
         mesh.vertices.push(x + w, y,     z - mesh.thickness);           // 10
         mesh.vertices.push(x,     y,     z - mesh.thickness);           // 11
-
+        
         // compute the texture coordinates
         mesh.texCoord.push(
           (x + tilt.width  / 2    ) / mesh.texture.width,
@@ -263,17 +280,18 @@ TiltChrome.Visualization = function(tilt, canvas, controller) {
   function setupBrowserEvents() {
     let tabContainer = gBrowser.tabContainer;
     
-    // when another tab is focused or the tab is closed, destroy visualization
-    tabContainer.addEventListener("TabSelect", destroy, false);
+    // when the tab is closed or the url changes, destroy visualization
     tabContainer.addEventListener("TabClose", destroy, false);
+    tabContainer.addEventListener("TabAttrModified", destroy, false);
     
     function destroy(e) {
       if (TiltChrome.BrowserOverlay.href !== window.content.location.href) {
+        TiltChrome.BrowserOverlay.href = null;
         TiltChrome.BrowserOverlay.destroy();
         
         // remove event listeners
-        tabContainer.removeEventListener("TabSelect", destroy, false);
         tabContainer.removeEventListener("TabClose", destroy, false);
+        tabContainer.removeEventListener("TabAttrModified", destroy, false);
       }
     }
   }
@@ -283,49 +301,125 @@ TiltChrome.Visualization = function(tilt, canvas, controller) {
    */
   function setupController() {
     // set a reference in the controller for this visualization
-    controller.visualization = that;
     controller.width = tilt.width;
     controller.height = tilt.height;
+    controller.setTranslation = setTranslation;
+    controller.setRotation = setRotation;
     
     // call the init function on the controller if available
-    if ("function" === typeof(controller.init)) {
+    if ("function" === typeof controller.init) {
       controller.init();
     }
     
     // bind commonly used mouse and keyboard events with the controller
-    if ("function" === typeof(controller.mousePressed)) {
-      tilt.mousePressed = controller.mousePressed;
+    if ("function" === typeof controller.mousePressed) {
+      canvas.addEventListener("mousedown", onMouseDown, false);
     }
-    if ("function" === typeof(controller.mouseReleased)) {
-      tilt.mouseReleased = controller.mouseReleased;
+    if ("function" === typeof controller.mouseReleased) {
+      canvas.addEventListener("mouseup", onMouseUp, false);
     }
-    if ("function" === typeof(controller.mouseClicked)) {
-      tilt.mouseClicked = controller.mouseClicked;
+    if ("function" === typeof controller.mouseClicked) {
+      canvas.addEventListener("click", onMouseClicked, false);
     }
-    if ("function" === typeof(controller.mouseMoved)) {
-      tilt.mouseMoved = controller.mouseMoved;
+    if ("function" === typeof controller.mouseMoved) {
+      canvas.addEventListener("mousemove", onMouseMove, false);
     }
-    if ("function" === typeof(controller.mouseOver)) {
-      tilt.mouseOver = controller.mouseOver;
+    if ("function" === typeof controller.mouseOver) {
+      canvas.addEventListener("mouseover", onMouseOver, false);
     }
-    if ("function" === typeof(controller.mouseOut)) {
-      tilt.mouseOut = controller.mouseOut;
+    if ("function" === typeof controller.mouseOut) {
+      canvas.addEventListener("mouseout", onMouseOut, false);
     }
-    if ("function" === typeof(controller.mouseScroll)) {
-      tilt.mouseScroll = controller.mouseScroll;
+    if ("function" === typeof controller.mouseScroll) {
+      canvas.addEventListener("DOMMouseScroll", onMouseScroll, false);
     }
-    if ("function" === typeof(controller.keyPressed)) {
-      tilt.keyPressed = controller.keyPressed;
+    if ("function" === typeof controller.keyPressed) {
+      window.addEventListener("keydown", onKeyDown, false);
     }
-    if ("function" === typeof(controller.keyTyped)) {
-      tilt.keyReleased = controller.keyTyped;
+    if ("function" === typeof controller.keyTyped) {
+      window.addEventListener("keypress", onKeyTyped, false);
     }
-    if ("function" === typeof(controller.keyReleased)) {
-      tilt.keyReleased = controller.keyReleased;
+    if ("function" === typeof controller.keyReleased) {
+      window.addEventListener("keyup", onKeyUp, false);
     }
-    if ("function" === typeof(controller.resize)) {
-      tilt.resize = controller.resize;
-    }
+  };
+  
+  /**
+   * Handle the mouse down event.
+   */
+  function onMouseDown(e) {
+    controller.mousePressed(self.mouseX, self.mouseY);
+  };
+  
+  /**
+   * Handle the mouse up event.
+   */
+  function onMouseUp(e) {
+    controller.mouseReleased(self.mouseX, self.mouseY);
+  };
+  
+  /**
+   * Handle the mouse clicked event.
+   */
+  function onMouseClicked(e) {
+    controller.mouseClicked(self.mouseX, self.mouseY);
+  };
+  
+  /**
+   * Handle the mouse move event.
+   */
+  function onMouseMove(e) {
+    self.mouseX = e.pageX;
+    self.mouseY = e.pageY;
+    controller.mouseMoved(self.mouseX, self.mouseY);
+  };
+  
+  /**
+   * Handle the mouse over event.
+   */
+  function onMouseOver(e) {
+    controller.mouseOver(self.mouseX, self.mouseY);
+  };
+  
+  /**
+   * Handle the mouse out event.
+   */
+  function onMouseOut(e) {
+    controller.mouseOut(self.mouseX, self.mouseY);
+  };
+  
+  /**
+   * Handle the mouse scroll event.
+   */
+  function onMouseScroll(e) {
+    controller.mouseScroll(e.detail);
+  };
+
+  /**
+   * Handle the key down event.
+   */
+  function onKeyDown(e) {
+    var keyCode = e.keyCode || e.which;
+    var keyChar = String.fromCharCode(e.keyCode || e.which);
+    controller.keyPressed(keyChar, keyCode);
+  };
+  
+  /**
+   * Handle the key typed event.
+   */
+  function onKeyTyped(e) {
+    var keyCode = e.keyCode || e.which;
+    var keyChar = String.fromCharCode(e.keyCode || e.which);
+    controller.keyTyped(keyChar, keyCode, e.charCode);
+  };
+  
+  /**
+   * Handle the key up event.
+   */
+  function onKeyUp(e) {
+    var keyCode = e.keyCode || e.which;
+    var keyChar = String.fromCharCode(e.keyCode || e.which);
+    controller.keyReleased(keyChar, keyCode);
   };
   
   /**
@@ -335,7 +429,7 @@ TiltChrome.Visualization = function(tilt, canvas, controller) {
    * @param {number} y: the new translation on the y axis
    * @param {number} z: the new translation on the z axis
    */
-  this.setTranslation = function(x, y, z) {
+  function setTranslation(x, y, z) {
     if (transforms.translation[0] != x ||
         transforms.translation[1] != y ||
         transforms.translation[2] != z) {
@@ -352,7 +446,7 @@ TiltChrome.Visualization = function(tilt, canvas, controller) {
    *
    * @param {array} quaternion: the rotation quaternion, as [x, y, z, w]
    */
-  this.setRotation = function(quaternion) {
+  function setRotation(quaternion) {
     if (transforms.rotation[0] != quaternion[0] || 
         transforms.rotation[1] != quaternion[1] || 
         transforms.rotation[2] != quaternion[2] || 
@@ -365,33 +459,28 @@ TiltChrome.Visualization = function(tilt, canvas, controller) {
   
   /**
    * Destroys this object and sets all members to null.
-   *
-   * @param {function} readyCallback: function to be called when finished
    */
-  this.destroy = function(readyCallback) {
-    for (var i in that) {
-      that[i] = null;
+  this.destroy = function() {
+    for (var i in self) {
+      self[i] = null;
     }
     
-    redraw = false;
-    background = null;
-    mesh = null;
-    transforms = null;
+    canvas.removeEventListener("mousedown", onMouseDown, false);
+    canvas.removeEventListener("mouseup", onMouseUp, false);
+    canvas.removeEventListener("click", onMouseClicked, false);
+    canvas.removeEventListener("mousemove", onMouseMove, false);
+    canvas.removeEventListener("mouseover", onMouseOver, false);
+    canvas.removeEventListener("mouseout", onMouseOut, false);
+    canvas.removeEventListener("DOMMouseScroll", onMouseScroll, false);
+    window.removeEventListener("keydown", onKeyDown, false);
+    window.removeEventListener("keypress", onKeyTyped, false);
+    window.removeEventListener("keyup", onKeyUp, false);
     
-    tilt.destroy();
-    tilt = null;
-    canvas = null;
-    
-    if ("function" === typeof(controller.destroy)) {
+    if ("function" === typeof controller.destroy) {
       controller.destroy();
     }
-    
-    if ("function" === typeof(readyCallback)) {
-      readyCallback();
-      readyCallback = null;
+    if ("function" === typeof tilt.destroy) {
+      tilt.destroy();
     }
-    
-    controller = null;
-    that = null;
   };
-}
+};

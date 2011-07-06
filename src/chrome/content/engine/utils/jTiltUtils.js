@@ -25,10 +25,7 @@
  */
 "use strict";
 
-if ("undefined" === typeof(Tilt)) {
-  var Tilt = {};
-}
-
+var Tilt = Tilt || {};
 var EXPORTED_SYMBOLS = [
   "Tilt.Iframe",
   "Tilt.Document",
@@ -42,154 +39,73 @@ var EXPORTED_SYMBOLS = [
 Tilt.Document = {
   
   /**
-   * Helper method, allowing to easily create an iframe with a canvas element
-   * if running in a chrome environment. If this is running from a html page, 
-   * just a canvas element is directly created.
-   * When loaded, the readyCallback function is called with the canvas and the
-   * iframe passed as parameters to it. You can also use the specified 
-   * iframe or canvas id to get the elements by id.
    *
-   * @param {function} readyCallback: function called when initialization done
-   * @param {boolean} keepInStack: true if the iframe should be retained
-   * @param {string} iframe_id: optional, id for the created iframe
-   * @param {string} canvas_id: optional, id for the created canvas element
-   * @param {string} type: optional, the type of the iframe
-   * @return {object} the newly created iframe or canvas
    */
-  initCanvas: function(readyCallback, keepInStack, canvas_id, iframe_id) {
-    // set the canvas id and the iframe id, should they be necessary
-    if ("undefined" === typeof(canvas_id)) {
-      canvas_id = "tilt-canvas";
-    }    
-    if ("undefined" === typeof(iframe_id)) {
-      iframe_id = "tilt-iframe";
+  currentContentDocument: null,
+  
+  /**
+   *
+   */
+  currentParentNode: null,
+  
+  /**
+   * Helper method, allowing to easily create and manage a canvas element.
+   *
+   * @param {number} width: specifies the width of the canvas
+   * @param {number} height: specifies the height of the canvas
+   * @param {boolean} append: true to append the canvas to the parent node
+   * @param {string} id: optional, id for the created canvas element
+   * @return {object} the newly created canvas
+   */
+  initCanvas: function(width, height, append, id) {
+    var doc = this.currentContentDocument, node = this.currentParentNode;
+    var canvas = doc.createElement("canvas");
+    canvas.width = width;
+    canvas.height = height;
+    canvas.id = id;
+    
+    if (append) {
+      this.append(canvas, node);
     }
     
-    // remember who we are
-    var that = this;
-    
-    if ("undefined" !== typeof(gBrowser)) { // inside a chrome environment
-      // create an iframe to contain the canvas element
-      var iframe = document.createElement("iframe");
-      iframe.setAttribute("style", "visibility: hidden;"); // initially hidden
-      iframe.id = iframe_id;
-      
-      // only after the iframe has finished loading, continue logic
-      iframe.addEventListener("load", function loadCallback() {
-        iframe.removeEventListener("load", loadCallback, true);
-        
-        // get the canvas element from the iframe
-        var canvas = iframe.contentDocument.getElementById(canvas_id);
-        
-        // run a ready callback function with the canvas and the parent iframe
-        if ("function" === typeof(readyCallback)) {
-          readyCallback(canvas, iframe);
-        }
-        
-        // it is not obligatory to keep the iframe visible, remove if desired
-        // (this will also remove the canvas)
-        if (!keepInStack) {
-          that.remove(canvas); canvas = null;
-          that.remove(iframe); iframe = null;
-        }
-        else {
-          // assure the iframe is now visible
-          iframe.setAttribute("style", "visibility: visible;");
-        }
-      }, true);
-      
-      // the iframe will contain a simple html source containing a canvas
-      iframe.setAttribute("src", 'data:text/html,\
-      <html>\
-        <body style="margin: 0px 0px 0px 0px;">\
-          <canvas style="width: 100%; height: 100%;" id="' + canvas_id + '"/>\
-        </body>\
-      </html>');
-      
-      // append the iframe to the browser parent node and return it
-      return that.append(iframe);
-    }
-    else { 
-      // were in a plain web page, not a privileged environment, so just
-      // create the canvas directly and follow roughly the same logic
-      var canvas = document.createElement("canvas");
-      canvas.setAttribute("style", "visibility: hidden;"); // initially hidden
-      canvas.id = canvas_id;
-      
-      // no need for a load listener, append the canvas to the document now
-      that.append(canvas);
-      
-      // run a ready callback function with the canvas
-      if ("function" === typeof(readyCallback)) {
-        readyCallback(canvas);
-      }
-      
-      // it is not obligatory to keep the canvas visible, remove if desired
-      if (!keepInStack) {
-        that.remove(canvas); canvas = null;
-      }
-      else {
-        // assure the canvas is now visible
-        canvas.setAttribute("style", "visibility: visible;");
-      }
-      
-      // in this case, we return the canvas, not the parent iframe
+    try {
       return canvas;
+    }
+    finally {
+      doc = null;
+      node = null;
+      canvas = null;
     }
   },
   
   /**
    * Appends an element to a specific node.
-   * If the node is not specified, it defaults to selectedBrowser.parentNode.
    *
-   * @param {object} iframe: the element to be appended
+   * @param {object} element: the element to be appended
    * @param {object} node: the node to append the element to
-   * @return {object} the same iframe
    */
   append: function(element, node) {
-    if ("undefined" === typeof(node)) {
-      if ("undefined" !== typeof(gBrowser)) { // inside a chrome environment
-        node = gBrowser.selectedBrowser.parentNode;
-      }
-      // not a privileged environment
-      else {
-        node = document.body;
-      }
-    }
-    
-    if (node !== null) {
+    try {
       node.appendChild(element);
     }
-    return element;
-  },
-  
-  /**
-   * Removes an element from it's parent node.
-   *
-   * @param {object} iframe: the iframe to be removed
-   */
-  remove: function(element, node) {
-    if ("undefined" === typeof(node)) {
-      if ("undefined" !== typeof(element.parentNode)) {
-        node = element.parentNode;
-      }
-      else {
-        return;
-      }
-    }
-    
-    if (node !== null) {
-      node.removeChild(element);
+    finally {
+      element = null;
+      node = null;
     }
   },
   
   /**
-   * Returns the current content document inside the active window.
+   * Removes an element from the parent node.
    *
-   * @return {object} the current content document
+   * @param {object} element: the element to be removed
    */
-  get: function() {
-    return window.content.document;
+  remove: function(element) {
+    try {
+      element.parentNode.removeChild(element);
+    }
+    finally {
+      element = null;
+    }
   },
   
   /**
@@ -197,25 +113,22 @@ Tilt.Document = {
    * If the dom parameter is omitted, then the current content.document will
    * be used. The nodeCallback function will have the current node and depth
    * passed as parameters, and the readyCallback function will have the 
-   * maximum depth and the entire dom passed as parameters.
+   * maximum depth passed as parameter.
    *
    * @param {function} nodeCallback: the function to call for each node
    * @param {function} readyCallback: called when no more nodes are found
    * @param {object} dom: the document object model to traverse
    */
-  traverse: function(nodeCallback, readyCallback, dom) {
-    if ("function" === typeof(nodeCallback)) {
-      recursive(nodeCallback, dom ? dom : this.get(), 0);
-      nodeCallback = null;
-    }
-    
+  traverse: function(nodeCallback, readyCallback, dom) {    
     // used to calculate the maximum depth of a dom node
     var maxDepth = 0;
     
     // used internally for recursively traversing a document object model
     function recursive(nodeCallback, dom, depth) {
-      for (var i = 0, len = dom.childNodes.length; i < len; i++) {
-        var child = dom.childNodes[i];
+      var i, length, child;
+      
+      for (i = 0, length = dom.childNodes.length; i < length; i++) {
+        child = dom.childNodes[i];
         
         if (depth > maxDepth) {
           maxDepth = depth;
@@ -228,11 +141,20 @@ Tilt.Document = {
       }
     }
     
-    // once we recursively traversed all the dom nodes, run a callback 
-    // function with the maximum depth and the entire dom passed as parameters
-    if ("function" === typeof(readyCallback)) {
-      readyCallback(maxDepth, dom ? dom : this.get());
-      readyCallback = null;
+    try {
+      if ("function" === typeof nodeCallback) {
+        recursive(nodeCallback, dom || window.content.document, 0);
+        nodeCallback = null;
+      }
+    
+      // once we recursively traversed all the dom nodes, run a callback
+      if ("function" === typeof readyCallback) {
+        readyCallback(maxDepth);
+        readyCallback = null;
+      }
+    }
+    finally {
+      dom = null;
     }
   },
   
@@ -243,10 +165,7 @@ Tilt.Document = {
    * @return {object} an object containing the x, y, width and height coords
    */
   getNodeCoordinates: function(node) {
-    var x = 0;
-    var y = 0;
-    var w = node.clientWidth;
-    var h = node.clientHeight;
+    var x = 0, y = 0, w = node.clientWidth, h = node.clientHeight;
     
     // if the node isn't the parent of everything
     if (node.offsetParent) {
@@ -254,7 +173,7 @@ Tilt.Document = {
       do {
         x += node.offsetLeft;
         y += node.offsetTop;
-    	} while (node = node.offsetParent);
+      } while (node = node.offsetParent);
     }
     else {
       // just get the x and y coordinates of this node if available
@@ -266,12 +185,17 @@ Tilt.Document = {
       }
     }
     
-    // a bit more verbose than a simple array
-    return {
-      x: x,
-      y: y,
-      width: w,
-      height: h
+    try {
+      // a bit more verbose than a simple array
+      return {
+        x: x,
+        y: y,
+        width: w,
+        height: h
+      };
+    }
+    finally {
+      node = null;
     }
   },
   
@@ -322,7 +246,12 @@ Tilt.Document = {
       type = "NOTATION_NODE";
     }
     
-    return type;
+    try {
+      return type;
+    }
+    finally {
+      node = null;
+    }
   }
 };
 
@@ -333,73 +262,71 @@ Tilt.Image = {
   
   /**
    * Scales an image to power of two width and height.
-   * If the image already has power of two dimensions, the readyCallback
-   * function is called immediately. In either case the newly created image
-   * will be passed to the readyCallback function.
    *
    * @param {object} image: the image to be scaled
-   * @param {function} readyCallback: function called when scaling is finished
-   * @param {string} fillColor: optional, color to fill the transparent bits
-   * @param {string} strokeColor: optional, color to draw an outline
-   * @param {number} strokeWeight: optional, the width of the outline
-   * @param {boolean} forceResize: true if image should be resized regardless
-   * if it already has power of two dimensions
+   * @param {object} parameters: an object containing the following properties
+   *  @param {string} fill: optional, color to fill the transparent bits
+   *  @param {string} stroke: optional, color to draw an outline
+   *  @param {number} strokeWeight: optional, the width of the outline
+   * @return {object} the resized image
    */
-  resizeToPowerOfTwo: function(image, readyCallback,
-                               fillColor, strokeColor, strokeWeight,
-                               forceResize) {
-                                 
-    // first check if the image is not already power of two, and continue to
-    // scale the image only if forceResize is true
+  resizeToPowerOfTwo: function(image, parameters) {
+    // first check if the image is not already power of two
     if (Tilt.Math.isPowerOfTwo(image.width) &&
-        Tilt.Math.isPowerOfTwo(image.height) && !forceResize) {
-          
-      if ("function" === typeof(readyCallback)) {
-        readyCallback(image);
-        return;
+        Tilt.Math.isPowerOfTwo(image.height) && 
+        image.src.indexOf("chrome://") === -1) {
+        
+      try {
+        return image;
+      }
+      finally {
+        image = null;
       }
     }
     
-    // set the canvas id and the iframe id, should they be necessary
-    var canvas_id = "tilt-canvas-" + image.src;
-    var iframe_id = "tilt-iframe-" + image.src;
+    var width, height, canvas, context;
+    
+    // make sure the parameters is an object
+    parameters = parameters || {};
+    
+    // calculate the power of two dimensions for the npot image
+    width = Tilt.Math.nextPowerOfTwo(image.width);
+    height = Tilt.Math.nextPowerOfTwo(image.height);
     
     // create a canvas, then we will use a 2d context to scale the image
-    Tilt.Document.initCanvas(function(canvas) {
-      // calculate the power of two dimensions for the npot image
-      canvas.width = Tilt.Math.nextPowerOfTwo(image.width);
-      canvas.height = Tilt.Math.nextPowerOfTwo(image.height);
+    canvas = Tilt.Document.initCanvas(width, height);
+       
+    // do some 2d context magic
+    context = canvas.getContext("2d");
+    
+    // optional fill (useful when handling transparent images)
+    if (parameters.fill) {
+      context.fillStyle = parameters.fill;
+      context.fillRect(0, 0, canvas.width, canvas.height);
+    }
+    
+    // draw the image with power of two dimensions
+    context.drawImage(image,
+      0, 0, image.width, image.height,
+      0, 0, canvas.width, canvas.height);
       
-      // do some 2d context magic
-      var context = canvas.getContext("2d");
-      
-      // optional fill (useful when handling transparent images)
-      if (fillColor) {
-        context.fillStyle = fillColor;
-        context.fillRect(0, 0, canvas.width, canvas.height);
-      }
-      
-      // draw the image with power of two dimensions
-      context.drawImage(image,
-        0, 0, image.width, image.height,
-        0, 0, canvas.width, canvas.height);
-        
-      // optional stroke (useful when creating textures for edges)
-      if (strokeColor) {
-        if (strokeWeight <= 0) {
-          strokeWeight = 1;
-        }
-        context.strokeStyle = strokeColor;
-        context.lineWidth = strokeWeight;
-        context.strokeRect(0, 0, canvas.width, canvas.height);
-      }
-      
-      // run a ready callback function with the resized image as a parameter
-      if ("function" === typeof(readyCallback)) {
-        readyCallback(canvas);
-        readyCallback = null;
-      }
-    }, false, canvas_id, iframe_id);
+    // optional stroke (useful when creating textures for edges)
+    if (parameters.stroke) {
+      context.strokeStyle = parameters.stroke;
+      context.lineWidth = parameters.strokeWeight > 0 ? 
+                          parameters.strokeWeight : 1;
+                          
+      context.strokeRect(0, 0, canvas.width, canvas.height);
+    }
+    
+    try {
+      return canvas;
+    }
+    finally {
+      image = null;
+      canvas = null;
+      context = null;
+    }
   }
 };
 
@@ -428,23 +355,23 @@ Tilt.Math = {
    * @return {array} the quaternion as [x, y, z, w]
    */
   quat4fromAxis: function(axis, angle, out) {
-  	angle *= 0.5;
-  	
-  	var sin = Math.sin(angle);
-  	var x = (axis[0] * sin);
-  	var y = (axis[1] * sin);
-  	var z = (axis[2] * sin);
-  	var w = Math.cos(angle);
-  	
-  	if ("undefined" === typeof(out)) {
+    angle *= 0.5;
+    
+    var sin = Math.sin(angle),
+        x = (axis[0] * sin), 
+        y = (axis[1] * sin),
+        z = (axis[2] * sin),
+        w = Math.cos(angle);
+        
+    if ("undefined" === typeof out) {
       return [x, y, z, w];
-  	}
-  	else {
-  	  out[0] = x;
-  	  out[1] = y;
-  	  out[2] = z;
-  	  out[3] = w;
-  	}
+    }
+    else {
+      out[0] = x;
+      out[1] = y;
+      out[2] = z;
+      out[3] = w;
+    }
   },
   
   /**
@@ -457,33 +384,34 @@ Tilt.Math = {
    * @return {array} the quaternion as [x, y, z, w]
    */
   quat4fromEuler: function(yaw, pitch, roll, out) {
-  	// basically we create 3 quaternions, for pitch, yaw and roll
-	  // and multiply those together
-  	var y = yaw   * 0.5;
-  	var x = pitch * 0.5;
-  	var z = roll  * 0.5;
-  	
-  	var siny = Math.sin(z);
-  	var sinp = Math.sin(y);
-    var sinr = Math.sin(x);
-    var cosy = Math.cos(z);
-  	var cosp = Math.cos(y);
-  	var cosr = Math.cos(x);
-  	
-  	var x = sinr * cosp * cosy - cosr * sinp * siny;
-  	var y = cosr * sinp * cosy + sinr * cosp * siny;
-  	var z = cosr * cosp * siny - sinr * sinp * cosy;
-  	var w = cosr * cosp * cosy + sinr * sinp * siny;
-  	
-  	if ("undefined" === typeof(out)) {
+    // basically we create 3 quaternions, for pitch, yaw and roll
+    // and multiply those together
+    var y = yaw   * 0.5,
+        x = pitch * 0.5,
+        z = roll  * 0.5,
+        w,
+        
+        siny = Math.sin(z),
+        sinp = Math.sin(y),
+        sinr = Math.sin(x),
+        cosy = Math.cos(z),
+        cosp = Math.cos(y),
+        cosr = Math.cos(x);
+        
+    x = sinr * cosp * cosy - cosr * sinp * siny;
+    y = cosr * sinp * cosy + sinr * cosp * siny;
+    z = cosr * cosp * siny - sinr * sinp * cosy;
+    w = cosr * cosp * cosy + sinr * sinp * siny;
+    
+    if ("undefined" === typeof out) {
       return [x, y, z, w];
-  	}
-  	else {
-  	  out[0] = x;
-  	  out[1] = y;
-  	  out[2] = z;
-  	  out[3] = w;
-  	}
+    }
+    else {
+      out[0] = x;
+      out[1] = y;
+      out[2] = z;
+      out[3] = w;
+    }
   },
   
   /**
@@ -503,8 +431,10 @@ Tilt.Math = {
    * @return {number} the next closest power of two for x
    */
   nextPowerOfTwo: function(x) {
+    var i;
+    
     --x;
-    for (var i = 1; i < 32; i <<= 1) {
+    for (i = 1; i < 32; i <<= 1) {
       x = x | x >> i;
     }
     return x + 1;
@@ -530,25 +460,26 @@ Tilt.Math = {
    */
   hex2rgba: function(hex) {
     hex = hex.charAt(0) === "#" ? hex.substring(1) : hex;
+    var rgba, r, g, b, a, cr, cg, cb, ca;
     
     // e.g. "f00"
     if (hex.length === 3) {
-      var cr = hex.charAt(0);
-      var cg = hex.charAt(1);
-      var cb = hex.charAt(2);
+      cr = hex.charAt(0);
+      cg = hex.charAt(1);
+      cb = hex.charAt(2);
       hex = [cr, cr, cg, cg, cb, cb, "ff"].join('');
     }
     // e.g. "f008" 
     else if (hex.length === 4) {
-      var cr = hex.charAt(0);
-      var cg = hex.charAt(1);
-      var cb = hex.charAt(2);
-      var ca = hex.charAt(3);
+      cr = hex.charAt(0);
+      cg = hex.charAt(1);
+      cb = hex.charAt(2);
+      ca = hex.charAt(3);
       hex = [cr, cr, cg, cg, cb, cb, ca, ca].join('');
     }
     // e.g. "rgba(255, 0, 0, 128)"
     else if (hex.match("^rgba") == "rgba") {
-      var rgba = hex.substring(5, hex.length - 1).split(',');
+      rgba = hex.substring(5, hex.length - 1).split(',');
       rgba[0] /= 255;
       rgba[1] /= 255;
       rgba[2] /= 255;
@@ -557,7 +488,7 @@ Tilt.Math = {
     }
     // e.g. "rgb(255, 0, 0)"
     else if (hex.match("^rgb") == "rgb") {
-      var rgba = hex.substring(4, hex.length - 1).split(',');
+      rgba = hex.substring(4, hex.length - 1).split(',');
       rgba[0] /= 255;
       rgba[1] /= 255;
       rgba[2] /= 255;
@@ -565,10 +496,10 @@ Tilt.Math = {
       return rgba;
     }
     
-    var r = parseInt(hex.substring(0, 2), 16) / 255;
-    var g = parseInt(hex.substring(2, 4), 16) / 255;
-    var b = parseInt(hex.substring(4, 6), 16) / 255;
-    var a = hex.length === 6 ? 1 : parseInt(hex.substring(6, 8), 16) / 255;
+    r = parseInt(hex.substring(0, 2), 16) / 255;
+    g = parseInt(hex.substring(2, 4), 16) / 255;
+    b = parseInt(hex.substring(4, 6), 16) / 255;
+    a = hex.length === 6 ? 1 : parseInt(hex.substring(6, 8), 16) / 255;
     return [r, g, b, a];
   }
 };
@@ -595,7 +526,7 @@ Tilt.String = {
    * @return {string} the trimmed string
    */
   ltrim: function(str) {
-    return str.replace(/^\s+/, ""); 	
+    return str.replace(/^\s+/, "");
   },
   
   /**
@@ -629,18 +560,23 @@ Tilt.StringBundle = {
    */
   get: function(string) {
     // undesired, you should always pass a defined string for the bundle
-    if ("undefined" === typeof(string)) {
+    if ("undefined" === typeof string) {
       return "undefined";
     }
     
     var elem = document.getElementById(this.bundle);
-    if (elem) {
-      // return the equivalent string from the bundle
-      return elem.getString(string);
+    try {
+      if (elem) {
+        // return the equivalent string from the bundle
+        return elem.getString(string);
+      }
+      else {
+        // this should never happen when inside a chrome environment
+        return string;
+      }
     }
-    else {
-      // this should never happen when inside a chrome environment
-      return string;
+    finally {
+      elem = null;
     }
   },
   
@@ -654,22 +590,27 @@ Tilt.StringBundle = {
    */
   format: function(string, args) {
     // undesired, you should always pass a defined string for the bundle
-    if ("undefined" === typeof(string)) {
+    if ("undefined" === typeof string) {
       return "undefined";
     }
     // undesired, you should always pass arguments when formatting strings
-    if ("undefined" === typeof(args)) {
+    if ("undefined" === typeof args) {
       return string;
     }
     
     var elem = document.getElementById(this.bundle);
-    if (elem) {
-      // return the equivalent formatted string from the bundle
-      return elem.getFormattedString(string, args);
+    try {
+      if (elem) {
+        // return the equivalent formatted string from the bundle
+        return elem.getFormattedString(string, args);
+      }
+      else {
+        // this should never happen when inside a chrome environment
+        return [string, args].join(" ");
+      }
     }
-    else {
-      // this should never happen when inside a chrome environment
-      return [string, args].join(" ");
+    finally {
+      elem = null;
     }
   }
 };
@@ -687,7 +628,7 @@ Tilt.Console = {
    */
   log: function(aMessage) {
     try {
-      if ("undefined" === typeof(aMessage)) {
+      if ("undefined" === typeof aMessage) {
         aMessage = "undefined";
       }
       
@@ -698,12 +639,12 @@ Tilt.Console = {
       // log the message
       consoleService.logStringMessage(aMessage);
     }
-    catch(exception) {
+    catch(e) {
       // running from an unprivileged environment
       alert(aMessage);      
     }
   },
-
+  
   /**
    * Logs an error to the console.
    * If this is not inside an extension environment, an alert() is used.
@@ -732,7 +673,7 @@ Tilt.Console = {
   error: function(aMessage, aSourceName, aSourceLine, 
                   aLineNumber, aColumnNumber, aFlags, aCategory) {
     try {
-      if ("undefined" === typeof(aMessage)) {
+      if ("undefined" === typeof aMessage) {
         aMessage = "undefined";
       }
       
@@ -751,7 +692,7 @@ Tilt.Console = {
       // log the error
       consoleService.logMessage(scriptError);
     }
-    catch(exception) {
+    catch(e) {
       // running from an unprivileged environment
       alert(aMessage);
     }
