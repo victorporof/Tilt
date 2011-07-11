@@ -14,24 +14,24 @@ ZIP := zip
 # The target location of the build and build files.
 bin_dir := ../bin
 
-# The target XPI file.  
-xpi_file := $(bin_dir)/$(extension_name).xpi  
+# The target XPI file.
+xpi_file := $(bin_dir)/$(extension_name).xpi
 
 # The type of operating system this make command is running on.
 os_type := $(patsubst darwin%,darwin,$(shell echo $(OSTYPE)))
 
 # The location of the extension profile.
 ifeq ($(os_type), darwin)
-  profile_location := \
-    ~/Library/Application\ Support/Firefox/Profiles/$(profile_dir)/extensions/$(extension_uuid)
+	profile_location := \
+		~/Library/Application\ Support/Firefox/Profiles/$(profile_dir)/extensions/$(extension_uuid)
 else
-  ifeq ($(os_type), linux-gnu)
-    profile_location := \
-      ~/.mozilla/firefox/$(profile_dir)/extensions/$(extension_uuid)
-  else
-    profile_location := \
-      "$(subst \,\\,$(APPDATA))\\Mozilla\\Firefox\\Profiles\\$(profile_dir)\\extensions\\$(extension_uuid)"
-  endif
+	ifeq ($(os_type), linux-gnu)
+		profile_location := \
+			~/.mozilla/firefox/$(profile_dir)/extensions/$(extension_uuid)
+	else
+		profile_location := \
+			"$(subst \,\\,$(APPDATA))\\Mozilla\\Firefox\\Profiles\\$(profile_dir)\\extensions\\$(extension_uuid)"
+	endif
 endif
 
 # The temporary location where the extension tree will be copied and built.
@@ -88,6 +88,6 @@ $(build_dir)/%: %
 
 $(build_dir):
 	@if [ ! -x $(build_dir) ]; \
-  then \
-    mkdir $(build_dir); \
-  fi
+	then \
+		mkdir $(build_dir); \
+	fi

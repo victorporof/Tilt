@@ -34,213 +34,213 @@ var EXPORTED_SYMBOLS = ["TiltChrome.Controller.MouseAndKeyboard"];
 TiltChrome.Controller = {};
 TiltChrome.Controller.MouseAndKeyboard = function() {
 
-	/**
-	 * By convention, we make a private "self" variable.
-	 */
-	var self = this,
+  /**
+   * By convention, we make a private "self" variable.
+   */
+  var self = this,
 
-	/**
-	 * Arcball used to control the visualization using the mouse.
-	 */
-	arcball = null,
+  /**
+   * Arcball used to control the visualization using the mouse.
+   */
+  arcball = null,
 
-	/**
-	 * Visualization translation and rotation on the X and Y axis.
-	 */
-	translationX = 0,
-		translationY = 0,
-		rotationX = 0,
-		rotationY = 0,
-		euler = quat4.create(),
+  /**
+   * Visualization translation and rotation on the X and Y axis.
+   */
+  translationX = 0,
+    translationY = 0,
+    rotationX = 0,
+    rotationY = 0,
+    euler = quat4.create(),
 
-	/**
-	 * Retain the mouse drag state and position, to manipulate the arcball.
-	 */
-	mouseDragged = false,
-		mouseStartX = 0,
-		mouseStartY = 0,
-		mouseX = 0,
-		mouseY = 0,
+  /**
+   * Retain the mouse drag state and position, to manipulate the arcball.
+   */
+  mouseDragged = false,
+    mouseStartX = 0,
+    mouseStartY = 0,
+    mouseX = 0,
+    mouseY = 0,
 
-	/**
-	 * Retain the keyboard state.
-	 */
-	keyCode = [];
+  /**
+   * Retain the keyboard state.
+   */
+  keyCode = [];
 
-	/**
-	 * Function called automatically by the visualization at the setup().
-	 * @param {object} canvas: the canvas dom element
-	 */
-	this.init = function(canvas) {
-		arcball = new Tilt.Arcball(canvas.width, canvas.height);
+  /**
+   * Function called automatically by the visualization at the setup().
+   * @param {object} canvas: the canvas dom element
+   */
+  this.init = function(canvas) {
+    arcball = new Tilt.Arcball(canvas.width, canvas.height);
 
-		// bind commonly used mouse and keyboard events with the controller
-		canvas.addEventListener("mousedown", mousePressed, false);
-		canvas.addEventListener("mouseup", mouseReleased, false);
-		canvas.addEventListener("mousemove", mouseMoved, false);
-		canvas.addEventListener("mouseout", mouseOut, false);
-		canvas.addEventListener("DOMMouseScroll", mouseScroll, false);
-		window.addEventListener("keydown", keyPressed, false);
-		window.addEventListener("keyup", keyReleased, false);
-	};
+    // bind commonly used mouse and keyboard events with the controller
+    canvas.addEventListener("mousedown", mousePressed, false);
+    canvas.addEventListener("mouseup", mouseReleased, false);
+    canvas.addEventListener("mousemove", mouseMoved, false);
+    canvas.addEventListener("mouseout", mouseOut, false);
+    canvas.addEventListener("DOMMouseScroll", mouseScroll, false);
+    window.addEventListener("keydown", keyPressed, false);
+    window.addEventListener("keyup", keyReleased, false);
+  };
 
-	/**
-	 * Function called automatically by the visualization each frame in draw().
-	 * @param {number} frameDelta: the delta time elapsed between frames
-	 */
-	this.loop = function(frameDelta) {
-		// handle mouse dragged events
-		if (mouseDragged) {
-			arcball.mouseDragged(mouseX, mouseY);
-		}
+  /**
+   * Function called automatically by the visualization each frame in draw().
+   * @param {number} frameDelta: the delta time elapsed between frames
+   */
+  this.loop = function(frameDelta) {
+    // handle mouse dragged events
+    if (mouseDragged) {
+      arcball.mouseDragged(mouseX, mouseY);
+    }
 
-		// handle key pressed events
-		if (keyCode[37]) { // left
-			translationX += frameDelta / 3;
-		}
-		if (keyCode[39]) { // right
-			translationX -= frameDelta / 3;
-		}
-		if (keyCode[38]) { // up
-			translationY += frameDelta / 3;
-		}
-		if (keyCode[40]) { // down
-			translationY -= frameDelta / 3;
-		}
-		if (keyCode[65]) { // w
-			rotationY -= Tilt.Math.radians(frameDelta) / 10;
-		}
-		if (keyCode[68]) { // s
-			rotationY += Tilt.Math.radians(frameDelta) / 10;
-		}
-		if (keyCode[87]) { // a
-			rotationX += Tilt.Math.radians(frameDelta) / 10;
-		}
-		if (keyCode[83]) { // d
-			rotationX -= Tilt.Math.radians(frameDelta) / 10;
-		}
+    // handle key pressed events
+    if (keyCode[37]) { // left
+      translationX += frameDelta / 3;
+    }
+    if (keyCode[39]) { // right
+      translationX -= frameDelta / 3;
+    }
+    if (keyCode[38]) { // up
+      translationY += frameDelta / 3;
+    }
+    if (keyCode[40]) { // down
+      translationY -= frameDelta / 3;
+    }
+    if (keyCode[65]) { // w
+      rotationY -= Tilt.Math.radians(frameDelta) / 10;
+    }
+    if (keyCode[68]) { // s
+      rotationY += Tilt.Math.radians(frameDelta) / 10;
+    }
+    if (keyCode[87]) { // a
+      rotationX += Tilt.Math.radians(frameDelta) / 10;
+    }
+    if (keyCode[83]) { // d
+      rotationX -= Tilt.Math.radians(frameDelta) / 10;
+    }
 
-		// get the arcball rotation and zoom coordinates
-		var coord = arcball.loop(frameDelta);
+    // get the arcball rotation and zoom coordinates
+    var coord = arcball.loop(frameDelta);
 
-		// create another custom rotation
-		Tilt.Math.quat4fromEuler(rotationY, rotationX, 0, euler);
+    // create another custom rotation
+    Tilt.Math.quat4fromEuler(rotationY, rotationX, 0, euler);
 
-		// update the visualization
-		self.setRotation(quat4.multiply(euler, coord.rotation));
-		self.setTranslation(translationX, translationY, coord.zoom);
-	};
+    // update the visualization
+    self.setRotation(quat4.multiply(euler, coord.rotation));
+    self.setTranslation(translationX, translationY, coord.zoom);
+  };
 
-	/**
-	 * Called once after every time a mouse button is pressed.
-	 */
-	function mousePressed(e) {
-		e.preventDefault();
-		e.stopPropagation();
+  /**
+   * Called once after every time a mouse button is pressed.
+   */
+  function mousePressed(e) {
+    e.preventDefault();
+    e.stopPropagation();
 
-		mouseX = e.clientX - e.target.offsetLeft;
-		mouseY = e.clientY - e.target.offsetTop;
-		mouseStartX = mouseX;
-		mouseStartY = mouseY;
+    mouseX = e.clientX - e.target.offsetLeft;
+    mouseY = e.clientY - e.target.offsetTop;
+    mouseStartX = mouseX;
+    mouseStartY = mouseY;
 
-		arcball.mousePressed(mouseX, mouseY);
-		mouseDragged = true;
-	};
+    arcball.mousePressed(mouseX, mouseY);
+    mouseDragged = true;
+  };
 
-	/**
-	 * Called every time a mouse button is released.
-	 */
-	function mouseReleased(e) {
-		e.preventDefault();
-		e.stopPropagation();
+  /**
+   * Called every time a mouse button is released.
+   */
+  function mouseReleased(e) {
+    e.preventDefault();
+    e.stopPropagation();
 
-		mouseDragged = false;
+    mouseDragged = false;
 
-		if (mouseStartX === mouseX && mouseStartY === mouseY) {
-			self.performClick(mouseX, mouseY);
-		}
-	};
+    if (mouseStartX === mouseX && mouseStartY === mouseY) {
+      self.performClick(mouseX, mouseY);
+    }
+  };
 
-	/**
-	 * Called every time the mouse moves.
-	 */
-	function mouseMoved(e) {
-		e.preventDefault();
-		e.stopPropagation();
+  /**
+   * Called every time the mouse moves.
+   */
+  function mouseMoved(e) {
+    e.preventDefault();
+    e.stopPropagation();
 
-		mouseX = e.clientX - e.target.offsetLeft;
-		mouseY = e.clientY - e.target.offsetTop;
-	};
+    mouseX = e.clientX - e.target.offsetLeft;
+    mouseY = e.clientY - e.target.offsetTop;
+  };
 
-	/**
-	 * Called when the the mouse leaves the visualization bounds.
-	 */
-	function mouseOut(e) {
-		e.preventDefault();
-		e.stopPropagation();
+  /**
+   * Called when the the mouse leaves the visualization bounds.
+   */
+  function mouseOut(e) {
+    e.preventDefault();
+    e.stopPropagation();
 
-		mouseDragged = false;
-	};
+    mouseDragged = false;
+  };
 
-	/**
-	 * Called when the the mouse wheel is used.
-	 */
-	function mouseScroll(e) {
-		e.preventDefault();
-		e.stopPropagation();
+  /**
+   * Called when the the mouse wheel is used.
+   */
+  function mouseScroll(e) {
+    e.preventDefault();
+    e.stopPropagation();
 
-		arcball.mouseScroll(e.detail);
-	};
+    arcball.mouseScroll(e.detail);
+  };
 
-	/**
-	 * Called when a key is pressed.
-	 */
-	function keyPressed(e) {
-		e.preventDefault();
-		e.stopPropagation();
+  /**
+   * Called when a key is pressed.
+   */
+  function keyPressed(e) {
+    e.preventDefault();
+    e.stopPropagation();
 
-		var code = e.keyCode || e.which;
-		keyCode[code] = true;
-	};
+    var code = e.keyCode || e.which;
+    keyCode[code] = true;
+  };
 
-	/**
-	 * Called when a key is released.
-	 */
-	function keyReleased(e) {
-		var code = e.keyCode || e.which;
-		keyCode[code] = false;
+  /**
+   * Called when a key is released.
+   */
+  function keyReleased(e) {
+    var code = e.keyCode || e.which;
+    keyCode[code] = false;
 
-		if (code === 27) { // escape
-			TiltChrome.BrowserOverlay.href = null;
-			TiltChrome.BrowserOverlay.destroy();
-		}
-	};
+    if (code === 27) { // escape
+      TiltChrome.BrowserOverlay.href = null;
+      TiltChrome.BrowserOverlay.destroy();
+    }
+  };
 
-	/**
-	 * Destroys this object and sets all members to null.
-	 * @param {object} canvas: the canvas dom element
-	 */
-	this.destroy = function(canvas) {
-		canvas.removeEventListener("mousedown", mousePressed, false);
-		canvas.removeEventListener("mouseup", mouseReleased, false);
-		canvas.removeEventListener("mousemove", mouseMoved, false);
-		canvas.removeEventListener("mouseout", mouseOut, false);
-		canvas.removeEventListener("DOMMouseScroll", mouseScroll, false);
-		window.removeEventListener("keydown", keyPressed, false);
-		window.removeEventListener("keyup", keyReleased, false);
+  /**
+   * Destroys this object and sets all members to null.
+   * @param {object} canvas: the canvas dom element
+   */
+  this.destroy = function(canvas) {
+    canvas.removeEventListener("mousedown", mousePressed, false);
+    canvas.removeEventListener("mouseup", mouseReleased, false);
+    canvas.removeEventListener("mousemove", mouseMoved, false);
+    canvas.removeEventListener("mouseout", mouseOut, false);
+    canvas.removeEventListener("DOMMouseScroll", mouseScroll, false);
+    window.removeEventListener("keydown", keyPressed, false);
+    window.removeEventListener("keyup", keyReleased, false);
 
-		arcball.destroy();
-		arcball = null;
-		euler = null;
-		keyCode = null;
+    arcball.destroy();
+    arcball = null;
+    euler = null;
+    keyCode = null;
 
-		for (var i in this) {
-			if ("function" === typeof this[i].destroy) {
-				this[i].destroy();
-			}
-			this[i] = null;
-		}
+    for (var i in this) {
+      if ("function" === typeof this[i].destroy) {
+        this[i].destroy();
+      }
+      this[i] = null;
+    }
 
-		self = null;
-	};
+    self = null;
+  };
 };

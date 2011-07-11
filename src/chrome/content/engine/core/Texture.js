@@ -47,107 +47,107 @@ var EXPORTED_SYMBOLS = ["Tilt.Texture"];
  */
 Tilt.Texture = function(image, parameters) {
 
-	/**
-	 * A reference to the WebGL texture object.
-	 */
-	this.ref = null;
+  /**
+   * A reference to the WebGL texture object.
+   */
+  this.ref = null;
 
-	/**
-	 * Each texture has an unique id assigned.
-	 */
-	this.id = 0;
+  /**
+   * Each texture has an unique id assigned.
+   */
+  this.id = 0;
 
-	/**
-	 * Variables specifying the width and height of the texture.
-	 * If these values are less than 0, the texture hasn't loaded yet.
-	 */
-	this.width = -1;
-	this.height = -1;
+  /**
+   * Variables specifying the width and height of the texture.
+   * If these values are less than 0, the texture hasn't loaded yet.
+   */
+  this.width = -1;
+  this.height = -1;
 
-	/**
-	 * Specifies if the texture has loaded or not.
-	 * @return {Boolean} true if the texture has loaded, false if not
-	 */
-	this.loaded = false;
+  /**
+   * Specifies if the texture has loaded or not.
+   * @return {Boolean} true if the texture has loaded, false if not
+   */
+  this.loaded = false;
 
-	// if the image is specified in the constructor, initialize directly
-	if ("object" === typeof image) {
-		this.initTexture(image, parameters);
-	} else if ("string" === typeof image) {
-		this.initTextureAt(image, parameters);
-	} else {
-		Tilt.Console.error(Tilt.StringBundle.get("initTexture.source.error"));
-	}
+  // if the image is specified in the constructor, initialize directly
+  if ("object" === typeof image) {
+    this.initTexture(image, parameters);
+  } else if ("string" === typeof image) {
+    this.initTextureAt(image, parameters);
+  } else {
+    Tilt.Console.error(Tilt.StringBundle.get("initTexture.source.error"));
+  }
 
-	// cleanup
-	image = null;
-	parameters = null;
+  // cleanup
+  image = null;
+  parameters = null;
 };
 
 Tilt.Texture.prototype = {
 
-	/**
-	 * Initializes a texture from a pre-existing image or canvas.
-	 *
-	 * @param {Image} image: the texture source image or canvas
-	 * @param {Object} parameters: an object containing the texture properties
-	 */
-	initTexture: function(image, parameters) {
-		this.ref = Tilt.TextureUtils.create(image, parameters);
+  /**
+   * Initializes a texture from a pre-existing image or canvas.
+   *
+   * @param {Image} image: the texture source image or canvas
+   * @param {Object} parameters: an object containing the texture properties
+   */
+  initTexture: function(image, parameters) {
+    this.ref = Tilt.TextureUtils.create(image, parameters);
 
-		// cache for faster access
-		this.id = this.ref.id;
-		this.width = this.ref.width;
-		this.height = this.ref.height;
-		this.loaded = true;
+    // cache for faster access
+    this.id = this.ref.id;
+    this.width = this.ref.width;
+    this.height = this.ref.height;
+    this.loaded = true;
 
-		delete this.ref.id;
-		delete this.ref.width;
-		delete this.ref.height;
+    delete this.ref.id;
+    delete this.ref.width;
+    delete this.ref.height;
 
-		// cleanup
-		image = null;
-		parameters = null;
-	},
+    // cleanup
+    image = null;
+    parameters = null;
+  },
 
-	/**
-	 * Initializes a texture from a source, runs a callback function when ready.
-	 *
-	 * @param {String} imageSource: the texture source
-	 * @param {Object} parameters: an object containing the texture properties
-	 * @param {Function} readyCallback: function called when loading is finished
-	 */
-	initTextureAt: function(imageSource, parameters, readyCallback) {
-		// remember who we are
-		var self = this,
+  /**
+   * Initializes a texture from a source, runs a callback function when ready.
+   *
+   * @param {String} imageSource: the texture source
+   * @param {Object} parameters: an object containing the texture properties
+   * @param {Function} readyCallback: function called when loading is finished
+   */
+  initTextureAt: function(imageSource, parameters, readyCallback) {
+    // remember who we are
+    var self = this,
 
-		image = new Image(); // load the image from the source in an object    
-		image.src = imageSource;
-		image.onload = function() {
-			// the image has loaded, continue initialization as usual
-			self.initTexture(image, parameters);
+    image = new Image(); // load the image from the source in an object    
+    image.src = imageSource;
+    image.onload = function() {
+      // the image has loaded, continue initialization as usual
+      self.initTexture(image, parameters);
 
-			// cleanup
-			self = null;
-			image = null;
-			parameters = null;
+      // cleanup
+      self = null;
+      image = null;
+      parameters = null;
 
-			// if a callback function is specified, run it when initialization done
-			if ("function" === typeof readyCallback) {
-				readyCallback();
-			}
-		};
-	},
+      // if a callback function is specified, run it when initialization done
+      if ("function" === typeof readyCallback) {
+        readyCallback();
+      }
+    };
+  },
 
-	/**
-	 * Destroys this object and sets all members to null.
-	 */
-	destroy: function() {
-		for (var i in this) {
-		  if ("function" === typeof this[i].destroy) {
-		    this[i].destroy();
-		  }
-			this[i] = null;
-		}
-	}
+  /**
+   * Destroys this object and sets all members to null.
+   */
+  destroy: function() {
+    for (var i in this) {
+      if ("function" === typeof this[i].destroy) {
+        this[i].destroy();
+      }
+      this[i] = null;
+    }
+  }
 };

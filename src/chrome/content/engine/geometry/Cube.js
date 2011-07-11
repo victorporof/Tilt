@@ -36,14 +36,14 @@ var EXPORTED_SYMBOLS = ["Tilt.Cube"];
  * @param {Number} depth: the depth of the cube
  */
 Tilt.Cube = function(width, height, depth) {
-	// make sure the width, height and depth are valid number values
-	width = width || 1;
-	height = height || 1;
-	depth = depth || 1;
+  // make sure the width, height and depth are valid number values
+  width = width || 1;
+  height = height || 1;
+  depth = depth || 1;
 
-	/**
-	 * Buffer of 3-component vertices (x, y, z) as the corners of a cube.
-	 */
+  /**
+   * Buffer of 3-component vertices (x, y, z) as the corners of a cube.
+   */
   this.vertices = new Tilt.VertexBuffer([
     -0.5 * width, -0.5 * height,  0.5 * depth, /* front */
      0.5 * width, -0.5 * height,  0.5 * depth,
@@ -96,15 +96,15 @@ Tilt.Cube = function(width, height, depth) {
 
 Tilt.Cube.prototype = {
 
-	/**
-	 * Destroys this object and sets all members to null.
-	 */
-	destroy: function() {
-		for (var i in this) {
-		  if ("function" === typeof this[i].destroy) {
-		    this[i].destroy();
-		  }
-			this[i] = null;
-		}
-	}
+  /**
+   * Destroys this object and sets all members to null.
+   */
+  destroy: function() {
+    for (var i in this) {
+      if ("function" === typeof this[i].destroy) {
+        this[i].destroy();
+      }
+      this[i] = null;
+    }
+  }
 };

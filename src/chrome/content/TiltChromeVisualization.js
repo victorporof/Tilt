@@ -155,7 +155,7 @@ TiltChrome.Visualization = function(canvas, controller) {
       window.QueryInterface(Ci.nsIInterfaceRequestor)
         .getInterface(Ci.nsIDOMWindowUtils)
         .garbageCollect();
-		}
+    }
   };
   
   // run the setup and draw functions
@@ -432,12 +432,12 @@ TiltChrome.Visualization = function(canvas, controller) {
     delete transforms.translation;
     transforms = null;
     
-		for (var i in this) {
-			if ("function" === typeof this[i].destroy) {
-				this[i].destroy();
-			}
-			this[i] = null;
-		}
+    for (var i in this) {
+      if ("function" === typeof this[i].destroy) {
+        this[i].destroy();
+      }
+      this[i] = null;
+    }
     
     canvas = null;
     self = null;

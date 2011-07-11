@@ -33,28 +33,28 @@ var EXPORTED_SYMBOLS = ["Tilt.Rectangle"];
  */
 Tilt.Rectangle = function(width, height, depth) {
 
-	/**
-	 * Buffer of 2-component vertices (x, y) as the corners of a rectangle.
-	 */
-	this.vertices = new Tilt.VertexBuffer([0, 0, 1, 0, 0, 1, 1, 1], 2);
+  /**
+   * Buffer of 2-component vertices (x, y) as the corners of a rectangle.
+   */
+  this.vertices = new Tilt.VertexBuffer([0, 0, 1, 0, 0, 1, 1, 1], 2);
 
-	/**
-	 * Buffer of 2-component texture coordinates (u, v) for the rectangle.
-	 */
-	this.texCoord = new Tilt.VertexBuffer([0, 0, 1, 0, 0, 1, 1, 1], 2);
+  /**
+   * Buffer of 2-component texture coordinates (u, v) for the rectangle.
+   */
+  this.texCoord = new Tilt.VertexBuffer([0, 0, 1, 0, 0, 1, 1, 1], 2);
 };
 
 Tilt.Rectangle.prototype = {
 
-	/**
-	 * Destroys this object and sets all members to null.
-	 */
-	destroy: function() {
-		for (var i in this) {
-			if ("function" === typeof this[i].destroy) {
-				this[i].destroy();
-			}
-			this[i] = null;
-		}
-	}
+  /**
+   * Destroys this object and sets all members to null.
+   */
+  destroy: function() {
+    for (var i in this) {
+      if ("function" === typeof this[i].destroy) {
+        this[i].destroy();
+      }
+      this[i] = null;
+    }
+  }
 };

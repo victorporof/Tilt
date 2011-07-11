@@ -43,79 +43,78 @@ var EXPORTED_SYMBOLS = ["Tilt.Mesh"];
  */
 Tilt.Mesh = function(parameters, draw) {
 
-	/**
-	 * Retain each parameters for easy access.
-	 */
-	for (var i in parameters) {
-		this[i] = parameters[i];
-	}
+  /**
+   * Retain each parameters for easy access.
+   */
+  for (var i in parameters) {
+    this[i] = parameters[i];
+  }
 
-	// the color should be a [r, g, b, a] array, check this now
-	if ("string" === typeof this.color) {
-		this.color = Tilt.Math.hex2rgba(this.color);
-	} else if ("undefined" === typeof this.color) {
-		this.color = [1, 1, 1, 1];
-	}
+  // the color should be a [r, g, b, a] array, check this now
+  if ("string" === typeof this.color) {
+    this.color = Tilt.Math.hex2rgba(this.color);
+  } else if ("undefined" === typeof this.color) {
+    this.color = [1, 1, 1, 1];
+  }
 
-	// the draw mode should be valid, default to TRIANGLES if unspecified
-	if ("undefined" === typeof this.drawMode) {
-		this.drawMode = Tilt.$renderer.TRIANGLES;
-	}
+  // the draw mode should be valid, default to TRIANGLES if unspecified
+  if ("undefined" === typeof this.drawMode) {
+    this.drawMode = Tilt.$renderer.TRIANGLES;
+  }
 
-	// if the draw call is specified in the constructor, overwrite directly
-	if ("function" === typeof draw) {
-		this.draw = draw;
-	}
+  // if the draw call is specified in the constructor, overwrite directly
+  if ("function" === typeof draw) {
+    this.draw = draw;
+  }
 };
 
 Tilt.Mesh.prototype = {
 
-	/**
-	 * Draws a custom mesh, using only the built-in shaders.
-	 * For more complex techniques, create your own shaders and drawing logic.
-	 * Overwrite this function to handle custom drawing.
-	 */
-	draw: function() {
-		// cache some properties for easy access
-		var tilt = Tilt.$renderer,
-			vertices = this.vertices,
-			texCoord = this.texCoord,
-			normals = this.normals,
-			indices = this.indices,
-			color = this.color,
-			texture = this.texture,
-			drawMode = this.drawMode;
+  /**
+   * Draws a custom mesh, using only the built-in shaders.
+   * For more complex techniques, create your own shaders and drawing logic.
+   * Overwrite this function to handle custom drawing.
+   */
+  draw: function() {
+    // cache some properties for easy access
+    var tilt = Tilt.$renderer,
+      vertices = this.vertices,
+      texCoord = this.texCoord,
+      normals = this.normals,
+      indices = this.indices,
+      color = this.color,
+      texture = this.texture,
+      drawMode = this.drawMode;
 
-		// use the necessary shader
-		if (texture) {
-			tilt.useTextureShader(vertices, texCoord, color, texture);
-		} else {
-			tilt.useColorShader(vertices, color);
-		}
+    // use the necessary shader
+    if (texture) {
+      tilt.useTextureShader(vertices, texCoord, color, texture);
+    } else {
+      tilt.useColorShader(vertices, color);
+    }
 
-		// draw the vertices as indexed elements or simple arrays
-		if (indices) {
-			tilt.drawIndexedVertices(drawMode, indices);
-		} else {
-			tilt.drawVertices(drawMode, vertices.numItems);
-		}
+    // draw the vertices as indexed elements or simple arrays
+    if (indices) {
+      tilt.drawIndexedVertices(drawMode, indices);
+    } else {
+      tilt.drawVertices(drawMode, vertices.numItems);
+    }
 
-		// TODO: use the normals buffer, add some lighting
+    // TODO: use the normals buffer, add some lighting
+    // save the current model view and projection matrices
+    this.mvMatrix = mat4.create(tilt.mvMatrix);
+    this.projMatrix = mat4.create(tilt.projMatrix);
+  },
 
-		// save the current model view and projection matrices
-		this.mvMatrix = mat4.create(tilt.mvMatrix);
-		this.projMatrix = mat4.create(tilt.projMatrix);
-	},
-
-	/**
-	 * Destroys this object and sets all members to null.
-	 */
-	destroy: function() {
-		for (var i in this) {
-		  if ("function" === typeof this[i].destroy) {
-		    this[i].destroy();
-		  }
-			this[i] = null;
-		}
-	}
+  /**
+   * Destroys this object and sets all members to null.
+   */
+  destroy: function() {
+    for (var i in this) {
+      if ("function" === typeof this[i].destroy) {
+        this[i].destroy();
+      }
+      this[i] = null;
+    }
+  }
 };

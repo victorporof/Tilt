@@ -55,8 +55,8 @@ Tilt.$enabledAttributes = -1;
  * Clears the cache and sets all the variables to default.
  */
 Tilt.clearCache = function() {
-	Tilt.$gl = null;
-	Tilt.$renderer = null;
-	Tilt.$activeShader = -1;
-	Tilt.$enabledAttributes = -1;
+  Tilt.$gl = null;
+  Tilt.$renderer = null;
+  Tilt.$activeShader = -1;
+  Tilt.$enabledAttributes = -1;
 };

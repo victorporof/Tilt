@@ -33,78 +33,78 @@ var EXPORTED_SYMBOLS = ["TiltChrome.BrowserOverlay"];
  */
 TiltChrome.BrowserOverlay = {
 
-	/**
-	 * Content location href of the current tab generating the visualization.
-	 */
-	href: null,
+  /**
+   * Content location href of the current tab generating the visualization.
+   */
+  href: null,
 
-	/**
-	 * The canvas element used for rendering the visualization.
-	 */
-	canvas: null,
+  /**
+   * The canvas element used for rendering the visualization.
+   */
+  canvas: null,
 
-	/*
+  /*
    * Visualization logic and drawing loop.
    */
-	visualization: null,
+  visualization: null,
 
-	/**
-	 * Initializes Tilt.
-	 * @param {object} event: the event firing this function
-	 */
-	initialize: function(event) {
-		// first, close the visualization and clean up any mess if there was any
-		this.destroy();
+  /**
+   * Initializes Tilt.
+   * @param {object} event: the event firing this function
+   */
+  initialize: function(event) {
+    // first, close the visualization and clean up any mess if there was any
+    this.destroy();
 
-		// if this was the page we just visualized, let the visualization closed
-		if (this.href === window.content.location.href) {
-			this.href = null; // forget the current tab location
-		} else {
-			// the current tab has new page, so recreate the entire visualization
-			// remember the current tab location
-			this.href = window.content.location.href;
+    // if this was the page we just visualized, let the visualization closed
+    if (this.href === window.content.location.href) {
+      this.href = null; // forget the current tab location
+    } else {
+      // the current tab has new page, so recreate the entire visualization
+      // remember the current tab location
+      this.href = window.content.location.href;
 
-			// set the width and height to mach the content window dimensions
-			let width = window.content.innerWidth;
-			let height = window.content.innerHeight;
+      // set the width and height to mach the content window dimensions
+      let width = window.content.innerWidth;
+      let height = window.content.innerHeight;
 
-			// get the iframe which will be used to create the canvas element
-			let iframe = document.getElementById("tilt-iframe");
+      // get the iframe which will be used to create the canvas element
+      let iframe = document.getElementById("tilt-iframe");
 
-			// inside a chrome environment the default document and parent nodes are
-			// different from an unprivileged html page, so change these accordingly
-			Tilt.Document.currentContentDocument = iframe.contentDocument;
-			Tilt.Document.currentParentNode = gBrowser.selectedBrowser.parentNode;
+      // inside a chrome environment the default document and parent nodes are
+      // different from an unprivileged html page, so change these accordingly
+      Tilt.Document.currentContentDocument = iframe.contentDocument;
+      Tilt.Document.currentParentNode = gBrowser.selectedBrowser.parentNode;
 
-			// initialize the canvas element
-			this.canvas = Tilt.Document.initCanvas(width, height, true);
+      // initialize the canvas element
+      this.canvas = Tilt.Document.initCanvas(width, height, true);
 
-			// construct the visualization using the canvas
-			this.visualization =
-			  new TiltChrome.Visualization(this.canvas,
-			  new TiltChrome.Controller.MouseAndKeyboard()); // default controls
-		}
-	},
+      // construct the visualization using the canvas
+      this.visualization =
+        new TiltChrome.Visualization(this.canvas,
+        new TiltChrome.Controller.MouseAndKeyboard()); // default controls
+    }
+  },
 
-	/**
-	 * Destroys this object, removes the iframe and sets all members to null.
-	 */
-	destroy: function() {
-		Tilt.Document.currentContentDocument = null;
-		Tilt.Document.currentParentNode = null;
+  /**
+   * Destroys this object, removes the iframe and sets all members to null.
+   */
+  destroy: function() {
+    Tilt.Document.currentContentDocument = null;
+    Tilt.Document.currentParentNode = null;
 
-		if (this.visualization !== null) {
-			this.visualization.destroy();
-			this.visualization = null;
-		}
+    if (this.visualization !== null) {
+      this.visualization.destroy();
+      this.visualization = null;
+    }
 
-		if (this.canvas !== null) {
-			this.canvas.parentNode.removeChild(this.canvas);
-			this.canvas = null;
-		}
+    if (this.canvas !== null) {
+      this.canvas.parentNode.removeChild(this.canvas);
+      this.canvas = null;
+    }
 
-		window.QueryInterface(Ci.nsIInterfaceRequestor)
-		  .getInterface(Ci.nsIDOMWindowUtils)
-		  .garbageCollect();
-	}
+    window.QueryInterface(Ci.nsIInterfaceRequestor)
+      .getInterface(Ci.nsIDOMWindowUtils)
+      .garbageCollect();
+  }
 };
