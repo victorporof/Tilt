@@ -3,7 +3,7 @@
 <plist version="1.0">
 <dict>
 	<key>currentDocument</key>
-	<string>chrome/content/browserOverlay.xul</string>
+	<string>chrome/content/Tilt.js</string>
 	<key>documents</key>
 	<array>
 		<dict>
@@ -77,12 +77,26 @@
 			<key>firstVisibleLine</key>
 			<integer>0</integer>
 		</dict>
+		<key>chrome.manifest</key>
+		<dict>
+			<key>caret</key>
+			<dict>
+				<key>column</key>
+				<integer>38</integer>
+				<key>line</key>
+				<integer>5</integer>
+			</dict>
+			<key>firstVisibleColumn</key>
+			<integer>0</integer>
+			<key>firstVisibleLine</key>
+			<integer>0</integer>
+		</dict>
 		<key>chrome/Makefile.in</key>
 		<dict>
 			<key>caret</key>
 			<dict>
 				<key>column</key>
-				<integer>4</integer>
+				<integer>3</integer>
 				<key>line</key>
 				<integer>38</integer>
 			</dict>
@@ -154,12 +168,12 @@
 				<key>column</key>
 				<integer>0</integer>
 				<key>line</key>
-				<integer>110</integer>
+				<integer>93</integer>
 			</dict>
 			<key>firstVisibleColumn</key>
 			<integer>0</integer>
 			<key>firstVisibleLine</key>
-			<integer>59</integer>
+			<integer>70</integer>
 		</dict>
 		<key>chrome/content/browserOverlay.xul</key>
 		<dict>
@@ -173,7 +187,7 @@
 			<key>firstVisibleColumn</key>
 			<integer>0</integer>
 			<key>firstVisibleLine</key>
-			<integer>59</integer>
+			<integer>4</integer>
 		</dict>
 		<key>chrome/content/engine/core/Buffer.js</key>
 		<dict>
@@ -236,14 +250,14 @@
 			<key>caret</key>
 			<dict>
 				<key>column</key>
-				<integer>17</integer>
+				<integer>6</integer>
 				<key>line</key>
-				<integer>160</integer>
+				<integer>178</integer>
 			</dict>
 			<key>firstVisibleColumn</key>
 			<integer>0</integer>
 			<key>firstVisibleLine</key>
-			<integer>139</integer>
+			<integer>162</integer>
 		</dict>
 		<key>chrome/content/engine/core/RequestAnimFrame.js</key>
 		<dict>
@@ -469,6 +483,20 @@
 			<key>firstVisibleLine</key>
 			<integer>0</integer>
 		</dict>
+		<key>install.rdf</key>
+		<dict>
+			<key>caret</key>
+			<dict>
+				<key>column</key>
+				<integer>28</integer>
+				<key>line</key>
+				<integer>20</integer>
+			</dict>
+			<key>firstVisibleColumn</key>
+			<integer>0</integer>
+			<key>firstVisibleLine</key>
+			<integer>0</integer>
+		</dict>
 		<key>testunits/testInitCanvas.html</key>
 		<dict>
 			<key>caret</key>
@@ -594,6 +622,7 @@
 		<string>chrome/content/engine/utils/jTiltUtils.js</string>
 		<string>Makefile</string>
 		<string>chrome/content/engine/core/ProgramUtils.js</string>
+		<string>install.rdf</string>
 		<string>chrome/content/engine/core/Program.js</string>
 		<string>chrome/content/TiltChromeVisualization.js</string>
 		<string>chrome/content/browserOverlay.js</string>
@@ -619,6 +648,7 @@
 		<string>chrome/content/Tilt-min.js</string>
 		<string>chrome/content/Tilt.js</string>
 		<string>compile.sh</string>
+		<string>chrome.manifest</string>
 		<string>chrome/content/engine/lib/json.js</string>
 		<string>testunits/testInitTilt.html</string>
 		<string>testunits/testPrimitivesBox.html</string>
