@@ -99,7 +99,7 @@ TiltChrome.Visualization = function(canvas, controller) {
     setupController();
     
     // load the background
-    background = new Tilt.Texture("chrome://tilt/skin/background.png");
+    background = new Tilt.Texture("chrome://tilt/skin/tilt-background.png");
     
     // set the transformations at initialization
     transforms.translation = [0, 0, 0];
