@@ -171,15 +171,23 @@ Tilt.GLSL = {
    * @return {Number} | {WebGLUniformLocation} the attribute or uniform
    */
   shaderIO: function(program, variable) {
-    var io;
-    // try to get a shader attribute
-    if ((io = this.shaderAttribute(program, variable)) >= 0) {
-      return io;
+    if ("string" === typeof variable) {
+      if (variable.length < 1) {
+        return null;
+      }
+      
+      var io;
+      // try to get a shader attribute
+      if ((io = this.shaderAttribute(program, variable)) >= 0) {
+        return io;
+      }
+      // if unavailable, search for a shader uniform
+      else {
+        return this.shaderUniform(program, variable);
+      }
     }
-    // if unavailable, search for a shader uniform
-    else {
-      return this.shaderUniform(program, variable);
-    }
+    
+    return null;
   },
 
   /**
@@ -207,6 +215,7 @@ Tilt.GLSL = {
       if ("number" === typeof io) {
         // bind the new parameter only if it was not already defined
         if ("undefined" === typeof program.attributes[param]) {
+          alert("[" + param + "] [" + io + "]");
           program.attributes[param] = io;
           program.attributes.length++;
         }
