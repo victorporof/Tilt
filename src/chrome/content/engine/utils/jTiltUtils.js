@@ -41,12 +41,12 @@ Tilt.Document = {
   /**
    *
    */
-  currentContentDocument: null,
+  currentContentDocument: undefined,
   
   /**
    *
    */
-  currentParentNode: null,
+  currentParentNode: undefined,
   
   /**
    * Helper method, allowing to easily create and manage a canvas element.
@@ -58,6 +58,13 @@ Tilt.Document = {
    * @return {object} the newly created canvas
    */
   initCanvas: function(width, height, append, id) {
+    if ("undefined" === typeof this.currentContentDocument) {
+      this.currentContentDocument = document;
+    }
+    if ("undefined" === typeof this.currentParentNode) {
+      this.currentParentNode = document.body;
+    }
+    
     var doc = this.currentContentDocument, node = this.currentParentNode;
     var canvas = doc.createElement("canvas");
     canvas.width = width;
@@ -74,6 +81,28 @@ Tilt.Document = {
     finally {
       doc = null;
       node = null;
+      canvas = null;
+    }
+  },
+  
+  /**
+   * Helper method, initializing a full screen canvas.
+   * This is mostly likely useful in a plain html page with an empty body.
+   *
+   * @return {object} the newly created canvas
+   */
+  initFullScreenCanvas: function() {
+    var width = window.innerWidth,
+      height = window.innerHeight,
+      canvas = this.initCanvas(width, height, true);
+      
+    canvas.setAttribute("style", "width: 100%; height: 100%;");
+    this.currentParentNode.setAttribute("style", "margin: 0px 0px 0px 0px;");
+    
+    try {
+      return canvas;
+    }
+    finally {
       canvas = null;
     }
   },
@@ -115,8 +144,8 @@ Tilt.Document = {
    * passed as parameters, and the readyCallback function will have the 
    * maximum depth passed as parameter.
    *
-   * @param {function} nodeCallback: the function to call for each node
-   * @param {function} readyCallback: called when no more nodes are found
+   * @param {Function} nodeCallback: the function to call for each node
+   * @param {Function} readyCallback: called when no more nodes are found
    * @param {object} dom: the document object model to traverse
    */
   traverse: function(nodeCallback, readyCallback, dom) {    
@@ -173,7 +202,7 @@ Tilt.Document = {
       do {
         x += node.offsetLeft;
         y += node.offsetTop;
-      } while (node = node.offsetParent);
+      } while ((node = node.offsetParent));
     }
     else {
       // just get the x and y coordinates of this node if available
@@ -256,76 +285,65 @@ Tilt.Document = {
 };
 
 /**
- * Utilities for manipulating images.
+ *
  */
-Tilt.Image = {
+Tilt.Xhr = {
   
   /**
-   * Scales an image to power of two width and height.
+   * Handles a generic get request, performed on a specified url. When done,
+   * it fires the ready callback function if it exists, & passes the http
+   * request object and also an optional auxiliary parameter if available.
+   * Used internally for getting shader sources from a specific resource.
    *
-   * @param {object} image: the image to be scaled
-   * @param {object} parameters: an object containing the following properties
-   *  @param {string} fill: optional, color to fill the transparent bits
-   *  @param {string} stroke: optional, color to draw an outline
-   *  @param {number} strokeWeight: optional, the width of the outline
-   * @return {object} the resized image
+   * @param {string} url: the url to perform the GET to
+   * @param {Function} readyCallback: function to be called when request ready
+   * @param {object} aParam: optional parameter passed to readyCallback
    */
-  resizeToPowerOfTwo: function(image, parameters) {
-    // first check if the image is not already power of two
-    if (Tilt.Math.isPowerOfTwo(image.width) &&
-        Tilt.Math.isPowerOfTwo(image.height) && 
-        image.src.indexOf("chrome://") === -1) {
-        
-      try {
-        return image;
+  request: function(url, readyCallback, aParam) {
+    var xhr = new XMLHttpRequest();
+    
+    xhr.open("GET", url, true);
+    xhr.send(null);
+    xhr.onreadystatechange = function() {
+      if (xhr.readyState === 4) {
+        if ("function" === typeof readyCallback) {
+          readyCallback(xhr, aParam);
+          readyCallback = null;
+        }
       }
-      finally {
-        image = null;
+    };
+  },
+  
+  /**
+   * Handles multiple get requests from specified urls. When all requests are
+   * completed, it fires the ready callback function if it exists, & passes
+   * the http request object and an optional auxiliary parameter if available.
+   * Used internally for getting shader sources from a specific resource.
+   *
+   * @param {array} urls: an array of urls to perform the GET to
+   * @param {Function} readyCallback: function called when all requests ready
+   * @param {object} aParam: optional parameter passed to readyCallback
+   */
+  requests: function(urls, readyCallback, aParam) {
+    var xhrs = [], finished = 0, i, length;
+    
+    function requestReady() {
+      finished++;
+      if (finished === urls.length) {
+        if ("function" === typeof readyCallback) {
+          readyCallback(xhrs, aParam);
+          readyCallback = null;
+        }
       }
     }
     
-    var width, height, canvas, context;
-    
-    // make sure the parameters is an object
-    parameters = parameters || {};
-    
-    // calculate the power of two dimensions for the npot image
-    width = Tilt.Math.nextPowerOfTwo(image.width);
-    height = Tilt.Math.nextPowerOfTwo(image.height);
-    
-    // create a canvas, then we will use a 2d context to scale the image
-    canvas = Tilt.Document.initCanvas(width, height);
-       
-    // do some 2d context magic
-    context = canvas.getContext("2d");
-    
-    // optional fill (useful when handling transparent images)
-    if (parameters.fill) {
-      context.fillStyle = parameters.fill;
-      context.fillRect(0, 0, canvas.width, canvas.height);
+    function requestCallback(xhr, index) {
+      xhrs[index] = xhr;
+      requestReady();
     }
     
-    // draw the image with power of two dimensions
-    context.drawImage(image,
-      0, 0, image.width, image.height,
-      0, 0, canvas.width, canvas.height);
-      
-    // optional stroke (useful when creating textures for edges)
-    if (parameters.stroke) {
-      context.strokeStyle = parameters.stroke;
-      context.lineWidth = parameters.strokeWeight > 0 ? 
-                          parameters.strokeWeight : 1;
-                          
-      context.strokeRect(0, 0, canvas.width, canvas.height);
-    }
-    
-    try {
-      return canvas;
-    }
-    finally {
-      image = null;
-      canvas = null;
-      context = null;
+    for (i = 0, length = urls.length; i < length; i++) {
+      this.request(urls[i], requestCallback, i);
     }
   }
 };
@@ -371,6 +389,7 @@ Tilt.Math = {
       out[1] = y;
       out[2] = z;
       out[3] = w;
+      return out;
     }
   },
   
@@ -411,7 +430,173 @@ Tilt.Math = {
       out[1] = y;
       out[2] = z;
       out[3] = w;
+      return out;
     }
+  },
+  
+  /**
+   * Port of gluUnProject.
+   *
+   * @param {number} winX: the window point for the x value
+   * @param {number} winY: the window point for the y value
+   * @param {number} winZ: the window point for the z value; this should range
+   * between 0 and 1, 0 meaning the near clipping plane and 1 for the far
+   * @param {array} mvMatrix: the model view matrix
+   * @param {array} projMatrix: the projection matrix
+   * @param {number} viewportX: the viewport top coordinate
+   * @param {number} viewportY: the viewport bottom coordinate
+   * @param {number} viewportWidth: the viewport width coordinate
+   * @param {number} viewportHeight: the viewport height coordinate
+   * @return {array} the unprojected array
+   */
+  unproject: function(winX, winY, winZ, mvMatrix, projMatrix,
+                      viewportX, viewportY, viewportWidth, viewportHeight) {
+                                                
+    var mvpMatrix = mat4.create();
+    var coordinates = quat4.create();
+    
+    // compute the inverse of the perspective x model-view matrix
+    mat4.multiply(projMatrix, mvMatrix, mvpMatrix);
+    mat4.inverse(mvpMatrix);
+    
+    // transformation of normalized coordinates (-1 to 1)
+    coordinates[0] = +((winX - viewportX) / viewportWidth * 2 - 1);
+    coordinates[1] = -((winY - viewportY) / viewportHeight * 2 - 1);
+    coordinates[2] = 2 * winZ - 1;
+    coordinates[3] = 1;
+    
+    // now transform that vector into object coordinates
+    mat4.multiplyVec4(mvpMatrix, coordinates);
+    
+    // invert to normalize x, y, and z values.
+    coordinates[3] = 1 / coordinates[3];
+    coordinates[0] *= coordinates[3];
+    coordinates[1] *= coordinates[3];
+    coordinates[2] *= coordinates[3];
+    
+    return coordinates;
+  },
+  
+  /**
+   * Create a ray between two points using the current modelview & projection
+   * matrices. This is useful when creating a ray destined for 3d picking.
+   *
+   * @param {number} x0 the x coordinate of the first point
+   * @param {number} y0 the y coordinate of the first point
+   * @param {number} z0 the z coordinate of the first point
+   * @param {number} x1 the x coordinate of the second point
+   * @param {number} y1 the y coordinate of the second point
+   * @param {number} z1 the z coordinate of the second point
+   * @param {array} mvMatrix: the model view matrix
+   * @param {array} projMatrix: the projection matrix
+   * @param {number} viewportX: the viewport top coordinate
+   * @param {number} viewportY: the viewport bottom coordinate
+   * @param {number} viewportWidth: the viewport width coordinate
+   * @param {number} viewportHeight: the viewport height coordinate
+   * @return {array} a directional vector between the two unprojected points
+   */
+  createRay: function(x0, y0, z0, x1, y1, z1, mvMatrix, projMatrix,
+                      viewportX, viewportY, viewportWidth, viewportHeight) {
+    
+    var p0, p1;
+    
+    // unproject the first point
+    p0 = this.unproject(x0, y0, z0,
+                        mvMatrix, projMatrix,
+                        viewportX, viewportY, viewportWidth, viewportHeight);
+
+    // unproject the second point
+    p1 = this.unproject(x1, y1, z1,
+                        mvMatrix, projMatrix,
+                        viewportX, viewportY, viewportWidth, viewportHeight);
+                        
+    // subtract to obtain a directional vector
+    return {
+      position: p0,
+      lookAt: p1,
+      direction: vec3.normalize(vec3.subtract(p1, p0))
+    };
+  },
+  
+  /**
+   * Intersect a ray with a 3D triangle.
+   *
+   * @param {array} v0: the [x, y, z] position of the first triangle point
+   * @param {array} v1: the [x, y, z] position of the second triangle point
+   * @param {array} v2: the [x, y, z] position of the third triangle point
+   * @param {object} ray: a ray, containing position and direction vectors
+   * @param {array} intersection: point to store the intersection to
+   * @return {number} -1 if the triangle is degenerate, 
+   *                   0 disjoint (no intersection)
+   *                   1 intersects in unique point
+   *                   2 the ray and the triangle are in the same plane
+   */
+  intersectRayTriangle: function(v0, v1, v2, ray, intersection) {
+    var u = vec3.create(), v = vec3.create(), n = vec3.create(),
+        w = vec3.create(), w0 = vec3.create(),
+        pos = ray.position, dir = ray.direction,
+        a, b, r, uu, uv, vv, wu, wv, D, s, t;
+    
+    if ("undefined" === typeof intersection) {
+      intersection = vec3.create();
+    }
+    
+    // get triangle edge vectors and plane normal
+    vec3.subtract(v1, v0, u);
+    vec3.subtract(v2, v0, v);
+    
+    // get the cross product
+    vec3.cross(u, v, n);
+    
+    // check if triangle is degenerate
+    if (n[0] === 0 && n[1] === 0 && n[2] === 0) {
+      return -1;
+    }
+    
+    vec3.subtract(pos, v0, w0);
+    a = -vec3.dot(n, w0);
+    b = +vec3.dot(n, dir);
+    
+    if (Math.abs(b) < 0.0001) { // ray is parallel to triangle plane
+      if (a == 0) {             // ray lies in triangle plane
+        return 2;
+      }
+      else {
+        return 0;               // ray disjoint from plane
+      }            
+    }
+    
+    // get intersect point of ray with triangle plane
+    r = a / b;
+    if (r < 0) {                // ray goes away from triangle
+      return 0;                 // => no intersect
+    }
+    
+    // intersect point of ray and plane
+    vec3.add(pos, vec3.scale(dir, r), intersection);
+
+    // check if the intersection is inside the triangle
+    uu = vec3.dot(u, u);
+    uv = vec3.dot(u, v);
+    vv = vec3.dot(v, v);
+    
+    vec3.subtract(intersection, v0, w);
+    wu = vec3.dot(w, u);
+    wv = vec3.dot(w, v);
+
+    D = uv * uv - uu * vv;
+
+    // get and test parametric coords
+    s = (uv * wv - vv * wu) / D;
+    if (s < 0 || s > 1) {       // intersection is outside the triangle
+      return 0;
+    }
+    t = (uv * wu - uu * wv) / D;
+    if (t < 0 || (s + t) > 1) { // intersection is outside the triangle
+      return 0;
+    }
+
+    return 1;                   // intersection is inside the triangle
   },
   
   /**
@@ -458,9 +643,13 @@ Tilt.Math = {
    * @return {array} an array with 4 color components: red, green, blue, alpha
    * with ranges from 0..1
    */
-  hex2rgba: function(hex) {
-    hex = hex.charAt(0) === "#" ? hex.substring(1) : hex;
-    var rgba, r, g, b, a, cr, cg, cb, ca;
+  hex2rgba: function(color) {
+    if ("undefined" !== typeof this[color]) {
+      return this[color];
+    }
+    
+    var rgba, r, g, b, a, cr, cg, cb, ca,
+      hex = color.charAt(0) === "#" ? color.substring(1) : color;
     
     // e.g. "f00"
     if (hex.length === 3) {
@@ -484,6 +673,8 @@ Tilt.Math = {
       rgba[1] /= 255;
       rgba[2] /= 255;
       rgba[3] /= 255;
+      
+      this[color] = rgba;
       return rgba;
     }
     // e.g. "rgb(255, 0, 0)"
@@ -493,6 +684,8 @@ Tilt.Math = {
       rgba[1] /= 255;
       rgba[2] /= 255;
       rgba[3] = 1;
+
+      this[color] = rgba;
       return rgba;
     }
     
@@ -500,6 +693,8 @@ Tilt.Math = {
     g = parseInt(hex.substring(2, 4), 16) / 255;
     b = parseInt(hex.substring(4, 6), 16) / 255;
     a = hex.length === 6 ? 1 : parseInt(hex.substring(6, 8), 16) / 255;
+    
+    this[color] = [r, g, b, a];
     return [r, g, b, a];
   }
 };
