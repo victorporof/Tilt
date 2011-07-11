@@ -826,15 +826,24 @@ Tilt.GLSL = {
    * @return {Number} | {WebGLUniformLocation} the attribute or uniform
    */
   shaderIO: function(program, variable) {
-    var io;
-    // try to get a shader attribute
-    if ((io = this.shaderAttribute(program, variable)) >= 0) {
-      return io;
+    if ("string" === typeof variable) {
+      // careful! weird stuff happens on Windows with empty strings
+      if (variable.length < 1) {
+        return null;
+      }
+      
+      var io;
+      // try to get a shader attribute
+      if ((io = this.shaderAttribute(program, variable)) >= 0) {
+        return io;
+      }
+      // if unavailable, search for a shader uniform
+      else {
+        return this.shaderUniform(program, variable);
+      }
     }
-    // if unavailable, search for a shader uniform
-    else {
-      return this.shaderUniform(program, variable);
-    }
+    
+    return null;
   },
 
   /**
@@ -1630,7 +1639,7 @@ Tilt.RectangleWireframe.prototype = {
  *    distribution.
  */
 
-var glMatrixArrayType, vec3, mat3, mat4, quat4;
+var glMatrixArrayType;
 
 // Fallback for systems that don't support WebGL
 if(typeof Float32Array != 'undefined') {
