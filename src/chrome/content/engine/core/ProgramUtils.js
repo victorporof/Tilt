@@ -172,6 +172,7 @@ Tilt.GLSL = {
    */
   shaderIO: function(program, variable) {
     if ("string" === typeof variable) {
+      // careful! weird stuff happens on Windows with empty strings
       if (variable.length < 1) {
         return null;
       }
