@@ -215,7 +215,6 @@ Tilt.GLSL = {
       if ("number" === typeof io) {
         // bind the new parameter only if it was not already defined
         if ("undefined" === typeof program.attributes[param]) {
-          alert("[" + param + "] [" + io + "]");
           program.attributes[param] = io;
           program.attributes.length++;
         }
