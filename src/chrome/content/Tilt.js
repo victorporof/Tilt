@@ -690,7 +690,7 @@ Tilt.GLSL = {
 
   /**
    * Initializes a shader program, using specified source code as strings,
-   * Returning the newly created shader program, by compiling and linking the 
+   * Returning the newly created shader program, by compiling and linking the
    * vertex and fragment shader.
    *
    * @param {String} vertShaderSrc: the vertex shader source code
@@ -831,7 +831,7 @@ Tilt.GLSL = {
       if (variable.length < 1) {
         return null;
       }
-      
+
       var io;
       // try to get a shader attribute
       if ((io = this.shaderAttribute(program, variable)) >= 0) {
@@ -842,7 +842,7 @@ Tilt.GLSL = {
         return this.shaderUniform(program, variable);
       }
     }
-    
+
     return null;
   },
 
@@ -961,7 +961,7 @@ var EXPORTED_SYMBOLS = ["Tilt.Texture"];
  * Texture constructor.
  * This wrapper creates a texture using an already initialized Image. To
  * create a texture using a remote image, use initTextureAt.
- * 
+ *
  * @param {Image} image: the texture source image or canvas
  * @param {Object} parameters: an object containing the following properties
  *  @param {String} fill: optional, color to fill the transparent bits
@@ -1050,7 +1050,7 @@ Tilt.Texture.prototype = {
     // remember who we are
     var self = this,
 
-    image = new Image(); // load the image from the source in an object    
+    image = new Image(); // load the image from the source in an object
     image.src = imageSource;
     image.onload = function() {
       // the image has loaded, continue initialization as usual
@@ -1639,7 +1639,7 @@ Tilt.RectangleWireframe.prototype = {
  *    distribution.
  */
 
-var glMatrixArrayType;
+var glMatrixArrayType, vec3, mat3, mat4, quat4;
 
 // Fallback for systems that don't support WebGL
 if(typeof Float32Array != 'undefined') {
@@ -4894,10 +4894,10 @@ var EXPORTED_SYMBOLS = ["Tilt.Arcball"];
  * in the Graphics Interface ’92 Proceedings. It features good behavior
  * easy implementation, cheap execution, & optional axis constrain.
  *
- * @param {number} width: the width of canvas
- * @param {number} height: the height of canvas
- * @param {number} radius: optional, the radius of the arcball
- * @return {object} the created object
+ * @param {Number} width: the width of canvas
+ * @param {Number} height: the height of canvas
+ * @param {Number} radius: optional, the radius of the arcball
+ * @return {Tilt.Arcball} the newly created object
  */
 Tilt.Arcball = function(width, height, radius) {
 
@@ -4916,7 +4916,7 @@ Tilt.Arcball = function(width, height, radius) {
 
   /**
    * The vectors representing the mouse coordinates mapped on the arcball
-   * and their perpendicular converted from (x, y) to (x, y, z) at specific 
+   * and their perpendicular converted from (x, y) to (x, y, z) at specific
    * events like mousePressed and mouseDragged.
    */
   this.startVec = vec3.create();
@@ -4948,8 +4948,8 @@ Tilt.Arcball.prototype = {
    * and the zoom amount. These values will be returned as "rotation" & "zoom"
    * properties inside an object.
    *
-   * @param {number} frameDelta: optional, pass deltas for smooth animations
-   * @return {object} the rotation quaternion and the zoom amount
+   * @param {Number} frameDelta: optional, pass deltas for smooth animations
+   * @return {Object} the rotation quaternion and the zoom amount
    */
   loop: function(frameDelta) {
     if ("undefined" === typeof frameDelta) {
@@ -5006,8 +5006,8 @@ Tilt.Arcball.prototype = {
    * Function handling the mousePressed event.
    * Call this when the mouse was pressed.
    *
-   * @param {number} x: the current horizontal coordinate of the mouse
-   * @param {number} y: the current vertical coordinate of the mouse
+   * @param {Number} x: the current horizontal coordinate of the mouse
+   * @param {Number} y: the current vertical coordinate of the mouse
    */
   mousePressed: function(x, y) {
     this.mouseX = x;
@@ -5027,8 +5027,8 @@ Tilt.Arcball.prototype = {
    * Function handling the mouseDragged event.
    * Call this when the mouse was dragged.
    *
-   * @param {number} x: the current horizontal coordinate of the mouse
-   * @param {number} y: the current vertical coordinate of the mouse
+   * @param {Number} x: the current horizontal coordinate of the mouse
+   * @param {Number} y: the current vertical coordinate of the mouse
    */
   mouseDragged: function(x, y) {
     this.mouseDragX = x;
@@ -5039,7 +5039,7 @@ Tilt.Arcball.prototype = {
    * Function handling the mouseScroll event.
    * Call this when the mouse wheel was scrolled.
    *
-   * @param {number} scroll: the mouse wheel direction and speed
+   * @param {Number} scroll: the mouse wheel direction and speed
    */
   mouseScroll: function(scroll) {
     this.scrollValue -= scroll * 10;
@@ -5048,12 +5048,12 @@ Tilt.Arcball.prototype = {
   /**
    * Maps the 2d coordinates of the mouse location to a 3d point on a sphere.
    *
-   * @param {number} x: the current horizontal coordinate of the mouse
-   * @param {number} y: the current vertical coordinate of the mouse
-   * @param {number} width: the width of canvas
-   * @param {number} height: the height of canvas
-   * @param {number} radius: optional, the radius of the arcball
-   * @param {array} sphereVec: a 3d vector to store the sphere coordinates
+   * @param {Number} x: the current horizontal coordinate of the mouse
+   * @param {Number} y: the current vertical coordinate of the mouse
+   * @param {Number} width: the width of canvas
+   * @param {Number} height: the height of canvas
+   * @param {Number} radius: optional, the radius of the arcball
+   * @param {Array} sphereVec: a 3d vector to store the sphere coordinates
    */
   pointToSphere: function(x, y, width, height, radius, sphereVec) {
     // adjust point coords and scale down to range of [-1..1]
@@ -5064,7 +5064,7 @@ Tilt.Arcball.prototype = {
     var sqlength = x * x + y * y,
       normal = 0;
 
-    // if the point is mapped outside of the sphere  
+    // if the point is mapped outside of the sphere
     if (sqlength > 1) {
       // calculate the normalization factor
       normal = 1 / Math.sqrt(sqlength);
@@ -5085,9 +5085,9 @@ Tilt.Arcball.prototype = {
    * Resize this implementation to use different bounds.
    * This function is automatically called when the arcball is created.
    *
-   * @param {number} width: the width of canvas
-   * @param {number} height: the height of canvas
-   * @param {number} radius: optional, the radius of the arcball
+   * @param {Number} width: the width of canvas
+   * @param {Number} height: the height of canvas
+   * @param {Number} radius: optional, the radius of the arcball
    */
   resize: function(newWidth, newHeight, newRadius) {
     // set the new width, height and radius dimensions
@@ -5157,8 +5157,8 @@ Tilt.Extensions.WebGL = {
    * JavaScript implementation of WebGL MOZ_dom_element_texture (#653656).
    * This shim renders a content window to a canvas element, but clamps the
    * maximum width and height of the canvas to MAX_TEXTURE_SIZE.
-   * 
-   * @param {object} contentWindow: the window content to draw
+   *
+   * @param {Window} contentWindow: the window content to draw
    */
   initDocumentImage: function(contentWindow) {
     var canvasgl, canvas2d, gl, ctx, maxSize, pWidth, pHeight, width, height;
