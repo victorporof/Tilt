@@ -60,36 +60,45 @@ TiltChrome.BrowserOverlay = {
     if (this.href === window.content.location.href) {
       this.href = null; // forget the current tab location
     } else {
-      // remember who we are
-      let self = this;
-
-      // initialize after 100ms
-      window.setTimeout(function() {
-        // the current tab has new page, so recreate the entire visualization
-        // remember the current tab location
-        self.href = window.content.location.href;
-
-        // set the width and height to mach the content window dimensions
-        let width = window.content.innerWidth;
-        let height = window.content.innerHeight;
-
-        // get the iframe which will be used to create the canvas element
-        let iframe = document.getElementById("tilt-iframe");
-
-        // inside a chrome environment the default document and parent nodes
-        // are different from an unprivileged html page, so change these
-        Tilt.Document.currentContentDocument = iframe.contentDocument;
-        Tilt.Document.currentParentNode = gBrowser.selectedBrowser.parentNode;
-
-        // initialize the canvas element
-        self.canvas = Tilt.Document.initCanvas(width, height, true);
-
-        // construct the visualization using the canvas
-        self.visualization =
-          new TiltChrome.Visualization(self.canvas,
-          new TiltChrome.Controller.MouseAndKeyboard()); // default controls
-      }, 100);
+      // if the menubar is visible, it can mess up the true innerWidth/Height
+      // of the window.content, so wait for the menubar to hide first
+      if (window.menubar.visible) {
+        window.setTimeout(this.create.bind(this), 100);
+      }
+      else {
+        // create the visualization normally
+        this.create();
+      }
     }
+  },
+
+  /**
+   * Creates the canvas and starts the visualization.
+   */
+  create: function() {
+    // the current tab has new page, so recreate the entire visualization
+    // remember the current tab location
+    this.href = window.content.location.href;
+
+    // set the width and height to mach the content window dimensions
+    let width = window.content.innerWidth;
+    let height = window.content.innerHeight;
+
+    // get the iframe which will be used to create the canvas element
+    let iframe = document.getElementById("tilt-iframe");
+
+    // inside a chrome environment the default document and parent nodes
+    // are different from an unprivileged html page, so change these
+    Tilt.Document.currentContentDocument = iframe.contentDocument;
+    Tilt.Document.currentParentNode = gBrowser.selectedBrowser.parentNode;
+
+    // initialize the canvas element
+    this.canvas = Tilt.Document.initCanvas(width, height, true);
+
+    // construct the visualization using the canvas
+    this.visualization =
+      new TiltChrome.Visualization(this.canvas,
+      new TiltChrome.Controller.MouseAndKeyboard()); // default controls
   },
 
   /**
