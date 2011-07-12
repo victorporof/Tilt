@@ -26,7 +26,7 @@
  *    distribution.
  */
 
-var glMatrixArrayType;
+var glMatrixArrayType, vec3, mat3, mat4, quat4;
 
 // Fallback for systems that don't support WebGL
 if(typeof Float32Array != 'undefined') {
