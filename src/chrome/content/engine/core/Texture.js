@@ -32,7 +32,7 @@ var EXPORTED_SYMBOLS = ["Tilt.Texture"];
  * Texture constructor.
  * This wrapper creates a texture using an already initialized Image. To
  * create a texture using a remote image, use initTextureAt.
- * 
+ *
  * @param {Image} image: the texture source image or canvas
  * @param {Object} parameters: an object containing the following properties
  *  @param {String} fill: optional, color to fill the transparent bits
@@ -121,7 +121,7 @@ Tilt.Texture.prototype = {
     // remember who we are
     var self = this,
 
-    image = new Image(); // load the image from the source in an object    
+    image = new Image(); // load the image from the source in an object
     image.src = imageSource;
     image.onload = function() {
       // the image has loaded, continue initialization as usual

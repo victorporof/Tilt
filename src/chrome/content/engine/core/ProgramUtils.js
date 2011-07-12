@@ -35,7 +35,7 @@ Tilt.GLSL = {
 
   /**
    * Initializes a shader program, using specified source code as strings,
-   * Returning the newly created shader program, by compiling and linking the 
+   * Returning the newly created shader program, by compiling and linking the
    * vertex and fragment shader.
    *
    * @param {String} vertShaderSrc: the vertex shader source code
@@ -176,7 +176,7 @@ Tilt.GLSL = {
       if (variable.length < 1) {
         return null;
       }
-      
+
       var io;
       // try to get a shader attribute
       if ((io = this.shaderAttribute(program, variable)) >= 0) {
@@ -187,7 +187,7 @@ Tilt.GLSL = {
         return this.shaderUniform(program, variable);
       }
     }
-    
+
     return null;
   },
 

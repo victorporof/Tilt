@@ -38,8 +38,8 @@ Tilt.Extensions.WebGL = {
    * JavaScript implementation of WebGL MOZ_dom_element_texture (#653656).
    * This shim renders a content window to a canvas element, but clamps the
    * maximum width and height of the canvas to MAX_TEXTURE_SIZE.
-   * 
-   * @param {object} contentWindow: the window content to draw
+   *
+   * @param {Window} contentWindow: the window content to draw
    */
   initDocumentImage: function(contentWindow) {
     var canvasgl, canvas2d, gl, ctx, maxSize, pWidth, pHeight, width, height;
