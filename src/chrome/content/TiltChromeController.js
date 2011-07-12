@@ -1,4 +1,4 @@
-/* 
+/*
  * TiltChromeControllers.js - Controller implementations handling events
  * version 0.1
  *
@@ -35,14 +35,9 @@ TiltChrome.Controller = {};
 TiltChrome.Controller.MouseAndKeyboard = function() {
 
   /**
-   * By convention, we make a private "self" variable.
-   */
-  var self = this,
-
-  /**
    * Arcball used to control the visualization using the mouse.
    */
-  arcball = null,
+  var arcball = null,
 
   /**
    * Visualization translation and rotation on the X and Y axis.
@@ -127,8 +122,8 @@ TiltChrome.Controller.MouseAndKeyboard = function() {
     Tilt.Math.quat4fromEuler(rotationY, rotationX, 0, euler);
 
     // update the visualization
-    self.setRotation(quat4.multiply(euler, coord.rotation));
-    self.setTranslation(translationX, translationY, coord.zoom);
+    this.setRotation(quat4.multiply(euler, coord.rotation));
+    this.setTranslation(translationX, translationY, coord.zoom);
   };
 
   /**
@@ -157,7 +152,7 @@ TiltChrome.Controller.MouseAndKeyboard = function() {
     mouseDragged = false;
 
     if (mouseStartX === mouseX && mouseStartY === mouseY) {
-      self.performClick(mouseX, mouseY);
+      this.performClick(mouseX, mouseY);
     }
   };
 
@@ -196,9 +191,6 @@ TiltChrome.Controller.MouseAndKeyboard = function() {
    * Called when a key is pressed.
    */
   function keyPressed(e) {
-    e.preventDefault();
-    e.stopPropagation();
-
     var code = e.keyCode || e.which;
     keyCode[code] = true;
   };
@@ -240,7 +232,5 @@ TiltChrome.Controller.MouseAndKeyboard = function() {
       }
       this[i] = null;
     }
-
-    self = null;
   };
 };
