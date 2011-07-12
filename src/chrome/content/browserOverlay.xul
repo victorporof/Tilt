@@ -11,11 +11,11 @@
 <overlay id="tilt-browser-overlay"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
   xmlns:html="http://www.w3.org/1999/xhtml">
-  
-  <!-- <script type="application/x-javascript"
-          src="chrome://tilt/content/Tilt-min.js"/> -->
-          
+
   <script type="application/x-javascript"
+          src="chrome://tilt/content/Tilt-min.js"/>
+
+  <!-- <script type="application/x-javascript"
     src="chrome://tilt/content/engine/core/Buffer.js"/>
   <script type="application/x-javascript"
     src="chrome://tilt/content/engine/core/Cache.js"/>
@@ -31,12 +31,12 @@
     src="chrome://tilt/content/engine/core/TextureUtils.js"/>
   <script type="application/x-javascript"
     src="chrome://tilt/content/engine/core/RequestAnimFrame.js"/>
-          
+
   <script type="application/x-javascript"
     src="chrome://tilt/content/engine/lib/glMatrix-0.9.6.js"/>
   <script type="application/x-javascript"
     src="chrome://tilt/content/engine/lib/json.js"/>
-          
+
   <script type="application/x-javascript"
     src="chrome://tilt/content/engine/geometry/Cube.js"/>
   <script type="application/x-javascript"
@@ -45,37 +45,37 @@
     src="chrome://tilt/content/engine/geometry/Rectangle.js"/>
   <script type="application/x-javascript"
     src="chrome://tilt/content/engine/geometry/RectangleWireframe.js"/>
-          
+
   <script type="application/x-javascript"
     src="chrome://tilt/content/engine/renderer/jTiltShaders.js"/>
   <script type="application/x-javascript"
     src="chrome://tilt/content/engine/renderer/jTiltRenderer.js"/>
-          
+
   <script type="application/x-javascript"
     src="chrome://tilt/content/engine/utils/jTiltUtils.js"/>
   <script type="application/x-javascript"
     src="chrome://tilt/content/engine/utils/jTiltExtensions.js"/>
   <script type="application/x-javascript"
-    src="chrome://tilt/content/engine/utils/jTiltControllers.js"/>
-          
+    src="chrome://tilt/content/engine/utils/jTiltControllers.js"/> -->
+
   <script type="application/x-javascript"
     src="chrome://tilt/content/TiltChromeController.js"/>
   <script type="application/x-javascript"
     src="chrome://tilt/content/TiltChromeVisualization.js"/>
-          
+
   <script type="application/x-javascript"
     src="chrome://tilt/content/browserOverlay.js"/>
-          
+
   <stringbundleset id="stringbundleset">
     <stringbundle id="tilt-string-bundle"
                   src="chrome://tilt/locale/browserOverlay.properties"/>
   </stringbundleset>
-  
+
   <keyset>
     <key id="tilt-menu-key" modifiers="accel shift" key="L"
          oncommand="TiltChrome.BrowserOverlay.initialize(event);"/>
   </keyset>
-  
+
   <menupopup id="menu_ToolsPopup">
     <menuitem class="menu-iconic"
               id="tilt-menu"
@@ -86,11 +86,11 @@
               oncommand="TiltChrome.BrowserOverlay.initialize(event);">
     </menuitem>
   </menupopup>
-  
+
   <window>
     <html:iframe id="tilt-iframe" width="0px" height="0px"/>
   </window>
-  
+
   <!-- <menupopup id="menuWebDeveloperPopup">
     <menuitem class="menu-iconic"
               id="tilt-menu"
