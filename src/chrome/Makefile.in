@@ -13,10 +13,11 @@ jar_sources := $(wildcard $(jar_source_root)/content/*.js) \
                $(wildcard $(jar_source_root)/content/*.xml) \
                $(wildcard $(jar_source_root)/content/*.css) \
                $(wildcard $(jar_source_root)/content/engine/*.js) \
+               $(wildcard $(jar_source_root)/content/engine/cameras/*.js) \
                $(wildcard $(jar_source_root)/content/engine/core/*.js) \
                $(wildcard $(jar_source_root)/content/engine/lib/*.js) \
-               $(wildcard $(jar_source_root)/content/engine/geometry/*.js) \
                $(wildcard $(jar_source_root)/content/engine/renderer/*.js) \
+               $(wildcard $(jar_source_root)/content/engine/renderer/*/*.js) \
                $(wildcard $(jar_source_root)/content/engine/utils/*.js) \
                $(wildcard $(jar_source_root)/skin/*.css) \
                $(wildcard $(jar_source_root)/skin/*.png) \
