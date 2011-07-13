@@ -12,15 +12,16 @@
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
   xmlns:html="http://www.w3.org/1999/xhtml">
 
-  <script type="application/x-javascript"
-          src="chrome://tilt/content/Tilt-min.js"/>
-
   <!-- <script type="application/x-javascript"
+          src="chrome://tilt/content/Tilt-min.js"/> -->
+
+  <script type="application/x-javascript"
+    src="chrome://tilt/content/engine/cameras/Arcball.js"/>
+
+  <script type="application/x-javascript"
     src="chrome://tilt/content/engine/core/Buffer.js"/>
   <script type="application/x-javascript"
     src="chrome://tilt/content/engine/core/Cache.js"/>
-  <script type="application/x-javascript"
-    src="chrome://tilt/content/engine/core/Mesh.js"/>
   <script type="application/x-javascript"
     src="chrome://tilt/content/engine/core/Program.js"/>
   <script type="application/x-javascript"
@@ -29,8 +30,6 @@
     src="chrome://tilt/content/engine/core/Texture.js"/>
   <script type="application/x-javascript"
     src="chrome://tilt/content/engine/core/TextureUtils.js"/>
-  <script type="application/x-javascript"
-    src="chrome://tilt/content/engine/core/RequestAnimFrame.js"/>
 
   <script type="application/x-javascript"
     src="chrome://tilt/content/engine/lib/glMatrix-0.9.6.js"/>
@@ -38,25 +37,28 @@
     src="chrome://tilt/content/engine/lib/json.js"/>
 
   <script type="application/x-javascript"
-    src="chrome://tilt/content/engine/geometry/Cube.js"/>
+    src="chrome://tilt/content/engine/renderer/geometry/Cube.js"/>
   <script type="application/x-javascript"
-    src="chrome://tilt/content/engine/geometry/CubeWireframe.js"/>
+    src="chrome://tilt/content/engine/renderer/geometry/CubeWireframe.js"/>
   <script type="application/x-javascript"
-    src="chrome://tilt/content/engine/geometry/Rectangle.js"/>
+    src="chrome://tilt/content/engine/renderer/geometry/Rectangle.js"/>
   <script type="application/x-javascript"
-    src="chrome://tilt/content/engine/geometry/RectangleWireframe.js"/>
+    src="chrome://tilt/content/engine/renderer/geometry/RectangleWireframe.js"/>
 
   <script type="application/x-javascript"
-    src="chrome://tilt/content/engine/renderer/jTiltShaders.js"/>
+    src="chrome://tilt/content/engine/renderer/objects/Mesh.js"/>
+
   <script type="application/x-javascript"
-    src="chrome://tilt/content/engine/renderer/jTiltRenderer.js"/>
+    src="chrome://tilt/content/engine/renderer/Renderer.js"/>
+  <script type="application/x-javascript"
+    src="chrome://tilt/content/engine/renderer/RequestAnimFrame.js"/>
+  <script type="application/x-javascript"
+    src="chrome://tilt/content/engine/renderer/Shaders.js"/>
 
   <script type="application/x-javascript"
     src="chrome://tilt/content/engine/utils/jTiltUtils.js"/>
   <script type="application/x-javascript"
     src="chrome://tilt/content/engine/utils/jTiltExtensions.js"/>
-  <script type="application/x-javascript"
-    src="chrome://tilt/content/engine/utils/jTiltControllers.js"/> -->
 
   <script type="application/x-javascript"
     src="chrome://tilt/content/TiltChromeController.js"/>
@@ -68,11 +70,12 @@
 
   <stringbundleset id="stringbundleset">
     <stringbundle id="tilt-string-bundle"
-                  src="chrome://tilt/locale/browserOverlay.properties"/>
+      src="chrome://tilt/locale/browserOverlay.properties"/>
   </stringbundleset>
 
   <keyset>
-    <key id="tilt-menu-key" modifiers="accel shift" key="L"
+    <key id="tilt-menu-key"
+         modifiers="accel shift" key="L"
          oncommand="TiltChrome.BrowserOverlay.initialize(event);"/>
   </keyset>
 
