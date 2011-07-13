@@ -576,7 +576,7 @@ Tilt.Program = function(vertShaderSrc, fragShaderSrc) {
   this.uniforms = null;
 
   /**
-   * Each program has an assigned object for caching all the current 
+   * Each program has an assigned object for caching all the current
    * attributes and uniforms at runtime, when using the shader.
    */
   this.cache = {};
@@ -689,9 +689,6 @@ Tilt.Program.prototype = {
 
     gl.bindBuffer(gl.ARRAY_BUFFER, buffer.ref);
     gl.vertexAttribPointer(attr, size, gl.FLOAT, false, 0, 0);
-
-    buffer = null;
-    gl = null;
   },
 
   /**
@@ -712,7 +709,6 @@ Tilt.Program.prototype = {
       this.cache[uniform] = hit;
       Tilt.$gl.uniformMatrix4fv(this.uniforms[uniform], false, m);
     }
-    m = null;
   },
 
   /**
@@ -733,7 +729,6 @@ Tilt.Program.prototype = {
       this.cache[uniform] = hit;
       Tilt.$gl.uniform4fv(this.uniforms[uniform], v);
     }
-    v = null;
   },
 
   /**
@@ -767,7 +762,6 @@ Tilt.Program.prototype = {
       gl.bindTexture(gl.TEXTURE_2D, texture.ref);
       gl.uniform1i(this.uniforms[sampler], 0);
     }
-    texture = null;
   },
 
   /**
@@ -4288,7 +4282,7 @@ Tilt.Renderer = function(canvas, failCallback, successCallback) {
   this.cube = new Tilt.Cube();
   this.cubeWireframe = new Tilt.CubeWireframe();
 
-  /** 
+  /**
    * Helpers for managing variables like frameCount, frameRate, frameDelta,
    * used internally, in the requestAnimFrame function.
    */
@@ -4337,10 +4331,10 @@ Tilt.Renderer.prototype = {
    * Clears the color and depth buffers to a specific color.
    * The color components are represented in the 0..1 range.
    *
-   * @param {number} r: the red component of the clear color
-   * @param {number} g: the green component of the clear color
-   * @param {number} b: the blue component of the clear color
-   * @param {number} a: the alpha component of the clear color
+   * @param {Number} r: the red component of the clear color
+   * @param {Number} g: the green component of the clear color
+   * @param {Number} b: the blue component of the clear color
+   * @param {Number} a: the alpha component of the clear color
    */
   clear: function(r, g, b, a) {
     // cache some variables for easy access
@@ -4366,7 +4360,7 @@ Tilt.Renderer.prototype = {
    * in which case the color will be [n, n, n, 255], or directly an array of
    * [r, g, b, a] values, all in the 0..255 interval.
    *
-   * @param {string} color: the color, defined in hex or as rgb() or rgba()
+   * @param {String} color: the color, defined in hex or as rgb() or rgba()
    */
   background: function(color) {
     var rgba;
@@ -4413,7 +4407,7 @@ Tilt.Renderer.prototype = {
 
   /**
    * Sets a custom projection matrix.
-   * @param {object} matrix: the custom projection matrix to be used
+   * @param {Array} matrix: the custom projection matrix to be used
    */
   projection: function(matrix) {
     mat4.set(matrix, this.projMatrix);
@@ -4450,7 +4444,7 @@ Tilt.Renderer.prototype = {
    * Transforms the model view matrix with a new matrix.
    * Useful for creating custom transformations.
    *
-   * @param {object} matrix: the matrix to be multiply the model view with
+   * @param {Array} matrix: the matrix to be multiply the model view with
    */
   transform: function(matrix) {
     mat4.multiply(this.mvMatrix, matrix);
@@ -4459,21 +4453,21 @@ Tilt.Renderer.prototype = {
   /**
    * Translates the model view by the x, y and z coordinates.
    *
-   * @param {number} x: the x amount of translation
-   * @param {number} y: the y amount of translation
-   * @param {number} z: the z amount of translation
+   * @param {Number} x: the x amount of translation
+   * @param {Number} y: the y amount of translation
+   * @param {Number} z: the z amount of translation
    */
   translate: function(x, y, z) {
-    mat4.translate(this.mvMatrix, [x, y, z]);
+    mat4.translate(this.mvMatrix, [x, y, z || 0]);
   },
 
   /**
    * Rotates the model view by a specified angle on the x, y and z axis.
    *
-   * @param {number} angle: the angle expressed in radians
-   * @param {number} x: the x axis of the rotation
-   * @param {number} y: the y axis of the rotation
-   * @param {number} z: the z axis of the rotation
+   * @param {Number} angle: the angle expressed in radians
+   * @param {Number} x: the x axis of the rotation
+   * @param {Number} y: the y axis of the rotation
+   * @param {Number} z: the z axis of the rotation
    */
   rotate: function(angle, x, y, z) {
     mat4.rotate(this.mvMatrix, angle, [x, y, z]);
@@ -4481,8 +4475,7 @@ Tilt.Renderer.prototype = {
 
   /**
    * Rotates the model view by a specified angle on the x axis.
-   *
-   * @param {number} angle: the angle expressed in radians
+   * @param {Number} angle: the angle expressed in radians
    */
   rotateX: function(angle) {
     mat4.rotateX(this.mvMatrix, angle);
@@ -4490,8 +4483,7 @@ Tilt.Renderer.prototype = {
 
   /**
    * Rotates the model view by a specified angle on the y axis.
-   *
-   * @param {number} angle: the angle expressed in radians
+   * @param {Number} angle: the angle expressed in radians
    */
   rotateY: function(angle) {
     mat4.rotateY(this.mvMatrix, angle);
@@ -4499,8 +4491,7 @@ Tilt.Renderer.prototype = {
 
   /**
    * Rotates the model view by a specified angle on the z axis.
-   *
-   * @param {number} angle: the angle expressed in radians
+   * @param {Number} angle: the angle expressed in radians
    */
   rotateZ: function(angle) {
     mat4.rotateZ(this.mvMatrix, angle);
@@ -4509,18 +4500,17 @@ Tilt.Renderer.prototype = {
   /**
    * Scales the model view by the x, y and z coordinates.
    *
-   * @param {number} x: the x amount of scaling
-   * @param {number} y: the y amount of scaling
-   * @param {number} z: the z amount of scaling
+   * @param {Number} x: the x amount of scaling
+   * @param {Number} y: the y amount of scaling
+   * @param {Number} z: the z amount of scaling
    */
   scale: function(x, y, z) {
-    mat4.scale(this.mvMatrix, [x, y, z]);
+    mat4.scale(this.mvMatrix, [x, y, z || 0]);
   },
 
   /**
    * Sets the current tint color.
-   *
-   * @param {string} color: the color, defined in hex or as rgb() or rgba()
+   * @param {String} color: the color, defined in hex or as rgb() or rgba()
    */
   tint: function(color) {
     this.tintColor = Tilt.Math.hex2rgba(color);
@@ -4539,8 +4529,7 @@ Tilt.Renderer.prototype = {
 
   /**
    * Sets the current fill color.
-   *
-   * @param {string} color: the color, defined in hex or as rgb() or rgba()
+   * @param {String} color: the color, defined in hex or as rgb() or rgba()
    */
   fill: function(color) {
     this.fillColor = Tilt.Math.hex2rgba(color);
@@ -4559,8 +4548,7 @@ Tilt.Renderer.prototype = {
 
   /**
    * Sets the current stroke color.
-   *
-   * @param {string} color: the color, defined in hex or as rgb() or rgba()
+   * @param {String} color: the color, defined in hex or as rgb() or rgba()
    */
   stroke: function(color) {
     this.strokeColor = Tilt.Math.hex2rgba(color);
@@ -4579,8 +4567,7 @@ Tilt.Renderer.prototype = {
 
   /**
    * Sets the current stroke weight (line width).
-   *
-   * @param {number} weight: the stroke weight
+   * @param {Number} weight: the stroke weight
    */
   strokeWeight: function(value) {
     if (this.strokeWeightValue !== value) {
@@ -4593,7 +4580,7 @@ Tilt.Renderer.prototype = {
    * Sets blending, either "alpha" or "add" (additive blending).
    * Anything else disables blending.
    *
-   * @param {string} mode: blending, either "alpha", "add" or undefined
+   * @param {String} mode: blending, either "alpha", "add" or undefined
    */
   blendMode: function(mode) {
     var gl = this.gl;
@@ -4613,7 +4600,7 @@ Tilt.Renderer.prototype = {
    * Sets if depth testing should be enabled or not.
    * Disabling could be useful when handling transparency (for example).
    *
-   * @param {boolean} mode: true if depth testing should be enabled
+   * @param {Boolean} mode: true if depth testing should be enabled
    */
   depthTest: function(mode) {
     var gl = this.gl;
@@ -4626,10 +4613,10 @@ Tilt.Renderer.prototype = {
   },
 
   /**
-   * Helper function to set active the color shader with the required params
-   * 
-   * @param {object} verticesBuffer: a buffer of vertices positions
-   * @param {object} color: the color to be used
+   * Helper function to set active the color shader with the required params.
+   *
+   * @param {Tilt.VertexBuffer} verticesBuffer: a buffer of vertices positions
+   * @param {Array} color: the color used, as [r, g, b, a] with 0..1 range
    */
   useColorShader: function(verticesBuffer, color) {
     var program = this.colorShader;
@@ -4645,12 +4632,12 @@ Tilt.Renderer.prototype = {
   },
 
   /**
-   * Helper function to set active the texture shader with the required params
-   * 
-   * @param {object} verticesBuffer: a buffer of vertices positions
-   * @param {object} texCoordBuffer: a buffer of vertices texture coordinates
-   * @param {object} color: the color to be used
-   * @param {object} texture: the texture to be applied
+   * Helper function to set active the texture shader with the required params.
+   *
+   * @param {Tilt.VertexBuffer} verticesBuffer: a buffer of vertices positions
+   * @param {Tilt.VertexBuffer} texCoordBuffer: a buffer of texture coordinates
+   * @param {Array} color: the color used, as [r, g, b, a] with 0..1 range
+   * @param {Tilt.Texture} texture: the texture to be applied
    */
   useTextureShader: function(verticesBuffer, texCoordBuffer, color, texture) {
     var program = this.textureShader;
@@ -4671,9 +4658,9 @@ Tilt.Renderer.prototype = {
    * Draw a single triangle.
    * Do not abuse this function, it is quite slow, use for debugging only!
    *
-   * @param {array} v0: the [x, y, z] position of the first triangle point
-   * @param {array} v1: the [x, y, z] position of the second triangle point
-   * @param {array} v2: the [x, y, z] position of the third triangle point
+   * @param {Array} v0: the [x, y, z] position of the first triangle point
+   * @param {Array} v1: the [x, y, z] position of the second triangle point
+   * @param {Array} v2: the [x, y, z] position of the third triangle point
    */
   triangle: function(v0, v1, v2) {
     var vertices = new Tilt.VertexBuffer(v0.concat(v1, v2), 3),
@@ -4702,7 +4689,7 @@ Tilt.Renderer.prototype = {
    * specify the width and height. Use rectMode("center") to draw centered
    * at the given x and y position.
    *
-   * @param {string} mode: either "corner" or "center"
+   * @param {String} mode: either "corner" or "center"
    */
   rectMode: function(mode) {
     this.rectangle.rectModeValue = mode;
@@ -4711,10 +4698,10 @@ Tilt.Renderer.prototype = {
   /**
    * Draws a rectangle using the specified parameters.
    *
-   * @param {number} x: the x position of the object
-   * @param {number} y: the y position of the object
-   * @param {number} width: the width of the object
-   * @param {number} height: the height of the object
+   * @param {Number} x: the x position of the object
+   * @param {Number} y: the y position of the object
+   * @param {Number} width: the width of the object
+   * @param {Number} height: the height of the object
    */
   rect: function(x, y, width, height) {
     var rectangle = this.rectangle,
@@ -4758,7 +4745,7 @@ Tilt.Renderer.prototype = {
    * image"s width and height. Use imageMode("center") to draw images centered
    * at the given x and y position.
    *
-   * @param {string} mode: either "corner" or "center"
+   * @param {String} mode: either "corner" or "center"
    */
   imageMode: function(mode) {
     this.rectangle.imageModeValue = mode;
@@ -4767,12 +4754,12 @@ Tilt.Renderer.prototype = {
   /**
    * Draws an image using the specified parameters.
    *
-   * @param {object} t: the texture to be used
-   * @param {number} x: the x position of the object
-   * @param {number} y: the y position of the object
-   * @param {number} z: the z position of the object
-   * @param {number} width: the width of the object
-   * @param {number} height: the height of the object
+   * @param {Tilt.Textrue} t: the texture to be used
+   * @param {Number} x: the x position of the object
+   * @param {Number} y: the y position of the object
+   * @param {Number} z: the z position of the object
+   * @param {Number} width: the width of the object
+   * @param {Number} height: the height of the object
    */
   image: function(t, x, y, width, height) {
     var rectangle = this.rectangle,
@@ -4811,10 +4798,10 @@ Tilt.Renderer.prototype = {
   /**
    * Draws a box using the specified parameters.
    *
-   * @param {number} width: the width of the object
-   * @param {number} height: the height of the object
-   * @param {number} depth: the depth of the object
-   * @param {object} texture: the texture to be used
+   * @param {Number} width: the width of the object
+   * @param {Number} height: the height of the object
+   * @param {Number} depth: the depth of the object
+   * @param {Tilt.Texture} texture: the texture to be used
    */
   box: function(width, height, depth, texture) {
     var cube = this.cube,
@@ -4857,8 +4844,8 @@ Tilt.Renderer.prototype = {
   /**
    * Draws bound vertex buffers using the specified parameters.
    *
-   * @param {number} drawMode: WebGL enum, like Tilt.TRIANGLES
-   * @param {number} count: the number of indices to be rendered
+   * @param {Number} drawMode: WebGL enum, like Tilt.TRIANGLES
+   * @param {Number} count: the number of indices to be rendered
    */
   drawVertices: function(drawMode, count) {
     this.gl.drawArrays(drawMode, 0, count);
@@ -4868,8 +4855,8 @@ Tilt.Renderer.prototype = {
    * Draws bound vertex buffers using the specified parameters.
    * This function also makes use of an index buffer.
    *
-   * @param {number} drawMode: WebGL enum, like Tilt.TRIANGLES
-   * @param {object} indicesBuffer: indices for the passed vertices buffer
+   * @param {Number} drawMode: WebGL enum, like Tilt.TRIANGLES
+   * @param {Tilt.IndexBuffer} indicesBuffer: indices for the passed vertices buffer
    */
   drawIndexedVertices: function(drawMode, indicesBuffer) {
     var gl = this.gl;
@@ -4881,8 +4868,8 @@ Tilt.Renderer.prototype = {
   /**
    * Helper function to create a 3D context in a cross browser way.
    *
-   * @param {object} canvas: the canvas to get the WebGL context from
-   * @param {object} opt_attribs: optional attributes used for initialization
+   * @param {HTMLCanvasElement} canvas: the canvas to get the WebGL context
+   * @param {Object} opt_attribs: optional attributes used for initialization
    */
   create3DContext: function(canvas, opt_attribs) {
     var names = ["experimental-webgl", "webgl", "webkit-3d", "moz-webgl"];
@@ -4913,8 +4900,9 @@ Tilt.Renderer.prototype = {
    *        // do rendering
    *        ...
    *      };
+   *      draw();
    *
-   * @param {function} loop: the function to be called each frame
+   * @param {Function} draw: the function to be called each frame
    */
   loop: function(draw) {
     window.requestAnimFrame(draw);
@@ -4938,11 +4926,11 @@ Tilt.Renderer.prototype = {
   },
 
   /**
-   * Destroys this object and deletes all members.
+   * Clears the Tilt cache, destroys this object and deletes all members.
    */
   destroy: function() {
     Tilt.clearCache();
-    
+
     for (var i in this) {
       if ("function" === typeof this[i].destroy) {
         this[i].destroy();
@@ -5106,7 +5094,908 @@ Tilt.Shaders.Texture = {
 ].join("\n")
 };
 /*
- * jTiltExtensions.js - Various JavaScript shims and extensions
+ * Console.js - Various console helper functions for Tilt
+ * version 0.1
+ *
+ * Copyright (c) 2011 Victor Porof
+ *
+ * This software is provided 'as-is', without any express or implied
+ * warranty. In no event will the authors be held liable for any damages
+ * arising from the use of this software.
+ *
+ * Permission is granted to anyone to use this software for any purpose,
+ * including commercial applications, and to alter it and redistribute it
+ * freely, subject to the following restrictions:
+ *
+ *    1. The origin of this software must not be misrepresented; you must not
+ *    claim that you wrote the original software. If you use this software
+ *    in a product, an acknowledgment in the product documentation would be
+ *    appreciated but is not required.
+ *
+ *    2. Altered source versions must be plainly marked as such, and must not
+ *    be misrepresented as being the original software.
+ *
+ *    3. This notice may not be removed or altered from any source
+ *    distribution.
+ */
+"use strict";
+
+var Tilt = Tilt || {};
+var EXPORTED_SYMBOLS = ["Tilt.Console", "Tilt.StringBundle"];
+
+/**
+ * Various console functions required by the engine.
+ */
+Tilt.Console = {
+
+  /**
+   * Logs a message to the console.
+   * If this is not inside an extension environment, an alert() is used.
+   *
+   * @param {String} message: the message to be logged
+   */
+  log: function(message) {
+    if ("undefined" === typeof message) {
+      message = "undefined";
+    }
+    try {
+      // get the console service
+      var consoleService = Components.classes["@mozilla.org/consoleservice;1"]
+        .getService(Components.interfaces.nsIConsoleService);
+
+      // log the message
+      consoleService.logStringMessage(message);
+    }
+    catch(e) {
+      // running from an unprivileged environment
+      alert(message);
+    }
+  },
+
+  /**
+   * Logs an error to the console.
+   * If this is not inside an extension environment, an alert() is used.
+   *
+   * @param {String} message: the message to be logged
+   * @param {String} sourceName: the URL of file with error. This will be a
+   * hyperlink in the JavaScript Console, so you'd better use real URL. You
+   * may pass null if it's not applicable.
+   * @param {String} sourceLine: the line #aLineNumber from aSourceName file.
+   * You are responsible for providing that line. You may pass null if you are
+   * lazy; that will prevent showing the source line in JavaScript Console.
+   * @param {String} lineNumber: specify the exact location of error
+   * @param {String} columnNumber: is used to draw the arrow pointing to the
+   * problem character.
+   * @param {Number} flags: one of flags declared in nsIScriptError. At the
+   * time of writing, possible values are:
+   *  nsIScriptError.errorFlag = 0
+   *  nsIScriptError.warningFlag = 1
+   *  nsIScriptError.exceptionFlag = 2
+   *  nsIScriptError.strictFlag = 4
+   * @param {String} category: a string indicating what kind of code caused
+   * the message. There are quite a few category strings and they do not seem
+   * to be listed in a single place. Hopefully, they will all be listed in
+   * nsIScriptError.idl eventually.
+   */
+  error: function(message, sourceName, sourceLine,
+                  lineNumber, columnNumber, flags, category) {
+
+    if ("undefined" === typeof message) {
+      message = "undefined";
+    }
+    try {
+      // get the console service
+      var consoleService = Components.classes["@mozilla.org/consoleservice;1"]
+        .getService(Components.interfaces.nsIConsoleService);
+
+      // also the script error service
+      var scriptError = Components.classes["@mozilla.org/scripterror;1"]
+        .createInstance(Components.interfaces.nsIScriptError);
+
+      // initialize a script error
+      scriptError.init(message, sourceName, sourceLine,
+                       lineNumber, columnNumber, flags, category);
+
+      // log the error
+      consoleService.logMessage(scriptError);
+    }
+    catch(e) {
+      // running from an unprivileged environment
+      alert(message);
+    }
+  }
+};
+
+/**
+ * Easy way to access the string bundle.
+ * Usually useful only when this is used inside an extension environment.
+ */
+Tilt.StringBundle = {
+
+  /**
+   * The bundle name used.
+   */
+  bundle: "tilt-string-bundle",
+
+  /**
+   * Returns a string in the string bundle.
+   * If the string bundle is not found, the parameter string is returned.
+   *
+   * @param {String} string: the string name in the bundle
+   * @return {String} the equivalent string from the bundle
+   */
+  get: function(string) {
+    // undesired, you should always pass a defined string for the bundle
+    if ("undefined" === typeof string) {
+      return "undefined";
+    }
+
+    var elem = document.getElementById(this.bundle);
+    try {
+      if (elem) {
+        // return the equivalent string from the bundle
+        return elem.getString(string);
+      }
+      else {
+        // this should never happen when inside a chrome environment
+        return string;
+      }
+    }
+    finally {
+      elem = null;
+    }
+  },
+
+  /**
+   * Returns a formatted string using the string bundle.
+   * If the string bundle is not found, the parameter arguments are returned.
+   *
+   * @param {String} string: the string name in the bundle
+   * @param {Array} args: an array of args for the formatted string
+   * @return {String} the equivalent formatted string from the bundle
+   */
+  format: function(string, args) {
+    // undesired, you should always pass a defined string for the bundle
+    if ("undefined" === typeof string) {
+      return "undefined";
+    }
+    // undesired, you should always pass arguments when formatting strings
+    if ("undefined" === typeof args) {
+      return string;
+    }
+
+    var elem = document.getElementById(this.bundle);
+    try {
+      if (elem) {
+        // return the equivalent formatted string from the bundle
+        return elem.getFormattedString(string, args);
+      }
+      else {
+        // this should never happen when inside a chrome environment
+        return [string, args].join(" ");
+      }
+    }
+    finally {
+      elem = null;
+    }
+  }
+};
+/*
+ * Document.js - Various helper functions for manipulating the DOM
+ * version 0.1
+ *
+ * Copyright (c) 2011 Victor Porof
+ *
+ * This software is provided 'as-is', without any express or implied
+ * warranty. In no event will the authors be held liable for any damages
+ * arising from the use of this software.
+ *
+ * Permission is granted to anyone to use this software for any purpose,
+ * including commercial applications, and to alter it and redistribute it
+ * freely, subject to the following restrictions:
+ *
+ *    1. The origin of this software must not be misrepresented; you must not
+ *    claim that you wrote the original software. If you use this software
+ *    in a product, an acknowledgment in the product documentation would be
+ *    appreciated but is not required.
+ *
+ *    2. Altered source versions must be plainly marked as such, and must not
+ *    be misrepresented as being the original software.
+ *
+ *    3. This notice may not be removed or altered from any source
+ *    distribution.
+ */
+"use strict";
+
+var Tilt = Tilt || {};
+var EXPORTED_SYMBOLS = ["Tilt.Document"];
+
+/**
+ * Utilities for accessing and manipulating a document.
+ */
+Tilt.Document = {
+
+  /**
+   * Current document object used when creating elements.
+   * If unspecified, it will default to the window.document variable.
+   */
+  currentContentDocument: undefined,
+
+  /**
+   * Current parent node object used when appending elements.
+   * If unspecified, it will default to the window.document.body variable.
+   */
+  currentParentNode: undefined,
+
+  /**
+   * Helper method, allowing to easily create and manage a canvas element.
+   *
+   * @param {Number} width: specifies the width of the canvas
+   * @param {Number} height: specifies the height of the canvas
+   * @param {Boolean} append: true to append the canvas to the parent node
+   * @param {String} id: optional, id for the created canvas element
+   * @return {HTMLCanvasElement} the newly created canvas element
+   */
+  initCanvas: function(width, height, append, id) {
+    if ("undefined" === typeof this.currentContentDocument) {
+      this.currentContentDocument = document;
+    }
+    if ("undefined" === typeof this.currentParentNode) {
+      this.currentParentNode = document.body;
+    }
+
+    var doc = this.currentContentDocument,
+      node = this.currentParentNode,
+
+    // create the canvas element
+    canvas = doc.createElement("canvas");
+    canvas.width = width;
+    canvas.height = height;
+    canvas.id = id;
+
+    // append the canvas element to the current parent node, if specified
+    if (append) {
+      this.append(canvas, node);
+    }
+
+    try {
+      return canvas;
+    }
+    finally {
+      doc = null;
+      node = null;
+      canvas = null;
+    }
+  },
+
+  /**
+   * Helper method, initializing a canvas stretching the entire window.
+   * This is mostly likely useful in a plain html page with an empty body.
+   *
+   * @return {HTMLCanvasElement} the newly created canvas
+   */
+  initFullScreenCanvas: function() {
+    var width = window.innerWidth,
+      height = window.innerHeight,
+      canvas = this.initCanvas(width, height, true);
+
+    canvas.setAttribute("style", "width: 100%; height: 100%;");
+    this.currentParentNode.setAttribute("style", "margin: 0px 0px 0px 0px;");
+
+    try {
+      return canvas;
+    }
+    finally {
+      canvas = null;
+    }
+  },
+
+  /**
+   * Appends an element to a specific node.
+   *
+   * @param {Object} element: the element to be appended
+   * @param {Object} node: the node to append the element to
+   */
+  append: function(element, node) {
+    try {
+      node.appendChild(element);
+    }
+    finally {
+      element = null;
+      node = null;
+    }
+  },
+
+  /**
+   * Removes an element from the parent node.
+   * @param {Object} element: the element to be removed
+   */
+  remove: function(element) {
+    try {
+      element.parentNode.removeChild(element);
+    }
+    finally {
+      element = null;
+    }
+  },
+
+  /**
+   * Traverses a document object model and calls function for each node.
+   * If the dom parameter is omitted, then the current content.document will
+   * be used. The nodeCallback function will have the current node and depth
+   * passed as parameters, and the readyCallback function will have the
+   * maximum depth passed as parameter.
+   *
+   * @param {Function} nodeCallback: the function to call for each node
+   * @param {Function} readyCallback: called when no more nodes are found
+   * @param {HTMLDocument} dom: the document object model to traverse
+   */
+  traverse: function(nodeCallback, readyCallback, dom) {
+    // used to calculate the maximum depth of a dom node
+    var maxDepth = 0;
+
+    // used internally for recursively traversing a document object model
+    function recursive(nodeCallback, dom, depth) {
+      var i, length, child;
+
+      for (i = 0, length = dom.childNodes.length; i < length; i++) {
+        child = dom.childNodes[i];
+
+        if (depth > maxDepth) {
+          maxDepth = depth;
+        }
+
+        // run the node callback function for each node, pass the depth, and
+        // also continue the recursion with all the children
+        nodeCallback(child, depth);
+        recursive(nodeCallback, child, depth + 1);
+      }
+    }
+
+    try {
+      if ("function" === typeof nodeCallback) {
+        recursive(nodeCallback, dom || window.content.document, 0);
+      }
+
+      // once we recursively traversed all the dom nodes, run a callback
+      if ("function" === typeof readyCallback) {
+        readyCallback(maxDepth);
+      }
+    }
+    finally {
+      dom = null;
+    }
+  },
+
+  /**
+   * Returns a node's absolute x, y, width and height coordinates.
+   *
+   * @param {Object} node: the node which type needs to be analyzed
+   * @return {Object} an object containing the x, y, width and height coords
+   */
+  getNodeCoordinates: function(node) {
+    var x = 0, y = 0, w = node.clientWidth, h = node.clientHeight;
+
+    // if the node isn't the parent of everything
+    if (node.offsetParent) {
+      // calculate the offset recursively
+      do {
+        x += node.offsetLeft;
+        y += node.offsetTop;
+      } while ((node = node.offsetParent));
+    }
+    else {
+      // just get the x and y coordinates of this node if available
+      if (node.x) {
+        x = node.x;
+      }
+      if (node.y) {
+        y = node.y;
+      }
+    }
+
+    try {
+      // a bit more verbose than a simple array
+      return {
+        x: x,
+        y: y,
+        width: w,
+        height: h
+      };
+    }
+    finally {
+      node = null;
+    }
+  },
+
+  /**
+   * Returns the string equivalent of a node type.
+   * If the node type is invalid, undefined is returned.
+   *
+   * @param {Object} node: the node which type needs to be analyzed
+   * @return {String} the string equivalent of the node type
+   */
+  getNodeType: function(node) {
+    var type;
+
+    if (node.nodeType === 1) {
+      type = "ELEMENT_NODE";
+    }
+    else if (node.nodeType === 2) {
+      type = "ATTRIBUTE_NODE";
+    }
+    else if (node.nodeType === 3) {
+      type = "TEXT_NODE";
+    }
+    else if (node.nodeType === 4) {
+      type = "CDATA_SECTION_NODE";
+    }
+    else if (node.nodeType === 5) {
+      type = "ENTITY_REFERENCE_NODE";
+    }
+    else if (node.nodeType === 6) {
+      type = "ENTITY_NODE";
+    }
+    else if (node.nodeType === 7) {
+      type = "PROCESSING_INSTRUCTION_NODE";
+    }
+    else if (node.nodeType === 8) {
+      type = "COMMENT_NODE";
+    }
+    else if (node.nodeType === 9) {
+      type = "DOCUMENT_NODE";
+    }
+    else if (node.nodeType === 10) {
+      type = "DOCUMENT_TYPE_NODE";
+    }
+    else if (node.nodeType === 11) {
+      type = "DOCUMENT_FRAGMENT_NODE";
+    }
+    else if (node.nodeType === 12) {
+      type = "NOTATION_NODE";
+    }
+
+    try {
+      return type;
+    }
+    finally {
+      node = null;
+    }
+  }
+};
+/*
+ * Math.js - Various math helper functions
+ * version 0.1
+ *
+ * Copyright (c) 2011 Victor Porof
+ *
+ * This software is provided 'as-is', without any express or implied
+ * warranty. In no event will the authors be held liable for any damages
+ * arising from the use of this software.
+ *
+ * Permission is granted to anyone to use this software for any purpose,
+ * including commercial applications, and to alter it and redistribute it
+ * freely, subject to the following restrictions:
+ *
+ *    1. The origin of this software must not be misrepresented; you must not
+ *    claim that you wrote the original software. If you use this software
+ *    in a product, an acknowledgment in the product documentation would be
+ *    appreciated but is not required.
+ *
+ *    2. Altered source versions must be plainly marked as such, and must not
+ *    be misrepresented as being the original software.
+ *
+ *    3. This notice may not be removed or altered from any source
+ *    distribution.
+ */
+"use strict";
+
+var Tilt = Tilt || {};
+var EXPORTED_SYMBOLS = ["Tilt.Math"];
+
+/**
+ * Various math functions required by the engine.
+ */
+Tilt.Math = {
+
+  /**
+   * Helper function, converts degrees to radians.
+   *
+   * @param {Number} degrees: the degrees to be converted to radians
+   * @return {Number} the degrees converted to radians
+   */
+  radians: function(degrees) {
+    return degrees * Math.PI / 180;
+  },
+
+  /**
+   * Helper function, converts radians to degrees.
+   *
+   * @param {Number} radians: the radians to be converted to degrees
+   * @return {Number} the radians converted to degrees
+   */
+  degrees: function(radians) {
+    return radians * 180 / Math.PI;
+  },
+
+  /**
+   * Returns if number is power of two.
+   *
+   * @param {Number} x: the number to be verified
+   * @return {Boolean} true if x is power of two
+   */
+  isPowerOfTwo: function(x) {
+    return (x & (x - 1)) === 0;
+  },
+
+  /**
+   * Returns the next closest power of two greater than a number.
+   *
+   * @param {Number} x: the number to be converted
+   * @return {Number} the next closest power of two for x
+   */
+  nextPowerOfTwo: function(x) {
+    var i;
+
+    --x;
+    for (i = 1; i < 32; i <<= 1) {
+      x = x | x >> i;
+    }
+    return x + 1;
+  },
+
+  /**
+   * A convenient way of limiting values to a set boundary.
+   *
+   * @param {Number} value: the number to be limited
+   * @param {Number} min: the minimum allowed value for the number
+   * @param {Number} max: the maximum allowed value for the number
+   */
+  clamp: function(value, min, max) {
+    return Math.max(min, Math.min(max, value));
+  },
+
+  /**
+   * Creates a rotation quaternion from axis-angle.
+   * This function implies that the axis is a normalized vector.
+   *
+   * @param {Array} axis: an array of elements representing the [x, y, z] axis
+   * @param {Number} angle: the angle of rotation
+   * @param {Array} out: optional parameter, the array to write the values to
+   * @return {Array} the quaternion as [x, y, z, w]
+   */
+  quat4fromAxis: function(axis, angle, out) {
+    angle *= 0.5;
+
+    var sin = Math.sin(angle),
+        x = (axis[0] * sin),
+        y = (axis[1] * sin),
+        z = (axis[2] * sin),
+        w = Math.cos(angle);
+
+    if ("undefined" === typeof out) {
+      return [x, y, z, w];
+    }
+    else {
+      out[0] = x;
+      out[1] = y;
+      out[2] = z;
+      out[3] = w;
+      return out;
+    }
+  },
+
+  /**
+   * Creates a rotation quaternion from Euler angles.
+   *
+   * @param {Number} yaw: the yaw angle of rotation
+   * @param {Number} pitch: the pitch angle of rotation
+   * @param {Number} roll: the roll angle of rotation
+   * @param {Array} out: optional parameter, the array to write the values to
+   * @return {Array} the quaternion as [x, y, z, w]
+   */
+  quat4fromEuler: function(yaw, pitch, roll, out) {
+    // basically we create 3 quaternions, for pitch, yaw and roll
+    // and multiply those together
+    var w,
+      x = pitch * 0.5,
+      y = yaw   * 0.5,
+      z = roll  * 0.5,
+      sinr = Math.sin(x),
+      sinp = Math.sin(y),
+      siny = Math.sin(z),
+      cosr = Math.cos(x),
+      cosp = Math.cos(y),
+      cosy = Math.cos(z);
+
+    x = sinr * cosp * cosy - cosr * sinp * siny;
+    y = cosr * sinp * cosy + sinr * cosp * siny;
+    z = cosr * cosp * siny - sinr * sinp * cosy;
+    w = cosr * cosp * cosy + sinr * sinp * siny;
+
+    if ("undefined" === typeof out) {
+      return [x, y, z, w];
+    }
+    else {
+      out[0] = x;
+      out[1] = y;
+      out[2] = z;
+      out[3] = w;
+      return out;
+    }
+  },
+
+  /**
+   * Port of gluUnProject.
+   *
+   * @param {Array} p: the [x, y, z] coordinates of the point to unproject;
+   * the z value should range between 0 and 1, as the near/far clipping planes
+   * @param {Array} viewport: the viewport [x, y, width, height] coordinates
+   * @param {Array} mvMatrix: the model view matrix
+   * @param {Array} projMatrix: the projection matrix
+   * @param {Array} out: optional parameter, the array to write the values to
+   * @return {Array} the unprojected coordinates
+   */
+  unproject: function(p, viewport, mvMatrix, projMatrix, out) {
+    var mvpMatrix = mat4.create(), coordinates = out || quat4.create();
+
+    // compute the inverse of the perspective x model-view matrix
+    mat4.multiply(projMatrix, mvMatrix, mvpMatrix);
+    mat4.inverse(mvpMatrix);
+
+    // transformation of normalized coordinates (-1 to 1)
+    coordinates[0] = +((p[0] - viewport[0]) / viewport[2] * 2 - 1);
+    coordinates[1] = -((p[1] - viewport[1]) / viewport[3] * 2 - 1);
+    coordinates[2] = 2 * p[2] - 1;
+    coordinates[3] = 1;
+
+    // now transform that vector into object coordinates
+    mat4.multiplyVec4(mvpMatrix, coordinates);
+
+    // invert to normalize x, y, and z values.
+    coordinates[3] = 1 / coordinates[3];
+    coordinates[0] *= coordinates[3];
+    coordinates[1] *= coordinates[3];
+    coordinates[2] *= coordinates[3];
+
+    return coordinates;
+  },
+
+  /**
+   * Create a ray between two points using the current modelview & projection
+   * matrices. This is useful when creating a ray destined for 3d picking.
+   *
+   * @param {Array} p0: the [x, y, z] coordinates of the first point
+   * @param {Array} p1: the [x, y, z] coordinates of the second point
+   * @param {Array} viewport: the viewport [x, y, width, height] coordinates
+   * @param {Array} mvMatrix: the model view matrix
+   * @param {Array} projMatrix: the projection matrix
+   * @return {Object} a ray object containing the direction vector between
+   * the two unprojected points, the position and the lookAt
+   */
+  createRay: function(p0, p1, viewport, mvMatrix, projMatrix) {
+    // unproject the two points
+    this.unproject(p0, viewport, mvMatrix, projMatrix, p0);
+    this.unproject(p1, viewport, mvMatrix, projMatrix, p1);
+
+    return {
+      position: p0,
+      lookAt: p1,
+      direction: vec3.normalize(vec3.subtract(p1, p0))
+    };
+  },
+
+  /**
+   * Intersect a ray with a 3D triangle.
+   *
+   * @param {Array} v0: the [x, y, z] position of the first triangle point
+   * @param {Array} v1: the [x, y, z] position of the second triangle point
+   * @param {Array} v2: the [x, y, z] position of the third triangle point
+   * @param {Object} ray: a ray, containing position and direction vectors
+   * @param {Array} intersection: point to store the intersection to
+   * @return {Number} -1 if the triangle is degenerate,
+   *                   0 disjoint (no intersection)
+   *                   1 intersects in unique point
+   *                   2 the ray and the triangle are in the same plane
+   */
+  intersectRayTriangle: function(v0, v1, v2, ray, intersection) {
+    var u = vec3.create(), v = vec3.create(), n = vec3.create(),
+        w = vec3.create(), w0 = vec3.create(),
+        pos = ray.position, dir = ray.direction,
+        a, b, r, uu, uv, vv, wu, wv, D, s, t;
+
+    if ("undefined" === typeof intersection) {
+      intersection = vec3.create();
+    }
+
+    // get triangle edge vectors and plane normal
+    vec3.subtract(v1, v0, u);
+    vec3.subtract(v2, v0, v);
+
+    // get the cross product
+    vec3.cross(u, v, n);
+
+    // check if triangle is degenerate
+    if (n[0] === 0 && n[1] === 0 && n[2] === 0) {
+      return -1;
+    }
+
+    vec3.subtract(pos, v0, w0);
+    a = -vec3.dot(n, w0);
+    b = +vec3.dot(n, dir);
+
+    if (Math.abs(b) < 0.0001) { // ray is parallel to triangle plane
+      if (a == 0) {             // ray lies in triangle plane
+        return 2;
+      }
+      else {
+        return 0;               // ray disjoint from plane
+      }
+    }
+
+    // get intersect point of ray with triangle plane
+    r = a / b;
+    if (r < 0) {                // ray goes away from triangle
+      return 0;                 // => no intersect
+    }
+
+    // intersect point of ray and plane
+    vec3.add(pos, vec3.scale(dir, r), intersection);
+
+    // check if the intersection is inside the triangle
+    uu = vec3.dot(u, u);
+    uv = vec3.dot(u, v);
+    vv = vec3.dot(v, v);
+
+    vec3.subtract(intersection, v0, w);
+    wu = vec3.dot(w, u);
+    wv = vec3.dot(w, v);
+
+    D = uv * uv - uu * vv;
+
+    // get and test parametric coords
+    s = (uv * wv - vv * wu) / D;
+    if (s < 0 || s > 1) {       // intersection is outside the triangle
+      return 0;
+    }
+
+    t = (uv * wu - uu * wv) / D;
+    if (t < 0 || (s + t) > 1) { // intersection is outside the triangle
+      return 0;
+    }
+
+    return 1;                   // intersection is inside the triangle
+  },
+
+  /**
+   * Converts a hex color to rgba.
+   *
+   * @param {String} a color expressed in hex, or using rgb() or rgba()
+   * @return {Array} an array with 4 color components: red, green, blue, alpha
+   * with ranges from 0..1
+   */
+  hex2rgba: function(color) {
+    if ("undefined" !== typeof this[color]) {
+      return this[color];
+    }
+
+    var rgba, r, g, b, a, cr, cg, cb, ca,
+      hex = color.charAt(0) === "#" ? color.substring(1) : color;
+
+    // e.g. "f00"
+    if (hex.length === 3) {
+      cr = hex.charAt(0);
+      cg = hex.charAt(1);
+      cb = hex.charAt(2);
+      hex = [cr, cr, cg, cg, cb, cb, "ff"].join('');
+    }
+    // e.g. "f008"
+    else if (hex.length === 4) {
+      cr = hex.charAt(0);
+      cg = hex.charAt(1);
+      cb = hex.charAt(2);
+      ca = hex.charAt(3);
+      hex = [cr, cr, cg, cg, cb, cb, ca, ca].join('');
+    }
+    // e.g. "rgba(255, 0, 0, 128)"
+    else if (hex.match("^rgba") == "rgba") {
+      rgba = hex.substring(5, hex.length - 1).split(',');
+      rgba[0] /= 255;
+      rgba[1] /= 255;
+      rgba[2] /= 255;
+      rgba[3] /= 255;
+
+      this[color] = rgba;
+      return rgba;
+    }
+    // e.g. "rgb(255, 0, 0)"
+    else if (hex.match("^rgb") == "rgb") {
+      rgba = hex.substring(4, hex.length - 1).split(',');
+      rgba[0] /= 255;
+      rgba[1] /= 255;
+      rgba[2] /= 255;
+      rgba[3] = 1;
+
+      this[color] = rgba;
+      return rgba;
+    }
+
+    r = parseInt(hex.substring(0, 2), 16) / 255;
+    g = parseInt(hex.substring(2, 4), 16) / 255;
+    b = parseInt(hex.substring(4, 6), 16) / 255;
+    a = hex.length === 6 ? 1 : parseInt(hex.substring(6, 8), 16) / 255;
+
+    this[color] = [r, g, b, a];
+    return [r, g, b, a];
+  }
+};
+/*
+ * String.js - Various string helper functions
+ * version 0.1
+ *
+ * Copyright (c) 2011 Victor Porof
+ *
+ * This software is provided 'as-is', without any express or implied
+ * warranty. In no event will the authors be held liable for any damages
+ * arising from the use of this software.
+ *
+ * Permission is granted to anyone to use this software for any purpose,
+ * including commercial applications, and to alter it and redistribute it
+ * freely, subject to the following restrictions:
+ *
+ *    1. The origin of this software must not be misrepresented; you must not
+ *    claim that you wrote the original software. If you use this software
+ *    in a product, an acknowledgment in the product documentation would be
+ *    appreciated but is not required.
+ *
+ *    2. Altered source versions must be plainly marked as such, and must not
+ *    be misrepresented as being the original software.
+ *
+ *    3. This notice may not be removed or altered from any source
+ *    distribution.
+ */
+"use strict";
+
+var Tilt = Tilt || {};
+var EXPORTED_SYMBOLS = ["Tilt.String"];
+
+/**
+ * Helper functions for manipulating strings.
+ */
+Tilt.String = {
+
+  /**
+   * Trims whitespace characters from the left and right side of a string.
+   *
+   * @param {String} str: the string to trim
+   * @return {String} the trimmed string
+   */
+  trim: function(str) {
+    return str.replace(/^\s+|\s+$/g, "");
+  },
+
+  /**
+   * Trims whitespace characters from the left side a string.
+   *
+   * @param {String} str: the string to trim
+   * @return {String} the trimmed string
+   */
+  ltrim: function(str) {
+    return str.replace(/^\s+/, "");
+  },
+
+  /**
+   * Trims whitespace characters from the right side a string.
+   *
+   * @param {String} str: the string to trim
+   * @return {String} the trimmed string
+   */
+  rtrim: function(str) {
+    return str.replace(/\s+$/, "");
+  }
+};
+/*
+ * WebGL.js - Various WebGL shims and extensions
  * version 0.1
  *
  * Copyright (c) 2011 Victor Porof
@@ -5188,7 +6077,7 @@ Tilt.Extensions.WebGL = {
   }
 };
 /*
- * jTiltUtils.js - Various helper functions
+ * Xhr.js - Various helper functions for XMLHttpRequest
  * version 0.1
  *
  * Copyright (c) 2011 Victor Porof
@@ -5215,870 +6104,66 @@ Tilt.Extensions.WebGL = {
 "use strict";
 
 var Tilt = Tilt || {};
-var EXPORTED_SYMBOLS = [
-  "Tilt.Iframe",
-  "Tilt.Document",
-  "Tilt.Image",
-  "Tilt.Math",
-  "Tilt.String"];
-  
+var EXPORTED_SYMBOLS = ["Tilt.Xhr"];
+
 /** 
- * Utilities for accessing and manipulating a document.
- */
-Tilt.Document = {
-  
-  /**
-   *
-   */
-  currentContentDocument: undefined,
-  
-  /**
-   *
-   */
-  currentParentNode: undefined,
-  
-  /**
-   * Helper method, allowing to easily create and manage a canvas element.
-   *
-   * @param {number} width: specifies the width of the canvas
-   * @param {number} height: specifies the height of the canvas
-   * @param {boolean} append: true to append the canvas to the parent node
-   * @param {string} id: optional, id for the created canvas element
-   * @return {object} the newly created canvas
-   */
-  initCanvas: function(width, height, append, id) {
-    if ("undefined" === typeof this.currentContentDocument) {
-      this.currentContentDocument = document;
-    }
-    if ("undefined" === typeof this.currentParentNode) {
-      this.currentParentNode = document.body;
-    }
-
-    var doc = this.currentContentDocument, node = this.currentParentNode;
-    var canvas = doc.createElement("canvas");
-    canvas.width = width;
-    canvas.height = height;
-    canvas.id = id;
-    
-    if (append) {
-      this.append(canvas, node);
-    }
-    
-    try {
-      return canvas;
-    }
-    finally {
-      doc = null;
-      node = null;
-      canvas = null;
-    }
-  },
-  
-  /**
-   * Helper method, initializing a full screen canvas.
-   * This is mostly likely useful in a plain html page with an empty body.
-   *
-   * @return {object} the newly created canvas
-   */
-  initFullScreenCanvas: function() {
-    var width = window.innerWidth,
-      height = window.innerHeight,
-      canvas = this.initCanvas(width, height, true);
-      
-    canvas.setAttribute("style", "width: 100%; height: 100%;");
-    this.currentParentNode.setAttribute("style", "margin: 0px 0px 0px 0px;");
-    
-    try {
-      return canvas;
-    }
-    finally {
-      canvas = null;
-    }
-  },
-  
-  /**
-   * Appends an element to a specific node.
-   *
-   * @param {object} element: the element to be appended
-   * @param {object} node: the node to append the element to
-   */
-  append: function(element, node) {
-    try {
-      node.appendChild(element);
-    }
-    finally {
-      element = null;
-      node = null;
-    }
-  },
-  
-  /**
-   * Removes an element from the parent node.
-   *
-   * @param {object} element: the element to be removed
-   */
-  remove: function(element) {
-    try {
-      element.parentNode.removeChild(element);
-    }
-    finally {
-      element = null;
-    }
-  },
-  
-  /**
-   * Traverses a document object model and calls function for each node.
-   * If the dom parameter is omitted, then the current content.document will
-   * be used. The nodeCallback function will have the current node and depth
-   * passed as parameters, and the readyCallback function will have the 
-   * maximum depth passed as parameter.
-   *
-   * @param {Function} nodeCallback: the function to call for each node
-   * @param {Function} readyCallback: called when no more nodes are found
-   * @param {object} dom: the document object model to traverse
-   */
-  traverse: function(nodeCallback, readyCallback, dom) {    
-    // used to calculate the maximum depth of a dom node
-    var maxDepth = 0;
-    
-    // used internally for recursively traversing a document object model
-    function recursive(nodeCallback, dom, depth) {
-      var i, length, child;
-      
-      for (i = 0, length = dom.childNodes.length; i < length; i++) {
-        child = dom.childNodes[i];
-        
-        if (depth > maxDepth) {
-          maxDepth = depth;
-        }
-        
-        // run the node callback function for each node, pass the depth, and 
-        // also continue the recursion with all the children
-        nodeCallback(child, depth);
-        recursive(nodeCallback, child, depth + 1);
-      }
-    }
-    
-    try {
-      if ("function" === typeof nodeCallback) {
-        recursive(nodeCallback, dom || window.content.document, 0);
-        nodeCallback = null;
-      }
-    
-      // once we recursively traversed all the dom nodes, run a callback
-      if ("function" === typeof readyCallback) {
-        readyCallback(maxDepth);
-        readyCallback = null;
-      }
-    }
-    finally {
-      dom = null;
-    }
-  },
-  
-  /**
-   * Returns a node's absolute x, y, width and height coordinates.
-   *
-   * @param {object} node: the node which type needs to be analyzed
-   * @return {object} an object containing the x, y, width and height coords
-   */
-  getNodeCoordinates: function(node) {
-    var x = 0, y = 0, w = node.clientWidth, h = node.clientHeight;
-    
-    // if the node isn't the parent of everything
-    if (node.offsetParent) {
-      // calculate the offset recursively
-      do {
-        x += node.offsetLeft;
-        y += node.offsetTop;
-      } while ((node = node.offsetParent));
-    }
-    else {
-      // just get the x and y coordinates of this node if available
-      if (node.x) {
-        x = node.x;
-      }
-      if (node.y) {
-        y = node.y;
-      }
-    }
-    
-    try {
-      // a bit more verbose than a simple array
-      return {
-        x: x,
-        y: y,
-        width: w,
-        height: h
-      };
-    }
-    finally {
-      node = null;
-    }
-  },
-  
-  /**
-   * Returns the string equivalent of a node type.
-   * If the node type is invalid, undefined is returned.
-   *
-   * @param {object} node: the node which type needs to be analyzed
-   * @return {string} the string equivalent of the node type
-   */
-  getNodeType: function(node) {
-    var type;
-    
-    if (node.nodeType === 1) {
-      type = "ELEMENT_NODE";
-    }
-    else if (node.nodeType === 2) {
-      type = "ATTRIBUTE_NODE";
-    }
-    else if (node.nodeType === 3) {
-      type = "TEXT_NODE";
-    }
-    else if (node.nodeType === 4) {
-      type = "CDATA_SECTION_NODE";
-    }
-    else if (node.nodeType === 5) {
-      type = "ENTITY_REFERENCE_NODE";
-    }
-    else if (node.nodeType === 6) {
-      type = "ENTITY_NODE";
-    }
-    else if (node.nodeType === 7) {
-      type = "PROCESSING_INSTRUCTION_NODE";
-    }
-    else if (node.nodeType === 8) {
-      type = "COMMENT_NODE";
-    }
-    else if (node.nodeType === 9) {
-      type = "DOCUMENT_NODE";
-    }
-    else if (node.nodeType === 10) {
-      type = "DOCUMENT_TYPE_NODE";
-    }
-    else if (node.nodeType === 11) {
-      type = "DOCUMENT_FRAGMENT_NODE";
-    }
-    else if (node.nodeType === 12) {
-      type = "NOTATION_NODE";
-    }
-    
-    try {
-      return type;
-    }
-    finally {
-      node = null;
-    }
-  }
-};
-
-/**
- *
+ * XMLHttpRequest utilities.
  */
 Tilt.Xhr = {
-  
+
   /**
    * Handles a generic get request, performed on a specified url. When done,
    * it fires the ready callback function if it exists, & passes the http
    * request object and also an optional auxiliary parameter if available.
    * Used internally for getting shader sources from a specific resource.
    *
-   * @param {string} url: the url to perform the GET to
+   * @param {String} url: the url to perform the GET to
    * @param {Function} readyCallback: function to be called when request ready
-   * @param {object} aParam: optional parameter passed to readyCallback
+   * @param {Object} aParam: optional parameter passed to readyCallback
    */
   request: function(url, readyCallback, aParam) {
     var xhr = new XMLHttpRequest();
-    
+
     xhr.open("GET", url, true);
     xhr.send(null);
     xhr.onreadystatechange = function() {
       if (xhr.readyState === 4) {
         if ("function" === typeof readyCallback) {
           readyCallback(xhr, aParam);
-          readyCallback = null;
         }
       }
     };
   },
-  
+
   /**
    * Handles multiple get requests from specified urls. When all requests are
    * completed, it fires the ready callback function if it exists, & passes
    * the http request object and an optional auxiliary parameter if available.
    * Used internally for getting shader sources from a specific resource.
    *
-   * @param {array} urls: an array of urls to perform the GET to
+   * @param {Array} urls: an array of urls to perform the GET to
    * @param {Function} readyCallback: function called when all requests ready
-   * @param {object} aParam: optional parameter passed to readyCallback
+   * @param {Object} aParam: optional parameter passed to readyCallback
    */
   requests: function(urls, readyCallback, aParam) {
     var xhrs = [], finished = 0, i, length;
-    
+
     function requestReady() {
       finished++;
       if (finished === urls.length) {
         if ("function" === typeof readyCallback) {
           readyCallback(xhrs, aParam);
-          readyCallback = null;
         }
       }
     }
-    
+
     function requestCallback(xhr, index) {
       xhrs[index] = xhr;
       requestReady();
     }
-    
+
     for (i = 0, length = urls.length; i < length; i++) {
       this.request(urls[i], requestCallback, i);
-    }
-  }
-};
-
-/**
- * Various math functions required by the engine.
- */
-Tilt.Math = {
-  
-  /**
-   * Helper function, converts degrees to radians.
-   *
-   * @param {number} degrees: the degrees to be converted to radians
-   * @return {number} the degrees converted to radians
-   */
-  radians: function(degrees) {
-    return degrees * Math.PI / 180;
-  },
-  
-  /**
-   * Creates a rotation quaternion from axis-angle.
-   * This function implies that the axis is a normalized vector.
-   *
-   * @param {array} axis: an array of elements representing the [x, y, z] axis
-   * @param {number} angle: the angle of rotation
-   * @param {array} out: optional parameter, the array to write the values to
-   * @return {array} the quaternion as [x, y, z, w]
-   */
-  quat4fromAxis: function(axis, angle, out) {
-    angle *= 0.5;
-    
-    var sin = Math.sin(angle),
-        x = (axis[0] * sin), 
-        y = (axis[1] * sin),
-        z = (axis[2] * sin),
-        w = Math.cos(angle);
-        
-    if ("undefined" === typeof out) {
-      return [x, y, z, w];
-    }
-    else {
-      out[0] = x;
-      out[1] = y;
-      out[2] = z;
-      out[3] = w;
-      return out;
-    }
-  },
-  
-  /**
-   * Creates a rotation quaternion from Euler angles.
-   *
-   * @param {number} yaw: the yaw angle of rotation
-   * @param {number} pitch: the pitch angle of rotation
-   * @param {number} roll: the roll angle of rotation
-   * @param {array} out: optional parameter, the array to write the values to   
-   * @return {array} the quaternion as [x, y, z, w]
-   */
-  quat4fromEuler: function(yaw, pitch, roll, out) {
-    // basically we create 3 quaternions, for pitch, yaw and roll
-    // and multiply those together
-    var y = yaw   * 0.5,
-        x = pitch * 0.5,
-        z = roll  * 0.5,
-        w,
-        
-        siny = Math.sin(z),
-        sinp = Math.sin(y),
-        sinr = Math.sin(x),
-        cosy = Math.cos(z),
-        cosp = Math.cos(y),
-        cosr = Math.cos(x);
-        
-    x = sinr * cosp * cosy - cosr * sinp * siny;
-    y = cosr * sinp * cosy + sinr * cosp * siny;
-    z = cosr * cosp * siny - sinr * sinp * cosy;
-    w = cosr * cosp * cosy + sinr * sinp * siny;
-    
-    if ("undefined" === typeof out) {
-      return [x, y, z, w];
-    }
-    else {
-      out[0] = x;
-      out[1] = y;
-      out[2] = z;
-      out[3] = w;
-      return out;
-    }
-  },
-  
-  /**
-   * Port of gluUnProject.
-   *
-   * @param {number} winX: the window point for the x value
-   * @param {number} winY: the window point for the y value
-   * @param {number} winZ: the window point for the z value; this should range
-   * between 0 and 1, 0 meaning the near clipping plane and 1 for the far
-   * @param {array} mvMatrix: the model view matrix
-   * @param {array} projMatrix: the projection matrix
-   * @param {number} viewportX: the viewport top coordinate
-   * @param {number} viewportY: the viewport bottom coordinate
-   * @param {number} viewportWidth: the viewport width coordinate
-   * @param {number} viewportHeight: the viewport height coordinate
-   * @return {array} the unprojected array
-   */
-  unproject: function(winX, winY, winZ, mvMatrix, projMatrix,
-                      viewportX, viewportY, viewportWidth, viewportHeight) {
-                                                
-    var mvpMatrix = mat4.create();
-    var coordinates = quat4.create();
-    
-    // compute the inverse of the perspective x model-view matrix
-    mat4.multiply(projMatrix, mvMatrix, mvpMatrix);
-    mat4.inverse(mvpMatrix);
-    
-    // transformation of normalized coordinates (-1 to 1)
-    coordinates[0] = +((winX - viewportX) / viewportWidth * 2 - 1);
-    coordinates[1] = -((winY - viewportY) / viewportHeight * 2 - 1);
-    coordinates[2] = 2 * winZ - 1;
-    coordinates[3] = 1;
-    
-    // now transform that vector into object coordinates
-    mat4.multiplyVec4(mvpMatrix, coordinates);
-    
-    // invert to normalize x, y, and z values.
-    coordinates[3] = 1 / coordinates[3];
-    coordinates[0] *= coordinates[3];
-    coordinates[1] *= coordinates[3];
-    coordinates[2] *= coordinates[3];
-    
-    return coordinates;
-  },
-  
-  /**
-   * Create a ray between two points using the current modelview & projection
-   * matrices. This is useful when creating a ray destined for 3d picking.
-   *
-   * @param {number} x0 the x coordinate of the first point
-   * @param {number} y0 the y coordinate of the first point
-   * @param {number} z0 the z coordinate of the first point
-   * @param {number} x1 the x coordinate of the second point
-   * @param {number} y1 the y coordinate of the second point
-   * @param {number} z1 the z coordinate of the second point
-   * @param {array} mvMatrix: the model view matrix
-   * @param {array} projMatrix: the projection matrix
-   * @param {number} viewportX: the viewport top coordinate
-   * @param {number} viewportY: the viewport bottom coordinate
-   * @param {number} viewportWidth: the viewport width coordinate
-   * @param {number} viewportHeight: the viewport height coordinate
-   * @return {array} a directional vector between the two unprojected points
-   */
-  createRay: function(x0, y0, z0, x1, y1, z1, mvMatrix, projMatrix,
-                      viewportX, viewportY, viewportWidth, viewportHeight) {
-    
-    var p0, p1;
-    
-    // unproject the first point
-    p0 = this.unproject(x0, y0, z0,
-                        mvMatrix, projMatrix,
-                        viewportX, viewportY, viewportWidth, viewportHeight);
-
-    // unproject the second point
-    p1 = this.unproject(x1, y1, z1,
-                        mvMatrix, projMatrix,
-                        viewportX, viewportY, viewportWidth, viewportHeight);
-                        
-    // subtract to obtain a directional vector
-    return {
-      position: p0,
-      lookAt: p1,
-      direction: vec3.normalize(vec3.subtract(p1, p0))
-    };
-  },
-  
-  /**
-   * Intersect a ray with a 3D triangle.
-   *
-   * @param {array} v0: the [x, y, z] position of the first triangle point
-   * @param {array} v1: the [x, y, z] position of the second triangle point
-   * @param {array} v2: the [x, y, z] position of the third triangle point
-   * @param {object} ray: a ray, containing position and direction vectors
-   * @param {array} intersection: point to store the intersection to
-   * @return {number} -1 if the triangle is degenerate, 
-   *                   0 disjoint (no intersection)
-   *                   1 intersects in unique point
-   *                   2 the ray and the triangle are in the same plane
-   */
-  intersectRayTriangle: function(v0, v1, v2, ray, intersection) {
-    var u = vec3.create(), v = vec3.create(), n = vec3.create(),
-        w = vec3.create(), w0 = vec3.create(),
-        pos = ray.position, dir = ray.direction,
-        a, b, r, uu, uv, vv, wu, wv, D, s, t;
-    
-    if ("undefined" === typeof intersection) {
-      intersection = vec3.create();
-    }
-    
-    // get triangle edge vectors and plane normal
-    vec3.subtract(v1, v0, u);
-    vec3.subtract(v2, v0, v);
-    
-    // get the cross product
-    vec3.cross(u, v, n);
-    
-    // check if triangle is degenerate
-    if (n[0] === 0 && n[1] === 0 && n[2] === 0) {
-      return -1;
-    }
-    
-    vec3.subtract(pos, v0, w0);
-    a = -vec3.dot(n, w0);
-    b = +vec3.dot(n, dir);
-    
-    if (Math.abs(b) < 0.0001) { // ray is parallel to triangle plane
-      if (a == 0) {             // ray lies in triangle plane
-        return 2;
-      }
-      else {
-        return 0;               // ray disjoint from plane
-      }            
-    }
-    
-    // get intersect point of ray with triangle plane
-    r = a / b;
-    if (r < 0) {                // ray goes away from triangle
-      return 0;                 // => no intersect
-    }
-    
-    // intersect point of ray and plane
-    vec3.add(pos, vec3.scale(dir, r), intersection);
-
-    // check if the intersection is inside the triangle
-    uu = vec3.dot(u, u);
-    uv = vec3.dot(u, v);
-    vv = vec3.dot(v, v);
-    
-    vec3.subtract(intersection, v0, w);
-    wu = vec3.dot(w, u);
-    wv = vec3.dot(w, v);
-
-    D = uv * uv - uu * vv;
-
-    // get and test parametric coords
-    s = (uv * wv - vv * wu) / D;
-    if (s < 0 || s > 1) {       // intersection is outside the triangle
-      return 0;
-    }
-    t = (uv * wu - uu * wv) / D;
-    if (t < 0 || (s + t) > 1) { // intersection is outside the triangle
-      return 0;
-    }
-
-    return 1;                   // intersection is inside the triangle
-  },
-  
-  /**
-   * Returns if parameter is a power of two.
-   *
-   * @param {number} x: the number to be verified
-   * @return {boolean} true if x is power of two
-   */
-  isPowerOfTwo: function (x) {
-    return (x & (x - 1)) === 0;
-  },
-  
-  /**
-   * Returns the next closest power of two greater than a number.
-   *
-   * @param {number} x: the number to be converted
-   * @return {number} the next closest power of two for x
-   */
-  nextPowerOfTwo: function(x) {
-    var i;
-    
-    --x;
-    for (i = 1; i < 32; i <<= 1) {
-      x = x | x >> i;
-    }
-    return x + 1;
-  },
-  
-  /**
-   * A convenient way of limiting values to a set boundary.
-   *
-   * @param {number} value: the number to be limited
-   * @param {number} min: the minimum allowed value for the number
-   * @param {number} max: the maximum allowed value for the number
-   */
-  clamp: function(value, min, max) {
-    return Math.max(min, Math.min(max, value));
-  },
-  
-  /**
-   * Converts a hex color to rgba.
-   *
-   * @param {string} a color expressed in hex, or using rgb() or rgba()
-   * @return {array} an array with 4 color components: red, green, blue, alpha
-   * with ranges from 0..1
-   */
-  hex2rgba: function(color) {
-    if ("undefined" !== typeof this[color]) {
-      return this[color];
-    }
-    
-    var rgba, r, g, b, a, cr, cg, cb, ca,
-      hex = color.charAt(0) === "#" ? color.substring(1) : color;
-    
-    // e.g. "f00"
-    if (hex.length === 3) {
-      cr = hex.charAt(0);
-      cg = hex.charAt(1);
-      cb = hex.charAt(2);
-      hex = [cr, cr, cg, cg, cb, cb, "ff"].join('');
-    }
-    // e.g. "f008" 
-    else if (hex.length === 4) {
-      cr = hex.charAt(0);
-      cg = hex.charAt(1);
-      cb = hex.charAt(2);
-      ca = hex.charAt(3);
-      hex = [cr, cr, cg, cg, cb, cb, ca, ca].join('');
-    }
-    // e.g. "rgba(255, 0, 0, 128)"
-    else if (hex.match("^rgba") == "rgba") {
-      rgba = hex.substring(5, hex.length - 1).split(',');
-      rgba[0] /= 255;
-      rgba[1] /= 255;
-      rgba[2] /= 255;
-      rgba[3] /= 255;
-      
-      this[color] = rgba;
-      return rgba;
-    }
-    // e.g. "rgb(255, 0, 0)"
-    else if (hex.match("^rgb") == "rgb") {
-      rgba = hex.substring(4, hex.length - 1).split(',');
-      rgba[0] /= 255;
-      rgba[1] /= 255;
-      rgba[2] /= 255;
-      rgba[3] = 1;
-
-      this[color] = rgba;
-      return rgba;
-    }
-    
-    r = parseInt(hex.substring(0, 2), 16) / 255;
-    g = parseInt(hex.substring(2, 4), 16) / 255;
-    b = parseInt(hex.substring(4, 6), 16) / 255;
-    a = hex.length === 6 ? 1 : parseInt(hex.substring(6, 8), 16) / 255;
-    
-    this[color] = [r, g, b, a];
-    return [r, g, b, a];
-  }
-};
-
-/**
- * Helper functions for manipulating strings.
- */
-Tilt.String = {
-  
-  /**
-   * Trims whitespace characters from the left and right side of a string.
-   *
-   * @param {string} str: the string to trim
-   * @return {string} the trimmed string
-   */
-  trim: function(str) {
-    return str.replace(/^\s+|\s+$/g, "");
-  },
-  
-  /**
-   * Trims whitespace characters from the left side a string.
-   *
-   * @param {string} str: the string to trim
-   * @return {string} the trimmed string
-   */
-  ltrim: function(str) {
-    return str.replace(/^\s+/, "");
-  },
-  
-  /**
-   * Trims whitespace characters from the right side a string.
-   *
-   * @param {string} str: the string to trim
-   * @return {string} the trimmed string
-   */
-  rtrim: function(str) {
-    return str.replace(/\s+$/, "");
-  }
-};
-
-/**
- * Easy way to access the string bundle.
- * Usually useful only when this is used inside an extension environment.
- */
-Tilt.StringBundle = {
-  
-  /** 
-   * The bundle name used.
-   */
-  bundle: "tilt-string-bundle",
-  
-  /**
-   * Returns a string in the string bundle.
-   * If the string bundle is not found, the parameter string is returned.
-   *
-   * @param {string} string: the string name in the bundle
-   * @return {string} the equivalent string from the bundle
-   */
-  get: function(string) {
-    // undesired, you should always pass a defined string for the bundle
-    if ("undefined" === typeof string) {
-      return "undefined";
-    }
-    
-    var elem = document.getElementById(this.bundle);
-    try {
-      if (elem) {
-        // return the equivalent string from the bundle
-        return elem.getString(string);
-      }
-      else {
-        // this should never happen when inside a chrome environment
-        return string;
-      }
-    }
-    finally {
-      elem = null;
-    }
-  },
-  
-  /**
-   * Returns a formatted string using the string bundle.
-   * If the string bundle is not found, the parameter arguments are returned.
-   *
-   * @param {string} string: the string name in the bundle
-   * @param {array} args: an array of args for the formatted string
-   * @return {string} the equivalent formatted string from the bundle
-   */
-  format: function(string, args) {
-    // undesired, you should always pass a defined string for the bundle
-    if ("undefined" === typeof string) {
-      return "undefined";
-    }
-    // undesired, you should always pass arguments when formatting strings
-    if ("undefined" === typeof args) {
-      return string;
-    }
-    
-    var elem = document.getElementById(this.bundle);
-    try {
-      if (elem) {
-        // return the equivalent formatted string from the bundle
-        return elem.getFormattedString(string, args);
-      }
-      else {
-        // this should never happen when inside a chrome environment
-        return [string, args].join(" ");
-      }
-    }
-    finally {
-      elem = null;
-    }
-  }
-};
-
-/**
- * Various console functions required by the engine.
- */
-Tilt.Console = {
-  
-  /**
-   * Logs a message to the console.
-   * If this is not inside an extension environment, an alert() is used.
-   *
-   * @param {string} aMessage: the message to be logged
-   */
-  log: function(aMessage) {
-    try {
-      if ("undefined" === typeof aMessage) {
-        aMessage = "undefined";
-      }
-      
-      // get the console service
-      var consoleService = Components.classes["@mozilla.org/consoleservice;1"]
-        .getService(Components.interfaces.nsIConsoleService);
-        
-      // log the message
-      consoleService.logStringMessage(aMessage);
-    }
-    catch(e) {
-      // running from an unprivileged environment
-      alert(aMessage);      
-    }
-  },
-  
-  /**
-   * Logs an error to the console.
-   * If this is not inside an extension environment, an alert() is used.
-   *
-   * @param {string} aMessage: the message to be logged
-   * @param {string} aSourceName: the URL of file with error. This will be a 
-   * hyperlink in the JavaScript Console, so you'd better use real URL. You 
-   * may pass null if it's not applicable.
-   * @param {string} aSourceLine: the line #aLineNumber from aSourceName file. 
-   * You are responsible for providing that line. You may pass null if you are 
-   * lazy; that will prevent showing the source line in JavaScript Console.
-   * @param {string} aLineNumber: specify the exact location of error
-   * @param {string} aColumnNumber: is used to draw the arrow pointing to the 
-   * problem character.
-   * @param {number} aFlags: one of flags declared in nsIScriptError. At the 
-   * time of writing, possible values are: 
-   *  nsIScriptError.errorFlag = 0
-   *  nsIScriptError.warningFlag = 1
-   *  nsIScriptError.exceptionFlag = 2
-   *  nsIScriptError.strictFlag = 4
-   * @param {string} aCategory: a string indicating what kind of code caused 
-   * the message. There are quite a few category strings and they do not seem 
-   * to be listed in a single place. Hopefully, they will all be listed in 
-   * nsIScriptError.idl eventually.
-   */
-  error: function(aMessage, aSourceName, aSourceLine, 
-                  aLineNumber, aColumnNumber, aFlags, aCategory) {
-    try {
-      if ("undefined" === typeof aMessage) {
-        aMessage = "undefined";
-      }
-      
-      // get the console service
-      var consoleService = Components.classes["@mozilla.org/consoleservice;1"]
-        .getService(Components.interfaces.nsIConsoleService);
-        
-      // also the script error service
-      var scriptError = Components.classes["@mozilla.org/scripterror;1"]
-        .createInstance(Components.interfaces.nsIScriptError);
-        
-      // initialize a script error
-      scriptError.init(aMessage, aSourceName, aSourceLine,
-                       aLineNumber, aColumnNumber, aFlags, aCategory);
-                       
-      // log the error
-      consoleService.logMessage(scriptError);
-    }
-    catch(e) {
-      // running from an unprivileged environment
-      alert(aMessage);
     }
   }
 };
