@@ -56,9 +56,17 @@
     src="chrome://tilt/content/engine/renderer/Shaders.js"/>
 
   <script type="application/x-javascript"
-    src="chrome://tilt/content/engine/utils/Extensions.js"/>
+    src="chrome://tilt/content/engine/utils/Console.js"/>
   <script type="application/x-javascript"
-    src="chrome://tilt/content/engine/utils/Utils.js"/>
+    src="chrome://tilt/content/engine/utils/Document.js"/>
+  <script type="application/x-javascript"
+    src="chrome://tilt/content/engine/utils/Math.js"/>
+  <script type="application/x-javascript"
+    src="chrome://tilt/content/engine/utils/String.js"/>
+  <script type="application/x-javascript"
+    src="chrome://tilt/content/engine/utils/WebGL.js"/>
+  <script type="application/x-javascript"
+    src="chrome://tilt/content/engine/utils/Xhr.js"/>
 
   <script type="application/x-javascript"
     src="chrome://tilt/content/TiltChromeController.js"/>
