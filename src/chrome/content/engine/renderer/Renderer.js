@@ -147,7 +147,7 @@ Tilt.Renderer = function(canvas, failCallback, successCallback) {
   this.cube = new Tilt.Cube();
   this.cubeWireframe = new Tilt.CubeWireframe();
 
-  /** 
+  /**
    * Helpers for managing variables like frameCount, frameRate, frameDelta,
    * used internally, in the requestAnimFrame function.
    */
@@ -196,10 +196,10 @@ Tilt.Renderer.prototype = {
    * Clears the color and depth buffers to a specific color.
    * The color components are represented in the 0..1 range.
    *
-   * @param {number} r: the red component of the clear color
-   * @param {number} g: the green component of the clear color
-   * @param {number} b: the blue component of the clear color
-   * @param {number} a: the alpha component of the clear color
+   * @param {Number} r: the red component of the clear color
+   * @param {Number} g: the green component of the clear color
+   * @param {Number} b: the blue component of the clear color
+   * @param {Number} a: the alpha component of the clear color
    */
   clear: function(r, g, b, a) {
     // cache some variables for easy access
@@ -225,7 +225,7 @@ Tilt.Renderer.prototype = {
    * in which case the color will be [n, n, n, 255], or directly an array of
    * [r, g, b, a] values, all in the 0..255 interval.
    *
-   * @param {string} color: the color, defined in hex or as rgb() or rgba()
+   * @param {String} color: the color, defined in hex or as rgb() or rgba()
    */
   background: function(color) {
     var rgba;
@@ -272,7 +272,7 @@ Tilt.Renderer.prototype = {
 
   /**
    * Sets a custom projection matrix.
-   * @param {object} matrix: the custom projection matrix to be used
+   * @param {Array} matrix: the custom projection matrix to be used
    */
   projection: function(matrix) {
     mat4.set(matrix, this.projMatrix);
@@ -309,7 +309,7 @@ Tilt.Renderer.prototype = {
    * Transforms the model view matrix with a new matrix.
    * Useful for creating custom transformations.
    *
-   * @param {object} matrix: the matrix to be multiply the model view with
+   * @param {Array} matrix: the matrix to be multiply the model view with
    */
   transform: function(matrix) {
     mat4.multiply(this.mvMatrix, matrix);
@@ -318,21 +318,21 @@ Tilt.Renderer.prototype = {
   /**
    * Translates the model view by the x, y and z coordinates.
    *
-   * @param {number} x: the x amount of translation
-   * @param {number} y: the y amount of translation
-   * @param {number} z: the z amount of translation
+   * @param {Number} x: the x amount of translation
+   * @param {Number} y: the y amount of translation
+   * @param {Number} z: the z amount of translation
    */
   translate: function(x, y, z) {
-    mat4.translate(this.mvMatrix, [x, y, z]);
+    mat4.translate(this.mvMatrix, [x, y, z || 0]);
   },
 
   /**
    * Rotates the model view by a specified angle on the x, y and z axis.
    *
-   * @param {number} angle: the angle expressed in radians
-   * @param {number} x: the x axis of the rotation
-   * @param {number} y: the y axis of the rotation
-   * @param {number} z: the z axis of the rotation
+   * @param {Number} angle: the angle expressed in radians
+   * @param {Number} x: the x axis of the rotation
+   * @param {Number} y: the y axis of the rotation
+   * @param {Number} z: the z axis of the rotation
    */
   rotate: function(angle, x, y, z) {
     mat4.rotate(this.mvMatrix, angle, [x, y, z]);
@@ -340,8 +340,7 @@ Tilt.Renderer.prototype = {
 
   /**
    * Rotates the model view by a specified angle on the x axis.
-   *
-   * @param {number} angle: the angle expressed in radians
+   * @param {Number} angle: the angle expressed in radians
    */
   rotateX: function(angle) {
     mat4.rotateX(this.mvMatrix, angle);
@@ -349,8 +348,7 @@ Tilt.Renderer.prototype = {
 
   /**
    * Rotates the model view by a specified angle on the y axis.
-   *
-   * @param {number} angle: the angle expressed in radians
+   * @param {Number} angle: the angle expressed in radians
    */
   rotateY: function(angle) {
     mat4.rotateY(this.mvMatrix, angle);
@@ -358,8 +356,7 @@ Tilt.Renderer.prototype = {
 
   /**
    * Rotates the model view by a specified angle on the z axis.
-   *
-   * @param {number} angle: the angle expressed in radians
+   * @param {Number} angle: the angle expressed in radians
    */
   rotateZ: function(angle) {
     mat4.rotateZ(this.mvMatrix, angle);
@@ -368,18 +365,17 @@ Tilt.Renderer.prototype = {
   /**
    * Scales the model view by the x, y and z coordinates.
    *
-   * @param {number} x: the x amount of scaling
-   * @param {number} y: the y amount of scaling
-   * @param {number} z: the z amount of scaling
+   * @param {Number} x: the x amount of scaling
+   * @param {Number} y: the y amount of scaling
+   * @param {Number} z: the z amount of scaling
    */
   scale: function(x, y, z) {
-    mat4.scale(this.mvMatrix, [x, y, z]);
+    mat4.scale(this.mvMatrix, [x, y, z || 0]);
   },
 
   /**
    * Sets the current tint color.
-   *
-   * @param {string} color: the color, defined in hex or as rgb() or rgba()
+   * @param {String} color: the color, defined in hex or as rgb() or rgba()
    */
   tint: function(color) {
     this.tintColor = Tilt.Math.hex2rgba(color);
@@ -398,8 +394,7 @@ Tilt.Renderer.prototype = {
 
   /**
    * Sets the current fill color.
-   *
-   * @param {string} color: the color, defined in hex or as rgb() or rgba()
+   * @param {String} color: the color, defined in hex or as rgb() or rgba()
    */
   fill: function(color) {
     this.fillColor = Tilt.Math.hex2rgba(color);
@@ -418,8 +413,7 @@ Tilt.Renderer.prototype = {
 
   /**
    * Sets the current stroke color.
-   *
-   * @param {string} color: the color, defined in hex or as rgb() or rgba()
+   * @param {String} color: the color, defined in hex or as rgb() or rgba()
    */
   stroke: function(color) {
     this.strokeColor = Tilt.Math.hex2rgba(color);
@@ -438,8 +432,7 @@ Tilt.Renderer.prototype = {
 
   /**
    * Sets the current stroke weight (line width).
-   *
-   * @param {number} weight: the stroke weight
+   * @param {Number} weight: the stroke weight
    */
   strokeWeight: function(value) {
     if (this.strokeWeightValue !== value) {
@@ -452,7 +445,7 @@ Tilt.Renderer.prototype = {
    * Sets blending, either "alpha" or "add" (additive blending).
    * Anything else disables blending.
    *
-   * @param {string} mode: blending, either "alpha", "add" or undefined
+   * @param {String} mode: blending, either "alpha", "add" or undefined
    */
   blendMode: function(mode) {
     var gl = this.gl;
@@ -472,7 +465,7 @@ Tilt.Renderer.prototype = {
    * Sets if depth testing should be enabled or not.
    * Disabling could be useful when handling transparency (for example).
    *
-   * @param {boolean} mode: true if depth testing should be enabled
+   * @param {Boolean} mode: true if depth testing should be enabled
    */
   depthTest: function(mode) {
     var gl = this.gl;
@@ -485,10 +478,10 @@ Tilt.Renderer.prototype = {
   },
 
   /**
-   * Helper function to set active the color shader with the required params
-   * 
-   * @param {object} verticesBuffer: a buffer of vertices positions
-   * @param {object} color: the color to be used
+   * Helper function to set active the color shader with the required params.
+   *
+   * @param {Tilt.VertexBuffer} verticesBuffer: a buffer of vertices positions
+   * @param {Array} color: the color used, as [r, g, b, a] with 0..1 range
    */
   useColorShader: function(verticesBuffer, color) {
     var program = this.colorShader;
@@ -504,12 +497,12 @@ Tilt.Renderer.prototype = {
   },
 
   /**
-   * Helper function to set active the texture shader with the required params
-   * 
-   * @param {object} verticesBuffer: a buffer of vertices positions
-   * @param {object} texCoordBuffer: a buffer of vertices texture coordinates
-   * @param {object} color: the color to be used
-   * @param {object} texture: the texture to be applied
+   * Helper function to set active the texture shader with the required params.
+   *
+   * @param {Tilt.VertexBuffer} verticesBuffer: a buffer of vertices positions
+   * @param {Tilt.VertexBuffer} texCoordBuffer: a buffer of texture coordinates
+   * @param {Array} color: the color used, as [r, g, b, a] with 0..1 range
+   * @param {Tilt.Texture} texture: the texture to be applied
    */
   useTextureShader: function(verticesBuffer, texCoordBuffer, color, texture) {
     var program = this.textureShader;
@@ -530,9 +523,9 @@ Tilt.Renderer.prototype = {
    * Draw a single triangle.
    * Do not abuse this function, it is quite slow, use for debugging only!
    *
-   * @param {array} v0: the [x, y, z] position of the first triangle point
-   * @param {array} v1: the [x, y, z] position of the second triangle point
-   * @param {array} v2: the [x, y, z] position of the third triangle point
+   * @param {Array} v0: the [x, y, z] position of the first triangle point
+   * @param {Array} v1: the [x, y, z] position of the second triangle point
+   * @param {Array} v2: the [x, y, z] position of the third triangle point
    */
   triangle: function(v0, v1, v2) {
     var vertices = new Tilt.VertexBuffer(v0.concat(v1, v2), 3),
@@ -561,7 +554,7 @@ Tilt.Renderer.prototype = {
    * specify the width and height. Use rectMode("center") to draw centered
    * at the given x and y position.
    *
-   * @param {string} mode: either "corner" or "center"
+   * @param {String} mode: either "corner" or "center"
    */
   rectMode: function(mode) {
     this.rectangle.rectModeValue = mode;
@@ -570,10 +563,10 @@ Tilt.Renderer.prototype = {
   /**
    * Draws a rectangle using the specified parameters.
    *
-   * @param {number} x: the x position of the object
-   * @param {number} y: the y position of the object
-   * @param {number} width: the width of the object
-   * @param {number} height: the height of the object
+   * @param {Number} x: the x position of the object
+   * @param {Number} y: the y position of the object
+   * @param {Number} width: the width of the object
+   * @param {Number} height: the height of the object
    */
   rect: function(x, y, width, height) {
     var rectangle = this.rectangle,
@@ -617,7 +610,7 @@ Tilt.Renderer.prototype = {
    * image"s width and height. Use imageMode("center") to draw images centered
    * at the given x and y position.
    *
-   * @param {string} mode: either "corner" or "center"
+   * @param {String} mode: either "corner" or "center"
    */
   imageMode: function(mode) {
     this.rectangle.imageModeValue = mode;
@@ -626,12 +619,12 @@ Tilt.Renderer.prototype = {
   /**
    * Draws an image using the specified parameters.
    *
-   * @param {object} t: the texture to be used
-   * @param {number} x: the x position of the object
-   * @param {number} y: the y position of the object
-   * @param {number} z: the z position of the object
-   * @param {number} width: the width of the object
-   * @param {number} height: the height of the object
+   * @param {Tilt.Textrue} t: the texture to be used
+   * @param {Number} x: the x position of the object
+   * @param {Number} y: the y position of the object
+   * @param {Number} z: the z position of the object
+   * @param {Number} width: the width of the object
+   * @param {Number} height: the height of the object
    */
   image: function(t, x, y, width, height) {
     var rectangle = this.rectangle,
@@ -670,10 +663,10 @@ Tilt.Renderer.prototype = {
   /**
    * Draws a box using the specified parameters.
    *
-   * @param {number} width: the width of the object
-   * @param {number} height: the height of the object
-   * @param {number} depth: the depth of the object
-   * @param {object} texture: the texture to be used
+   * @param {Number} width: the width of the object
+   * @param {Number} height: the height of the object
+   * @param {Number} depth: the depth of the object
+   * @param {Tilt.Texture} texture: the texture to be used
    */
   box: function(width, height, depth, texture) {
     var cube = this.cube,
@@ -716,8 +709,8 @@ Tilt.Renderer.prototype = {
   /**
    * Draws bound vertex buffers using the specified parameters.
    *
-   * @param {number} drawMode: WebGL enum, like Tilt.TRIANGLES
-   * @param {number} count: the number of indices to be rendered
+   * @param {Number} drawMode: WebGL enum, like Tilt.TRIANGLES
+   * @param {Number} count: the number of indices to be rendered
    */
   drawVertices: function(drawMode, count) {
     this.gl.drawArrays(drawMode, 0, count);
@@ -727,8 +720,8 @@ Tilt.Renderer.prototype = {
    * Draws bound vertex buffers using the specified parameters.
    * This function also makes use of an index buffer.
    *
-   * @param {number} drawMode: WebGL enum, like Tilt.TRIANGLES
-   * @param {object} indicesBuffer: indices for the passed vertices buffer
+   * @param {Number} drawMode: WebGL enum, like Tilt.TRIANGLES
+   * @param {Tilt.IndexBuffer} indicesBuffer: indices for the passed vertices buffer
    */
   drawIndexedVertices: function(drawMode, indicesBuffer) {
     var gl = this.gl;
@@ -740,8 +733,8 @@ Tilt.Renderer.prototype = {
   /**
    * Helper function to create a 3D context in a cross browser way.
    *
-   * @param {object} canvas: the canvas to get the WebGL context from
-   * @param {object} opt_attribs: optional attributes used for initialization
+   * @param {HTMLCanvasElement} canvas: the canvas to get the WebGL context
+   * @param {Object} opt_attribs: optional attributes used for initialization
    */
   create3DContext: function(canvas, opt_attribs) {
     var names = ["experimental-webgl", "webgl", "webkit-3d", "moz-webgl"];
@@ -772,8 +765,9 @@ Tilt.Renderer.prototype = {
    *        // do rendering
    *        ...
    *      };
+   *      draw();
    *
-   * @param {function} loop: the function to be called each frame
+   * @param {Function} draw: the function to be called each frame
    */
   loop: function(draw) {
     window.requestAnimFrame(draw);
@@ -797,11 +791,11 @@ Tilt.Renderer.prototype = {
   },
 
   /**
-   * Destroys this object and deletes all members.
+   * Clears the Tilt cache, destroys this object and deletes all members.
    */
   destroy: function() {
     Tilt.clearCache();
-    
+
     for (var i in this) {
       if ("function" === typeof this[i].destroy) {
         this[i].destroy();
