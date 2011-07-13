@@ -57,7 +57,7 @@ Tilt.Program = function(vertShaderSrc, fragShaderSrc) {
   this.uniforms = null;
 
   /**
-   * Each program has an assigned object for caching all the current 
+   * Each program has an assigned object for caching all the current
    * attributes and uniforms at runtime, when using the shader.
    */
   this.cache = {};
@@ -170,9 +170,6 @@ Tilt.Program.prototype = {
 
     gl.bindBuffer(gl.ARRAY_BUFFER, buffer.ref);
     gl.vertexAttribPointer(attr, size, gl.FLOAT, false, 0, 0);
-
-    buffer = null;
-    gl = null;
   },
 
   /**
@@ -193,7 +190,6 @@ Tilt.Program.prototype = {
       this.cache[uniform] = hit;
       Tilt.$gl.uniformMatrix4fv(this.uniforms[uniform], false, m);
     }
-    m = null;
   },
 
   /**
@@ -214,7 +210,6 @@ Tilt.Program.prototype = {
       this.cache[uniform] = hit;
       Tilt.$gl.uniform4fv(this.uniforms[uniform], v);
     }
-    v = null;
   },
 
   /**
@@ -248,7 +243,6 @@ Tilt.Program.prototype = {
       gl.bindTexture(gl.TEXTURE_2D, texture.ref);
       gl.uniform1i(this.uniforms[sampler], 0);
     }
-    texture = null;
   },
 
   /**
