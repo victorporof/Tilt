@@ -64,7 +64,7 @@ TiltChrome.Controller.MouseAndKeyboard = function() {
 
   /**
    * Function called automatically by the visualization at the setup().
-   * @param {object} canvas: the canvas dom element
+   * @param {HTMLCanvasElement} canvas: the canvas element
    */
   this.init = function(canvas) {
     arcball = new Tilt.Arcball(canvas.width, canvas.height);
@@ -81,7 +81,7 @@ TiltChrome.Controller.MouseAndKeyboard = function() {
 
   /**
    * Function called automatically by the visualization each frame in draw().
-   * @param {number} frameDelta: the delta time elapsed between frames
+   * @param {Number} frameDelta: the delta time elapsed between frames
    */
   this.loop = function(frameDelta) {
     // handle mouse dragged events
@@ -210,7 +210,7 @@ TiltChrome.Controller.MouseAndKeyboard = function() {
 
   /**
    * Destroys this object and sets all members to null.
-   * @param {object} canvas: the canvas dom element
+   * @param {HTMLCanvasElement} canvas: the canvas dom element
    */
   this.destroy = function(canvas) {
     canvas.removeEventListener("mousedown", mousePressed, false);
@@ -227,10 +227,7 @@ TiltChrome.Controller.MouseAndKeyboard = function() {
     keyCode = null;
 
     for (var i in this) {
-      if ("function" === typeof this[i].destroy) {
-        this[i].destroy();
-      }
-      this[i] = null;
+      delete this[i];
     }
   };
 };

@@ -31,9 +31,9 @@ var EXPORTED_SYMBOLS = ["TiltChrome.Visualization"];
 /**
  * TiltChrome visualization constructor.
  *
- * @param {object} canvas: the canvas element used for rendering
- * @param {object} controller: the controller responsible for handling events
- * @return {object} the created object
+ * @param {HTMLCanvasElement} canvas: the canvas element used for rendering
+ * @param {TiltChrome.Controller} controller: the controller handling events
+ * @return {TiltChrome.Visualization} the newly created object
  */
 TiltChrome.Visualization = function(canvas, controller) {
 
