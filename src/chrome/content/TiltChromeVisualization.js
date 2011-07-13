@@ -355,10 +355,10 @@ TiltChrome.Visualization = function(canvas, controller) {
    * @param {number} y: the current vertical coordinate of the mouse
    */
   function performClick(x, y) {
-    // var ray = Tilt.Math.createRay(x, y, 0, x, y, 1,
+    // var ray = Tilt.Math.createRay([x, y, 0], [x, y, 1],
+    //                               [0, 0, tilt.width, tilt.height],
     //                               mesh.mvMatrix,
-    //                               mesh.projMatrix, 0, 0,
-    //                               tilt.width, tilt.height);
+    //                               mesh.projMatrix);
     // var point = vec3.create();
     // var intersections = [];
     //
