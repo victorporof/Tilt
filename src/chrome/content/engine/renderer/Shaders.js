@@ -1,5 +1,5 @@
 /* 
- * jTiltShaders.js - Various simple shaders used internally by Tilt
+ * Shaders.js - Various simple shaders used internally by Tilt
  * version 0.1
  *
  * Copyright (c) 2011 Victor Porof
