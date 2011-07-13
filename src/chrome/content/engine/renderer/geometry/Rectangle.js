@@ -47,14 +47,14 @@ Tilt.Rectangle = function(width, height, depth) {
 Tilt.Rectangle.prototype = {
 
   /**
-   * Destroys this object and sets all members to null.
+   * Destroys this object and deletes all members.
    */
   destroy: function() {
     for (var i in this) {
       if ("function" === typeof this[i].destroy) {
         this[i].destroy();
       }
-      this[i] = null;
+      delete this[i];
     }
   }
 };

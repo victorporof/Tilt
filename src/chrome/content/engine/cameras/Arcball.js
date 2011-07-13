@@ -1,5 +1,5 @@
 /*
- * jTiltControllers.js - Easy to use camera controllers for Tilt
+ * Arcball.js - Easy to use arcball controller for Tilt
  * version 0.1
  *
  * Copyright (c) 2011 Victor Porof
@@ -29,6 +29,7 @@ var Tilt = Tilt || {};
 var EXPORTED_SYMBOLS = ["Tilt.Arcball"];
 
 /**
+ * Arcball constructor.
  * This is a general purpose 3D rotation controller described by Ken Shoemake
  * in the Graphics Interface ’92 Proceedings. It features good behavior
  * easy implementation, cheap execution, & optional axis constrain.
@@ -245,14 +246,11 @@ Tilt.Arcball.prototype = {
   },
 
   /**
-   * Destroys this object and sets all members to null.
+   * Destroys this object and deletes all members.
    */
   destroy: function() {
     for (var i in this) {
-      if ("function" === typeof this[i].destroy) {
-        this[i].destroy();
-      }
-      this[i] = null;
+      delete this[i];
     }
   }
 };

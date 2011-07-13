@@ -1,5 +1,5 @@
 /*
- * Cube.js - A simple cube primitive geometry
+ * CubeWireframe.js - A simple cube primitive wireframe
  * version 0.1
  *
  * Copyright (c) 2011 Victor Porof
@@ -26,85 +26,56 @@
 "use strict";
 
 var Tilt = Tilt || {};
-var EXPORTED_SYMBOLS = ["Tilt.Cube"];
+var EXPORTED_SYMBOLS = ["Tilt.CubeWireframe"];
 
 /**
- * Tilt.Cube constructor.
+ * Tilt.CubeWireframe constructor.
  *
- * @param {Number} width: the width of the cube
- * @param {Number} height: the height of the cube
- * @param {Number} depth: the depth of the cube
+ * @param {number} width: the width of the cube
+ * @param {number} height: the height of the cube
+ * @param {number} depth: the depth of the cube
  */
-Tilt.Cube = function(width, height, depth) {
+Tilt.CubeWireframe = function(width, height, depth) {
   // make sure the width, height and depth are valid number values
   width = width || 1;
   height = height || 1;
   depth = depth || 1;
 
   /**
-   * Buffer of 3-component vertices (x, y, z) as the corners of a cube.
+   * Buffer of 3-component vertices (x, y, z) as the outline of a cube.
    */
   this.vertices = new Tilt.VertexBuffer([
     -0.5 * width, -0.5 * height,  0.5 * depth, /* front */
      0.5 * width, -0.5 * height,  0.5 * depth,
      0.5 * width,  0.5 * height,  0.5 * depth,
     -0.5 * width,  0.5 * height,  0.5 * depth,
-    -0.5 * width,  0.5 * height,  0.5 * depth, /* bottom */
-     0.5 * width,  0.5 * height,  0.5 * depth,
-     0.5 * width,  0.5 * height, -0.5 * depth,
-    -0.5 * width,  0.5 * height, -0.5 * depth,
      0.5 * width, -0.5 * height, -0.5 * depth, /* back */
     -0.5 * width, -0.5 * height, -0.5 * depth,
     -0.5 * width,  0.5 * height, -0.5 * depth,
-     0.5 * width,  0.5 * height, -0.5 * depth,
-    -0.5 * width, -0.5 * height, -0.5 * depth, /* top */
-     0.5 * width, -0.5 * height, -0.5 * depth,
-     0.5 * width, -0.5 * height,  0.5 * depth,
-    -0.5 * width, -0.5 * height,  0.5 * depth,
-     0.5 * width, -0.5 * height,  0.5 * depth, /* right */
-     0.5 * width, -0.5 * height, -0.5 * depth,
-     0.5 * width,  0.5 * height, -0.5 * depth,
-     0.5 * width,  0.5 * height,  0.5 * depth,
-    -0.5 * width, -0.5 * height, -0.5 * depth, /* left */
-    -0.5 * width, -0.5 * height,  0.5 * depth,
-    -0.5 * width,  0.5 * height,  0.5 * depth,
-    -0.5 * width,  0.5 * height, -0.5 * depth], 3);
-
-  /**
-   * Buffer of 2-component texture coordinates (u, v) for the cube.
-   */
-  this.texCoord = new Tilt.VertexBuffer([
-    0, 0, 1, 0, 1, 1, 0, 1,
-    0, 0, 1, 0, 1, 1, 0, 1,
-    0, 0, 1, 0, 1, 1, 0, 1,
-    0, 0, 1, 0, 1, 1, 0, 1,
-    0, 0, 1, 0, 1, 1, 0, 1,
-    0, 0, 1, 0, 1, 1, 0, 1], 2);
+     0.5 * width,  0.5 * height, -0.5 * depth], 3);
 
   /**
    * Vertex indices for the cube vertices, defining the order for which
-   * these points can create a cube from triangles.
+   * these points can create a wireframe cube from lines.
    */
   this.indices = new Tilt.IndexBuffer([
-    0, 1, 2, 0, 2, 3,
-    4, 5, 6, 4, 6, 7,
-    8, 9, 10, 8, 10, 11,
-    12, 13, 14, 12, 14, 15,
-    16, 17, 18, 16, 18, 19,
-    20, 21, 22, 20, 22, 23]);
+    0, 1, 1, 2, 2, 3, 3, 0, /* front */
+    4, 5, 5, 6, 6, 7, 7, 4, /* back */
+    0, 5, 1, 4,
+    2, 7, 3, 6]);
 };
 
-Tilt.Cube.prototype = {
+Tilt.CubeWireframe.prototype = {
 
   /**
-   * Destroys this object and sets all members to null.
+   * Destroys this object and deletes all members.
    */
   destroy: function() {
     for (var i in this) {
       if ("function" === typeof this[i].destroy) {
         this[i].destroy();
       }
-      this[i] = null;
+      delete this[i];
     }
   }
 };

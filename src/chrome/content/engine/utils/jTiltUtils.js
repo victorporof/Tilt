@@ -64,7 +64,7 @@ Tilt.Document = {
     if ("undefined" === typeof this.currentParentNode) {
       this.currentParentNode = document.body;
     }
-    
+
     var doc = this.currentContentDocument, node = this.currentParentNode;
     var canvas = doc.createElement("canvas");
     canvas.width = width;

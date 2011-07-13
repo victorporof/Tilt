@@ -1,5 +1,5 @@
 /*
- * jTiltRenderer.js - Helper drawing functions for WebGL
+ * Renderer.js - Helper drawing functions for WebGL
  * version 0.1
  *
  * Copyright (c) 2011 Victor Porof
@@ -797,7 +797,7 @@ Tilt.Renderer.prototype = {
   },
 
   /**
-   * Destroys this object and sets all members to null.
+   * Destroys this object and deletes all members.
    */
   destroy: function() {
     Tilt.clearCache();
@@ -806,7 +806,7 @@ Tilt.Renderer.prototype = {
       if ("function" === typeof this[i].destroy) {
         this[i].destroy();
       }
-      this[i] = null;
+      delete this[i];
     }
   }
 };
