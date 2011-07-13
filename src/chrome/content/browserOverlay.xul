@@ -56,9 +56,9 @@
     src="chrome://tilt/content/engine/renderer/Shaders.js"/>
 
   <script type="application/x-javascript"
-    src="chrome://tilt/content/engine/utils/jTiltUtils.js"/>
+    src="chrome://tilt/content/engine/utils/Extensions.js"/>
   <script type="application/x-javascript"
-    src="chrome://tilt/content/engine/utils/jTiltExtensions.js"/>
+    src="chrome://tilt/content/engine/utils/Utils.js"/>
 
   <script type="application/x-javascript"
     src="chrome://tilt/content/TiltChromeController.js"/>
