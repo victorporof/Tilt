@@ -101,11 +101,11 @@ Tilt.Texture.prototype = {
     this.height = this.ref.height;
     this.loaded = true;
 
+    // cleanup
     delete this.ref.id;
     delete this.ref.width;
     delete this.ref.height;
 
-    // cleanup
     image = null;
     parameters = null;
   },
@@ -140,14 +140,11 @@ Tilt.Texture.prototype = {
   },
 
   /**
-   * Destroys this object and sets all members to null.
+   * Destroys this object and deletes all members.
    */
   destroy: function() {
     for (var i in this) {
-      if ("function" === typeof this[i].destroy) {
-        this[i].destroy();
-      }
-      this[i] = null;
+      delete this[i];
     }
   }
 };
