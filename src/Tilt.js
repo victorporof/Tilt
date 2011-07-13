@@ -1,4 +1,260 @@
 /*
+ * Arcball.js - Easy to use arcball controller for Tilt
+ * version 0.1
+ *
+ * Copyright (c) 2011 Victor Porof
+ *
+ * This software is provided "as-is", without any express or implied
+ * warranty. In no event will the authors be held liable for any damages
+ * arising from the use of this software.
+ *
+ * Permission is granted to anyone to use this software for any purpose,
+ * including commercial applications, and to alter it and redistribute it
+ * freely, subject to the following restrictions:
+ *
+ *    1. The origin of this software must not be misrepresented; you must not
+ *    claim that you wrote the original software. If you use this software
+ *    in a product, an acknowledgment in the product documentation would be
+ *    appreciated but is not required.
+ *
+ *    2. Altered source versions must be plainly marked as such, and must not
+ *    be misrepresented as being the original software.
+ *
+ *    3. This notice may not be removed or altered from any source
+ *    distribution.
+ */
+"use strict";
+
+var Tilt = Tilt || {};
+var EXPORTED_SYMBOLS = ["Tilt.Arcball"];
+
+/**
+ * Arcball constructor.
+ * This is a general purpose 3D rotation controller described by Ken Shoemake
+ * in the Graphics Interface ’92 Proceedings. It features good behavior
+ * easy implementation, cheap execution, & optional axis constrain.
+ *
+ * @param {Number} width: the width of canvas
+ * @param {Number} height: the height of canvas
+ * @param {Number} radius: optional, the radius of the arcball
+ * @return {Tilt.Arcball} the newly created object
+ */
+Tilt.Arcball = function(width, height, radius) {
+
+  /**
+   * Values retaining the current horizontal and vertical mouse coordinates.
+   */
+  this.mouseX = 0;
+  this.mouseY = 0;
+  this.mouseDragX = 0;
+  this.mouseDragY = 0;
+
+  /**
+   * Additionally, this implementation also handles zoom.
+   */
+  this.scrollValue = 0;
+
+  /**
+   * The vectors representing the mouse coordinates mapped on the arcball
+   * and their perpendicular converted from (x, y) to (x, y, z) at specific
+   * events like mousePressed and mouseDragged.
+   */
+  this.startVec = vec3.create();
+  this.endVec = vec3.create();
+  this.pVec = vec3.create();
+
+  /**
+   * The corresponding rotation quaternions created using the mouse vectors.
+   */
+  this.lastRot = quat4.create([0, 0, 0, 1]);
+  this.deltaRot = quat4.create([0, 0, 0, 1]);
+  this.currentRot = quat4.create([0, 0, 0, 1]);
+
+  /**
+   * The zoom, calculated using mouse scroll deltas.
+   */
+  this.currentZoom = 0;
+
+  /**
+   * Set the current dimensions of the arcball.
+   */
+  this.resize(width, height, radius);
+};
+
+Tilt.Arcball.prototype = {
+
+  /**
+   * Call this function whenever you need the updated rotation quaternion
+   * and the zoom amount. These values will be returned as "rotation" & "zoom"
+   * properties inside an object.
+   *
+   * @param {Number} frameDelta: optional, pass deltas for smooth animations
+   * @return {Object} the rotation quaternion and the zoom amount
+   */
+  loop: function(frameDelta) {
+    if ("undefined" === typeof frameDelta) {
+      frameDelta = 0.25;
+    } else {
+      // this should be in the (0..1) interval
+      frameDelta = Tilt.Math.clamp(frameDelta / 100, 0.01, 0.99);
+    }
+
+    // update the zoom based on the mouse scroll
+    this.currentZoom += (this.scrollValue - this.currentZoom) * frameDelta;
+
+    // update the mouse coordinates
+    this.mouseX += (this.mouseDragX - this.mouseX) * frameDelta;
+    this.mouseY += (this.mouseDragY - this.mouseY) * frameDelta;
+
+    var radius = this.radius,
+      width = this.width,
+      height = this.height,
+      mouseX = this.mouseX,
+      mouseY = this.mouseY;
+
+    // find the sphere coordinates of the mouse positions
+    this.pointToSphere(mouseX, mouseY, width, height, radius, this.endVec);
+
+    // compute the vector perpendicular to the start & end vectors
+    vec3.cross(this.startVec, this.endVec, this.pVec);
+
+    // if the begin and end vectors don't coincide
+    if (vec3.length(this.pVec) > 0) {
+      this.deltaRot[0] = this.pVec[0];
+      this.deltaRot[1] = this.pVec[1];
+      this.deltaRot[2] = this.pVec[2];
+
+      // in the quaternion values, w is cosine (theta / 2),
+      // where theta is the rotation angle
+      this.deltaRot[3] = -vec3.dot(this.startVec, this.endVec);
+    } else {
+      // return an identity rotation quaternion
+      this.deltaRot[0] = 0;
+      this.deltaRot[1] = 0;
+      this.deltaRot[2] = 0;
+      this.deltaRot[3] = 1;
+    }
+
+    // calculate the current rotation using the delta quaternion
+    return {
+      rotation: quat4.multiply(this.lastRot, this.deltaRot, this.currentRot),
+      zoom: this.currentZoom
+    };
+  },
+
+  /**
+   * Function handling the mousePressed event.
+   * Call this when the mouse was pressed.
+   *
+   * @param {Number} x: the current horizontal coordinate of the mouse
+   * @param {Number} y: the current vertical coordinate of the mouse
+   */
+  mousePressed: function(x, y) {
+    this.mouseX = x;
+    this.mouseY = y;
+
+    var radius = this.radius,
+      width = this.width,
+      height = this.height,
+      mouseX = this.mouseX,
+      mouseY = this.mouseY;
+
+    this.pointToSphere(mouseX, mouseY, width, height, radius, this.startVec);
+    quat4.set(this.currentRot, this.lastRot);
+  },
+
+  /**
+   * Function handling the mouseDragged event.
+   * Call this when the mouse was dragged.
+   *
+   * @param {Number} x: the current horizontal coordinate of the mouse
+   * @param {Number} y: the current vertical coordinate of the mouse
+   */
+  mouseDragged: function(x, y) {
+    this.mouseDragX = x;
+    this.mouseDragY = y;
+  },
+
+  /**
+   * Function handling the mouseScroll event.
+   * Call this when the mouse wheel was scrolled.
+   *
+   * @param {Number} scroll: the mouse wheel direction and speed
+   */
+  mouseScroll: function(scroll) {
+    this.scrollValue -= scroll * 10;
+  },
+
+  /**
+   * Maps the 2d coordinates of the mouse location to a 3d point on a sphere.
+   *
+   * @param {Number} x: the current horizontal coordinate of the mouse
+   * @param {Number} y: the current vertical coordinate of the mouse
+   * @param {Number} width: the width of canvas
+   * @param {Number} height: the height of canvas
+   * @param {Number} radius: optional, the radius of the arcball
+   * @param {Array} sphereVec: a 3d vector to store the sphere coordinates
+   */
+  pointToSphere: function(x, y, width, height, radius, sphereVec) {
+    // adjust point coords and scale down to range of [-1..1]
+    x = (x - width / 2) / radius;
+    y = (y - height / 2) / radius;
+
+    // compute the square length of the vector to the point from the center
+    var sqlength = x * x + y * y,
+      normal = 0;
+
+    // if the point is mapped outside of the sphere
+    if (sqlength > 1) {
+      // calculate the normalization factor
+      normal = 1 / Math.sqrt(sqlength);
+
+      // set the normalized vector (a point on the sphere)
+      sphereVec[0] = x * normal;
+      sphereVec[1] = y * normal;
+      sphereVec[2] = 0;
+    } else {
+      // set the vector to a point mapped inside the sphere
+      sphereVec[0] = x;
+      sphereVec[1] = y;
+      sphereVec[2] = Math.sqrt(1 - sqlength);
+    }
+  },
+
+  /**
+   * Resize this implementation to use different bounds.
+   * This function is automatically called when the arcball is created.
+   *
+   * @param {Number} width: the width of canvas
+   * @param {Number} height: the height of canvas
+   * @param {Number} radius: optional, the radius of the arcball
+   */
+  resize: function(newWidth, newHeight, newRadius) {
+    // set the new width, height and radius dimensions
+    this.width = newWidth;
+    this.height = newHeight;
+    this.radius = "undefined" !== typeof newRadius ? newRadius : newHeight;
+
+    var radius = this.radius,
+      width = this.width,
+      height = this.height,
+      mouseX = this.mouseX,
+      mouseY = this.mouseY;
+
+    this.pointToSphere(mouseX, mouseY, width, height, radius, this.startVec);
+    quat4.set(this.currentRot, this.lastRot);
+  },
+
+  /**
+   * Destroys this object and deletes all members.
+   */
+  destroy: function() {
+    for (var i in this) {
+      delete this[i];
+    }
+  }
+};
+/*
  * IndexBuffer.js - A WebGL ELEMENT_ARRAY_BUFFER Uint16Array buffer
  * version 0.1
  *
@@ -110,7 +366,6 @@ Tilt.VertexBuffer.prototype = {
    */
   destroy: function() {
     for (var i in this) {
-      this[i] = null;
       delete this[i];
     }
   }
@@ -192,14 +447,11 @@ Tilt.IndexBuffer.prototype = {
   },
 
   /**
-   * Destroys this object and sets all members to null.
+   * Destroys this object and deletes all members.
    */
   destroy: function() {
     for (var i in this) {
-      if ("function" === typeof this[i].destroy) {
-        this[i].destroy();
-      }
-      this[i] = null;
+      delete this[i];
     }
   }
 };
@@ -264,126 +516,6 @@ Tilt.clearCache = function() {
   Tilt.$renderer = null;
   Tilt.$activeShader = -1;
   Tilt.$enabledAttributes = -1;
-};
-/*
- * Mesh.js - An object representing a drawable mesh
- * version 0.1
- *
- * Copyright (c) 2011 Victor Porof
- *
- * This software is provided "as-is", without any express or implied
- * warranty. In no event will the authors be held liable for any damages
- * arising from the use of this software.
- *
- * Permission is granted to anyone to use this software for any purpose,
- * including commercial applications, and to alter it and redistribute it
- * freely, subject to the following restrictions:
- *
- *    1. The origin of this software must not be misrepresented; you must not
- *    claim that you wrote the original software. If you use this software
- *    in a product, an acknowledgment in the product documentation would be
- *    appreciated but is not required.
- *
- *    2. Altered source versions must be plainly marked as such, and must not
- *    be misrepresented as being the original software.
- *
- *    3. This notice may not be removed or altered from any source
- *    distribution.
- */
-"use strict";
-
-var Tilt = Tilt || {};
-var EXPORTED_SYMBOLS = ["Tilt.Mesh"];
-
-/**
- * Mesh constructor.
- *
- * @param {Object} parameters: an object containing the following properties
- *  @param {Tilt.VertexBuffer} vertices: the vertices buffer (x, y and z)
- *  @param {Tilt.VertexBuffer} texCoord: the texture coordinates buffer (u, v)
- *  @param {Tilt.VertexBuffer} normals: the normals buffer (m, n, p)
- *  @param {Tilt.IndexBuffer} indices: indices for the passed vertices buffer
- *  @param {String} color: the color to be used by the shader if required
- *  @param {Tilt.Texture} texture: optional texture to be used by the shader
- *  @param {Number} drawMode: WebGL enum, like tilt.TRIANGLES
- * @param {Function} draw: optional function to handle custom drawing
- */
-Tilt.Mesh = function(parameters, draw) {
-
-  /**
-   * Retain each parameters for easy access.
-   */
-  for (var i in parameters) {
-    this[i] = parameters[i];
-  }
-
-  // the color should be a [r, g, b, a] array, check this now
-  if ("string" === typeof this.color) {
-    this.color = Tilt.Math.hex2rgba(this.color);
-  } else if ("undefined" === typeof this.color) {
-    this.color = [1, 1, 1, 1];
-  }
-
-  // the draw mode should be valid, default to TRIANGLES if unspecified
-  if ("undefined" === typeof this.drawMode) {
-    this.drawMode = Tilt.$renderer.TRIANGLES;
-  }
-
-  // if the draw call is specified in the constructor, overwrite directly
-  if ("function" === typeof draw) {
-    this.draw = draw;
-  }
-};
-
-Tilt.Mesh.prototype = {
-
-  /**
-   * Draws a custom mesh, using only the built-in shaders.
-   * For more complex techniques, create your own shaders and drawing logic.
-   * Overwrite this function to handle custom drawing.
-   */
-  draw: function() {
-    // cache some properties for easy access
-    var tilt = Tilt.$renderer,
-      vertices = this.vertices,
-      texCoord = this.texCoord,
-      normals = this.normals,
-      indices = this.indices,
-      color = this.color,
-      texture = this.texture,
-      drawMode = this.drawMode;
-
-    // use the necessary shader
-    if (texture) {
-      tilt.useTextureShader(vertices, texCoord, color, texture);
-    } else {
-      tilt.useColorShader(vertices, color);
-    }
-
-    // draw the vertices as indexed elements or simple arrays
-    if (indices) {
-      tilt.drawIndexedVertices(drawMode, indices);
-    } else {
-      tilt.drawVertices(drawMode, vertices.numItems);
-    }
-
-    // TODO: use the normals buffer, add some lighting
-    // save the current model view and projection matrices
-    this.mvMatrix = mat4.create(tilt.mvMatrix);
-    this.projMatrix = mat4.create(tilt.projMatrix);
-  },
-
-  /**
-   * Destroys this object and sets all members to null.
-   */
-  destroy: function() {
-    for (var i in this) {
-      if ("function" === typeof this[i].destroy) {
-        this[i].destroy();
-      }
-      this[i] = null;
-    }
-  }
 };
 /*
  * Program.js - A wrapper for a GLSL program
@@ -472,9 +604,6 @@ Tilt.Program.prototype = {
     this.uniforms = this.ref.uniforms;
 
     // cleanup
-    this.ref.attributes = null;
-    this.ref.uniforms = null;
-
     delete this.ref.id;
     delete this.ref.attributes;
     delete this.ref.uniforms;
@@ -642,14 +771,14 @@ Tilt.Program.prototype = {
   },
 
   /**
-   * Destroys this object and sets all members to null.
+   * Destroys this object and deletes all members.
    */
   destroy: function() {
     for (var i in this) {
       if ("function" === typeof this[i].destroy) {
         this[i].destroy();
       }
-      this[i] = null;
+      delete this[i];
     }
   }
 };
@@ -894,40 +1023,6 @@ Tilt.GLSL = {
   count: 0
 };
 /*
- * RequestAnimFrame.js - Provides requestAnimationFrame in a cross browser way
- * version 0.1
- *
- * Copyright (c) 2011 Victor Porof
- *
- * This software is provided "as-is", without any express or implied
- * warranty. In no event will the authors be held liable for any damages
- * arising from the use of this software.
- *
- * Permission is granted to anyone to use this software for any purpose,
- * including commercial applications, and to alter it and redistribute it
- * freely, subject to the following restrictions:
- *
- *    1. The origin of this software must not be misrepresented; you must not
- *    claim that you wrote the original software. If you use this software
- *    in a product, an acknowledgment in the product documentation would be
- *    appreciated but is not required.
- *
- *    2. Altered source versions must be plainly marked as such, and must not
- *    be misrepresented as being the original software.
- *
- *    3. This notice may not be removed or altered from any source
- *    distribution.
- */
-window.requestAnimFrame = (function() {
-  return window.requestAnimationFrame ||
-         window.webkitRequestAnimationFrame ||
-         window.mozRequestAnimationFrame ||
-         window.oRequestAnimationFrame ||
-         window.msRequestAnimationFrame ||
-         function(callback, element) {
-           window.setTimeout(callback, 1000 / 60);
-         };
-})();/*
  * Texture.js - A WebGL texture wrapper
  * version 0.1
  *
@@ -1030,11 +1125,11 @@ Tilt.Texture.prototype = {
     this.height = this.ref.height;
     this.loaded = true;
 
+    // cleanup
     delete this.ref.id;
     delete this.ref.width;
     delete this.ref.height;
 
-    // cleanup
     image = null;
     parameters = null;
   },
@@ -1069,14 +1164,11 @@ Tilt.Texture.prototype = {
   },
 
   /**
-   * Destroys this object and sets all members to null.
+   * Destroys this object and deletes all members.
    */
   destroy: function() {
     for (var i in this) {
-      if ("function" === typeof this[i].destroy) {
-        this[i].destroy();
-      }
-      this[i] = null;
+      delete this[i];
     }
   }
 };
@@ -1304,312 +1396,6 @@ Tilt.TextureUtils = {
    * The total number of shaders created.
    */
   count: 0
-};
-/*
- * Cube.js - A simple cube primitive geometry
- * version 0.1
- *
- * Copyright (c) 2011 Victor Porof
- *
- * This software is provided "as-is", without any express or implied
- * warranty. In no event will the authors be held liable for any damages
- * arising from the use of this software.
- *
- * Permission is granted to anyone to use this software for any purpose,
- * including commercial applications, and to alter it and redistribute it
- * freely, subject to the following restrictions:
- *
- *    1. The origin of this software must not be misrepresented; you must not
- *    claim that you wrote the original software. If you use this software
- *    in a product, an acknowledgment in the product documentation would be
- *    appreciated but is not required.
- *
- *    2. Altered source versions must be plainly marked as such, and must not
- *    be misrepresented as being the original software.
- *
- *    3. This notice may not be removed or altered from any source
- *    distribution.
- */
-"use strict";
-
-var Tilt = Tilt || {};
-var EXPORTED_SYMBOLS = ["Tilt.Cube"];
-
-/**
- * Tilt.Cube constructor.
- *
- * @param {Number} width: the width of the cube
- * @param {Number} height: the height of the cube
- * @param {Number} depth: the depth of the cube
- */
-Tilt.Cube = function(width, height, depth) {
-  // make sure the width, height and depth are valid number values
-  width = width || 1;
-  height = height || 1;
-  depth = depth || 1;
-
-  /**
-   * Buffer of 3-component vertices (x, y, z) as the corners of a cube.
-   */
-  this.vertices = new Tilt.VertexBuffer([
-    -0.5 * width, -0.5 * height,  0.5 * depth, /* front */
-     0.5 * width, -0.5 * height,  0.5 * depth,
-     0.5 * width,  0.5 * height,  0.5 * depth,
-    -0.5 * width,  0.5 * height,  0.5 * depth,
-    -0.5 * width,  0.5 * height,  0.5 * depth, /* bottom */
-     0.5 * width,  0.5 * height,  0.5 * depth,
-     0.5 * width,  0.5 * height, -0.5 * depth,
-    -0.5 * width,  0.5 * height, -0.5 * depth,
-     0.5 * width, -0.5 * height, -0.5 * depth, /* back */
-    -0.5 * width, -0.5 * height, -0.5 * depth,
-    -0.5 * width,  0.5 * height, -0.5 * depth,
-     0.5 * width,  0.5 * height, -0.5 * depth,
-    -0.5 * width, -0.5 * height, -0.5 * depth, /* top */
-     0.5 * width, -0.5 * height, -0.5 * depth,
-     0.5 * width, -0.5 * height,  0.5 * depth,
-    -0.5 * width, -0.5 * height,  0.5 * depth,
-     0.5 * width, -0.5 * height,  0.5 * depth, /* right */
-     0.5 * width, -0.5 * height, -0.5 * depth,
-     0.5 * width,  0.5 * height, -0.5 * depth,
-     0.5 * width,  0.5 * height,  0.5 * depth,
-    -0.5 * width, -0.5 * height, -0.5 * depth, /* left */
-    -0.5 * width, -0.5 * height,  0.5 * depth,
-    -0.5 * width,  0.5 * height,  0.5 * depth,
-    -0.5 * width,  0.5 * height, -0.5 * depth], 3);
-
-  /**
-   * Buffer of 2-component texture coordinates (u, v) for the cube.
-   */
-  this.texCoord = new Tilt.VertexBuffer([
-    0, 0, 1, 0, 1, 1, 0, 1,
-    0, 0, 1, 0, 1, 1, 0, 1,
-    0, 0, 1, 0, 1, 1, 0, 1,
-    0, 0, 1, 0, 1, 1, 0, 1,
-    0, 0, 1, 0, 1, 1, 0, 1,
-    0, 0, 1, 0, 1, 1, 0, 1], 2);
-
-  /**
-   * Vertex indices for the cube vertices, defining the order for which
-   * these points can create a cube from triangles.
-   */
-  this.indices = new Tilt.IndexBuffer([
-    0, 1, 2, 0, 2, 3,
-    4, 5, 6, 4, 6, 7,
-    8, 9, 10, 8, 10, 11,
-    12, 13, 14, 12, 14, 15,
-    16, 17, 18, 16, 18, 19,
-    20, 21, 22, 20, 22, 23]);
-};
-
-Tilt.Cube.prototype = {
-
-  /**
-   * Destroys this object and sets all members to null.
-   */
-  destroy: function() {
-    for (var i in this) {
-      if ("function" === typeof this[i].destroy) {
-        this[i].destroy();
-      }
-      this[i] = null;
-    }
-  }
-};
-/*
- * CubeWireframe.js - A simple cube primitive wireframe
- * version 0.1
- *
- * Copyright (c) 2011 Victor Porof
- *
- * This software is provided "as-is", without any express or implied
- * warranty. In no event will the authors be held liable for any damages
- * arising from the use of this software.
- *
- * Permission is granted to anyone to use this software for any purpose,
- * including commercial applications, and to alter it and redistribute it
- * freely, subject to the following restrictions:
- *
- *    1. The origin of this software must not be misrepresented; you must not
- *    claim that you wrote the original software. If you use this software
- *    in a product, an acknowledgment in the product documentation would be
- *    appreciated but is not required.
- *
- *    2. Altered source versions must be plainly marked as such, and must not
- *    be misrepresented as being the original software.
- *
- *    3. This notice may not be removed or altered from any source
- *    distribution.
- */
-"use strict";
-
-var Tilt = Tilt || {};
-var EXPORTED_SYMBOLS = ["Tilt.CubeWireframe"];
-
-/**
- * Tilt.CubeWireframe constructor.
- *
- * @param {number} width: the width of the cube
- * @param {number} height: the height of the cube
- * @param {number} depth: the depth of the cube
- */
-Tilt.CubeWireframe = function(width, height, depth) {
-  // make sure the width, height and depth are valid number values
-  width = width || 1;
-  height = height || 1;
-  depth = depth || 1;
-
-  /**
-   * Buffer of 3-component vertices (x, y, z) as the outline of a cube.
-   */
-  this.vertices = new Tilt.VertexBuffer([
-    -0.5 * width, -0.5 * height,  0.5 * depth, /* front */
-     0.5 * width, -0.5 * height,  0.5 * depth,
-     0.5 * width,  0.5 * height,  0.5 * depth,
-    -0.5 * width,  0.5 * height,  0.5 * depth,
-     0.5 * width, -0.5 * height, -0.5 * depth, /* back */
-    -0.5 * width, -0.5 * height, -0.5 * depth,
-    -0.5 * width,  0.5 * height, -0.5 * depth,
-     0.5 * width,  0.5 * height, -0.5 * depth], 3);
-
-  /**
-   * Vertex indices for the cube vertices, defining the order for which
-   * these points can create a wireframe cube from lines.
-   */
-  this.indices = new Tilt.IndexBuffer([
-    0, 1, 1, 2, 2, 3, 3, 0, /* front */
-    4, 5, 5, 6, 6, 7, 7, 4, /* back */
-    0, 5, 1, 4,
-    2, 7, 3, 6]);
-};
-
-Tilt.CubeWireframe.prototype = {
-
-  /**
-   * Destroys this object and sets all members to null.
-   */
-  destroy: function() {
-    for (var i in this) {
-      if ("function" === typeof this[i].destroy) {
-        this[i].destroy();
-      }
-      this[i] = null;
-    }
-  }
-};
-/*
- * Cube.js - A simple rectangle primitive geometry
- * version 0.1
- *
- * Copyright (c) 2011 Victor Porof
- *
- * This software is provided "as-is", without any express or implied
- * warranty. In no event will the authors be held liable for any damages
- * arising from the use of this software.
- *
- * Permission is granted to anyone to use this software for any purpose,
- * including commercial applications, and to alter it and redistribute it
- * freely, subject to the following restrictions:
- *
- *    1. The origin of this software must not be misrepresented; you must not
- *    claim that you wrote the original software. If you use this software
- *    in a product, an acknowledgment in the product documentation would be
- *    appreciated but is not required.
- *
- *    2. Altered source versions must be plainly marked as such, and must not
- *    be misrepresented as being the original software.
- *
- *    3. This notice may not be removed or altered from any source
- *    distribution.
- */
-"use strict";
-
-var Tilt = Tilt || {};
-var EXPORTED_SYMBOLS = ["Tilt.Rectangle"];
-
-/**
- * Tilt.Rectangle constructor.
- */
-Tilt.Rectangle = function(width, height, depth) {
-
-  /**
-   * Buffer of 2-component vertices (x, y) as the corners of a rectangle.
-   */
-  this.vertices = new Tilt.VertexBuffer([0, 0, 1, 0, 0, 1, 1, 1], 2);
-
-  /**
-   * Buffer of 2-component texture coordinates (u, v) for the rectangle.
-   */
-  this.texCoord = new Tilt.VertexBuffer([0, 0, 1, 0, 0, 1, 1, 1], 2);
-};
-
-Tilt.Rectangle.prototype = {
-
-  /**
-   * Destroys this object and sets all members to null.
-   */
-  destroy: function() {
-    for (var i in this) {
-      if ("function" === typeof this[i].destroy) {
-        this[i].destroy();
-      }
-      this[i] = null;
-    }
-  }
-};
-/*
- * Cube.js - A simple rectangle primitive wireframe
- * version 0.1
- *
- * Copyright (c) 2011 Victor Porof
- *
- * This software is provided "as-is", without any express or implied
- * warranty. In no event will the authors be held liable for any damages
- * arising from the use of this software.
- *
- * Permission is granted to anyone to use this software for any purpose,
- * including commercial applications, and to alter it and redistribute it
- * freely, subject to the following restrictions:
- *
- *    1. The origin of this software must not be misrepresented; you must not
- *    claim that you wrote the original software. If you use this software
- *    in a product, an acknowledgment in the product documentation would be
- *    appreciated but is not required.
- *
- *    2. Altered source versions must be plainly marked as such, and must not
- *    be misrepresented as being the original software.
- *
- *    3. This notice may not be removed or altered from any source
- *    distribution.
- */
-"use strict";
-
-var Tilt = Tilt || {};
-var EXPORTED_SYMBOLS = ["Tilt.RectangleWireframe"];
-
-/**
- * Tilt.RectangleWireframe constructor.
- */
-Tilt.RectangleWireframe = function() {
-
-  /**
-   * Buffer of 2-component vertices (x, y) as the outline of a rectangle.
-   */
-  this.vertices = new Tilt.VertexBuffer([0, 0, 1, 0, 1, 1, 0, 1, 0, 0], 2);
-};
-
-Tilt.RectangleWireframe.prototype = {
-
-  /**
-   * Destroys this object and sets all members to null.
-   */
-  destroy: function() {
-    for (var i in this) {
-      if ("function" === typeof this[i].destroy) {
-        this[i].destroy();
-      }
-      this[i] = null;
-    }
-  }
 };
 /* 
  * glMatrix.js - High performance matrix and vector operations for WebGL
@@ -3928,7 +3714,433 @@ if (!JSON) {
     }
 }());
 /*
- * jTiltRenderer.js - Helper drawing functions for WebGL
+ * Cube.js - A simple cube primitive geometry
+ * version 0.1
+ *
+ * Copyright (c) 2011 Victor Porof
+ *
+ * This software is provided "as-is", without any express or implied
+ * warranty. In no event will the authors be held liable for any damages
+ * arising from the use of this software.
+ *
+ * Permission is granted to anyone to use this software for any purpose,
+ * including commercial applications, and to alter it and redistribute it
+ * freely, subject to the following restrictions:
+ *
+ *    1. The origin of this software must not be misrepresented; you must not
+ *    claim that you wrote the original software. If you use this software
+ *    in a product, an acknowledgment in the product documentation would be
+ *    appreciated but is not required.
+ *
+ *    2. Altered source versions must be plainly marked as such, and must not
+ *    be misrepresented as being the original software.
+ *
+ *    3. This notice may not be removed or altered from any source
+ *    distribution.
+ */
+"use strict";
+
+var Tilt = Tilt || {};
+var EXPORTED_SYMBOLS = ["Tilt.Cube"];
+
+/**
+ * Tilt.Cube constructor.
+ *
+ * @param {Number} width: the width of the cube
+ * @param {Number} height: the height of the cube
+ * @param {Number} depth: the depth of the cube
+ */
+Tilt.Cube = function(width, height, depth) {
+  // make sure the width, height and depth are valid number values
+  width = width || 1;
+  height = height || 1;
+  depth = depth || 1;
+
+  /**
+   * Buffer of 3-component vertices (x, y, z) as the corners of a cube.
+   */
+  this.vertices = new Tilt.VertexBuffer([
+    -0.5 * width, -0.5 * height,  0.5 * depth, /* front */
+     0.5 * width, -0.5 * height,  0.5 * depth,
+     0.5 * width,  0.5 * height,  0.5 * depth,
+    -0.5 * width,  0.5 * height,  0.5 * depth,
+    -0.5 * width,  0.5 * height,  0.5 * depth, /* bottom */
+     0.5 * width,  0.5 * height,  0.5 * depth,
+     0.5 * width,  0.5 * height, -0.5 * depth,
+    -0.5 * width,  0.5 * height, -0.5 * depth,
+     0.5 * width, -0.5 * height, -0.5 * depth, /* back */
+    -0.5 * width, -0.5 * height, -0.5 * depth,
+    -0.5 * width,  0.5 * height, -0.5 * depth,
+     0.5 * width,  0.5 * height, -0.5 * depth,
+    -0.5 * width, -0.5 * height, -0.5 * depth, /* top */
+     0.5 * width, -0.5 * height, -0.5 * depth,
+     0.5 * width, -0.5 * height,  0.5 * depth,
+    -0.5 * width, -0.5 * height,  0.5 * depth,
+     0.5 * width, -0.5 * height,  0.5 * depth, /* right */
+     0.5 * width, -0.5 * height, -0.5 * depth,
+     0.5 * width,  0.5 * height, -0.5 * depth,
+     0.5 * width,  0.5 * height,  0.5 * depth,
+    -0.5 * width, -0.5 * height, -0.5 * depth, /* left */
+    -0.5 * width, -0.5 * height,  0.5 * depth,
+    -0.5 * width,  0.5 * height,  0.5 * depth,
+    -0.5 * width,  0.5 * height, -0.5 * depth], 3);
+
+  /**
+   * Buffer of 2-component texture coordinates (u, v) for the cube.
+   */
+  this.texCoord = new Tilt.VertexBuffer([
+    0, 0, 1, 0, 1, 1, 0, 1,
+    0, 0, 1, 0, 1, 1, 0, 1,
+    0, 0, 1, 0, 1, 1, 0, 1,
+    0, 0, 1, 0, 1, 1, 0, 1,
+    0, 0, 1, 0, 1, 1, 0, 1,
+    0, 0, 1, 0, 1, 1, 0, 1], 2);
+
+  /**
+   * Vertex indices for the cube vertices, defining the order for which
+   * these points can create a cube from triangles.
+   */
+  this.indices = new Tilt.IndexBuffer([
+    0, 1, 2, 0, 2, 3,
+    4, 5, 6, 4, 6, 7,
+    8, 9, 10, 8, 10, 11,
+    12, 13, 14, 12, 14, 15,
+    16, 17, 18, 16, 18, 19,
+    20, 21, 22, 20, 22, 23]);
+};
+
+Tilt.Cube.prototype = {
+
+  /**
+   * Destroys this object and deletes all members.
+   */
+  destroy: function() {
+    for (var i in this) {
+      if ("function" === typeof this[i].destroy) {
+        this[i].destroy();
+      }
+      delete this[i];
+    }
+  }
+};
+/*
+ * CubeWireframe.js - A simple cube primitive wireframe
+ * version 0.1
+ *
+ * Copyright (c) 2011 Victor Porof
+ *
+ * This software is provided "as-is", without any express or implied
+ * warranty. In no event will the authors be held liable for any damages
+ * arising from the use of this software.
+ *
+ * Permission is granted to anyone to use this software for any purpose,
+ * including commercial applications, and to alter it and redistribute it
+ * freely, subject to the following restrictions:
+ *
+ *    1. The origin of this software must not be misrepresented; you must not
+ *    claim that you wrote the original software. If you use this software
+ *    in a product, an acknowledgment in the product documentation would be
+ *    appreciated but is not required.
+ *
+ *    2. Altered source versions must be plainly marked as such, and must not
+ *    be misrepresented as being the original software.
+ *
+ *    3. This notice may not be removed or altered from any source
+ *    distribution.
+ */
+"use strict";
+
+var Tilt = Tilt || {};
+var EXPORTED_SYMBOLS = ["Tilt.CubeWireframe"];
+
+/**
+ * Tilt.CubeWireframe constructor.
+ *
+ * @param {number} width: the width of the cube
+ * @param {number} height: the height of the cube
+ * @param {number} depth: the depth of the cube
+ */
+Tilt.CubeWireframe = function(width, height, depth) {
+  // make sure the width, height and depth are valid number values
+  width = width || 1;
+  height = height || 1;
+  depth = depth || 1;
+
+  /**
+   * Buffer of 3-component vertices (x, y, z) as the outline of a cube.
+   */
+  this.vertices = new Tilt.VertexBuffer([
+    -0.5 * width, -0.5 * height,  0.5 * depth, /* front */
+     0.5 * width, -0.5 * height,  0.5 * depth,
+     0.5 * width,  0.5 * height,  0.5 * depth,
+    -0.5 * width,  0.5 * height,  0.5 * depth,
+     0.5 * width, -0.5 * height, -0.5 * depth, /* back */
+    -0.5 * width, -0.5 * height, -0.5 * depth,
+    -0.5 * width,  0.5 * height, -0.5 * depth,
+     0.5 * width,  0.5 * height, -0.5 * depth], 3);
+
+  /**
+   * Vertex indices for the cube vertices, defining the order for which
+   * these points can create a wireframe cube from lines.
+   */
+  this.indices = new Tilt.IndexBuffer([
+    0, 1, 1, 2, 2, 3, 3, 0, /* front */
+    4, 5, 5, 6, 6, 7, 7, 4, /* back */
+    0, 5, 1, 4,
+    2, 7, 3, 6]);
+};
+
+Tilt.CubeWireframe.prototype = {
+
+  /**
+   * Destroys this object and deletes all members.
+   */
+  destroy: function() {
+    for (var i in this) {
+      if ("function" === typeof this[i].destroy) {
+        this[i].destroy();
+      }
+      delete this[i];
+    }
+  }
+};
+/*
+ * Cube.js - A simple rectangle primitive geometry
+ * version 0.1
+ *
+ * Copyright (c) 2011 Victor Porof
+ *
+ * This software is provided "as-is", without any express or implied
+ * warranty. In no event will the authors be held liable for any damages
+ * arising from the use of this software.
+ *
+ * Permission is granted to anyone to use this software for any purpose,
+ * including commercial applications, and to alter it and redistribute it
+ * freely, subject to the following restrictions:
+ *
+ *    1. The origin of this software must not be misrepresented; you must not
+ *    claim that you wrote the original software. If you use this software
+ *    in a product, an acknowledgment in the product documentation would be
+ *    appreciated but is not required.
+ *
+ *    2. Altered source versions must be plainly marked as such, and must not
+ *    be misrepresented as being the original software.
+ *
+ *    3. This notice may not be removed or altered from any source
+ *    distribution.
+ */
+"use strict";
+
+var Tilt = Tilt || {};
+var EXPORTED_SYMBOLS = ["Tilt.Rectangle"];
+
+/**
+ * Tilt.Rectangle constructor.
+ */
+Tilt.Rectangle = function(width, height, depth) {
+
+  /**
+   * Buffer of 2-component vertices (x, y) as the corners of a rectangle.
+   */
+  this.vertices = new Tilt.VertexBuffer([0, 0, 1, 0, 0, 1, 1, 1], 2);
+
+  /**
+   * Buffer of 2-component texture coordinates (u, v) for the rectangle.
+   */
+  this.texCoord = new Tilt.VertexBuffer([0, 0, 1, 0, 0, 1, 1, 1], 2);
+};
+
+Tilt.Rectangle.prototype = {
+
+  /**
+   * Destroys this object and deletes all members.
+   */
+  destroy: function() {
+    for (var i in this) {
+      if ("function" === typeof this[i].destroy) {
+        this[i].destroy();
+      }
+      delete this[i];
+    }
+  }
+};
+/*
+ * Cube.js - A simple rectangle primitive wireframe
+ * version 0.1
+ *
+ * Copyright (c) 2011 Victor Porof
+ *
+ * This software is provided "as-is", without any express or implied
+ * warranty. In no event will the authors be held liable for any damages
+ * arising from the use of this software.
+ *
+ * Permission is granted to anyone to use this software for any purpose,
+ * including commercial applications, and to alter it and redistribute it
+ * freely, subject to the following restrictions:
+ *
+ *    1. The origin of this software must not be misrepresented; you must not
+ *    claim that you wrote the original software. If you use this software
+ *    in a product, an acknowledgment in the product documentation would be
+ *    appreciated but is not required.
+ *
+ *    2. Altered source versions must be plainly marked as such, and must not
+ *    be misrepresented as being the original software.
+ *
+ *    3. This notice may not be removed or altered from any source
+ *    distribution.
+ */
+"use strict";
+
+var Tilt = Tilt || {};
+var EXPORTED_SYMBOLS = ["Tilt.RectangleWireframe"];
+
+/**
+ * Tilt.RectangleWireframe constructor.
+ */
+Tilt.RectangleWireframe = function() {
+
+  /**
+   * Buffer of 2-component vertices (x, y) as the outline of a rectangle.
+   */
+  this.vertices = new Tilt.VertexBuffer([0, 0, 1, 0, 1, 1, 0, 1, 0, 0], 2);
+};
+
+Tilt.RectangleWireframe.prototype = {
+
+  /**
+   * Destroys this object and deletes all members.
+   */
+  destroy: function() {
+    for (var i in this) {
+      if ("function" === typeof this[i].destroy) {
+        this[i].destroy();
+      }
+      delete this[i];
+    }
+  }
+};
+/*
+ * Mesh.js - An object representing a drawable mesh
+ * version 0.1
+ *
+ * Copyright (c) 2011 Victor Porof
+ *
+ * This software is provided "as-is", without any express or implied
+ * warranty. In no event will the authors be held liable for any damages
+ * arising from the use of this software.
+ *
+ * Permission is granted to anyone to use this software for any purpose,
+ * including commercial applications, and to alter it and redistribute it
+ * freely, subject to the following restrictions:
+ *
+ *    1. The origin of this software must not be misrepresented; you must not
+ *    claim that you wrote the original software. If you use this software
+ *    in a product, an acknowledgment in the product documentation would be
+ *    appreciated but is not required.
+ *
+ *    2. Altered source versions must be plainly marked as such, and must not
+ *    be misrepresented as being the original software.
+ *
+ *    3. This notice may not be removed or altered from any source
+ *    distribution.
+ */
+"use strict";
+
+var Tilt = Tilt || {};
+var EXPORTED_SYMBOLS = ["Tilt.Mesh"];
+
+/**
+ * Mesh constructor.
+ *
+ * @param {Object} parameters: an object containing the following properties
+ *  @param {Tilt.VertexBuffer} vertices: the vertices buffer (x, y and z)
+ *  @param {Tilt.VertexBuffer} texCoord: the texture coordinates buffer (u, v)
+ *  @param {Tilt.VertexBuffer} normals: the normals buffer (m, n, p)
+ *  @param {Tilt.IndexBuffer} indices: indices for the passed vertices buffer
+ *  @param {String} color: the color to be used by the shader if required
+ *  @param {Tilt.Texture} texture: optional texture to be used by the shader
+ *  @param {Number} drawMode: WebGL enum, like tilt.TRIANGLES
+ * @param {Function} draw: optional function to handle custom drawing
+ */
+Tilt.Mesh = function(parameters, draw) {
+
+  /**
+   * Retain each parameters for easy access.
+   */
+  for (var i in parameters) {
+    this[i] = parameters[i];
+  }
+
+  // the color should be a [r, g, b, a] array, check this now
+  if ("string" === typeof this.color) {
+    this.color = Tilt.Math.hex2rgba(this.color);
+  } else if ("undefined" === typeof this.color) {
+    this.color = [1, 1, 1, 1];
+  }
+
+  // the draw mode should be valid, default to TRIANGLES if unspecified
+  if ("undefined" === typeof this.drawMode) {
+    this.drawMode = Tilt.$renderer.TRIANGLES;
+  }
+
+  // if the draw call is specified in the constructor, overwrite directly
+  if ("function" === typeof draw) {
+    this.draw = draw;
+  }
+};
+
+Tilt.Mesh.prototype = {
+
+  /**
+   * Draws a custom mesh, using only the built-in shaders.
+   * For more complex techniques, create your own shaders and drawing logic.
+   * Overwrite this function to handle custom drawing.
+   */
+  draw: function() {
+    // cache some properties for easy access
+    var tilt = Tilt.$renderer,
+      vertices = this.vertices,
+      texCoord = this.texCoord,
+      normals = this.normals,
+      indices = this.indices,
+      color = this.color,
+      texture = this.texture,
+      drawMode = this.drawMode;
+
+    // use the necessary shader
+    if (texture) {
+      tilt.useTextureShader(vertices, texCoord, color, texture);
+    } else {
+      tilt.useColorShader(vertices, color);
+    }
+
+    // draw the vertices as indexed elements or simple arrays
+    if (indices) {
+      tilt.drawIndexedVertices(drawMode, indices);
+    } else {
+      tilt.drawVertices(drawMode, vertices.numItems);
+    }
+
+    // TODO: use the normals buffer, add some lighting
+    // save the current model view and projection matrices
+    this.mvMatrix = mat4.create(tilt.mvMatrix);
+    this.projMatrix = mat4.create(tilt.projMatrix);
+  },
+
+  /**
+   * Destroys this object and deletes all members.
+   */
+  destroy: function() {
+    for (var i in this) {
+      if ("function" === typeof this[i].destroy) {
+        this[i].destroy();
+      }
+      delete this[i];
+    }
+  }
+};
+/*
+ * Renderer.js - Helper drawing functions for WebGL
  * version 0.1
  *
  * Copyright (c) 2011 Victor Porof
@@ -4726,7 +4938,7 @@ Tilt.Renderer.prototype = {
   },
 
   /**
-   * Destroys this object and sets all members to null.
+   * Destroys this object and deletes all members.
    */
   destroy: function() {
     Tilt.clearCache();
@@ -4735,12 +4947,46 @@ Tilt.Renderer.prototype = {
       if ("function" === typeof this[i].destroy) {
         this[i].destroy();
       }
-      this[i] = null;
+      delete this[i];
     }
   }
 };
-/* 
- * jTiltShaders.js - Various simple shaders used internally by Tilt
+/*
+ * RequestAnimFrame.js - Provides requestAnimationFrame in a cross browser way
+ * version 0.1
+ *
+ * Copyright (c) 2011 Victor Porof
+ *
+ * This software is provided "as-is", without any express or implied
+ * warranty. In no event will the authors be held liable for any damages
+ * arising from the use of this software.
+ *
+ * Permission is granted to anyone to use this software for any purpose,
+ * including commercial applications, and to alter it and redistribute it
+ * freely, subject to the following restrictions:
+ *
+ *    1. The origin of this software must not be misrepresented; you must not
+ *    claim that you wrote the original software. If you use this software
+ *    in a product, an acknowledgment in the product documentation would be
+ *    appreciated but is not required.
+ *
+ *    2. Altered source versions must be plainly marked as such, and must not
+ *    be misrepresented as being the original software.
+ *
+ *    3. This notice may not be removed or altered from any source
+ *    distribution.
+ */
+window.requestAnimFrame = (function() {
+  return window.requestAnimationFrame ||
+         window.webkitRequestAnimationFrame ||
+         window.mozRequestAnimationFrame ||
+         window.oRequestAnimationFrame ||
+         window.msRequestAnimationFrame ||
+         function(callback, element) {
+           window.setTimeout(callback, 1000 / 60);
+         };
+})();/* 
+ * Shaders.js - Various simple shaders used internally by Tilt
  * version 0.1
  *
  * Copyright (c) 2011 Victor Porof
@@ -4858,264 +5104,6 @@ Tilt.Shaders.Texture = {
 "  gl_FragColor = color * tex;",
 "}"
 ].join("\n")
-};
-/*
- * jTiltControllers.js - Easy to use camera controllers for Tilt
- * version 0.1
- *
- * Copyright (c) 2011 Victor Porof
- *
- * This software is provided "as-is", without any express or implied
- * warranty. In no event will the authors be held liable for any damages
- * arising from the use of this software.
- *
- * Permission is granted to anyone to use this software for any purpose,
- * including commercial applications, and to alter it and redistribute it
- * freely, subject to the following restrictions:
- *
- *    1. The origin of this software must not be misrepresented; you must not
- *    claim that you wrote the original software. If you use this software
- *    in a product, an acknowledgment in the product documentation would be
- *    appreciated but is not required.
- *
- *    2. Altered source versions must be plainly marked as such, and must not
- *    be misrepresented as being the original software.
- *
- *    3. This notice may not be removed or altered from any source
- *    distribution.
- */
-"use strict";
-
-var Tilt = Tilt || {};
-var EXPORTED_SYMBOLS = ["Tilt.Arcball"];
-
-/**
- * This is a general purpose 3D rotation controller described by Ken Shoemake
- * in the Graphics Interface ’92 Proceedings. It features good behavior
- * easy implementation, cheap execution, & optional axis constrain.
- *
- * @param {Number} width: the width of canvas
- * @param {Number} height: the height of canvas
- * @param {Number} radius: optional, the radius of the arcball
- * @return {Tilt.Arcball} the newly created object
- */
-Tilt.Arcball = function(width, height, radius) {
-
-  /**
-   * Values retaining the current horizontal and vertical mouse coordinates.
-   */
-  this.mouseX = 0;
-  this.mouseY = 0;
-  this.mouseDragX = 0;
-  this.mouseDragY = 0;
-
-  /**
-   * Additionally, this implementation also handles zoom.
-   */
-  this.scrollValue = 0;
-
-  /**
-   * The vectors representing the mouse coordinates mapped on the arcball
-   * and their perpendicular converted from (x, y) to (x, y, z) at specific
-   * events like mousePressed and mouseDragged.
-   */
-  this.startVec = vec3.create();
-  this.endVec = vec3.create();
-  this.pVec = vec3.create();
-
-  /**
-   * The corresponding rotation quaternions created using the mouse vectors.
-   */
-  this.lastRot = quat4.create([0, 0, 0, 1]);
-  this.deltaRot = quat4.create([0, 0, 0, 1]);
-  this.currentRot = quat4.create([0, 0, 0, 1]);
-
-  /**
-   * The zoom, calculated using mouse scroll deltas.
-   */
-  this.currentZoom = 0;
-
-  /**
-   * Set the current dimensions of the arcball.
-   */
-  this.resize(width, height, radius);
-};
-
-Tilt.Arcball.prototype = {
-
-  /**
-   * Call this function whenever you need the updated rotation quaternion
-   * and the zoom amount. These values will be returned as "rotation" & "zoom"
-   * properties inside an object.
-   *
-   * @param {Number} frameDelta: optional, pass deltas for smooth animations
-   * @return {Object} the rotation quaternion and the zoom amount
-   */
-  loop: function(frameDelta) {
-    if ("undefined" === typeof frameDelta) {
-      frameDelta = 0.25;
-    } else {
-      // this should be in the (0..1) interval
-      frameDelta = Tilt.Math.clamp(frameDelta / 100, 0.01, 0.99);
-    }
-
-    // update the zoom based on the mouse scroll
-    this.currentZoom += (this.scrollValue - this.currentZoom) * frameDelta;
-
-    // update the mouse coordinates
-    this.mouseX += (this.mouseDragX - this.mouseX) * frameDelta;
-    this.mouseY += (this.mouseDragY - this.mouseY) * frameDelta;
-
-    var radius = this.radius,
-      width = this.width,
-      height = this.height,
-      mouseX = this.mouseX,
-      mouseY = this.mouseY;
-
-    // find the sphere coordinates of the mouse positions
-    this.pointToSphere(mouseX, mouseY, width, height, radius, this.endVec);
-
-    // compute the vector perpendicular to the start & end vectors
-    vec3.cross(this.startVec, this.endVec, this.pVec);
-
-    // if the begin and end vectors don't coincide
-    if (vec3.length(this.pVec) > 0) {
-      this.deltaRot[0] = this.pVec[0];
-      this.deltaRot[1] = this.pVec[1];
-      this.deltaRot[2] = this.pVec[2];
-
-      // in the quaternion values, w is cosine (theta / 2),
-      // where theta is the rotation angle
-      this.deltaRot[3] = -vec3.dot(this.startVec, this.endVec);
-    } else {
-      // return an identity rotation quaternion
-      this.deltaRot[0] = 0;
-      this.deltaRot[1] = 0;
-      this.deltaRot[2] = 0;
-      this.deltaRot[3] = 1;
-    }
-
-    // calculate the current rotation using the delta quaternion
-    return {
-      rotation: quat4.multiply(this.lastRot, this.deltaRot, this.currentRot),
-      zoom: this.currentZoom
-    };
-  },
-
-  /**
-   * Function handling the mousePressed event.
-   * Call this when the mouse was pressed.
-   *
-   * @param {Number} x: the current horizontal coordinate of the mouse
-   * @param {Number} y: the current vertical coordinate of the mouse
-   */
-  mousePressed: function(x, y) {
-    this.mouseX = x;
-    this.mouseY = y;
-
-    var radius = this.radius,
-      width = this.width,
-      height = this.height,
-      mouseX = this.mouseX,
-      mouseY = this.mouseY;
-
-    this.pointToSphere(mouseX, mouseY, width, height, radius, this.startVec);
-    quat4.set(this.currentRot, this.lastRot);
-  },
-
-  /**
-   * Function handling the mouseDragged event.
-   * Call this when the mouse was dragged.
-   *
-   * @param {Number} x: the current horizontal coordinate of the mouse
-   * @param {Number} y: the current vertical coordinate of the mouse
-   */
-  mouseDragged: function(x, y) {
-    this.mouseDragX = x;
-    this.mouseDragY = y;
-  },
-
-  /**
-   * Function handling the mouseScroll event.
-   * Call this when the mouse wheel was scrolled.
-   *
-   * @param {Number} scroll: the mouse wheel direction and speed
-   */
-  mouseScroll: function(scroll) {
-    this.scrollValue -= scroll * 10;
-  },
-
-  /**
-   * Maps the 2d coordinates of the mouse location to a 3d point on a sphere.
-   *
-   * @param {Number} x: the current horizontal coordinate of the mouse
-   * @param {Number} y: the current vertical coordinate of the mouse
-   * @param {Number} width: the width of canvas
-   * @param {Number} height: the height of canvas
-   * @param {Number} radius: optional, the radius of the arcball
-   * @param {Array} sphereVec: a 3d vector to store the sphere coordinates
-   */
-  pointToSphere: function(x, y, width, height, radius, sphereVec) {
-    // adjust point coords and scale down to range of [-1..1]
-    x = (x - width / 2) / radius;
-    y = (y - height / 2) / radius;
-
-    // compute the square length of the vector to the point from the center
-    var sqlength = x * x + y * y,
-      normal = 0;
-
-    // if the point is mapped outside of the sphere
-    if (sqlength > 1) {
-      // calculate the normalization factor
-      normal = 1 / Math.sqrt(sqlength);
-
-      // set the normalized vector (a point on the sphere)
-      sphereVec[0] = x * normal;
-      sphereVec[1] = y * normal;
-      sphereVec[2] = 0;
-    } else {
-      // set the vector to a point mapped inside the sphere
-      sphereVec[0] = x;
-      sphereVec[1] = y;
-      sphereVec[2] = Math.sqrt(1 - sqlength);
-    }
-  },
-
-  /**
-   * Resize this implementation to use different bounds.
-   * This function is automatically called when the arcball is created.
-   *
-   * @param {Number} width: the width of canvas
-   * @param {Number} height: the height of canvas
-   * @param {Number} radius: optional, the radius of the arcball
-   */
-  resize: function(newWidth, newHeight, newRadius) {
-    // set the new width, height and radius dimensions
-    this.width = newWidth;
-    this.height = newHeight;
-    this.radius = "undefined" !== typeof newRadius ? newRadius : newHeight;
-
-    var radius = this.radius,
-      width = this.width,
-      height = this.height,
-      mouseX = this.mouseX,
-      mouseY = this.mouseY;
-
-    this.pointToSphere(mouseX, mouseY, width, height, radius, this.startVec);
-    quat4.set(this.currentRot, this.lastRot);
-  },
-
-  /**
-   * Destroys this object and sets all members to null.
-   */
-  destroy: function() {
-    for (var i in this) {
-      if ("function" === typeof this[i].destroy) {
-        this[i].destroy();
-      }
-      this[i] = null;
-    }
-  }
 };
 /*
  * jTiltExtensions.js - Various JavaScript shims and extensions
@@ -5265,7 +5253,7 @@ Tilt.Document = {
     if ("undefined" === typeof this.currentParentNode) {
       this.currentParentNode = document.body;
     }
-    
+
     var doc = this.currentContentDocument, node = this.currentParentNode;
     var canvas = doc.createElement("canvas");
     canvas.width = width;
