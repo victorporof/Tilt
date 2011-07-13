@@ -3,23 +3,22 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
     <title>Tilt</title>
-    
+
     <script type="application/x-javascript" src="../Tilt-min.js"></script>
-        
     <script type="text/javascript">
       function init() {
-        
+
         var canvas, tilt;
-        
+
         function setup() {
           canvas = Tilt.Document.initFullScreenCanvas();
           tilt = new Tilt.Renderer(canvas);
         };
-        
+
         function draw() {
           tilt.loop(draw);
           tilt.clear(0, 0, 0, 1);
-          
+
           tilt.translate(tilt.width / 2, tilt.height / 2, 0);
           tilt.rotateX(tilt.elapsedTime / 500);
           tilt.rotateY(tilt.elapsedTime / 500);
@@ -31,7 +30,7 @@
           tilt.rectMode("center");
           tilt.rect(0, 0, 100, 100);
         };
-        
+
         setup();
         draw();
       }

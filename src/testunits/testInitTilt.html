@@ -5,22 +5,21 @@
     <title>Tilt</title>
 
     <script type="application/x-javascript" src="../Tilt-min.js"></script>
-        
     <script type="text/javascript">
       function init() {
-        
+
         var canvas, tilt;
-        
+
         function setup() {
           canvas = Tilt.Document.initFullScreenCanvas();
           tilt = new Tilt.Renderer(canvas);
         };
-        
+
         function draw() {
           tilt.requestAnimFrame(draw);
           tilt.clear(1, 0, 0, 1);
         };
-        
+
         setup();
         draw();
       }

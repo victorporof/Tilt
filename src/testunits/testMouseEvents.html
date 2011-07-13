@@ -3,44 +3,43 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
     <title>Tilt</title>
-    
+
     <script type="application/x-javascript" src="../Tilt-min.js"></script>
-    
     <script type="text/javascript">
       function init() {
-        
+
         var canvas, tilt;
         var mouseX = 0, mouseY = 0, pressed = false;
-        
+
         function setup() {
           canvas = Tilt.Document.initFullScreenCanvas();
           tilt = new Tilt.Renderer(canvas);
-          
+
           mouseX = tilt.width / 2;
           mouseY = tilt.height / 2;
-          
+
           canvas.onmousemove = mouseMove;
           canvas.onmousedown = mousePressed;
           canvas.onmouseup = mouseReleased;
         };
-        
+
         function draw() {
           tilt.loop(draw);
           tilt.clear(0, 0, 0, 1);
-          
+
           tilt.rotateX(Tilt.Math.radians(tilt.elapsedTime / 10));
           tilt.rotateY(Tilt.Math.radians(tilt.elapsedTime / 10));
           tilt.rotateZ(Tilt.Math.radians(tilt.elapsedTime / 10));
           tilt.scale(2, 2, 2);
-          
+
           var u = Tilt.Math.unproject(
-            mouseX, mouseY, 0.925, tilt.mvMatrix, tilt.projMatrix,
-            0, 0, tilt.width, tilt.height);
-            
+            [mouseX, mouseY, 0.925], [0, 0, tilt.width, tilt.height],
+            tilt.mvMatrix, tilt.projMatrix);
+
           tilt.translate(u[0], u[1], u[2]);
           tilt.stroke("#0f0");
           tilt.strokeWeight(3);
-          
+
           if (pressed) {
             tilt.fill("#f00");
             tilt.box(100, 100, 100);
@@ -50,20 +49,20 @@
             tilt.box(100, 100, 100);
           }
         };
-        
+
         function mouseMove(e) {
           mouseX = e.clientX;
           mouseY = e.clientY;
         }
-        
+
         function mousePressed(e) {
           pressed = true;
         }
-        
+
         function mouseReleased(e) {
           pressed = false;
         }
-        
+
         setup();
         draw();
       }
