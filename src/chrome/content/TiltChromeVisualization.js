@@ -307,6 +307,7 @@ TiltChrome.Visualization = function(canvas, controller) {
     controller.setTranslation = setTranslation;
     controller.setRotation = setRotation;
     controller.performClick = performClick;
+    controller.performDoubleClick = performDoubleClick;
 
     // call the init function on the controller if available
     if ("function" === typeof controller.init) {
@@ -361,7 +362,15 @@ TiltChrome.Visualization = function(canvas, controller) {
    */
   function performClick(x, y) {
     window.content.focus();
+  };
 
+  /**
+   * Delegate double click method, used by the controller.
+   *
+   * @param {number} x: the current horizontal coordinate of the mouse
+   * @param {number} y: the current vertical coordinate of the mouse
+   */
+  function performDoubleClick(x, y) {
     // create a ray following the mouse direction from the near clipping plane
     // to the far clipping plane, to check for intersections with the mesh
     var ray = Tilt.Math.createRay([x, y, 0], [x, y, 1],
@@ -427,27 +436,12 @@ TiltChrome.Visualization = function(canvas, controller) {
       // show the popup panel containing the html editor iframe
       var panel = document.getElementById("tilt-panel");
       panel.label = "Tilt editor: " + intersection.node.name;
-      panel.onkeydown = panelKeyPressed;
       panel.openPopup(null, "overlap",
         window.innerWidth - iframe.width - 17,
         window.innerHeight - iframe.height - 35, false, false);
 
       editor.innerHTML = html;
       iframe.contentWindow.onload();
-    }
-  };
-
-  /**
-   * Called when a key is pressed while the html editor panel has focus.
-   */
-  function panelKeyPressed(e) {
-    var code = e.keyCode || e.which;
-    if (code === 27) { // escape
-      var panel = document.getElementById("tilt-panel");
-      panel.hidePopup();
-      panel.onkeydown = null;
-
-      window.content.focus();
     }
   };
 
