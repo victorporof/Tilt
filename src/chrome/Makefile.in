@@ -12,6 +12,8 @@ jar_sources := $(wildcard $(jar_source_root)/content/*.js) \
                $(wildcard $(jar_source_root)/content/*.xul) \
                $(wildcard $(jar_source_root)/content/*.xml) \
                $(wildcard $(jar_source_root)/content/*.css) \
+               $(wildcard $(jar_source_root)/content/ace/*.html) \
+               $(wildcard $(jar_source_root)/content/ace/src/*.js) \
                $(wildcard $(jar_source_root)/content/engine/*.js) \
                $(wildcard $(jar_source_root)/content/engine/cameras/*.js) \
                $(wildcard $(jar_source_root)/content/engine/core/*.js) \
