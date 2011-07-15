@@ -105,6 +105,8 @@ TiltChrome.BrowserOverlay = {
    * Destroys this object, removes the iframe and sets all members to null.
    */
   destroy: function() {
+    document.getElementById("tilt-panel").hidePopup();
+
     Tilt.Document.currentContentDocument = null;
     Tilt.Document.currentParentNode = null;
 
