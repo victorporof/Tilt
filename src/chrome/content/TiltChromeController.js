@@ -34,28 +34,32 @@ var EXPORTED_SYMBOLS = ["TiltChrome.Controller.MouseAndKeyboard"];
 TiltChrome.Controller = {};
 TiltChrome.Controller.MouseAndKeyboard = function() {
 
+  var self = this,
+
   /**
    * Arcball used to control the visualization using the mouse.
    */
-  var arcball = null,
+  arcball = null,
 
   /**
    * Visualization translation and rotation on the X and Y axis.
    */
   translationX = 0,
-    translationY = 0,
-    rotationX = 0,
-    rotationY = 0,
-    euler = quat4.create(),
+  translationY = 0,
+  dragX = 0,
+  dragY = 0,
+  rotationX = 0,
+  rotationY = 0,
+  euler = quat4.create(),
 
   /**
    * Retain the mouse drag state and position, to manipulate the arcball.
    */
   mouseDragged = false,
-    mouseStartX = 0,
-    mouseStartY = 0,
-    mouseX = 0,
-    mouseY = 0,
+  mouseStartX = 0,
+  mouseStartY = 0,
+  mouseX = 0,
+  mouseY = 0,
 
   /**
    * Retain the keyboard state.
@@ -66,7 +70,7 @@ TiltChrome.Controller.MouseAndKeyboard = function() {
    * Function called automatically by the visualization at the setup().
    * @param {HTMLCanvasElement} canvas: the canvas element
    */
-  this.init = function(canvas) {
+  self.init = function(canvas) {
     arcball = new Tilt.Arcball(canvas.width, canvas.height);
 
     // bind commonly used mouse and keyboard events with the controller
@@ -75,44 +79,55 @@ TiltChrome.Controller.MouseAndKeyboard = function() {
     canvas.addEventListener("mousemove", mouseMoved, false);
     canvas.addEventListener("mouseout", mouseOut, false);
     canvas.addEventListener("DOMMouseScroll", mouseScroll, false);
-    window.addEventListener("keydown", keyPressed, false);
-    window.addEventListener("keyup", keyReleased, false);
+    window.content.document.addEventListener("keydown", keyPressed, false);
+    window.content.document.addEventListener("keyup", keyReleased, false);
   };
 
   /**
    * Function called automatically by the visualization each frame in draw().
    * @param {Number} frameDelta: the delta time elapsed between frames
    */
-  this.loop = function(frameDelta) {
+  self.loop = function(frameDelta) {
     // handle mouse dragged events
     if (mouseDragged) {
-      arcball.mouseDragged(mouseX, mouseY);
+      if (keyCoded()) {
+        translationX = dragX + mouseX - mouseStartX;
+        translationY = dragY + mouseY - mouseStartY;
+
+        self.setTranslation(translationX, translationY, 0);
+        return;
+      }
+      else {
+        arcball.mouseDragged(mouseX, mouseY);
+      }
     }
 
     // handle key pressed events
-    if (keyCode[37]) { // left
-      translationX += frameDelta / 3;
-    }
-    if (keyCode[39]) { // right
-      translationX -= frameDelta / 3;
-    }
-    if (keyCode[38]) { // up
-      translationY += frameDelta / 3;
-    }
-    if (keyCode[40]) { // down
-      translationY -= frameDelta / 3;
-    }
-    if (keyCode[65]) { // w
-      rotationY -= Tilt.Math.radians(frameDelta) / 10;
-    }
-    if (keyCode[68]) { // s
-      rotationY += Tilt.Math.radians(frameDelta) / 10;
-    }
-    if (keyCode[87]) { // a
-      rotationX += Tilt.Math.radians(frameDelta) / 10;
-    }
-    if (keyCode[83]) { // d
-      rotationX -= Tilt.Math.radians(frameDelta) / 10;
+    if (!keyCoded()) {
+      if (keyCode[37]) { // left
+        translationX += frameDelta / 3;
+      }
+      if (keyCode[39]) { // right
+        translationX -= frameDelta / 3;
+      }
+      if (keyCode[38]) { // up
+        translationY += frameDelta / 3;
+      }
+      if (keyCode[40]) { // down
+        translationY -= frameDelta / 3;
+      }
+      if (keyCode[65]) { // w
+        rotationY -= Tilt.Math.radians(frameDelta) / 10;
+      }
+      if (keyCode[68]) { // s
+        rotationY += Tilt.Math.radians(frameDelta) / 10;
+      }
+      if (keyCode[87]) { // a
+        rotationX += Tilt.Math.radians(frameDelta) / 10;
+      }
+      if (keyCode[83]) { // d
+        rotationX -= Tilt.Math.radians(frameDelta) / 10;
+      }
     }
 
     // get the arcball rotation and zoom coordinates
@@ -122,8 +137,8 @@ TiltChrome.Controller.MouseAndKeyboard = function() {
     Tilt.Math.quat4fromEuler(rotationY, rotationX, 0, euler);
 
     // update the visualization
-    this.setRotation(quat4.multiply(euler, coord.rotation));
-    this.setTranslation(translationX, translationY, coord.zoom);
+    self.setRotation(quat4.multiply(euler, coord.rotation));
+    self.setTranslation(translationX, translationY, coord.zoom);
   };
 
   /**
@@ -137,8 +152,12 @@ TiltChrome.Controller.MouseAndKeyboard = function() {
     mouseY = e.clientY - e.target.offsetTop;
     mouseStartX = mouseX;
     mouseStartY = mouseY;
+    dragX = translationX;
+    dragY = translationY;
 
-    arcball.mousePressed(mouseX, mouseY);
+    if (!keyCoded()) {
+      arcball.mousePressed(mouseX, mouseY);
+    }
     mouseDragged = true;
   };
 
@@ -152,7 +171,7 @@ TiltChrome.Controller.MouseAndKeyboard = function() {
     mouseDragged = false;
 
     if (mouseStartX === mouseX && mouseStartY === mouseY) {
-      this.performClick(mouseX, mouseY);
+      self.performClick(mouseX, mouseY);
     }
   };
 
@@ -193,6 +212,11 @@ TiltChrome.Controller.MouseAndKeyboard = function() {
   function keyPressed(e) {
     var code = e.keyCode || e.which;
     keyCode[code] = true;
+
+    if (keyCoded()) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
   };
 
   /**
@@ -206,6 +230,24 @@ TiltChrome.Controller.MouseAndKeyboard = function() {
       TiltChrome.BrowserOverlay.href = null;
       TiltChrome.BrowserOverlay.destroy();
     }
+
+    if (keyCoded()) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+  };
+
+  /**
+   * Returns if the key is coded (control or command).
+   * @return {Boolean} true if the key is coded
+   */
+  function keyCoded() {
+    if (keyCode !== null) {
+      return keyCode[17] || keyCode[224];
+    }
+    else {
+      return false;
+    }
   };
 
   /**
@@ -218,8 +260,8 @@ TiltChrome.Controller.MouseAndKeyboard = function() {
     canvas.removeEventListener("mousemove", mouseMoved, false);
     canvas.removeEventListener("mouseout", mouseOut, false);
     canvas.removeEventListener("DOMMouseScroll", mouseScroll, false);
-    window.removeEventListener("keydown", keyPressed, false);
-    window.removeEventListener("keyup", keyReleased, false);
+    window.content.document.removeEventListener("keydown", keyPressed, false);
+    window.content.document.removeEventListener("keyup", keyReleased, false);
 
     arcball.destroy();
     arcball = null;
@@ -229,5 +271,7 @@ TiltChrome.Controller.MouseAndKeyboard = function() {
     for (var i in this) {
       delete this[i];
     }
+
+    self = null;
   };
 };
