@@ -175,7 +175,7 @@ TiltChrome.Visualization = function(canvas, controller) {
       var coord = Tilt.Document.getNodeCoordinates(node);
 
       // use this node only if it actually has any dimensions
-      if ((coord.width > 1 && coord.height > 1) && depth > 0) {
+      if (coord.width > 1 && coord.height > 1) {
         // the entire mesh's pivot is the screen center
         var x = coord.x - tilt.width / 2,
          y = coord.y - tilt.height / 2,
@@ -223,9 +223,7 @@ TiltChrome.Visualization = function(canvas, controller) {
 
         // save the inner html for each triangle
         nodeInformation.push({
-          innerHTML: node.innerHTML,
-          name: Tilt.Document.getNodeType(node) + ", " +
-                "name: <" + node.localName + ">"
+          innerHTML: node.innerHTML
         });
 
         // compute the indices
@@ -236,7 +234,7 @@ TiltChrome.Visualization = function(canvas, controller) {
         indices.push(i + 8,  i + 11, i + 4,  i + 8,  i + 4,  i + 7);
 
         // close the stack adding a back face if it's the first layer
-        // if (depth === 1) {
+        // if (depth === 0) {
         //   indices.push(11, 10, 5, 11, 5, 4);
         // }
 
@@ -276,12 +274,13 @@ TiltChrome.Visualization = function(canvas, controller) {
    */
   function setupBrowserEvents() {
     // when the tab is closed or the url changes, destroy visualization
-    gBrowser.tabContainer.addEventListener("TabClose", gTabClose, false);
+    gBrowser.tabContainer.addEventListener("TabClose", gClose, false);
+    gBrowser.tabContainer.addEventListener("TabAttrModified", gClose, false);
     gBrowser.contentWindow.addEventListener("resize", gResize, false);
   };
 
   // called when the tab container of the current browser is closed
-  function gTabClose(e) {
+  function gClose(e) {
     if (TiltChrome.BrowserOverlay.href !== window.content.location.href) {
       TiltChrome.BrowserOverlay.href = null;
       TiltChrome.BrowserOverlay.destroy();
@@ -329,6 +328,8 @@ TiltChrome.Visualization = function(canvas, controller) {
       transforms.translation[1] = y;
       transforms.translation[2] = z;
       redraw = true;
+
+      window.content.focus();
     }
   };
 
@@ -345,6 +346,8 @@ TiltChrome.Visualization = function(canvas, controller) {
 
       quat4.set(quaternion, transforms.rotation);
       redraw = true;
+
+      window.content.focus();
     }
   };
 
@@ -355,63 +358,102 @@ TiltChrome.Visualization = function(canvas, controller) {
    * @param {number} y: the current vertical coordinate of the mouse
    */
   function performClick(x, y) {
-    // var ray = Tilt.Math.createRay([x, y, 0], [x, y, 1],
-    //                               [0, 0, tilt.width, tilt.height],
-    //                               mesh.mvMatrix,
-    //                               mesh.projMatrix);
-    // var point = vec3.create();
-    // var intersections = [];
-    //
-    // for (var i = 0, length = mesh.indices.length; i < length; i += 3) {
-    //   var v0 = [mesh.vertices[mesh.indices[i    ] * 3    ],
-    //             mesh.vertices[mesh.indices[i    ] * 3 + 1],
-    //             mesh.vertices[mesh.indices[i    ] * 3 + 2]];
-    //
-    //   var v1 = [mesh.vertices[mesh.indices[i + 1] * 3    ],
-    //             mesh.vertices[mesh.indices[i + 1] * 3 + 1],
-    //             mesh.vertices[mesh.indices[i + 1] * 3 + 2]];
-    //
-    //   var v2 = [mesh.vertices[mesh.indices[i + 2] * 3    ],
-    //             mesh.vertices[mesh.indices[i + 2] * 3 + 1],
-    //             mesh.vertices[mesh.indices[i + 2] * 3 + 2]];
-    //
-    //   if (Tilt.Math.intersectRayTriangle(v0, v1, v2, ray, point) > 0) {
-    //     var copy = vec3.create();
-    //     vec3.set(point, copy);
-    //     intersections.push({
-    //       location: copy,
-    //       node: mesh.nodeInformation[Math.floor(i / 30)]
-    //     });
-    //   }
-    // }
-    //
-    // if (intersections.length > 0) {
-    //   intersections.sort(function(a, b) {
-    //     if (a.location[2] < b.location[2]) {
-    //       return 1;
-    //     }
-    //     else {
-    //       return -1;
-    //     }
-    //   });
-    //
-    //   var intersection = intersections[0];
-    //
-    //   var promptService =
-    //     Components.classes["@mozilla.org/embedcomp/prompt-service;1"]
-    //     .getService(Components.interfaces.nsIPromptService);
-    //
-    //   promptService.alert(null,
-    //     intersection.node.name, intersection.node.innerHTML);
-    // }
+    window.content.focus();
+
+    // create a ray following the mouse direction from the near clipping plane
+    // to the far clipping plane, to check for intersections with the mesh
+    var ray = Tilt.Math.createRay([x, y, 0], [x, y, 1],
+                                  [0, 0, tilt.width, tilt.height],
+                                  mesh.mvMatrix,
+                                  mesh.projMatrix);
+    var point = vec3.create();
+    var intersections = [];
+
+    for (var i = 0, length = mesh.indices.length; i < length; i += 3) {
+      var v0 = [mesh.vertices[mesh.indices[i    ] * 3    ],
+                mesh.vertices[mesh.indices[i    ] * 3 + 1],
+                mesh.vertices[mesh.indices[i    ] * 3 + 2]];
+
+      var v1 = [mesh.vertices[mesh.indices[i + 1] * 3    ],
+                mesh.vertices[mesh.indices[i + 1] * 3 + 1],
+                mesh.vertices[mesh.indices[i + 1] * 3 + 2]];
+
+      var v2 = [mesh.vertices[mesh.indices[i + 2] * 3    ],
+                mesh.vertices[mesh.indices[i + 2] * 3 + 1],
+                mesh.vertices[mesh.indices[i + 2] * 3 + 2]];
+
+      // for each triangle in the mesh, check to see if the mouse ray
+      // intersects the triangle
+      if (Tilt.Math.intersectRayTriangle(v0, v1, v2, ray, point) > 0) {
+        // save the intersection, along with the node information
+        intersections.push({
+          location: vec3.create(point),
+          node: mesh.nodeInformation[Math.floor(i / 30)]
+        });
+      }
+    }
+
+    // if there were any intersections, sort them by the distance towards the
+    // camera, and show a panel with the node information
+    if (intersections.length > 0) {
+      intersections.sort(function(a, b) {
+        if (a.location[2] < b.location[2]) {
+          return 1;
+        }
+        else {
+          return -1;
+        }
+      });
+
+      // use only the first intersection (closest to the camera)
+      var intersection = intersections[0];
+      var html = Tilt.String.trim(
+        style_html(intersection.node.innerHTML, 
+        {
+          'indent_size': 2,
+          'indent_char': ' ',
+          'max_char': 78,
+          'brace_style': 'default'
+        })
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;"));
+
+      // get the iframe containing the html editor, and add the html
+      var iframe = document.getElementById("tilt-iframe");
+      var editor = iframe.contentDocument.getElementById("editor");
+      editor.innerHTML = html;
+      iframe.contentWindow.onload();
+
+      // show the popup panel containing the html editor iframe
+      var panel = document.getElementById("tilt-panel");
+      panel.onkeydown = panelKeyPressed;
+      panel.openPopup(null, "overlap",
+        window.innerWidth - iframe.width - 20,
+        window.innerHeight - iframe.height - 45, false, false);
+    }
+  };
+
+  /**
+   * Called when a key is pressed while the html editor panel has focus.
+   */
+  function panelKeyPressed(e) {
+    var code = e.keyCode || e.which;
+    if (code === 27) { // escape
+      var panel = document.getElementById("tilt-panel");
+      panel.hidePopup();
+      panel.onkeydown = null;
+
+      window.content.focus();
+    }
   };
 
   /**
    * Destroys this object and sets all members to null.
    */
   this.destroy = function() {
-    gBrowser.tabContainer.removeEventListener("TabClose", gTabClose, false);
-    gBrowser.contentWindow.removeEventListener("resize", gResize, false);
+    gBrowser.tabContainer.removeEventListener("TabClose", gClose, 0);
+    gBrowser.tabContainer.removeEventListener("TabAttrModified", gClose, 0);
+    gBrowser.contentWindow.removeEventListener("resize", gResize, 0);
 
     controller.destroy(canvas);
     controller = null;
