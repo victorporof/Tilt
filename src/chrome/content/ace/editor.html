@@ -29,7 +29,7 @@
 window.onload = function() {
     var editor = ace.edit("editor");
     editor.setTheme("ace/theme/dawn");
-    
+
     var HTMLMode = require("ace/mode/html").Mode;
     editor.getSession().setMode(new HTMLMode());
     editor.renderer.setHScrollBarAlwaysVisible(false);
