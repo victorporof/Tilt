@@ -1,10 +1,6 @@
 <?xml version="1.0"?>
-
-<?xml-stylesheet type="text/css"
-                 href="chrome://global/skin/"?>
-
-<?xml-stylesheet type="text/css"
-                 href="chrome://tilt/skin/browserOverlay.css"?>
+<?xml-stylesheet type="text/css" href="chrome://global/skin/"?>
+<?xml-stylesheet type="text/css" href="chrome://tilt/skin/browserOverlay.css"?>
 
 <!DOCTYPE overlay SYSTEM "chrome://tilt/locale/browserOverlay.dtd">
 
@@ -31,6 +27,10 @@
   <script type="application/x-javascript"
     src="chrome://tilt/content/engine/core/TextureUtils.js"/>
 
+  <script type="application/x-javascript"
+    src="chrome://tilt/content/engine/lib/beautify.js"/>
+  <script type="application/x-javascript"
+    src="chrome://tilt/content/engine/lib/beautify-html.js"/>
   <script type="application/x-javascript"
     src="chrome://tilt/content/engine/lib/glMatrix-0.9.6.js"/>
   <script type="application/x-javascript"
@@ -99,7 +99,15 @@
   </menupopup>
 
   <window>
-    <html:iframe id="tilt-iframe" width="0px" height="0px"/>
+    <panel id="tilt-panel"
+      type="arrow"
+      noautohide="true"
+      noautofocus="true"
+      onpopupshown="document.getElementById('tilt-iframe').focus()">
+
+      <iframe id="tilt-iframe" src="chrome://tilt/content/ace/editor.html"
+        width="480" height="320"/>
+    </panel>
   </window>
 
   <!-- <menupopup id="menuWebDeveloperPopup">
