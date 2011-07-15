@@ -46,6 +46,7 @@ TiltChrome.Controller.MouseAndKeyboard = function() {
    */
   translationX = 0,
   translationY = 0,
+  translationZ = 0,
   dragX = 0,
   dragY = 0,
   rotationX = 0,
@@ -94,7 +95,7 @@ TiltChrome.Controller.MouseAndKeyboard = function() {
         translationX = dragX + mouseX - mouseStartX;
         translationY = dragY + mouseY - mouseStartY;
 
-        self.setTranslation(translationX, translationY, 0);
+        self.setTranslation(translationX, translationY, translationZ);
         return;
       }
       else {
@@ -132,13 +133,14 @@ TiltChrome.Controller.MouseAndKeyboard = function() {
 
     // get the arcball rotation and zoom coordinates
     var coord = arcball.loop(frameDelta);
+    translationZ = coord.zoom;
 
     // create another custom rotation
     Tilt.Math.quat4fromEuler(rotationY, rotationX, 0, euler);
 
     // update the visualization
     self.setRotation(quat4.multiply(euler, coord.rotation));
-    self.setTranslation(translationX, translationY, coord.zoom);
+    self.setTranslation(translationX, translationY, translationZ);
   };
 
   /**
