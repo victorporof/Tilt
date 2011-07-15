@@ -77,11 +77,12 @@ TiltChrome.Controller.MouseAndKeyboard = function() {
     // bind commonly used mouse and keyboard events with the controller
     canvas.addEventListener("mousedown", mousePressed, false);
     canvas.addEventListener("mouseup", mouseReleased, false);
+    canvas.addEventListener("dblclick", mouseDoubleClick, false);
     canvas.addEventListener("mousemove", mouseMoved, false);
     canvas.addEventListener("mouseout", mouseOut, false);
     canvas.addEventListener("DOMMouseScroll", mouseScroll, false);
-    window.content.document.addEventListener("keydown", keyPressed, false);
-    window.content.document.addEventListener("keyup", keyReleased, false);
+    window.addEventListener("keydown", keyPressed, false);
+    window.addEventListener("keyup", keyReleased, false);
   };
 
   /**
@@ -178,6 +179,20 @@ TiltChrome.Controller.MouseAndKeyboard = function() {
   };
 
   /**
+   * Called every time a mouse button is double clicked.
+   */
+  function mouseDoubleClick(e) {
+    e.preventDefault();
+    e.stopPropagation();
+
+    mouseDragged = false;
+
+    if (mouseStartX === mouseX && mouseStartY === mouseY) {
+      self.performDoubleClick(mouseX, mouseY);
+    }
+  };
+
+  /**
    * Called every time the mouse moves.
    */
   function mouseMoved(e) {
@@ -259,11 +274,12 @@ TiltChrome.Controller.MouseAndKeyboard = function() {
   this.destroy = function(canvas) {
     canvas.removeEventListener("mousedown", mousePressed, false);
     canvas.removeEventListener("mouseup", mouseReleased, false);
+    canvas.removeEventListener("dblclick", mouseDoubleClick, false);
     canvas.removeEventListener("mousemove", mouseMoved, false);
     canvas.removeEventListener("mouseout", mouseOut, false);
     canvas.removeEventListener("DOMMouseScroll", mouseScroll, false);
-    window.content.document.removeEventListener("keydown", keyPressed, false);
-    window.content.document.removeEventListener("keyup", keyReleased, false);
+    window.removeEventListener("keydown", keyPressed, false);
+    window.removeEventListener("keyup", keyReleased, false);
 
     arcball.destroy();
     arcball = null;
