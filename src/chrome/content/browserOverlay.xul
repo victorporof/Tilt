@@ -100,9 +100,9 @@
 
   <window>
     <panel id="tilt-panel"
-      type="arrow"
+      titlebar="normal"
+      close="true"
       noautohide="true"
-      noautofocus="true"
       onpopupshown="document.getElementById('tilt-iframe').focus()">
 
       <iframe id="tilt-iframe" src="chrome://tilt/content/ace/editor.html"
