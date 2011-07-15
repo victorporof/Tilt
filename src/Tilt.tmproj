@@ -3,7 +3,7 @@
 <plist version="1.0">
 <dict>
 	<key>currentDocument</key>
-	<string>chrome/content/browserOverlay.xul</string>
+	<string>chrome/content/TiltChromeVisualization.js</string>
 	<key>documents</key>
 	<array>
 		<dict>
@@ -128,26 +128,26 @@
 				<key>column</key>
 				<integer>0</integer>
 				<key>line</key>
-				<integer>129</integer>
+				<integer>0</integer>
 			</dict>
 			<key>firstVisibleColumn</key>
 			<integer>0</integer>
 			<key>firstVisibleLine</key>
-			<integer>99</integer>
+			<integer>162</integer>
 		</dict>
 		<key>chrome/content/TiltChromeVisualization.js</key>
 		<dict>
 			<key>caret</key>
 			<dict>
 				<key>column</key>
-				<integer>0</integer>
+				<integer>47</integer>
 				<key>line</key>
-				<integer>415</integer>
+				<integer>432</integer>
 			</dict>
 			<key>firstVisibleColumn</key>
 			<integer>0</integer>
 			<key>firstVisibleLine</key>
-			<integer>382</integer>
+			<integer>402</integer>
 		</dict>
 		<key>chrome/content/ace/editor.html</key>
 		<dict>
@@ -156,56 +156,40 @@
 				<key>column</key>
 				<integer>0</integer>
 				<key>line</key>
-				<integer>30</integer>
+				<integer>0</integer>
 			</dict>
 			<key>firstVisibleColumn</key>
 			<integer>0</integer>
 			<key>firstVisibleLine</key>
-			<integer>3</integer>
+			<integer>0</integer>
 		</dict>
 		<key>chrome/content/browserOverlay.js</key>
 		<dict>
 			<key>caret</key>
 			<dict>
 				<key>column</key>
-				<integer>74</integer>
+				<integer>0</integer>
 				<key>line</key>
-				<integer>92</integer>
+				<integer>108</integer>
 			</dict>
 			<key>firstVisibleColumn</key>
 			<integer>0</integer>
 			<key>firstVisibleLine</key>
-			<integer>80</integer>
+			<integer>79</integer>
 		</dict>
 		<key>chrome/content/browserOverlay.xul</key>
 		<dict>
 			<key>caret</key>
 			<dict>
 				<key>column</key>
-				<integer>17</integer>
+				<integer>0</integer>
 				<key>line</key>
-				<integer>101</integer>
+				<integer>111</integer>
 			</dict>
-			<key>columnSelection</key>
-			<false/>
 			<key>firstVisibleColumn</key>
 			<integer>0</integer>
 			<key>firstVisibleLine</key>
-			<integer>72</integer>
-			<key>selectFrom</key>
-			<dict>
-				<key>column</key>
-				<integer>15</integer>
-				<key>line</key>
-				<integer>101</integer>
-			</dict>
-			<key>selectTo</key>
-			<dict>
-				<key>column</key>
-				<integer>18</integer>
-				<key>line</key>
-				<integer>101</integer>
-			</dict>
+			<integer>78</integer>
 		</dict>
 		<key>chrome/content/engine/cameras/Arcball.js</key>
 		<dict>
@@ -326,14 +310,30 @@
 			<key>caret</key>
 			<dict>
 				<key>column</key>
-				<integer>31</integer>
+				<integer>93</integer>
 				<key>line</key>
-				<integer>100</integer>
+				<integer>117</integer>
 			</dict>
+			<key>columnSelection</key>
+			<false/>
 			<key>firstVisibleColumn</key>
 			<integer>0</integer>
 			<key>firstVisibleLine</key>
-			<integer>80</integer>
+			<integer>99</integer>
+			<key>selectFrom</key>
+			<dict>
+				<key>column</key>
+				<integer>82</integer>
+				<key>line</key>
+				<integer>117</integer>
+			</dict>
+			<key>selectTo</key>
+			<dict>
+				<key>column</key>
+				<integer>93</integer>
+				<key>line</key>
+				<integer>117</integer>
+			</dict>
 		</dict>
 		<key>chrome/content/engine/lib/glMatrix-0.9.6.js</key>
 		<dict>
@@ -637,6 +637,20 @@
 			<key>firstVisibleLine</key>
 			<integer>0</integer>
 		</dict>
+		<key>chrome/locale/en-US/browserOverlay.properties</key>
+		<dict>
+			<key>caret</key>
+			<dict>
+				<key>column</key>
+				<integer>59</integer>
+				<key>line</key>
+				<integer>1</integer>
+			</dict>
+			<key>firstVisibleColumn</key>
+			<integer>0</integer>
+			<key>firstVisibleLine</key>
+			<integer>0</integer>
+		</dict>
 		<key>chrome/skin/browserOverlay.css</key>
 		<dict>
 			<key>caret</key>
@@ -670,14 +684,30 @@
 			<key>caret</key>
 			<dict>
 				<key>column</key>
-				<integer>28</integer>
+				<integer>23</integer>
 				<key>line</key>
 				<integer>20</integer>
 			</dict>
+			<key>columnSelection</key>
+			<false/>
 			<key>firstVisibleColumn</key>
 			<integer>0</integer>
 			<key>firstVisibleLine</key>
 			<integer>0</integer>
+			<key>selectFrom</key>
+			<dict>
+				<key>column</key>
+				<integer>24</integer>
+				<key>line</key>
+				<integer>20</integer>
+			</dict>
+			<key>selectTo</key>
+			<dict>
+				<key>column</key>
+				<integer>23</integer>
+				<key>line</key>
+				<integer>20</integer>
+			</dict>
 		</dict>
 		<key>testunits/testInitCanvas.html</key>
 		<dict>
@@ -797,6 +827,7 @@
 	<key>openDocuments</key>
 	<array>
 		<string>chrome/content/TiltChromeVisualization.js</string>
+		<string>chrome/locale/en-US/browserOverlay.properties</string>
 		<string>chrome/content/engine/lib/beautify-html.js</string>
 		<string>chrome/content/browserOverlay.js</string>
 		<string>chrome/content/ace/editor.html</string>
@@ -836,6 +867,7 @@
 		<string>chrome/content/engine/cameras/Arcball.js</string>
 		<string>chrome/content/TiltChromeController.js</string>
 		<string>chrome/content/browserOverlay.xul</string>
+		<string>install.rdf</string>
 		<string>chrome/Makefile.in</string>
 		<string>chrome/content/engine/renderer/Shaders.js</string>
 	</array>
