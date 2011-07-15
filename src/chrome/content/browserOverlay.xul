@@ -100,13 +100,17 @@
 
   <window>
     <panel id="tilt-panel"
-      titlebar="normal"
-      close="true"
+      type="arrow"
       noautohide="true"
       onpopupshown="document.getElementById('tilt-iframe').focus()">
 
-      <iframe id="tilt-iframe" src="chrome://tilt/content/ace/editor.html"
-        width="480" height="320"/>
+      <vbox>
+        <label id="tilt-panel-label" value="Tilt editor"
+          width="400" crop="center"/>
+
+        <iframe id="tilt-iframe" src="chrome://tilt/content/ace/editor.html"
+          width="480" height="320"/>
+      </vbox>
     </panel>
   </window>
 
