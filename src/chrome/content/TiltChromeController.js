@@ -92,7 +92,7 @@ TiltChrome.Controller.MouseAndKeyboard = function() {
   self.loop = function(frameDelta) {
     // handle mouse dragged events
     if (mouseDragged) {
-      if (keyCoded()) {
+      if (keyCoded() || mouseDragged === 3) {
         translationX = dragX + mouseX - mouseStartX;
         translationY = dragY + mouseY - mouseStartY;
 
@@ -158,10 +158,11 @@ TiltChrome.Controller.MouseAndKeyboard = function() {
     dragX = translationX;
     dragY = translationY;
 
-    if (!keyCoded()) {
+    mouseDragged = e.which;
+
+    if (!keyCoded() && mouseDragged !== 3) {
       arcball.mousePressed(mouseX, mouseY);
     }
-    mouseDragged = true;
   };
 
   /**
@@ -229,11 +230,6 @@ TiltChrome.Controller.MouseAndKeyboard = function() {
   function keyPressed(e) {
     var code = e.keyCode || e.which;
     keyCode[code] = true;
-
-    if (keyCoded()) {
-      e.preventDefault();
-      e.stopPropagation();
-    }
   };
 
   /**
@@ -244,13 +240,20 @@ TiltChrome.Controller.MouseAndKeyboard = function() {
     keyCode[code] = false;
 
     if (code === 27) { // escape
-      TiltChrome.BrowserOverlay.href = null;
-      TiltChrome.BrowserOverlay.destroy();
-    }
+      var panel = document.getElementById("tilt-panel");
 
-    if (keyCoded()) {
-      e.preventDefault();
-      e.stopPropagation();
+      // if the panel with the html editor was open, hide it now
+      if ("open" === panel.state) {
+        panel.hidePopup();
+
+        // reset some input events which might have been triggered
+        keyCode = [];
+        mouseDragged = false;
+      }
+      else {
+        TiltChrome.BrowserOverlay.href = null;
+        TiltChrome.BrowserOverlay.destroy();
+      }
     }
   };
 
