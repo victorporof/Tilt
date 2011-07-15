@@ -223,7 +223,9 @@ TiltChrome.Visualization = function(canvas, controller) {
 
         // save the inner html for each triangle
         nodeInformation.push({
-          innerHTML: node.innerHTML
+          innerHTML: node.innerHTML,
+          name: Tilt.Document.getNodeType(node) + ", " +
+            "name: <" + node.localName + ">"
         });
 
         // compute the indices
@@ -421,15 +423,17 @@ TiltChrome.Visualization = function(canvas, controller) {
       // get the iframe containing the html editor, and add the html
       var iframe = document.getElementById("tilt-iframe");
       var editor = iframe.contentDocument.getElementById("editor");
-      editor.innerHTML = html;
-      iframe.contentWindow.onload();
 
       // show the popup panel containing the html editor iframe
       var panel = document.getElementById("tilt-panel");
+      panel.label = "Tilt editor: " + intersection.node.name;
       panel.onkeydown = panelKeyPressed;
       panel.openPopup(null, "overlap",
-        window.innerWidth - iframe.width - 20,
-        window.innerHeight - iframe.height - 45, false, false);
+        window.innerWidth - iframe.width - 17,
+        window.innerHeight - iframe.height - 35, false, false);
+
+      editor.innerHTML = html;
+      iframe.contentWindow.onload();
     }
   };
 
