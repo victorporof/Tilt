@@ -224,8 +224,8 @@ TiltChrome.Visualization = function(canvas, controller) {
         // save the inner html for each triangle
         nodeInformation.push({
           innerHTML: node.innerHTML,
-          name: Tilt.Document.getNodeType(node) + ", " +
-            "name: <" + node.localName + ">"
+          type: Tilt.Document.getNodeType(node),
+          name: node.localName
         });
 
         // compute the indices
@@ -281,21 +281,26 @@ TiltChrome.Visualization = function(canvas, controller) {
     gBrowser.contentWindow.addEventListener("resize", gResize, false);
   };
 
-  // called when the tab container of the current browser is closed
+  /**
+   * Delegate called when the tab container of the current browser is closed.
+   */
   function gClose(e) {
     if (TiltChrome.BrowserOverlay.href !== window.content.location.href) {
       TiltChrome.BrowserOverlay.href = null;
       TiltChrome.BrowserOverlay.destroy();
     }
-  }
+  };
 
-  // called when the content window of the current browser is resized
+  /**
+   * Delegate called when the content of the current browser is resized.
+   */
   function gResize(e) {
     tilt.width = window.content.innerWidth;
     tilt.height = window.content.innerHeight;
-    Tilt.Console.error(tilt.width);
     redraw = true;
-  }
+
+    document.getElementById("tilt-panel").hidePopup();
+  };
 
   /**
    * Setup the controller, referencing this visualization.
@@ -318,9 +323,9 @@ TiltChrome.Visualization = function(canvas, controller) {
   /**
    * Delegate translation method, used by the controller.
    *
-   * @param {number} x: the new translation on the x axis
-   * @param {number} y: the new translation on the y axis
-   * @param {number} z: the new translation on the z axis
+   * @param {Number} x: the new translation on the x axis
+   * @param {Number} y: the new translation on the y axis
+   * @param {Number} z: the new translation on the z axis
    */
   function setTranslation(x, y, z) {
     if (transforms.translation[0] != x ||
@@ -331,15 +336,12 @@ TiltChrome.Visualization = function(canvas, controller) {
       transforms.translation[1] = y;
       transforms.translation[2] = z;
       redraw = true;
-
-      window.content.focus();
     }
   };
 
   /**
    * Delegate rotation method, used by the controller.
-   *
-   * @param {array} quaternion: the rotation quaternion, as [x, y, z, w]
+   * @param {Array} quaternion: the rotation quaternion, as [x, y, z, w]
    */
   function setRotation(quaternion) {
     if (transforms.rotation[0] != quaternion[0] ||
@@ -349,16 +351,14 @@ TiltChrome.Visualization = function(canvas, controller) {
 
       quat4.set(quaternion, transforms.rotation);
       redraw = true;
-
-      window.content.focus();
     }
   };
 
   /**
    * Delegate click method, used by the controller.
    *
-   * @param {number} x: the current horizontal coordinate of the mouse
-   * @param {number} y: the current vertical coordinate of the mouse
+   * @param {Number} x: the current horizontal coordinate of the mouse
+   * @param {Number} y: the current vertical coordinate of the mouse
    */
   function performClick(x, y) {
     window.content.focus();
@@ -367,8 +367,8 @@ TiltChrome.Visualization = function(canvas, controller) {
   /**
    * Delegate double click method, used by the controller.
    *
-   * @param {number} x: the current horizontal coordinate of the mouse
-   * @param {number} y: the current vertical coordinate of the mouse
+   * @param {Number} x: the current horizontal coordinate of the mouse
+   * @param {Number} y: the current vertical coordinate of the mouse
    */
   function performDoubleClick(x, y) {
     // create a ray following the mouse direction from the near clipping plane
@@ -429,17 +429,20 @@ TiltChrome.Visualization = function(canvas, controller) {
         .replace(/</g, "&lt;")
         .replace(/>/g, "&gt;"));
 
-      // get the iframe containing the html editor, and add the html
-      var iframe = document.getElementById("tilt-iframe");
-      var editor = iframe.contentDocument.getElementById("editor");
+      var label = document.getElementById("tilt-panel-label");
+      label.value = "Tilt editor: " + 
+        intersection.node.type + " <" + intersection.node.name + "> " + 
+        "@ " + window.content.location.href;
 
       // show the popup panel containing the html editor iframe
+      var iframe = document.getElementById("tilt-iframe");
       var panel = document.getElementById("tilt-panel");
-      panel.label = "Tilt editor: " + intersection.node.name;
       panel.openPopup(null, "overlap",
-        window.innerWidth - iframe.width - 17,
-        window.innerHeight - iframe.height - 35, false, false);
+        window.innerWidth - iframe.width - 20,
+        window.innerHeight - iframe.height - 65, false, false);
 
+      // get the content document containing the html editor, and add the html
+      var editor = iframe.contentDocument.getElementById("editor");
       editor.innerHTML = html;
       iframe.contentWindow.onload();
     }
