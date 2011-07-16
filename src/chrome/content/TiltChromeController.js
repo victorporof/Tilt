@@ -228,8 +228,11 @@ TiltChrome.Controller.MouseAndKeyboard = function() {
    * Called when a key is pressed.
    */
   function keyPressed(e) {
-    var code = e.keyCode || e.which;
-    keyCode[code] = true;
+    // handle key events only if the html editor is not open 
+    if ("open" !== document.getElementById("tilt-panel").state) {
+      var code = e.keyCode || e.which;
+      keyCode[code] = true;
+    }
   };
 
   /**
