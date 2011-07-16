@@ -85,7 +85,7 @@ TiltChrome.BrowserOverlay = {
     let height = window.content.innerHeight;
 
     // get the iframe which will be used to create the canvas element
-    let iframe = document.getElementById("tilt-iframe");
+    let iframe = document.getElementById("tilt-panel-iframe");
 
     // inside a chrome environment the default document and parent nodes
     // are different from an unprivileged html page, so change these
