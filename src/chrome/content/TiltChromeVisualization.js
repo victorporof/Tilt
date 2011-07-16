@@ -429,17 +429,18 @@ TiltChrome.Visualization = function(canvas, controller) {
         .replace(/</g, "&lt;")
         .replace(/>/g, "&gt;"));
 
+      // set the title label of the popup panel
       var label = document.getElementById("tilt-panel-label");
       label.value = "Tilt editor: " + 
         intersection.node.type + " <" + intersection.node.name + "> " + 
-        "@ " + window.content.location.href;
+        window.content.location.href;
 
       // show the popup panel containing the html editor iframe
-      var iframe = document.getElementById("tilt-iframe");
+      var iframe = document.getElementById("tilt-panel-iframe");
       var panel = document.getElementById("tilt-panel");
       panel.openPopup(null, "overlap",
-        window.innerWidth - iframe.width - 20,
-        window.innerHeight - iframe.height - 65, false, false);
+        window.innerWidth - iframe.width - 21,
+        window.innerHeight - iframe.height - 77, false, false);
 
       // get the content document containing the html editor, and add the html
       var editor = iframe.contentDocument.getElementById("editor");
