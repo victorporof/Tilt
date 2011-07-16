@@ -167,7 +167,7 @@ TiltChrome.Visualization = function(canvas, controller) {
       texCoord = [],
       indices = [],
       wireframeIndices = [],
-      nodeInformation = [];
+      nodes = [];
 
     // traverse the document
     Tilt.Document.traverse(function(node, depth) {
@@ -222,10 +222,11 @@ TiltChrome.Visualization = function(canvas, controller) {
         }
 
         // save the inner html for each triangle
-        nodeInformation.push({
+        nodes.push({
           innerHTML: node.innerHTML,
-          type: Tilt.Document.getNodeType(node),
-          name: node.localName
+          name: node.localName,
+          className: node.className,
+          id: node.id
         });
 
         // compute the indices
@@ -260,7 +261,7 @@ TiltChrome.Visualization = function(canvas, controller) {
       indices: new Tilt.IndexBuffer(indices),
       color: "#fff",
       texture: texture,
-      nodeInformation: nodeInformation
+      nodes: nodes
     });
 
     meshWireframe = new Tilt.Mesh({
@@ -276,9 +277,9 @@ TiltChrome.Visualization = function(canvas, controller) {
    */
   function setupBrowserEvents() {
     // when the tab is closed or the url changes, destroy visualization
-    gBrowser.tabContainer.addEventListener("TabClose", gClose, false);
-    gBrowser.tabContainer.addEventListener("TabAttrModified", gClose, false);
-    gBrowser.contentWindow.addEventListener("resize", gResize, false);
+    gBrowser.tabContainer.addEventListener("TabClose", gClose, 0);
+    gBrowser.tabContainer.addEventListener("TabAttrModified", gClose, 0);
+    gBrowser.contentWindow.addEventListener("resize", gResize, 0);
   };
 
   /**
@@ -299,7 +300,8 @@ TiltChrome.Visualization = function(canvas, controller) {
     tilt.height = window.content.innerHeight;
     redraw = true;
 
-    document.getElementById("tilt-panel").hidePopup();
+    // hide the panel with the html editor (to avoid wrong positioning) 
+    TiltChrome.BrowserOverlay.panel.hidePopup();
   };
 
   /**
@@ -376,22 +378,23 @@ TiltChrome.Visualization = function(canvas, controller) {
     var ray = Tilt.Math.createRay([x, y, 0], [x, y, 1],
                                   [0, 0, tilt.width, tilt.height],
                                   mesh.mvMatrix,
-                                  mesh.projMatrix);
-    var point = vec3.create();
-    var intersections = [];
+                                  mesh.projMatrix),
+      point = vec3.create(),
+      intersections = [],
+      i, length, v0, v1, v2;
 
-    for (var i = 0, length = mesh.indices.length; i < length; i += 3) {
-      var v0 = [mesh.vertices[mesh.indices[i    ] * 3    ],
-                mesh.vertices[mesh.indices[i    ] * 3 + 1],
-                mesh.vertices[mesh.indices[i    ] * 3 + 2]];
+    for (i = 0, length = mesh.indices.length; i < length; i += 3) {
+      v0 = [mesh.vertices[mesh.indices[i    ] * 3    ],
+            mesh.vertices[mesh.indices[i    ] * 3 + 1],
+            mesh.vertices[mesh.indices[i    ] * 3 + 2]];
 
-      var v1 = [mesh.vertices[mesh.indices[i + 1] * 3    ],
-                mesh.vertices[mesh.indices[i + 1] * 3 + 1],
-                mesh.vertices[mesh.indices[i + 1] * 3 + 2]];
+      v1 = [mesh.vertices[mesh.indices[i + 1] * 3    ],
+            mesh.vertices[mesh.indices[i + 1] * 3 + 1],
+            mesh.vertices[mesh.indices[i + 1] * 3 + 2]];
 
-      var v2 = [mesh.vertices[mesh.indices[i + 2] * 3    ],
-                mesh.vertices[mesh.indices[i + 2] * 3 + 1],
-                mesh.vertices[mesh.indices[i + 2] * 3 + 2]];
+      v2 = [mesh.vertices[mesh.indices[i + 2] * 3    ],
+            mesh.vertices[mesh.indices[i + 2] * 3 + 1],
+            mesh.vertices[mesh.indices[i + 2] * 3 + 2]];
 
       // for each triangle in the mesh, check to see if the mouse ray
       // intersects the triangle
@@ -399,7 +402,7 @@ TiltChrome.Visualization = function(canvas, controller) {
         // save the intersection, along with the node information
         intersections.push({
           location: vec3.create(point),
-          node: mesh.nodeInformation[Math.floor(i / 30)]
+          node: mesh.nodes[Math.floor(i / 30)]
         });
       }
     }
@@ -417,33 +420,35 @@ TiltChrome.Visualization = function(canvas, controller) {
       });
 
       // use only the first intersection (closest to the camera)
-      var intersection = intersections[0];
-      var html = Tilt.String.trim(
-        style_html(intersection.node.innerHTML, 
-        {
-          'indent_size': 2,
-          'indent_char': ' ',
-          'max_char': 78,
-          'brace_style': 'default'
-        })
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;"));
+      var intersection = intersections[0],
+        node = intersection.node,
+        html = Tilt.String.trim(
+          style_html(intersection.node.innerHTML, 
+          {
+            'indent_size': 2,
+            'indent_char': ' ',
+            'max_char': 78,
+            'brace_style': 'default'
+          })
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")),
+
+      // get the elements used by the popup
+      label = document.getElementById("tilt-panel-label"),
+      iframe = document.getElementById("tilt-panel-iframe"),
+      editor = iframe.contentDocument.getElementById("editor");
 
       // set the title label of the popup panel
-      var label = document.getElementById("tilt-panel-label");
-      label.value = "Tilt editor: " + 
-        intersection.node.type + " <" + intersection.node.name + "> " + 
-        window.content.location.href;
+      label.value = " <" + node.name +
+        (node.className ? " class=\"" + node.className + "\"" : "") +
+        (node.id ? " id=\"" + node.id + "\"" : "") + ">";
 
       // show the popup panel containing the html editor iframe
-      var iframe = document.getElementById("tilt-panel-iframe");
-      var panel = document.getElementById("tilt-panel");
-      panel.openPopup(null, "overlap",
+      TiltChrome.BrowserOverlay.panel.openPopup(null, "overlap",
         window.innerWidth - iframe.width - 21,
         window.innerHeight - iframe.height - 77, false, false);
 
       // get the content document containing the html editor, and add the html
-      var editor = iframe.contentDocument.getElementById("editor");
       editor.innerHTML = html;
       iframe.contentWindow.onload();
     }
