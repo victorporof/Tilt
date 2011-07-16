@@ -229,7 +229,7 @@ TiltChrome.Controller.MouseAndKeyboard = function() {
    */
   function keyPressed(e) {
     // handle key events only if the html editor is not open 
-    if ("open" !== document.getElementById("tilt-panel").state) {
+    if ("open" !== TiltChrome.BrowserOverlay.panel.state) {
       var code = e.keyCode || e.which;
       keyCode[code] = true;
     }
@@ -242,20 +242,18 @@ TiltChrome.Controller.MouseAndKeyboard = function() {
     var code = e.keyCode || e.which;
     keyCode[code] = false;
 
-    if (code === 27) { // escape
-      var panel = document.getElementById("tilt-panel");
-
+    if (code === 27) {
       // if the panel with the html editor was open, hide it now
-      if ("open" === panel.state) {
-        panel.hidePopup();
+      if ("open" === TiltChrome.BrowserOverlay.panel.state) {
+        TiltChrome.BrowserOverlay.panel.hidePopup();
 
         // reset some input events which might have been triggered
         keyCode = [];
         mouseDragged = false;
       }
       else {
-        TiltChrome.BrowserOverlay.href = null;
         TiltChrome.BrowserOverlay.destroy();
+        TiltChrome.BrowserOverlay.href = null;
       }
     }
   };
