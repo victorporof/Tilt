@@ -83,33 +83,37 @@
 
   <keyset>
     <key id="tilt-menu-key"
-         modifiers="accel shift" key="L"
-         oncommand="TiltChrome.BrowserOverlay.initialize(event);"/>
+      modifiers="accel shift" key="L"
+      oncommand="TiltChrome.BrowserOverlay.initialize(event);"/>
   </keyset>
 
   <menupopup id="menu_ToolsPopup">
     <menuitem class="menu-iconic"
-              id="tilt-menu"
-              label="&tilt.menu.label;"
-              accesskey="&tilt.menu.accesskey;"
-              key="tilt-menu-key"
-              insertafter="devToolsSeparator"
-              oncommand="TiltChrome.BrowserOverlay.initialize(event);">
+      id="tilt-menu"
+      key="tilt-menu-key"
+      label="&tilt.menu.label;"
+      accesskey="&tilt.menu.accesskey;"
+      insertafter="devToolsSeparator"
+      oncommand="TiltChrome.BrowserOverlay.initialize(event);">
     </menuitem>
   </menupopup>
 
   <window>
-    <panel id="tilt-panel"
-      type="arrow"
-      noautohide="true"
-      onpopupshown="document.getElementById('tilt-iframe').focus()">
-
+    <panel id="tilt-panel" type="arrow" noautohide="true">
       <vbox>
-        <label id="tilt-panel-label" value="Tilt editor"
-          width="400" crop="center"/>
+        <hbox align="center">
+          <label id="tilt-panel-label" value="Tilt editor"
+            crop="center" width="380"/>
 
-        <iframe id="tilt-iframe" src="chrome://tilt/content/ace/editor.html"
-          width="480" height="320"/>
+          <spacer flex="1"/>
+          <button id="tilt-panel-close" label="Close"
+            oncommand="document.getElementById('tilt-panel').hidePopup();"/>
+        </hbox>
+
+        <iframe id="tilt-panel-iframe"
+          src="chrome://tilt/content/ace/editor.html"
+          width="480"
+          height="320"/>
       </vbox>
     </panel>
   </window>
