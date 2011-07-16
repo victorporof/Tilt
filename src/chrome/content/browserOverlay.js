@@ -39,6 +39,11 @@ TiltChrome.BrowserOverlay = {
   href: null,
 
   /**
+   * The popup panel containing the Ace Cloud9 html editor in an iframe.
+   */
+  panel: null,
+
+  /**
    * The canvas element used for rendering the visualization.
    */
   canvas: null,
@@ -92,6 +97,9 @@ TiltChrome.BrowserOverlay = {
     Tilt.Document.currentContentDocument = iframe.contentDocument;
     Tilt.Document.currentParentNode = gBrowser.selectedBrowser.parentNode;
 
+    // retain the popup panel for future reference
+    this.panel = document.getElementById("tilt-panel");
+
     // initialize the canvas element
     this.canvas = Tilt.Document.initCanvas(width, height, true);
 
@@ -105,10 +113,13 @@ TiltChrome.BrowserOverlay = {
    * Destroys this object, removes the iframe and sets all members to null.
    */
   destroy: function() {
-    document.getElementById("tilt-panel").hidePopup();
-
     Tilt.Document.currentContentDocument = null;
     Tilt.Document.currentParentNode = null;
+
+    if (this.panel !== null) {
+      this.panel.hidePopup();
+      this.panel = null;
+    }
 
     if (this.visualization !== null) {
       this.visualization.destroy();
