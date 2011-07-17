@@ -59,7 +59,7 @@ clean:
 
 # The includes are added after the targets because we want this file to contain
 # the default (first) target.
-include chrome/Makefile.in
+include Makefile.in
 
 # The sources for the XPI file. Uses variables defined in the included
 # Makefiles.
