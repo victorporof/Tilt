@@ -172,6 +172,13 @@ TiltChrome.Controller.MouseAndKeyboard = function() {
     e.preventDefault();
     e.stopPropagation();
 
+    mouseX = e.clientX - e.target.offsetLeft;
+    mouseY = e.clientY - e.target.offsetTop;
+    mouseStartX = mouseX;
+    mouseStartY = mouseY;
+    dragX = translationX;
+    dragY = translationY;
+
     mouseDragged = false;
 
     if (mouseStartX === mouseX && mouseStartY === mouseY) {
@@ -185,6 +192,13 @@ TiltChrome.Controller.MouseAndKeyboard = function() {
   function mouseDoubleClick(e) {
     e.preventDefault();
     e.stopPropagation();
+
+    mouseX = e.clientX - e.target.offsetLeft;
+    mouseY = e.clientY - e.target.offsetTop;
+    mouseStartX = mouseX;
+    mouseStartY = mouseY;
+    dragX = translationX;
+    dragY = translationY;
 
     mouseDragged = false;
 
