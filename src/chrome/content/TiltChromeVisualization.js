@@ -428,7 +428,7 @@ TiltChrome.Visualization = function(canvas, controller) {
             'indent_size': 2,
             'indent_char': ' ',
             'max_char': 78,
-            'brace_style': 'default'
+            'brace_style': 'collapse'
           })
           .replace(/</g, "&lt;")
           .replace(/>/g, "&gt;")),
