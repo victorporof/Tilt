@@ -8,73 +8,8 @@
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
   xmlns:html="http://www.w3.org/1999/xhtml">
 
-  <!-- <script type="application/x-javascript"
-          src="chrome://tilt/content/Tilt-min.js"/> -->
-
   <script type="application/x-javascript"
-    src="chrome://tilt/content/engine/cameras/Arcball.js"/>
-
-  <script type="application/x-javascript"
-    src="chrome://tilt/content/engine/core/Buffer.js"/>
-  <script type="application/x-javascript"
-    src="chrome://tilt/content/engine/core/Cache.js"/>
-  <script type="application/x-javascript"
-    src="chrome://tilt/content/engine/core/Program.js"/>
-  <script type="application/x-javascript"
-    src="chrome://tilt/content/engine/core/ProgramUtils.js"/>
-  <script type="application/x-javascript"
-    src="chrome://tilt/content/engine/core/Texture.js"/>
-  <script type="application/x-javascript"
-    src="chrome://tilt/content/engine/core/TextureUtils.js"/>
-
-  <script type="application/x-javascript"
-    src="chrome://tilt/content/engine/lib/beautify.js"/>
-  <script type="application/x-javascript"
-    src="chrome://tilt/content/engine/lib/beautify-html.js"/>
-  <script type="application/x-javascript"
-    src="chrome://tilt/content/engine/lib/glMatrix-0.9.6.js"/>
-  <script type="application/x-javascript"
-    src="chrome://tilt/content/engine/lib/json.js"/>
-
-  <script type="application/x-javascript"
-    src="chrome://tilt/content/engine/renderer/geometry/Cube.js"/>
-  <script type="application/x-javascript"
-    src="chrome://tilt/content/engine/renderer/geometry/CubeWireframe.js"/>
-  <script type="application/x-javascript"
-    src="chrome://tilt/content/engine/renderer/geometry/Rectangle.js"/>
-  <script type="application/x-javascript"
-    src="chrome://tilt/content/engine/renderer/geometry/RectangleWireframe.js"/>
-
-  <script type="application/x-javascript"
-    src="chrome://tilt/content/engine/renderer/objects/Mesh.js"/>
-
-  <script type="application/x-javascript"
-    src="chrome://tilt/content/engine/renderer/Renderer.js"/>
-  <script type="application/x-javascript"
-    src="chrome://tilt/content/engine/renderer/RequestAnimFrame.js"/>
-  <script type="application/x-javascript"
-    src="chrome://tilt/content/engine/renderer/Shaders.js"/>
-
-  <script type="application/x-javascript"
-    src="chrome://tilt/content/engine/utils/Console.js"/>
-  <script type="application/x-javascript"
-    src="chrome://tilt/content/engine/utils/Document.js"/>
-  <script type="application/x-javascript"
-    src="chrome://tilt/content/engine/utils/Math.js"/>
-  <script type="application/x-javascript"
-    src="chrome://tilt/content/engine/utils/String.js"/>
-  <script type="application/x-javascript"
-    src="chrome://tilt/content/engine/utils/WebGL.js"/>
-  <script type="application/x-javascript"
-    src="chrome://tilt/content/engine/utils/Xhr.js"/>
-
-  <script type="application/x-javascript"
-    src="chrome://tilt/content/TiltChromeController.js"/>
-  <script type="application/x-javascript"
-    src="chrome://tilt/content/TiltChromeVisualization.js"/>
-
-  <script type="application/x-javascript"
-    src="chrome://tilt/content/browserOverlay.js"/>
+    src="chrome://tilt/content/browserEntryPoint.js"/>
 
   <stringbundleset id="stringbundleset">
     <stringbundle id="tilt-string-bundle"
@@ -102,18 +37,14 @@
     <panel id="tilt-panel" type="arrow" noautohide="true">
       <vbox>
         <hbox align="center">
-          <label id="tilt-panel-label" value="Tilt editor"
-            crop="center" width="380"/>
-
+          <label id="tilt-panel-label" crop="center" width="380"/>
           <spacer flex="1"/>
           <button id="tilt-panel-close" label="Close"
             oncommand="document.getElementById('tilt-panel').hidePopup();"/>
         </hbox>
 
-        <iframe id="tilt-panel-iframe"
-          src="chrome://tilt/content/ace/editor.html"
-          width="480"
-          height="320"/>
+        <iframe id="tilt-panel-iframe" width="480" height="320"
+          src="chrome://tilt/content/ace/editor.html"/>
       </vbox>
     </panel>
   </window>
