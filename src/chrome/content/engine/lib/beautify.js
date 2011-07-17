@@ -68,7 +68,7 @@ function js_beautify(js_source_text, options) {
     opt_brace_style = options.brace_style ? options.brace_style : (opt_brace_style ? opt_brace_style : "collapse");
 
 
-    var opt_indent_size = options.indent_size ? options.indent_size : 4;
+    var opt_indent_size = options.indent_size ? options.indent_size : 2;
     var opt_indent_char = options.indent_char ? options.indent_char : ' ';
     var opt_preserve_newlines = typeof options.preserve_newlines === 'undefined' ? true : options.preserve_newlines;
     var opt_max_preserve_newlines = typeof options.max_preserve_newlines === 'undefined' ? false : options.max_preserve_newlines;
