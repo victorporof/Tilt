@@ -1,0 +1,12 @@
+#!/bin/bash
+
+find chrome/content -name \*.js ! -path *ace/* ! -name browserEntryPoint.js  ! -name tilt-content.js -exec cat > chrome/content/tilt-content.js {} \;
+
+if [ $1 == "minify" ]
+  then
+    cp chrome/content/tilt-content.js tilt-content.js
+    java -jar compiler.jar --language_in ECMASCRIPT5_STRICT --compilation_level ADVANCED_OPTIMIZATIONS --warning_level QUIET --externs build-externs.jsext --js tilt-content.js --js_output_file chrome/content/tilt-content.js
+    rm tilt-content.js
+fi
+
+export OSTYPE; make clean; make; make install;
