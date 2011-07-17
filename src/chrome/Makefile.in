@@ -8,7 +8,9 @@ chrome_jar_file := $(jar_target_dir)/$(extension_name).jar
 jar_source_root := chrome
 
 # The sources for the JAR file.
-jar_sources := $(wildcard $(jar_source_root)/content/*.js) \
+jar_sources := $(wildcard $(jar_source_root)/ace/*.html) \
+               $(wildcard $(jar_source_root)/ace/src/*.js) \
+               $(wildcard $(jar_source_root)/content/*.js) \
                $(wildcard $(jar_source_root)/content/*.xul) \
                $(wildcard $(jar_source_root)/content/*.xml) \
                $(wildcard $(jar_source_root)/content/*.css) \
