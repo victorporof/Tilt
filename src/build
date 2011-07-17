@@ -1,6 +1,6 @@
 #!/bin/bash
 
-find chrome/content -name \*.js ! -path *ace/* ! -name browserEntryPoint.js  ! -name tilt-content.js -exec cat > chrome/content/tilt-content.js {} \;
+find chrome/content -name \*.js ! -path *ace/* ! -name browserEntryPoint.js ! -name tilt-content.js -exec cat > chrome/content/tilt-content.js {} \;
 
 if [ $1 == "minify" ]
   then
