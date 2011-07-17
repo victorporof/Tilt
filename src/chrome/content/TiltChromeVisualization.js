@@ -381,9 +381,9 @@ TiltChrome.Visualization = function(canvas, controller) {
                                   mesh.projMatrix),
       point = vec3.create(),
       intersections = [],
-      i, length, v0, v1, v2;
+      i, len, v0, v1, v2;
 
-    for (i = 0, length = mesh.indices.length; i < length; i += 3) {
+    for (i = 0, len = mesh.indices.length; i < len; i += 3) {
       v0 = [mesh.vertices[mesh.indices[i    ] * 3    ],
             mesh.vertices[mesh.indices[i    ] * 3 + 1],
             mesh.vertices[mesh.indices[i    ] * 3 + 2]];

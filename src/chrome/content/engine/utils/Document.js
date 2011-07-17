@@ -154,9 +154,9 @@ Tilt.Document = {
 
     // used internally for recursively traversing a document object model
     function recursive(nodeCallback, dom, depth) {
-      var i, length, child;
+      var i, len, child;
 
-      for (i = 0, length = dom.childNodes.length; i < length; i++) {
+      for (i = 0, len = dom.childNodes.length; i < len; i++) {
         child = dom.childNodes[i];
 
         if (depth > maxDepth) {

@@ -738,9 +738,9 @@ Tilt.Renderer.prototype = {
    */
   create3DContext: function(canvas, opt_attribs) {
     var names = ["experimental-webgl", "webgl", "webkit-3d", "moz-webgl"];
-    var context, i, length;
+    var context, i, len;
 
-    for (i = 0, length = names.length; i < length; ++i) {
+    for (i = 0, len = names.length; i < len; ++i) {
       try {
         context = canvas.getContext(names[i], opt_attribs);
       }

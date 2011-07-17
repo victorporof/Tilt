@@ -68,7 +68,7 @@ Tilt.Xhr = {
    * @param {Object} aParam: optional parameter passed to readyCallback
    */
   requests: function(urls, readyCallback, aParam) {
-    var xhrs = [], finished = 0, i, length;
+    var xhrs = [], finished = 0, i, len;
 
     function requestReady() {
       finished++;
@@ -84,7 +84,7 @@ Tilt.Xhr = {
       requestReady();
     }
 
-    for (i = 0, length = urls.length; i < length; i++) {
+    for (i = 0, len = urls.length; i < len; i++) {
       this.request(urls[i], requestCallback, i);
     }
   }

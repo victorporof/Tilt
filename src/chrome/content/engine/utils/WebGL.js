@@ -42,13 +42,13 @@ Tilt.Extensions.WebGL = {
    * @param {Window} contentWindow: the window content to draw
    */
   initDocumentImage: function(contentWindow) {
-    var canvasgl, canvas2d, gl, ctx, maxSize, pWidth, pHeight, width, height;
+    var canvasgl, canvas, gl, ctx, maxSize, pWidth, pHeight, width, height;
 
     // use a canvas and a WebGL context to get the maximum texture size
     canvasgl = Tilt.Document.initCanvas();
 
     // use a custom canvas element and a 2d context to draw the window
-    canvas2d = Tilt.Document.initCanvas();
+    canvas = Tilt.Document.initCanvas();
 
     // create the WebGL context
     gl = Tilt.Renderer.prototype.create3DContext(canvasgl);
@@ -62,19 +62,19 @@ Tilt.Extensions.WebGL = {
     width = Tilt.Math.clamp(pWidth, 0, maxSize);
     height = Tilt.Math.clamp(pHeight, 0, maxSize);
 
-    canvas2d.width = width;
-    canvas2d.height = height;
+    canvas.width = width;
+    canvas.height = height;
 
     // use the 2d context.drawWindow() magic
-    ctx = canvas2d.getContext("2d");
+    ctx = canvas.getContext("2d");
     ctx.drawWindow(contentWindow, 0, 0, width, height, "#fff");
 
     try {
-      return canvas2d;
+      return canvas;
     }
     finally {
       canvasgl = null;
-      canvas2d = null;
+      canvas = null;
       gl = null;
       ctx = null;
     }

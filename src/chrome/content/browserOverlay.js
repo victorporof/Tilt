@@ -61,7 +61,7 @@ TiltChrome.BrowserOverlay = {
     // first, close the visualization and clean up any mess if there was any
     this.destroy();
 
-    // if this was the page we just visualized, let the visualization closed
+    // if this was the page we just visualized, leave the visualization closed
     if (this.href === window.content.location.href) {
       this.href = null; // forget the current tab location
     } else {
@@ -86,11 +86,11 @@ TiltChrome.BrowserOverlay = {
     this.href = window.content.location.href;
 
     // set the width and height to mach the content window dimensions
-    let width = window.content.innerWidth;
-    let height = window.content.innerHeight;
+    var width = window.content.innerWidth;
+    var height = window.content.innerHeight;
 
     // get the iframe which will be used to create the canvas element
-    let iframe = document.getElementById("tilt-panel-iframe");
+    var iframe = document.getElementById("tilt-panel-iframe");
 
     // inside a chrome environment the default document and parent nodes
     // are different from an unprivileged html page, so change these

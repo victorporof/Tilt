@@ -83,7 +83,8 @@ Tilt.VertexBuffer.prototype = {
 
     // create the Float32Array using the elements array
     var array = new Float32Array(elementsArray),
-      gl = Tilt.$gl;
+      gl = Tilt.$gl,
+      i, len;
 
     // create an array buffer and bind the elements as a Float32Array
     this.ref = gl.createBuffer();
@@ -95,7 +96,7 @@ Tilt.VertexBuffer.prototype = {
     this.numItems = numItems;
     this.length = elementsArray.length;
 
-    for (var i = 0; i < elementsArray.length; i++) {
+    for (i = 0, len = elementsArray.length; i < len; i++) {
       this[i] = elementsArray[i];
     }
 
@@ -168,7 +169,8 @@ Tilt.IndexBuffer.prototype = {
 
     // create the Uint16Array using the elements array
     var array = new Uint16Array(elementsArray),
-      gl = Tilt.$gl;
+      gl = Tilt.$gl,
+      i, len;
 
     // create an array buffer and bind the elements as a Uint16Array
     this.ref = gl.createBuffer();
@@ -180,7 +182,7 @@ Tilt.IndexBuffer.prototype = {
     this.numItems = numItems;
     this.length = elementsArray.length;
 
-    for (var i = 0; i < elementsArray.length; i++) {
+    for (i = 0, len = elementsArray.length; i < len; i++) {
       this[i] = elementsArray[i];
     }
 

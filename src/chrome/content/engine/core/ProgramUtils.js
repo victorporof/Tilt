@@ -199,7 +199,7 @@ Tilt.GLSL = {
    * @return {WebGLProgram} the same program
    */
   shaderIOCache: function(program, variables) {
-    var i, length, param, io;
+    var i, len, param, io;
 
     // make sure the attributes and uniforms cache objects are created
     program.attributes = {};
@@ -207,7 +207,7 @@ Tilt.GLSL = {
     program.uniforms = {};
 
     // pass through each element in the variables array
-    for (i = 0, length = variables.length; i < length; i++) {
+    for (i = 0, len = variables.length; i < len; i++) {
       // try to get a shader variable from the program
       param = variables[i];
       io = this.shaderIO(program, param);
