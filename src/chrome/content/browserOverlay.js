@@ -68,7 +68,7 @@ TiltChrome.BrowserOverlay = {
       // if the menubar is visible, it can mess up the true innerWidth/Height
       // of the window.content, so wait for the menubar to hide first
       if (window.menubar.visible) {
-        window.setTimeout(this.create.bind(this), 100);
+        window.setTimeout(this.create.bind(this), 200);
       }
       else {
         // create the visualization normally
