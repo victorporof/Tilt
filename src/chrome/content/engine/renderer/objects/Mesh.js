@@ -111,10 +111,15 @@ Tilt.Mesh.prototype = {
    */
   destroy: function() {
     for (var i in this) {
-      if ("function" === typeof this[i].destroy) {
-        this[i].destroy();
+      try {
+        if ("function" === typeof this[i].destroy) {
+          this[i].destroy();
+        }
       }
-      delete this[i];
+      catch(e) {}
+      finally {
+        delete this[i];
+      }
     }
   }
 };

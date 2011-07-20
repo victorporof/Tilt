@@ -41,6 +41,7 @@ Tilt.Renderer = function(canvas, failCallback, successCallback) {
   /**
    * The WebGL context obtained from the canvas element, used for drawing.
    */
+  this.canvas = canvas;
   this.gl = this.create3DContext(canvas);
 
   // first, clear the cache
@@ -58,6 +59,9 @@ Tilt.Renderer = function(canvas, failCallback, successCallback) {
     this.LINE_STRIP = this.gl.LINE_STRIP;
     this.LINE_LOOP = this.gl.LINE_LOOP;
     this.POINTS = this.gl.POINTS;
+    this.COLOR_BUFFER_BIT = this.gl.COLOR_BUFFER_BIT;
+    this.DEPTH_BUFFER_BIT = this.gl.DEPTH_BUFFER_BIT;
+    this.STENCIL_BUFFER_BIT = this.gl.STENCIL_BUFFER_BIT;
 
     // if successful, run a success callback function if available
     if ("function" === typeof successCallback) {
@@ -175,19 +179,12 @@ Tilt.Renderer = function(canvas, failCallback, successCallback) {
    */
   this.frameDelta = 0;
 
-  // set the default rendering properties
-  this.blendMode("alpha");
-  this.depthTest(true);
-
   // set the default model view and projection matrices
   this.origin();
   this.perspective();
 
   // set the default tint, fill, stroke and stroke weight
-  this.tint("#fff");
-  this.fill("#fff");
-  this.stroke("#000");
-  this.strokeWeight(1);
+  this.defaults();
 };
 
 Tilt.Renderer.prototype = {
@@ -212,6 +209,14 @@ Tilt.Renderer.prototype = {
       col[2] = b;
       col[3] = a;
       gl.clearColor(r, g, b, a);
+
+      r *= 255;
+      g *= 255;
+      b *= 255;
+      a *= 255;
+      this.canvas.setAttribute("style",
+        "background: rgba(" + r + ", " + g + ", " + b + ", " + a + "); " + 
+        "width: 100%; height: 100%;");
     }
 
     // clear the color and depth buffers
@@ -374,6 +379,18 @@ Tilt.Renderer.prototype = {
   },
 
   /**
+   * Sets a default visual style throughout the renderer.
+   */
+  defaults: function() {
+    this.blendMode("alpha");
+    this.depthTest(false);
+    this.tint("#fff");
+    this.fill("#fff");
+    this.stroke("#000");
+    this.strokeWeight(1);    
+  },
+
+  /**
    * Sets the current tint color.
    * @param {String} color: the color, defined in hex or as rgb() or rgba()
    */
@@ -478,7 +495,7 @@ Tilt.Renderer.prototype = {
   },
 
   /**
-   * Helper function to set active the color shader with the required params.
+   * Helper function to set active the color shader with required params.
    *
    * @param {Tilt.VertexBuffer} verticesBuffer: a buffer of vertices positions
    * @param {Array} color: the color used, as [r, g, b, a] with 0..1 range
@@ -497,10 +514,10 @@ Tilt.Renderer.prototype = {
   },
 
   /**
-   * Helper function to set active the texture shader with the required params.
+   * Helper function to set active the texture shader with required params.
    *
    * @param {Tilt.VertexBuffer} verticesBuffer: a buffer of vertices positions
-   * @param {Tilt.VertexBuffer} texCoordBuffer: a buffer of texture coordinates
+   * @param {Tilt.VertexBuffer} texCoordBuffer: a buffer of texture coords
    * @param {Array} color: the color used, as [r, g, b, a] with 0..1 range
    * @param {Tilt.Texture} texture: the texture to be applied
    */
@@ -532,18 +549,18 @@ Tilt.Renderer.prototype = {
       fill = this.fillColor,
       stroke = this.strokeColor;
 
-    // draw the triangle only if the fill alpha channel is not transparent
-    if (fill[3]) {
-      // use the necessary shader and draw the vertices
-      this.useColorShader(vertices, fill);
-      this.drawVertices(this.TRIANGLE_STRIP, vertices.numItems);
-    }
-
     // draw the outline only if the stroke alpha channel is not transparent
     if (stroke[3]) {
       // use the necessary shader and draw the vertices
       this.useColorShader(vertices, stroke);
       this.drawVertices(this.LINE_LOOP, vertices.numItems);
+    }
+
+    // draw the triangle only if the fill alpha channel is not transparent
+    if (fill[3]) {
+      // use the necessary shader and draw the vertices
+      this.useColorShader(vertices, fill);
+      this.drawVertices(this.TRIANGLE_STRIP, vertices.numItems);
     }
   },
 
@@ -586,18 +603,18 @@ Tilt.Renderer.prototype = {
     this.translate(x, y, 0);
     this.scale(width, height, 1);
 
-    // draw the rectangle only if the fill alpha channel is not transparent
-    if (fill[3]) {
-      // use the necessary shader and draw the vertices
-      this.useColorShader(rectangle.vertices, fill);
-      this.drawVertices(this.TRIANGLE_STRIP, rectangle.vertices.numItems);
-    }
-
     // draw the outline only if the stroke alpha channel is not transparent
     if (stroke[3]) {
       // use the necessary shader and draw the vertices
       this.useColorShader(wireframe.vertices, stroke);
       this.drawVertices(this.LINE_STRIP, wireframe.vertices.numItems);
+    }
+
+    // draw the rectangle only if the fill alpha channel is not transparent
+    if (fill[3]) {
+      // use the necessary shader and draw the vertices
+      this.useColorShader(rectangle.vertices, fill);
+      this.drawVertices(this.TRIANGLE_STRIP, rectangle.vertices.numItems);
     }
 
     this.popMatrix();
@@ -622,20 +639,21 @@ Tilt.Renderer.prototype = {
    * @param {Tilt.Textrue} t: the texture to be used
    * @param {Number} x: the x position of the object
    * @param {Number} y: the y position of the object
-   * @param {Number} z: the z position of the object
    * @param {Number} width: the width of the object
    * @param {Number} height: the height of the object
+   * @param {Tilt.VertexBuffer} texCoord: optional, custom texture coordinates
    */
-  image: function(t, x, y, width, height) {
+  image: function(t, x, y, width, height, texCoord) {
     var rectangle = this.rectangle,
       tint = this.tintColor,
-      stroke = this.strokeColor;
+      stroke = this.strokeColor,
+      texCoordBuffer = texCoord || rectangle.texCoord;
 
     // if the width and height are not specified, we use the embedded
     // texture dimensions, from the source image or framebuffer
     if ("undefined" === typeof width || "undefined" === typeof height) {
-      width = texture.width;
-      height = texture.height;
+      width = t.width;
+      height = t.height;
     }
 
     // if imageMode is set to "center", we need to offset the origin
@@ -653,7 +671,7 @@ Tilt.Renderer.prototype = {
       this.scale(width, height, 1);
 
       // use the necessary shader and draw the vertices
-      this.useTextureShader(rectangle.vertices, rectangle.texCoord, tint, t);
+      this.useTextureShader(rectangle.vertices, texCoordBuffer, tint, t);
       this.drawVertices(this.TRIANGLE_STRIP, rectangle.vertices.numItems);
 
       this.popMatrix();
@@ -680,6 +698,13 @@ Tilt.Renderer.prototype = {
     this.pushMatrix();
     this.scale(width, height, depth);
 
+    // draw the outline only if the stroke alpha channel is not transparent
+    if (stroke[3]) {
+      // use the necessary shader and draw the vertices
+      this.useColorShader(wireframe.vertices, stroke);
+      this.drawIndexedVertices(this.LINES, wireframe.indices);
+    }
+
     if (texture) {
       // draw the box only if the tint alpha channel is not transparent
       if (tint[3]) {
@@ -694,13 +719,6 @@ Tilt.Renderer.prototype = {
         this.useColorShader(cube.vertices, fill);
         this.drawIndexedVertices(this.TRIANGLES, cube.indices);
       }
-    }
-
-    // draw the outline only if the stroke alpha channel is not transparent
-    if (stroke[3]) {
-      // use the necessary shader and draw the vertices
-      this.useColorShader(wireframe.vertices, stroke);
-      this.drawIndexedVertices(this.LINES, wireframe.indices);
     }
 
     this.popMatrix();
@@ -721,7 +739,7 @@ Tilt.Renderer.prototype = {
    * This function also makes use of an index buffer.
    *
    * @param {Number} drawMode: WebGL enum, like Tilt.TRIANGLES
-   * @param {Tilt.IndexBuffer} indicesBuffer: indices for the passed vertices buffer
+   * @param {Tilt.IndexBuffer} indicesBuffer: indices for the vertices buffer
    */
   drawIndexedVertices: function(drawMode, indicesBuffer) {
     var gl = this.gl;
@@ -797,10 +815,15 @@ Tilt.Renderer.prototype = {
     Tilt.clearCache();
 
     for (var i in this) {
-      if ("function" === typeof this[i].destroy) {
-        this[i].destroy();
+      try {
+        if ("function" === typeof this[i].destroy) {
+          this[i].destroy();
+        }
       }
-      delete this[i];
+      catch(e) {}
+      finally {
+        delete this[i];
+      }
     }
   }
 };
