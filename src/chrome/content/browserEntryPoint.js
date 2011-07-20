@@ -44,7 +44,7 @@ TiltChrome.EntryPoint = {
 
     // load everything after a while, don't slow down the browser startup
     window.setTimeout(function() {
-      scriptLoader.loadSubScript("chrome://tilt/content/tilt-content.js");
+      scriptLoader.loadSubScript("chrome://tilt/content/Tilt-content.js");
     }, 500);
   }()
 };
