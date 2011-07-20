@@ -144,7 +144,7 @@ TiltChrome.UI = function() {
       helpLightbox,
       // arcballSprite, resetButton, zoomInButton, zoomOutButton,
       // viewModeButton, colorButton,
-      eyeButton, optionsButton, exportButton, helpButton, exitButton);
+      /* eyeButton, optionsButton, exportButton, */ helpButton, exitButton);
   };
 
   /**
