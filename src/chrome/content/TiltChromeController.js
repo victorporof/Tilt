@@ -34,12 +34,10 @@ var EXPORTED_SYMBOLS = ["TiltChrome.Controller.MouseAndKeyboard"];
 TiltChrome.Controller = {};
 TiltChrome.Controller.MouseAndKeyboard = function() {
 
-  var self = this,
-
   /**
    * Arcball used to control the visualization using the mouse.
    */
-  arcball = null,
+  var arcball = null,
 
   /**
    * Visualization translation and rotation on the X and Y axis.
@@ -71,7 +69,7 @@ TiltChrome.Controller.MouseAndKeyboard = function() {
    * Function called automatically by the visualization at the setup().
    * @param {HTMLCanvasElement} canvas: the canvas element
    */
-  self.init = function(canvas) {
+  this.init = function(canvas) {
     arcball = new Tilt.Arcball(canvas.width, canvas.height);
 
     // bind commonly used mouse and keyboard events with the controller
@@ -89,14 +87,16 @@ TiltChrome.Controller.MouseAndKeyboard = function() {
    * Function called automatically by the visualization each frame in draw().
    * @param {Number} frameDelta: the delta time elapsed between frames
    */
-  self.loop = function(frameDelta) {
+  this.loop = function(frameDelta) {
+    var vis = this.visualization;
+
     // handle mouse dragged events
     if (mouseDragged) {
       if (keyCoded() || mouseDragged === 3) {
         translationX = dragX + mouseX - mouseStartX;
         translationY = dragY + mouseY - mouseStartY;
-
-        self.setTranslation(translationX, translationY, translationZ);
+        
+        vis.setTranslation(translationX, translationY, translationZ);
         return;
       }
       else {
@@ -134,20 +134,19 @@ TiltChrome.Controller.MouseAndKeyboard = function() {
 
     // get the arcball rotation and zoom coordinates
     var coord = arcball.loop(frameDelta);
-    translationZ = coord.zoom;
 
     // create another custom rotation
     Tilt.Math.quat4fromEuler(rotationY, rotationX, 0, euler);
 
     // update the visualization
-    self.setRotation(quat4.multiply(euler, coord.rotation));
-    self.setTranslation(translationX, translationY, translationZ);
+    vis.setRotation(quat4.multiply(euler, coord.rotation));
+    vis.setTranslation(translationX, translationY, translationZ = coord.zoom);
   };
 
   /**
    * Called once after every time a mouse button is pressed.
    */
-  function mousePressed(e) {
+  var mousePressed = function(e) {
     e.preventDefault();
     e.stopPropagation();
 
@@ -163,14 +162,23 @@ TiltChrome.Controller.MouseAndKeyboard = function() {
     if (!keyCoded() && mouseDragged !== 3) {
       arcball.mousePressed(mouseX, mouseY);
     }
-  };
+  }.bind(this);
 
   /**
    * Called every time a mouse button is released.
    */
-  function mouseReleased(e) {
+  var mouseReleased = function(e) {
     e.preventDefault();
     e.stopPropagation();
+
+    var absX = Math.abs(mouseStartX - mouseX);
+    var absY = Math.abs(mouseStartY - mouseY);
+
+    if (absX < 2 && absY < 2) {
+      this.visualization.click(mouseX, mouseY);
+    }
+
+    TiltChrome.BrowserOverlay.panel.hidePopup();
 
     mouseX = e.clientX - e.target.offsetLeft;
     mouseY = e.clientY - e.target.offsetTop;
@@ -180,18 +188,21 @@ TiltChrome.Controller.MouseAndKeyboard = function() {
     dragY = translationY;
 
     mouseDragged = false;
-
-    if (mouseStartX === mouseX && mouseStartY === mouseY) {
-      self.performClick(mouseX, mouseY);
-    }
-  };
+  }.bind(this);
 
   /**
    * Called every time a mouse button is double clicked.
    */
-  function mouseDoubleClick(e) {
+  var mouseDoubleClick = function(e) {
     e.preventDefault();
     e.stopPropagation();
+
+    var absX = Math.abs(mouseStartX - mouseX);
+    var absY = Math.abs(mouseStartY - mouseY);
+
+    if (absX < 2 && absY < 2) {
+      this.visualization.doubleClick(mouseX, mouseY);
+    }
 
     mouseX = e.clientX - e.target.offsetLeft;
     mouseY = e.clientY - e.target.offsetTop;
@@ -201,58 +212,54 @@ TiltChrome.Controller.MouseAndKeyboard = function() {
     dragY = translationY;
 
     mouseDragged = false;
-
-    if (mouseStartX === mouseX && mouseStartY === mouseY) {
-      self.performDoubleClick(mouseX, mouseY);
-    }
-  };
+  }.bind(this);
 
   /**
    * Called every time the mouse moves.
    */
-  function mouseMoved(e) {
+  var mouseMoved = function(e) {
     e.preventDefault();
     e.stopPropagation();
 
     mouseX = e.clientX - e.target.offsetLeft;
     mouseY = e.clientY - e.target.offsetTop;
-  };
+  }.bind(this);
 
   /**
    * Called when the the mouse leaves the visualization bounds.
    */
-  function mouseOut(e) {
+  var mouseOut = function(e) {
     e.preventDefault();
     e.stopPropagation();
 
     mouseDragged = false;
-  };
+  }.bind(this);
 
   /**
    * Called when the the mouse wheel is used.
    */
-  function mouseScroll(e) {
+  var mouseScroll = function(e) {
     e.preventDefault();
     e.stopPropagation();
 
     arcball.mouseScroll(e.detail);
-  };
+  }.bind(this);
 
   /**
    * Called when a key is pressed.
    */
-  function keyPressed(e) {
+  var keyPressed = function(e) {
     // handle key events only if the html editor is not open 
     if ("open" !== TiltChrome.BrowserOverlay.panel.state) {
       var code = e.keyCode || e.which;
       keyCode[code] = true;
     }
-  };
+  }.bind(this);
 
   /**
    * Called when a key is released.
    */
-  function keyReleased(e) {
+  var keyReleased = function(e) {
     var code = e.keyCode || e.which;
     keyCode[code] = false;
 
@@ -270,7 +277,7 @@ TiltChrome.Controller.MouseAndKeyboard = function() {
         TiltChrome.BrowserOverlay.href = null;
       }
     }
-  };
+  }.bind(this);
 
   /**
    * Returns if the key is coded (control or command).
@@ -299,15 +306,30 @@ TiltChrome.Controller.MouseAndKeyboard = function() {
     window.removeEventListener("keydown", keyPressed, false);
     window.removeEventListener("keyup", keyReleased, false);
 
+    mousePressed = null;
+    mouseReleased = null;
+    mouseDoubleClick = null;
+    mouseMoved = null;
+    mouseOut = null;
+    mouseScroll = null;
+    keyPressed = null;
+    keyReleased = null;
+
     arcball.destroy();
     arcball = null;
     euler = null;
     keyCode = null;
 
     for (var i in this) {
-      delete this[i];
+      try {
+        if ("function" === typeof this[i].destroy) {
+          this[i].destroy();
+        }
+      }
+      catch(e) {}
+      finally {
+        delete this[i];
+      }
     }
-
-    self = null;
   };
 };
