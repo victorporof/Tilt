@@ -33,9 +33,10 @@ var EXPORTED_SYMBOLS = ["TiltChrome.Visualization"];
  *
  * @param {HTMLCanvasElement} canvas: the canvas element used for rendering
  * @param {TiltChrome.Controller} controller: the controller handling events
+ * @param {TiltChrome.GUI} controller: the visualization user interface
  * @return {TiltChrome.Visualization} the newly created object
  */
-TiltChrome.Visualization = function(canvas, controller) {
+TiltChrome.Visualization = function(canvas, controller, gui) {
 
   /**
    * Create the Tilt object, containing useful functions for easy drawing
@@ -89,9 +90,10 @@ TiltChrome.Visualization = function(canvas, controller) {
     });
 
     // setup the visualization, browser event handlers and the controller
-    setupVisualization();
-    setupBrowserEvents();
-    setupController();
+    setupVisualization.call(this);
+    setupBrowserEvents.call(this);
+    setupController.call(this);
+    setupGUI.call(this);
 
     // load the background
     background = new Tilt.Texture("chrome://tilt/skin/tilt-background.png");
@@ -99,7 +101,6 @@ TiltChrome.Visualization = function(canvas, controller) {
     // set the transformations at initialization
     transforms.translation = [0, 0, 0];
     transforms.rotation = [0, 0, 0, 1];
-    tilt.strokeWeight(2);
   };
 
   /**
@@ -125,8 +126,9 @@ TiltChrome.Visualization = function(canvas, controller) {
         tilt.image(background, 0, 0, tilt.width, tilt.height);
 
         // apply the necessary transformations to the model view
-        tilt.translate(tilt.width / 2, tilt.height / 2,
-                       transforms.translation[2] - thickness * 16);
+        tilt.translate(tilt.width / 2,
+                       tilt.height / 2 - 30,
+                       transforms.translation[2] - thickness * 25);
 
         tilt.transform(quat4.toMat4(transforms.rotation));
         tilt.translate(transforms.translation[0],
@@ -134,8 +136,11 @@ TiltChrome.Visualization = function(canvas, controller) {
 
         // draw the visualization mesh
         tilt.depthTest(true);
+        tilt.strokeWeight(2);
         mesh.draw();
         meshWireframe.draw();
+
+        gui.draw(tilt.frameDelta);
       }
 
       // when rendering is finished, call a loop function in the controller
@@ -154,8 +159,8 @@ TiltChrome.Visualization = function(canvas, controller) {
   };
 
   // run the setup and draw functions
-  setup();
-  draw();
+  setup.call(this);
+  draw.call(this);
 
   /**
    * Create the combined mesh representing the document visualization by
@@ -267,7 +272,7 @@ TiltChrome.Visualization = function(canvas, controller) {
     meshWireframe = new Tilt.Mesh({
       vertices: mesh.vertices,
       indices: new Tilt.IndexBuffer(wireframeIndices),
-      color: "#899",
+      color: "#999",
       drawMode: tilt.LINES
     });
   };
@@ -283,43 +288,36 @@ TiltChrome.Visualization = function(canvas, controller) {
   };
 
   /**
-   * Delegate called when the tab container of the current browser is closed.
-   */
-  function gClose(e) {
-    if (TiltChrome.BrowserOverlay.href !== window.content.location.href) {
-      TiltChrome.BrowserOverlay.href = null;
-      TiltChrome.BrowserOverlay.destroy();
-    }
-  };
-
-  /**
-   * Delegate called when the content of the current browser is resized.
-   */
-  function gResize(e) {
-    tilt.width = window.content.innerWidth;
-    tilt.height = window.content.innerHeight;
-    redraw = true;
-
-    // hide the panel with the html editor (to avoid wrong positioning) 
-    TiltChrome.BrowserOverlay.panel.hidePopup();
-  };
-
-  /**
    * Setup the controller, referencing this visualization.
    */
   function setupController() {
-    // set some references in the controller for this visualization
-    controller.width = tilt.width;
-    controller.height = tilt.height;
-    controller.setTranslation = setTranslation;
-    controller.setRotation = setRotation;
-    controller.performClick = performClick;
-    controller.performDoubleClick = performDoubleClick;
+    // set a reference in the controller for this visualization
+    controller.visualization = this;
 
     // call the init function on the controller if available
     if ("function" === typeof controller.init) {
       controller.init(canvas);
     }
+  };
+
+  /**
+   * Setup the user interface, referencing this visualization.
+   */
+  function setupGUI() {
+    // set a reference in the user interface for this visualization
+    gui.visualization = this;
+
+    // call the init function on the user interface if available
+    if ("function" === typeof gui.init) {
+      gui.init(canvas);
+    }
+  };
+  
+  /**
+   * Delegate method, sending a redraw signal.
+   */
+  this.redraw = function() {
+    redraw = true;
   };
 
   /**
@@ -329,7 +327,7 @@ TiltChrome.Visualization = function(canvas, controller) {
    * @param {Number} y: the new translation on the y axis
    * @param {Number} z: the new translation on the z axis
    */
-  function setTranslation(x, y, z) {
+  this.setTranslation = function(x, y, z) {
     if (transforms.translation[0] != x ||
         transforms.translation[1] != y ||
         transforms.translation[2] != z) {
@@ -345,7 +343,7 @@ TiltChrome.Visualization = function(canvas, controller) {
    * Delegate rotation method, used by the controller.
    * @param {Array} quaternion: the rotation quaternion, as [x, y, z, w]
    */
-  function setRotation(quaternion) {
+  this.setRotation = function(quaternion) {
     if (transforms.rotation[0] != quaternion[0] ||
         transforms.rotation[1] != quaternion[1] ||
         transforms.rotation[2] != quaternion[2] ||
@@ -359,20 +357,30 @@ TiltChrome.Visualization = function(canvas, controller) {
   /**
    * Delegate click method, used by the controller.
    *
-   * @param {Number} x: the current horizontal coordinate of the mouse
-   * @param {Number} y: the current vertical coordinate of the mouse
+   * @param {Number} x: the current horizontal coordinate
+   * @param {Number} y: the current vertical coordinate
    */
-  function performClick(x, y) {
+  this.click = function(x, y) {
+    if ("function" === typeof gui.click) {
+      gui.click(x, y);
+    }
+
+    // set the focus back to the window content if it was somewhere else
     window.content.focus();
+    redraw = true;
   };
 
   /**
    * Delegate double click method, used by the controller.
    *
-   * @param {Number} x: the current horizontal coordinate of the mouse
-   * @param {Number} y: the current vertical coordinate of the mouse
+   * @param {Number} x: the current horizontal coordinate
+   * @param {Number} y: the current vertical coordinate
    */
-  function performDoubleClick(x, y) {
+  this.doubleClick = function(x, y) {
+    if ("function" === typeof gui.doubleClick) {
+      gui.doubleClick(x, y);
+    }
+
     // create a ray following the mouse direction from the near clipping plane
     // to the far clipping plane, to check for intersections with the mesh
     var ray = Tilt.Math.createRay([x, y, 0], [x, y, 1],
@@ -423,8 +431,7 @@ TiltChrome.Visualization = function(canvas, controller) {
       var intersection = intersections[0],
         node = intersection.node,
         html = Tilt.String.trim(
-          style_html(intersection.node.innerHTML, 
-          {
+          style_html(intersection.node.innerHTML, {
             'indent_size': 2,
             'indent_char': ' ',
             'max_char': 78,
@@ -452,6 +459,30 @@ TiltChrome.Visualization = function(canvas, controller) {
       editor.innerHTML = html;
       iframe.contentWindow.onload();
     }
+
+    redraw = true;
+  };
+
+  /**
+   * Delegate called when the tab container of the current browser is closed.
+   */
+  function gClose(e) {
+    if (TiltChrome.BrowserOverlay.href !== window.content.location.href) {
+      TiltChrome.BrowserOverlay.href = null;
+      TiltChrome.BrowserOverlay.destroy();
+    }
+  };
+
+  /**
+   * Delegate called when the content of the current browser is resized.
+   */
+  function gResize(e) {
+    tilt.width = window.content.innerWidth;
+    tilt.height = window.content.innerHeight;
+    redraw = true;
+
+    // hide the panel with the html editor (to avoid wrong positioning) 
+    TiltChrome.BrowserOverlay.panel.hidePopup();
   };
 
   /**
@@ -462,11 +493,14 @@ TiltChrome.Visualization = function(canvas, controller) {
     gBrowser.tabContainer.removeEventListener("TabAttrModified", gClose, 0);
     gBrowser.contentWindow.removeEventListener("resize", gResize, 0);
 
+    tilt.destroy();
+    tilt = null;
+
     controller.destroy(canvas);
     controller = null;
 
-    tilt.destroy();
-    tilt = null;
+    gui.destroy(canvas);
+    gui = null;
 
     background.destroy();
     background = null;
@@ -485,10 +519,15 @@ TiltChrome.Visualization = function(canvas, controller) {
     transforms = null;
 
     for (var i in this) {
-      if ("function" === typeof this[i].destroy) {
-        this[i].destroy();
+      try {
+        if ("function" === typeof this[i].destroy) {
+          this[i].destroy();
+        }
       }
-      this[i] = null;
+      catch(e) {}
+      finally {
+        delete this[i];
+      }
     }
   };
 };
