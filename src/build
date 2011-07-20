@@ -1,12 +1,25 @@
 #!/bin/bash
 
-find chrome/content -name \*.js ! -path *ace/* ! -name browserEntryPoint.js ! -name tilt-content.js -exec cat > chrome/content/tilt-content.js {} \;
-
-if [ $1 == "minify" ]
+if [[ $# > 0 && $1 == "engine" || $1 == "all" ]];
   then
-    cp chrome/content/tilt-content.js tilt-content.js
-    java -jar compiler.jar --language_in ECMASCRIPT5_STRICT --compilation_level ADVANCED_OPTIMIZATIONS --warning_level QUIET --externs build-externs.jsext --js tilt-content.js --js_output_file chrome/content/tilt-content.js
-    rm tilt-content.js
+    find chrome/content/engine -name \*.js -exec cat > Tilt.js {} \;
+
+    if [[ $# > 1 && $2 == "minify" ]];
+      then
+        java -jar compiler.jar --language_in ECMASCRIPT5_STRICT --compilation_level SIMPLE_OPTIMIZATIONS --warning_level QUIET --js Tilt.js --js_output_file Tilt-min.js
+    fi
 fi
 
-export OSTYPE; make clean; make; make install;
+if [[ $# > 0 && $1 == "extension" || $1 == "all" ]];
+  then
+    find chrome/content -name \*.js ! -path \*ace\/\* ! -name browserEntryPoint.js ! -name Tilt-content.js -exec cat > chrome/content/Tilt-content.js {} \;
+
+    if [[ $# > 0 && $2 == "minify" ]];
+      then
+        cp chrome/content/Tilt-content.js Tilt-content.js
+        java -jar compiler.jar --language_in ECMASCRIPT5_STRICT --compilation_level ADVANCED_OPTIMIZATIONS --warning_level QUIET --externs build-externs.jsext --js Tilt-content.js --js_output_file chrome/content/Tilt-content.js
+        rm Tilt-content.js
+    fi
+
+    export OSTYPE; make clean; make; make install;  
+fi

@@ -1,28 +1,28 @@
-window['gBrowser'] = gBrowser;
-gBrowser['tabContainer'] = gBrowser.tabContainer;
-gBrowser['contentWindow'] = gBrowser.contentWindow;
-gBrowser['selectedBrowser'] = gBrowser.selectedBrowser;
-gBrowser.selectedBrowser['parentNode'] = gBrowser.selectedBrowser.parentNode;
+window["gBrowser"] = gBrowser;
+gBrowser["tabContainer"] = gBrowser.tabContainer;
+gBrowser["contentWindow"] = gBrowser.contentWindow;
+gBrowser["selectedBrowser"] = gBrowser.selectedBrowser;
+gBrowser.selectedBrowser["parentNode"] = gBrowser.selectedBrowser.parentNode;
 
-window['TiltChrome'] = TiltChrome;
-TiltChrome['BrowserOverlay'] = TiltChrome.BrowserOverlay;
-TiltChrome.BrowserOverlay['initialize'] = TiltChrome.BrowserOverlay.initialize;
-TiltChrome.BrowserOverlay['panel'] = TiltChrome.BrowserOverlay.panel;
-TiltChrome.BrowserOverlay.panel['openPopup'] = TiltChrome.BrowserOverlay.panel.openPopup;
-TiltChrome.BrowserOverlay.panel['hidePopup'] = TiltChrome.BrowserOverlay.panel.hidePopup;
+window["TiltChrome"] = TiltChrome;
+TiltChrome["BrowserOverlay"] = TiltChrome.BrowserOverlay;
+TiltChrome.BrowserOverlay["initialize"] = TiltChrome.BrowserOverlay.initialize;
+TiltChrome.BrowserOverlay["panel"] = TiltChrome.BrowserOverlay.panel;
+TiltChrome.BrowserOverlay.panel["openPopup"] = TiltChrome.BrowserOverlay.panel.openPopup;
+TiltChrome.BrowserOverlay.panel["hidePopup"] = TiltChrome.BrowserOverlay.panel.hidePopup;
 
 canvas.getContext("2d").drawWindow;
 
 window.QueryInterface(Ci.nsIInterfaceRequestor)
   .getInterface(Ci.nsIDOMWindowUtils)
   .garbageCollect();
-  
+
 Components.classes["@mozilla.org/consoleservice;1"]
   .getService(Components.interfaces.nsIConsoleService);
 
 Components.classes["@mozilla.org/scripterror;1"]
   .createInstance(Components.interfaces.nsIScriptError);
-  
+
 scriptError.init;
 consoleService.logMessage;
 consoleService.logStringMessage;
