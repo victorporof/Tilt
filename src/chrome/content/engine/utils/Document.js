@@ -67,6 +67,7 @@ Tilt.Document = {
 
     // create the canvas element
     canvas = doc.createElement("canvas");
+    canvas.setAttribute("style", "width: 100%; height: 100%;");
     canvas.width = width;
     canvas.height = height;
     canvas.id = id;
@@ -96,9 +97,9 @@ Tilt.Document = {
     var width = window.innerWidth,
       height = window.innerHeight,
       canvas = this.initCanvas(width, height, true);
-
-    canvas.setAttribute("style", "width: 100%; height: 100%;");
-    this.currentParentNode.setAttribute("style", "margin: 0px 0px 0px 0px;");
+    
+    this.currentParentNode.setAttribute("style",
+      "background:#000; margin: 0px; padding: 0px; overflow: hidden;");
 
     try {
       return canvas;
@@ -192,27 +193,38 @@ Tilt.Document = {
    * @return {Object} an object containing the x, y, width and height coords
    */
   getNodeCoordinates: function(node) {
-    var x = 0, y = 0, w = node.clientWidth, h = node.clientHeight;
-
-    // if the node isn't the parent of everything
-    if (node.offsetParent) {
-      // calculate the offset recursively
-      do {
-        x += node.offsetLeft;
-        y += node.offsetTop;
-      } while ((node = node.offsetParent));
-    }
-    else {
-      // just get the x and y coordinates of this node if available
-      if (node.x) {
-        x = node.x;
-      }
-      if (node.y) {
-        y = node.y;
-      }
-    }
-
     try {
+      var clientRect = node.getBoundingClientRect();
+
+      // a bit more verbose than a simple array
+      return {
+        x: clientRect.left + window.content.pageXOffset,
+        y: clientRect.top + window.content.pageYOffset,
+        width: clientRect.width,
+        height: clientRect.height
+      };
+    }
+    catch (e) {
+      var x = 0, y = 0, w = node.clientWidth, h = node.clientHeight;
+
+      // if the node isn't the parent of everything
+      if (node.offsetParent) {
+        // calculate the offset recursively
+        do {
+          x += node.offsetLeft;
+          y += node.offsetTop;
+        } while ((node = node.offsetParent));
+      }
+      else {
+        // just get the x and y coordinates of this node if available
+        if (node.x) {
+          x = node.x;
+        }
+        if (node.y) {
+          y = node.y;
+        }
+      }
+
       // a bit more verbose than a simple array
       return {
         x: x,
