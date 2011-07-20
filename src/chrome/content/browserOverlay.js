@@ -106,7 +106,8 @@ TiltChrome.BrowserOverlay = {
     // construct the visualization using the canvas
     this.visualization =
       new TiltChrome.Visualization(this.canvas,
-      new TiltChrome.Controller.MouseAndKeyboard()); // default controls
+      new TiltChrome.Controller.MouseAndKeyboard(),
+      new TiltChrome.UI());
   },
 
   /**
