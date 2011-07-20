@@ -194,6 +194,7 @@ Tilt.Document = {
    */
   getNodeCoordinates: function(node) {
     try {
+      // this is the preferred way of getting the bounding client rectangle
       var clientRect = node.getBoundingClientRect();
 
       // a bit more verbose than a simple array
