@@ -44,6 +44,11 @@ Tilt.TextureUtils = {
     // make sure the parameters argument is an object
     parameters = parameters || {};
 
+    // check to see if the texture hasn't been already created
+    if ("undefined" !== typeof Tilt.$loadedTextures[image.src]) {
+      return Tilt.$loadedTextures[image.src];
+    }
+
     // make sure the image is power of two before binding to a texture
     var gl = Tilt.$gl,
       pot = Tilt.TextureUtils.resizeImageToPowerOfTwo(image, parameters),
@@ -67,6 +72,11 @@ Tilt.TextureUtils = {
     // set the required texture params and do some cleanup
     this.setTextureParams(parameters);
     gl.bindTexture(gl.TEXTURE_2D, null);
+
+    // cache the current texture in a hash table, for easy future access
+    if ("undefined" !== typeof image.src) {
+      Tilt.$loadedTextures[image.src] = texture;
+    }
 
     // cleanup
     gl = null;

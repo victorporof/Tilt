@@ -52,6 +52,11 @@ Tilt.$activeShader = -1;
 Tilt.$enabledAttributes = -1;
 
 /**
+ * All the loaded textures, stored in a hash table.
+ */
+Tilt.$loadedTextures = {};
+
+/**
  * Clears the cache and sets all the variables to default.
  */
 Tilt.clearCache = function() {
@@ -59,4 +64,5 @@ Tilt.clearCache = function() {
   Tilt.$renderer = null;
   Tilt.$activeShader = -1;
   Tilt.$enabledAttributes = -1;
+  Tilt.$loadedTextures = {};
 };
