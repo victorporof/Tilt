@@ -43,9 +43,10 @@ var EXPORTED_SYMBOLS = ["Tilt.Texture"];
  *  @param {Boolean} mipmap: true if should generate mipmap
  *  @param {String} wrapS: either "repeat" or "clamp"
  *  @param {String} wrapT: either "repeat" or "clamp"
+ * @param {Function} readyCallback: function called when texture has loaded
  * @return {Tilt.Texture} the newly created object
  */
-Tilt.Texture = function(image, parameters) {
+Tilt.Texture = function(image, parameters, readyCallback) {
 
   /**
    * A reference to the WebGL texture object.
@@ -69,6 +70,11 @@ Tilt.Texture = function(image, parameters) {
    * @return {Boolean} true if the texture has loaded, false if not
    */
   this.loaded = false;
+
+  /**
+   * Function to be called when the texture has finished loading.
+   */
+  this.onload = readyCallback;
 
   // if the image is specified in the constructor, initialize directly
   if ("object" === typeof image) {
@@ -101,10 +107,15 @@ Tilt.Texture.prototype = {
     this.height = this.ref.height;
     this.loaded = true;
 
+    if ("undefined" !== typeof this.onload) {
+      this.onload();
+    }
+
     // cleanup
     delete this.ref.id;
     delete this.ref.width;
     delete this.ref.height;
+    delete this.onload;
 
     image = null;
     parameters = null;
@@ -115,7 +126,6 @@ Tilt.Texture.prototype = {
    *
    * @param {String} imageSource: the texture source
    * @param {Object} parameters: an object containing the texture properties
-   * @param {Function} readyCallback: function called when loading is finished
    */
   initTextureAt: function(imageSource, parameters, readyCallback) {
     // remember who we are
@@ -131,11 +141,6 @@ Tilt.Texture.prototype = {
       self = null;
       image = null;
       parameters = null;
-
-      // if a callback function is specified, run it when initialization done
-      if ("function" === typeof readyCallback) {
-        readyCallback();
-      }
     };
   },
 
@@ -144,7 +149,15 @@ Tilt.Texture.prototype = {
    */
   destroy: function() {
     for (var i in this) {
-      delete this[i];
+      try {
+        if ("function" === typeof this[i].destroy) {
+          this[i].destroy();
+        }
+      }
+      catch(e) {}
+      finally {
+        delete this[i];
+      }
     }
   }
 };
