@@ -176,11 +176,19 @@ TiltChrome.Visualization = function(canvas, controller, gui) {
 
     // traverse the document
     Tilt.Document.traverse(function(node, depth) {
+      if (node.localName === "a" ||
+          node.localName === "b" ||
+          node.localName === "i" ||
+          node.localName === "u" ||
+          node.localName === "img") {
+        return;
+      }
+
       // get the x, y, width and height coordinates of a node
       var coord = Tilt.Document.getNodeCoordinates(node);
 
       // use this node only if it actually has any dimensions
-      if (coord.width > 1 && coord.height > 1) {
+      if (coord.width > 4 && coord.height > 4) {
         // the entire mesh's pivot is the screen center
         var x = coord.x - tilt.width / 2,
          y = coord.y - tilt.height / 2,
