@@ -19,7 +19,10 @@
 
 ### Following months
 * add some lights, experiment with bump mapping
-* handle mouse clicks on the webpage and seamlessly refresh the visualization
 * export the visualization to other browsers (html, url, image, obj)
-* easter eggs
+* handle mouse clicks on the webpage and seamlessly refresh the visualization
+
+### Wacky ideas
+* expose/ spaces/ mission control/ speed dial? that would be awesome!
 * audio rendering (lol?!)
+* easter eggs
