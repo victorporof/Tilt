@@ -35,36 +35,6 @@
 			<key>firstVisibleLine</key>
 			<integer>0</integer>
 		</dict>
-		<key>Tilt.js</key>
-		<dict>
-			<key>caret</key>
-			<dict>
-				<key>column</key>
-				<integer>11</integer>
-				<key>line</key>
-				<integer>7154</integer>
-			</dict>
-			<key>columnSelection</key>
-			<false/>
-			<key>firstVisibleColumn</key>
-			<integer>0</integer>
-			<key>firstVisibleLine</key>
-			<integer>7219</integer>
-			<key>selectFrom</key>
-			<dict>
-				<key>column</key>
-				<integer>3</integer>
-				<key>line</key>
-				<integer>7154</integer>
-			</dict>
-			<key>selectTo</key>
-			<dict>
-				<key>column</key>
-				<integer>11</integer>
-				<key>line</key>
-				<integer>7154</integer>
-			</dict>
-		</dict>
 		<key>Tilt.komodoproject</key>
 		<dict>
 			<key>caret</key>
@@ -121,6 +91,20 @@
 			<key>firstVisibleLine</key>
 			<integer>0</integer>
 		</dict>
+		<key>chrome/content/Tilt-content.js</key>
+		<dict>
+			<key>caret</key>
+			<dict>
+				<key>column</key>
+				<integer>0</integer>
+				<key>line</key>
+				<integer>9568</integer>
+			</dict>
+			<key>firstVisibleColumn</key>
+			<integer>0</integer>
+			<key>firstVisibleLine</key>
+			<integer>9576</integer>
+		</dict>
 		<key>chrome/content/TiltChromeController.js</key>
 		<dict>
 			<key>caret</key>
@@ -133,7 +117,7 @@
 			<key>firstVisibleColumn</key>
 			<integer>0</integer>
 			<key>firstVisibleLine</key>
-			<integer>164</integer>
+			<integer>165</integer>
 		</dict>
 		<key>chrome/content/TiltChromeUI.js</key>
 		<dict>
@@ -161,7 +145,7 @@
 			<key>firstVisibleColumn</key>
 			<integer>0</integer>
 			<key>firstVisibleLine</key>
-			<integer>347</integer>
+			<integer>500</integer>
 		</dict>
 		<key>chrome/content/ace/editor.html</key>
 		<dict>
@@ -821,7 +805,6 @@
 		<string>testunits/testPrimitivesImage.html</string>
 		<string>chrome/content/engine/utils/Console.js</string>
 		<string>chrome/content/engine/utils/Document.js</string>
-		<string>Tilt.js</string>
 		<string>chrome/content/engine/core/Texture.js</string>
 		<string>chrome/content/engine/core/TextureUtils.js</string>
 		<string>chrome/content/engine/lib/glMatrix-0.9.6.js</string>
@@ -843,6 +826,7 @@
 		<string>build-externs.jsext</string>
 		<string>chrome/content/engine/renderer/RequestAnimFrame.js</string>
 		<string>chrome/content/engine/renderer/Shaders.js</string>
+		<string>chrome/content/Tilt-content.js</string>
 		<string>chrome/content/engine/renderer/geometry/Cube.js</string>
 		<string>chrome/content/engine/renderer/geometry/CubeWireframe.js</string>
 		<string>chrome/content/engine/gui/controls/Button.js</string>
