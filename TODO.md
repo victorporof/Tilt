@@ -25,4 +25,5 @@
 ### Wacky ideas
 * expose/ spaces/ mission control/ speed dial? that would be awesome!
 * audio rendering (lol?!)
+* a haptic map device so that we can feel the page in 3D... arduino anyone?
 * easter eggs
