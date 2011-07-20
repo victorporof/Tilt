@@ -374,7 +374,9 @@ TiltChrome.Visualization = function(canvas, controller, gui) {
     }
 
     // set the focus back to the window content if it was somewhere else
+    TiltChrome.BrowserOverlay.panel.hidePopup();
     window.content.focus();
+
     redraw = true;
   };
 

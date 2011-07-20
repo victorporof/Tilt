@@ -178,8 +178,6 @@ TiltChrome.Controller.MouseAndKeyboard = function() {
       this.visualization.click(mouseX, mouseY);
     }
 
-    TiltChrome.BrowserOverlay.panel.hidePopup();
-
     mouseX = e.clientX - e.target.offsetLeft;
     mouseY = e.clientY - e.target.offsetTop;
     mouseStartX = mouseX;
