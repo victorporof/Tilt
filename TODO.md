@@ -32,10 +32,7 @@
 * better support for XUL
 
 ### Wacky ideas
-* using head tracking from a webcam image to modify/rotate the perspective on a webpage
-  example: http://www.filosophy.org/projects/3dpage/
-  by: Filip Zembowicz
-
+* using head tracking from a webcam image to modify/rotate the perspective on a webpage, example: http://www.filosophy.org/projects/3dpage/ by Filip Zembowicz
 * create some DOM art, so that it looks amazing in Tilt
 * when we have live updates, we might even create Tilt movies! 
 * minecraft?
