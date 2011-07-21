@@ -291,6 +291,16 @@ TiltChrome.Controller.MouseAndKeyboard = function() {
   };
 
   /**
+   * Delegate method, called when the controller needs to be resized.
+   *
+   * @param width: the new width of the visualization
+   * @param height: the new height of the visualization
+   */
+  this.resize = function(width, height) {
+    arcball.resize(width, height);
+  };
+
+  /**
    * Destroys this object and sets all members to null.
    * @param {HTMLCanvasElement} canvas: the canvas dom element
    */
