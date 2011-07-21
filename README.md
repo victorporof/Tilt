@@ -2,16 +2,16 @@
 #### [Development Blog](http://blog.mozilla.com/tilt/)
 #### [Tilt Project Page](https://wiki.mozilla.org/Tilt_Project_Page)
 
-### Installation
+## Installation
 In the bin folder you will find the latest [Tilt.xpi](https://github.com/victorporof/Tilt/raw/master/bin/Tilt.xpi) extension build. Download, then drag and drop it to Firefox. After the installation is complete, restart, and open the extension using `Ctrl+Shift+M` (or `Cmd+Shift+M` if you're on a mac), or find it inside the Tools menu. Close it at any time with the `Esc` key.
 
-### Description
+## Description
 > Tilt represents a new way of visualizing a web page. This tool creates a 3D representation of the document, with the purpose of displaying, understanding and easily analyzing the DOM. It will take advantage of the great tools Firefox has to offer, as it is an extension which contains a WebGL implementation, providing rich user-experience, fun interaction and useful information, while taking full advantage of 3D hardware acceleration, GLSL shaders and what OpenGL ES 2.0 has to offer.
 
 > The implementation consists of a Firefox extension containing a 3D representation of a web page, as both a fun visualization tool and a developer-friendly environment for debugging the document’s structure, contents and nesting of the DOM tree. Various information besides the actual contents will be displayed on request, regarding each node’s type, class, id, and other attributes if available. The rendering will be dynamic, in-browser, using WebGL and GLSL shaders.
 #### [Additional info](http://www.google-melange.com/gsoc/proposal/review/google/gsoc2011/victorporof/1#)
 
-### How to build
+## How to build
 Building is done using the [build script](https://github.com/victorporof/Tilt/blob/master/src/build). There are two parts of the project which can be compiled: the engine and the extension itself. To build everything and also minify the sources, run the `./build` command from a terminal:
 
     ./build all minify
@@ -21,10 +21,10 @@ Alternatively, you can just use
     ./build engine
     ./build extension
 
-To build only a part of the project. Append the `minify` parameter to minify the sources.
-The compiled files are in the [bin folder](https://github.com/victorporof/Tilt/tree/master/bin). Inside [build](https://github.com/victorporof/Tilt/tree/master/bin/build) you can find the unpacked [Tilt.xpi](https://github.com/victorporof/Tilt/raw/master/bin/Tilt.xpi) archive.
+To build only a part of the project, append the `minify` parameter to minify the sources.
+The compiled files are in the [bin](https://github.com/victorporof/Tilt/tree/master/bin) folder. Inside [build](https://github.com/victorporof/Tilt/tree/master/bin/build) you can find the unpacked [Tilt.xpi](https://github.com/victorporof/Tilt/raw/master/bin/Tilt.xpi) archive.
 
-Tilt uses the Google Closure compiler to minify the Javascript files, with the --compilation_level ADVANCED_OPTIMIZATIONS flag. Therefore, [some JS externs](https://github.com/victorporof/Tilt/blob/master/bin/google-closure/tilt-externs.jsext) must be specified so important variable names are not renamed.
+Tilt uses the Google Closure [compiler](https://github.com/victorporof/Tilt/tree/master/bin/google-closure) to minify the Javascript files, with the --compilation_level ADVANCED_OPTIMIZATIONS flag. Therefore, [some JS externs](https://github.com/victorporof/Tilt/blob/master/bin/google-closure/tilt-externs.jsext) must be specified so important variable names are not renamed.
 
 ### Principles
 Before developing this extension, I’ve experimented with various techniques of achieving the desired visualization results and polished user experience, by implementing a few of the required features and asking for feedback from knowledgeable people working in the domain. As a result, some key aspects must be pointed out:
