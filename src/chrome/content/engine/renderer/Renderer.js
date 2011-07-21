@@ -50,7 +50,7 @@ Tilt.Renderer = function(canvas, failCallback, successCallback) {
   Tilt.$renderer = this;
 
   // check if the context was created successfully
-  if ("undefined" !== typeof this.gl) {
+  if ("undefined" !== typeof this.gl && this.gl !== null) {
     // set up some global enums
     this.TRIANGLES = this.gl.TRIANGLES;
     this.TRIANGLE_STRIP = this.gl.TRIANGLE_STRIP;
@@ -72,6 +72,7 @@ Tilt.Renderer = function(canvas, failCallback, successCallback) {
     Tilt.Console.log(Tilt.StringBundle.get("initWebGL.error"));
     if ("function" === typeof failCallback) {
       failCallback();
+      return;
     }
   }
 
