@@ -24,7 +24,7 @@ Alternatively, you can just use the `engine` or `extension` param to build only 
 Also, you can append the `minify` parameter to minify the sources.
 The compiled files are in the [bin](https://github.com/victorporof/Tilt/tree/master/bin) folder. If the extension was also built, inside [build](https://github.com/victorporof/Tilt/tree/master/bin/build) you can find the unpacked [Tilt.xpi](https://github.com/victorporof/Tilt/raw/master/bin/Tilt.xpi) archive.
 
-To install the extension automatically in Firefox with the `make install` or `./build` command, first edit the [makefile](https://github.com/victorporof/Tilt/blob/master/src/Makefile) and change the `profile_dir` to match your profile in Firefox. If you don't do this, installation will fail. Additionally, you may need to have the `tilt@mozilla.com` folder created in the extension profile directory, depending on the OS and Firefox version. After this quick setup, run any of this command to install the extension (after compiling it with `./build`):
+To install the extension automatically in Firefox with the `make install` or `./build` command, first edit the [makefile](https://github.com/victorporof/Tilt/blob/master/src/Makefile) and change the `profile_dir` to match your profile in Firefox. If you don't do this, installation will fail. Additionally, you may need to have the `tilt@mozilla.com` folder created in the extension profile directory, depending on the OS and Firefox version. After this quick setup (provided that you already compiled the extension with `./build`), run this command to install the extension:
 
     export OSTYPE; make install;
 
