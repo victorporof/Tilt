@@ -188,8 +188,7 @@ TiltChrome.Visualization = function(canvas, controller, gui) {
           node.localName === "b" ||
           node.localName === "i" ||
           node.localName === "u" ||
-          node.localName === "img" ||
-          node.innerHTML === "") {
+          node.localName === "img") {
         return;
       }
 
