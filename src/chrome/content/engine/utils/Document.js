@@ -64,6 +64,13 @@ Tilt.Document = {
 
     var doc = this.currentContentDocument,
       node = this.currentParentNode,
+      canvas;
+
+    if ("undefined" === typeof doc || doc === null ||
+        "undefined" === typeof node || node === null) {
+
+      return null;
+    }
 
     // create the canvas element
     canvas = doc.createElement("canvas");
