@@ -21,6 +21,7 @@
 * perhaps a zoom control that isolates a dom node and its children only
 * the back of the webpage itself should, instead of a mirror image, display the entire source code
 * display useful information on the sides of the nodes too
+* a color code to make the most common html elements appear clearly? like, green for a <div>
 * hide/unhide nodes
 
 ### Following months
