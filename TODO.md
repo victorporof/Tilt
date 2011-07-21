@@ -20,6 +20,7 @@
 * highlight a node and the children (glow, grayscale others, etc.)
 * perhaps a zoom control that isolates a dom node and its children only
 * the back of the webpage itself should, instead of a mirror image, display the entire source code
+* maybe use the Orion Code Editor instead of Ace?
 * display useful information on the sides of the nodes too
 * a color code to make the most common html elements appear clearly? like, green for a <div>
 * hide/unhide nodes
