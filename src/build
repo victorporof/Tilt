@@ -14,7 +14,7 @@ if [[ $# > 0 && $1 == "extension" || $1 == "all" ]];
   then
     find chrome/content -name \*.js ! -path \*ace\/\* ! -name browserEntryPoint.js -exec cat > ../bin/Tilt-extension.js {} \;
 
-    if [[ $# > 0 && $2 == "minify" ]];
+    if [[ $# > 1 && $2 == "minify" ]];
       then
         java -jar ../bin/google-closure/compiler.jar --language_in ECMASCRIPT5_STRICT --compilation_level ADVANCED_OPTIMIZATIONS --warning_level QUIET --externs ../bin/google-closure/tilt-externs.jsext --js ../bin/Tilt-extension.js --js_output_file chrome/content/Tilt-extension.js
     else
@@ -23,4 +23,9 @@ if [[ $# > 0 && $1 == "extension" || $1 == "all" ]];
 
     export OSTYPE; make clean; make; 
     rm chrome/content/Tilt-extension.js
+
+    if [[ $# > 1 && $2 == "install" || $3 == "install" ]];
+      then
+        export OSTYPE; make install;
+    fi
 fi
