@@ -3,7 +3,7 @@
 <plist version="1.0">
 <dict>
 	<key>currentDocument</key>
-	<string>build</string>
+	<string>chrome/content/TiltChromeUI.js</string>
 	<key>documents</key>
 	<array>
 		<dict>
@@ -68,9 +68,9 @@
 			<key>caret</key>
 			<dict>
 				<key>column</key>
-				<integer>0</integer>
+				<integer>39</integer>
 				<key>line</key>
-				<integer>20</integer>
+				<integer>24</integer>
 			</dict>
 			<key>firstVisibleColumn</key>
 			<integer>0</integer>
@@ -91,33 +91,35 @@
 			<key>firstVisibleLine</key>
 			<integer>0</integer>
 		</dict>
-		<key>chrome/content/Tilt-extension.js</key>
-		<dict>
-			<key>caret</key>
-			<dict>
-				<key>column</key>
-				<integer>0</integer>
-				<key>line</key>
-				<integer>0</integer>
-			</dict>
-			<key>firstVisibleColumn</key>
-			<integer>0</integer>
-			<key>firstVisibleLine</key>
-			<integer>0</integer>
-		</dict>
 		<key>chrome/content/TiltChromeController.js</key>
 		<dict>
 			<key>caret</key>
 			<dict>
 				<key>column</key>
-				<integer>0</integer>
+				<integer>32</integer>
 				<key>line</key>
-				<integer>315</integer>
+				<integer>76</integer>
 			</dict>
+			<key>columnSelection</key>
+			<false/>
 			<key>firstVisibleColumn</key>
 			<integer>0</integer>
 			<key>firstVisibleLine</key>
-			<integer>276</integer>
+			<integer>67</integer>
+			<key>selectFrom</key>
+			<dict>
+				<key>column</key>
+				<integer>29</integer>
+				<key>line</key>
+				<integer>76</integer>
+			</dict>
+			<key>selectTo</key>
+			<dict>
+				<key>column</key>
+				<integer>36</integer>
+				<key>line</key>
+				<integer>76</integer>
+			</dict>
 		</dict>
 		<key>chrome/content/TiltChromeUI.js</key>
 		<dict>
@@ -126,12 +128,12 @@
 				<key>column</key>
 				<integer>0</integer>
 				<key>line</key>
-				<integer>176</integer>
+				<integer>87</integer>
 			</dict>
 			<key>firstVisibleColumn</key>
 			<integer>0</integer>
 			<key>firstVisibleLine</key>
-			<integer>154</integer>
+			<integer>68</integer>
 		</dict>
 		<key>chrome/content/TiltChromeVisualization.js</key>
 		<dict>
@@ -140,12 +142,12 @@
 				<key>column</key>
 				<integer>0</integer>
 				<key>line</key>
-				<integer>119</integer>
+				<integer>509</integer>
 			</dict>
 			<key>firstVisibleColumn</key>
 			<integer>0</integer>
 			<key>firstVisibleLine</key>
-			<integer>88</integer>
+			<integer>486</integer>
 		</dict>
 		<key>chrome/content/ace/editor.html</key>
 		<dict>
@@ -180,14 +182,14 @@
 			<key>caret</key>
 			<dict>
 				<key>column</key>
-				<integer>0</integer>
+				<integer>5</integer>
 				<key>line</key>
-				<integer>90</integer>
+				<integer>58</integer>
 			</dict>
 			<key>firstVisibleColumn</key>
 			<integer>0</integer>
 			<key>firstVisibleLine</key>
-			<integer>72</integer>
+			<integer>39</integer>
 		</dict>
 		<key>chrome/content/browserOverlay.xul</key>
 		<dict>
@@ -366,14 +368,14 @@
 			<key>caret</key>
 			<dict>
 				<key>column</key>
-				<integer>0</integer>
+				<integer>58</integer>
 				<key>line</key>
-				<integer>70</integer>
+				<integer>50</integer>
 			</dict>
 			<key>firstVisibleColumn</key>
 			<integer>0</integer>
 			<key>firstVisibleLine</key>
-			<integer>41</integer>
+			<integer>19</integer>
 		</dict>
 		<key>chrome/content/engine/gui/controls/Sprite.js</key>
 		<dict>
@@ -570,7 +572,7 @@
 				<key>column</key>
 				<integer>0</integer>
 				<key>line</key>
-				<integer>50</integer>
+				<integer>58</integer>
 			</dict>
 			<key>firstVisibleColumn</key>
 			<integer>0</integer>
@@ -675,20 +677,6 @@
 			<key>firstVisibleLine</key>
 			<integer>0</integer>
 		</dict>
-		<key>compiled/google-closure/build-externs.jsext</key>
-		<dict>
-			<key>caret</key>
-			<dict>
-				<key>column</key>
-				<integer>0</integer>
-				<key>line</key>
-				<integer>27</integer>
-			</dict>
-			<key>firstVisibleColumn</key>
-			<integer>0</integer>
-			<key>firstVisibleLine</key>
-			<integer>0</integer>
-		</dict>
 		<key>install.rdf</key>
 		<dict>
 			<key>caret</key>
@@ -708,9 +696,9 @@
 			<key>caret</key>
 			<dict>
 				<key>column</key>
-				<integer>69</integer>
+				<integer>0</integer>
 				<key>line</key>
-				<integer>6</integer>
+				<integer>7</integer>
 			</dict>
 			<key>columnSelection</key>
 			<false/>
@@ -721,16 +709,16 @@
 			<key>selectFrom</key>
 			<dict>
 				<key>column</key>
-				<integer>76</integer>
+				<integer>0</integer>
 				<key>line</key>
 				<integer>6</integer>
 			</dict>
 			<key>selectTo</key>
 			<dict>
 				<key>column</key>
-				<integer>69</integer>
+				<integer>0</integer>
 				<key>line</key>
-				<integer>6</integer>
+				<integer>7</integer>
 			</dict>
 		</dict>
 		<key>testunits/testInitTilt.html</key>
@@ -738,9 +726,9 @@
 			<key>caret</key>
 			<dict>
 				<key>column</key>
-				<integer>76</integer>
+				<integer>0</integer>
 				<key>line</key>
-				<integer>6</integer>
+				<integer>7</integer>
 			</dict>
 			<key>firstVisibleColumn</key>
 			<integer>0</integer>
@@ -752,9 +740,9 @@
 			<key>caret</key>
 			<dict>
 				<key>column</key>
-				<integer>76</integer>
+				<integer>0</integer>
 				<key>line</key>
-				<integer>6</integer>
+				<integer>7</integer>
 			</dict>
 			<key>firstVisibleColumn</key>
 			<integer>0</integer>
@@ -766,9 +754,9 @@
 			<key>caret</key>
 			<dict>
 				<key>column</key>
-				<integer>76</integer>
+				<integer>0</integer>
 				<key>line</key>
-				<integer>6</integer>
+				<integer>7</integer>
 			</dict>
 			<key>firstVisibleColumn</key>
 			<integer>0</integer>
@@ -780,9 +768,9 @@
 			<key>caret</key>
 			<dict>
 				<key>column</key>
-				<integer>76</integer>
+				<integer>0</integer>
 				<key>line</key>
-				<integer>6</integer>
+				<integer>7</integer>
 			</dict>
 			<key>firstVisibleColumn</key>
 			<integer>0</integer>
@@ -794,9 +782,9 @@
 			<key>caret</key>
 			<dict>
 				<key>column</key>
-				<integer>76</integer>
+				<integer>0</integer>
 				<key>line</key>
-				<integer>6</integer>
+				<integer>7</integer>
 			</dict>
 			<key>firstVisibleColumn</key>
 			<integer>0</integer>
@@ -808,9 +796,9 @@
 			<key>caret</key>
 			<dict>
 				<key>column</key>
-				<integer>76</integer>
+				<integer>0</integer>
 				<key>line</key>
-				<integer>6</integer>
+				<integer>7</integer>
 			</dict>
 			<key>firstVisibleColumn</key>
 			<integer>0</integer>
@@ -850,11 +838,9 @@
 		<string>chrome.manifest</string>
 		<string>chrome/content/engine/utils/Math.js</string>
 		<string>build</string>
-		<string>chrome/content/Tilt-extension.js</string>
 		<string>testunits/testPrimitivesRect.html</string>
 		<string>testunits/testPrimitivesTexturedBox.html</string>
 		<string>chrome/content/ace/editor.html</string>
-		<string>compiled/google-closure/build-externs.jsext</string>
 		<string>chrome/content/engine/renderer/RequestAnimFrame.js</string>
 		<string>chrome/content/engine/renderer/Shaders.js</string>
 		<string>chrome/content/engine/renderer/geometry/Cube.js</string>
