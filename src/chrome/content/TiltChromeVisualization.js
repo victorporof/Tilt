@@ -484,7 +484,7 @@ TiltChrome.Visualization = function(canvas, controller, gui) {
   };
 
   /**
-   * Event method called when the tab container of the current browser is closed.
+   * Event method called when the tab container of the current browser closes.
    */
   function gClose(e) {
     if (TiltChrome.BrowserOverlay.href !== window.content.location.href) {
