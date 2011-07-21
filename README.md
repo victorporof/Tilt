@@ -12,7 +12,7 @@ In the bin folder you will find the latest [Tilt.xpi](https://github.com/victorp
 #### [Additional info](http://www.google-melange.com/gsoc/proposal/review/google/gsoc2011/victorporof/1#)
 
 ### How to build
-Building is done using the [build script](https://github.com/victorporof/Tilt/blob/master/src/build). There are two parts of the project which can be compiled: the engine and the extension itself. To build everything and also minify the sources, run the `./build` command from a terminal:
+Building is done using the [build script](https://github.com/victorporof/Tilt/blob/master/src/build). There are two parts of the project which can be compiled: the engine and the extension itself. To build everything and also minify the sources, run this `./build` command from a terminal:
 
     ./build all minify
 

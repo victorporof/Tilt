@@ -1,6 +1,4 @@
 ### Important
-* show a message if WebGL is not supported by the hardware (and some helpful resources)
-* change the Ctrl+Shift+L shortcut to something else, to avoid Firebug confusion
 * edit README.md to be more useful, now that we're almost done with the pre-alpha stage
 
 ### Soon
