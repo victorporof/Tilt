@@ -41,7 +41,11 @@ TiltChrome.Visualization = function(canvas, controller, gui) {
   /**
    * Create the Tilt object, containing useful functions for easy drawing
    */
-  var tilt = new Tilt.Renderer(canvas),
+  var tilt = new Tilt.Renderer(canvas, function failCallback() {
+    TiltChrome.BrowserOverlay.destroy();
+    TiltChrome.BrowserOverlay.href = null;
+    Tilt.Console.alert("Tilt", Tilt.StringBundle.get("initWebGL.error"));
+  }),
 
   /**
    * Variable specifying if the scene should be redrawn.
@@ -79,6 +83,10 @@ TiltChrome.Visualization = function(canvas, controller, gui) {
    * The initialization logic.
    */
   function setup() {
+    if (tilt === null || tilt.gl === null || "undefined" === typeof tilt.gl) {
+      return;
+    }
+
     // use an extension to get the image representation of the document
     // this will be removed once the MOZ_dom_element_texture WebGL extension
     // is finished; currently converting the document image to a texture
@@ -108,7 +116,7 @@ TiltChrome.Visualization = function(canvas, controller, gui) {
    */
   function draw() {
     // if the visualization was destroyed, don't continue rendering
-    if (tilt === null) {
+    if (tilt === null || tilt.gl === null || "undefined" === typeof tilt.gl) {
       return;
     }
 
@@ -503,30 +511,33 @@ TiltChrome.Visualization = function(canvas, controller, gui) {
     gBrowser.tabContainer.removeEventListener("TabAttrModified", gClose, 0);
     gBrowser.contentWindow.removeEventListener("resize", gResize, 0);
 
-    tilt.destroy();
-    tilt = null;
+    try {
+      tilt.destroy();
+      tilt = null;
 
-    controller.destroy(canvas);
-    controller = null;
+      controller.destroy(canvas);
+      controller = null;
 
-    gui.destroy(canvas);
-    gui = null;
+      gui.destroy(canvas);
+      gui = null;
 
-    background.destroy();
-    background = null;
+      background.destroy();
+      background = null;
 
-    texture.destroy();
-    texture = null;
+      texture.destroy();
+      texture = null;
 
-    mesh.destroy();
-    mesh = null;
+      mesh.destroy();
+      mesh = null;
 
-    meshWireframe.destroy();
-    meshWireframe = null;
+      meshWireframe.destroy();
+      meshWireframe = null;
 
-    delete transforms.rotation;
-    delete transforms.translation;
-    transforms = null;
+      delete transforms.rotation;
+      delete transforms.translation;
+      transforms = null;
+    }
+    catch (e) {}
 
     for (var i in this) {
       try {

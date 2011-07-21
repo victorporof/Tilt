@@ -304,19 +304,22 @@ TiltChrome.Controller.MouseAndKeyboard = function() {
     window.removeEventListener("keydown", keyPressed, false);
     window.removeEventListener("keyup", keyReleased, false);
 
-    mousePressed = null;
-    mouseReleased = null;
-    mouseDoubleClick = null;
-    mouseMoved = null;
-    mouseOut = null;
-    mouseScroll = null;
-    keyPressed = null;
-    keyReleased = null;
+    try {
+      mousePressed = null;
+      mouseReleased = null;
+      mouseDoubleClick = null;
+      mouseMoved = null;
+      mouseOut = null;
+      mouseScroll = null;
+      keyPressed = null;
+      keyReleased = null;
 
-    arcball.destroy();
-    arcball = null;
-    euler = null;
-    keyCode = null;
+      arcball.destroy();
+      arcball = null;
+      euler = null;
+      keyCode = null;
+    }
+    catch (e) {}
 
     for (var i in this) {
       try {

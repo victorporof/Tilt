@@ -179,8 +179,11 @@ TiltChrome.UI = function() {
    * Destroys this object and sets all members to null.
    */
   this.destroy = function(canvas) {
-    gui.destroy();
-    gui = null;
+    try {
+      gui.destroy();
+      gui = null;
+    }
+    catch(e) {}
 
     for (var i in this) {
       try {
