@@ -1714,8 +1714,9 @@ var EXPORTED_SYMBOLS = ["Tilt.Lightbox"];
  *
  * @param {String} color: the background, defined in hex or as rgb() or rgba()
  * @param {Tilt.Sprite} sprite: the sprite to be drawn on top
+ * @param {Boolean} hidden: true if the lightbox should initially be hidden
  */
-Tilt.Lightbox = function(color, sprite) {
+Tilt.Lightbox = function(color, sprite, hidden) {
 
   /**
    * The color of the full screen rectangle.
@@ -1726,6 +1727,11 @@ Tilt.Lightbox = function(color, sprite) {
    * A texture used as the pixel data for this object.
    */
   this.sprite = sprite;
+  
+  /**
+   * Variable specifying if the lightbox should be hidden.
+   */
+  this.hidden = hidden;
 
   /**
    * The bounds of this object (used for clicking and intersections).
@@ -8873,6 +8879,16 @@ TiltChrome.Controller.MouseAndKeyboard = function() {
   };
 
   /**
+   * Delegate method, called when the controller needs to be resized.
+   *
+   * @param width: the new width of the visualization
+   * @param height: the new height of the visualization
+   */
+  this.resize = function(width, height) {
+    arcball.resize(width, height);
+  };
+
+  /**
    * Destroys this object and sets all members to null.
    * @param {HTMLCanvasElement} canvas: the canvas dom element
    */
@@ -9002,11 +9018,7 @@ TiltChrome.UI = function() {
     });
 
     helpLightbox = new Tilt.Lightbox("#0107",
-      new Tilt.Sprite(texture, [210, 210, 610, 610]));
-
-    helpLightbox.hidden = true;
-    helpLightbox.sprite.x = canvas.width / 2 - 305;
-    helpLightbox.sprite.y = canvas.height / 2 - 305;
+      new Tilt.Sprite(texture, [210, 210, 610, 610]), true);
 
     optionsButton = new Tilt.Button(canvas.width - 320, 0,
       new Tilt.Sprite(texture, [945, 0, 70, 40]));
@@ -9050,6 +9062,8 @@ TiltChrome.UI = function() {
     };
 
     helpButton.onclick = function(x, y) {
+      helpLightbox.sprite.x = canvas.width / 2 - 305;
+      helpLightbox.sprite.y = canvas.height / 2 - 305;
       helpLightbox.hidden = false;
     };
 
@@ -9306,7 +9320,8 @@ TiltChrome.Visualization = function(canvas, controller, gui) {
           node.localName === "b" ||
           node.localName === "i" ||
           node.localName === "u" ||
-          node.localName === "img") {
+          node.localName === "img" ||
+          node.innerHTML === "") {
         return;
       }
 
@@ -9419,6 +9434,7 @@ TiltChrome.Visualization = function(canvas, controller, gui) {
     gBrowser.tabContainer.addEventListener("TabClose", gClose, 0);
     gBrowser.tabContainer.addEventListener("TabAttrModified", gClose, 0);
     gBrowser.contentWindow.addEventListener("resize", gResize, 0);
+    gBrowser.addEventListener("mouseover", gMouseOver, 0);
   };
 
   /**
@@ -9600,7 +9616,7 @@ TiltChrome.Visualization = function(canvas, controller, gui) {
   };
 
   /**
-   * Delegate called when the tab container of the current browser is closed.
+   * Event method called when the tab container of the current browser is closed.
    */
   function gClose(e) {
     if (TiltChrome.BrowserOverlay.href !== window.content.location.href) {
@@ -9610,7 +9626,7 @@ TiltChrome.Visualization = function(canvas, controller, gui) {
   };
 
   /**
-   * Delegate called when the content of the current browser is resized.
+   * Event method called when the content of the current browser is resized.
    */
   function gResize(e) {
     tilt.width = window.content.innerWidth;
@@ -9622,12 +9638,30 @@ TiltChrome.Visualization = function(canvas, controller, gui) {
   };
 
   /**
+   * Event method called when the mouse comes over the current browser.
+   */
+  function gMouseOver() {
+    redraw = true;
+
+    if (canvas.width !== tilt.width || canvas.height !== tilt.height) {
+      canvas.width = tilt.width;
+      canvas.height = tilt.height;
+
+      controller.resize(tilt.width, tilt.height);
+      tilt.gl.viewport(0, 0, canvas.width, canvas.height);
+
+      draw();
+    }
+  }
+
+  /**
    * Destroys this object and sets all members to null.
    */
   this.destroy = function() {
     gBrowser.tabContainer.removeEventListener("TabClose", gClose, 0);
     gBrowser.tabContainer.removeEventListener("TabAttrModified", gClose, 0);
     gBrowser.contentWindow.removeEventListener("resize", gResize, 0);
+    gBrowser.removeEventListener("mouseover", gMouseOver, 0);
 
     try {
       tilt.destroy();
