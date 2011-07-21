@@ -84,11 +84,7 @@ TiltChrome.UI = function() {
     });
 
     helpLightbox = new Tilt.Lightbox("#0107",
-      new Tilt.Sprite(texture, [210, 210, 610, 610]));
-
-    helpLightbox.hidden = true;
-    helpLightbox.sprite.x = canvas.width / 2 - 305;
-    helpLightbox.sprite.y = canvas.height / 2 - 305;
+      new Tilt.Sprite(texture, [210, 210, 610, 610]), true);
 
     optionsButton = new Tilt.Button(canvas.width - 320, 0,
       new Tilt.Sprite(texture, [945, 0, 70, 40]));
@@ -132,6 +128,8 @@ TiltChrome.UI = function() {
     };
 
     helpButton.onclick = function(x, y) {
+      helpLightbox.sprite.x = canvas.width / 2 - 305;
+      helpLightbox.sprite.y = canvas.height / 2 - 305;
       helpLightbox.hidden = false;
     };
 

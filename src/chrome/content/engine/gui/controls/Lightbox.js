@@ -33,8 +33,9 @@ var EXPORTED_SYMBOLS = ["Tilt.Lightbox"];
  *
  * @param {String} color: the background, defined in hex or as rgb() or rgba()
  * @param {Tilt.Sprite} sprite: the sprite to be drawn on top
+ * @param {Boolean} hidden: true if the lightbox should initially be hidden
  */
-Tilt.Lightbox = function(color, sprite) {
+Tilt.Lightbox = function(color, sprite, hidden) {
 
   /**
    * The color of the full screen rectangle.
@@ -45,6 +46,11 @@ Tilt.Lightbox = function(color, sprite) {
    * A texture used as the pixel data for this object.
    */
   this.sprite = sprite;
+  
+  /**
+   * Variable specifying if the lightbox should be hidden.
+   */
+  this.hidden = hidden;
 
   /**
    * The bounds of this object (used for clicking and intersections).
