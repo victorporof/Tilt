@@ -1855,7 +1855,7 @@ Tilt.GUI.prototype = {
       elements = this.elements,
       element, i, len;
 
-    tilt.perspective();
+    tilt.ortho();
     tilt.origin();
     tilt.defaults();
 
@@ -6385,7 +6385,7 @@ Tilt.Renderer = function(canvas, failCallback, successCallback) {
   Tilt.$renderer = this;
 
   // check if the context was created successfully
-  if ("undefined" !== typeof this.gl) {
+  if ("undefined" !== typeof this.gl && this.gl !== null) {
     // set up some global enums
     this.TRIANGLES = this.gl.TRIANGLES;
     this.TRIANGLE_STRIP = this.gl.TRIANGLE_STRIP;
@@ -6407,6 +6407,7 @@ Tilt.Renderer = function(canvas, failCallback, successCallback) {
     Tilt.Console.log(Tilt.StringBundle.get("initWebGL.error"));
     if ("function" === typeof failCallback) {
       failCallback();
+      return;
     }
   }
 
@@ -7352,18 +7353,44 @@ var EXPORTED_SYMBOLS = ["Tilt.Console", "Tilt.StringBundle"];
 Tilt.Console = {
 
   /**
+   * Shows a modal alert message popup.
+   * 
+   * @param {String} title: the title of the popup
+   * @param {String} message: the message to be logged
+   */
+  alert: function(title, message) {  
+    var prompt;
+  
+    if ("undefined" === typeof message) {
+      message = "undefined";
+    }
+    try {
+      prompt = Components.classes["@mozilla.org/embedcomp/prompt-service;1"]
+        .getService(Components.interfaces.nsIPromptService);
+
+      prompt.alert(null, title, message);
+    }
+    catch(e) {
+      // running from an unprivileged environment
+      alert(message);
+    }
+  },
+
+  /**
    * Logs a message to the console.
    * If this is not inside an extension environment, an alert() is used.
    *
    * @param {String} message: the message to be logged
    */
   log: function(message) {
+    var consoleService;
+
     if ("undefined" === typeof message) {
       message = "undefined";
     }
     try {
       // get the console service
-      var consoleService = Components.classes["@mozilla.org/consoleservice;1"]
+      consoleService = Components.classes["@mozilla.org/consoleservice;1"]
         .getService(Components.interfaces.nsIConsoleService);
 
       // log the message
@@ -7403,16 +7430,18 @@ Tilt.Console = {
   error: function(message, sourceName, sourceLine,
                   lineNumber, columnNumber, flags, category) {
 
+    var consoleService, scriptError;
+
     if ("undefined" === typeof message) {
       message = "undefined";
     }
     try {
       // get the console service
-      var consoleService = Components.classes["@mozilla.org/consoleservice;1"]
+      consoleService = Components.classes["@mozilla.org/consoleservice;1"]
         .getService(Components.interfaces.nsIConsoleService);
 
       // also the script error service
-      var scriptError = Components.classes["@mozilla.org/scripterror;1"]
+      scriptError = Components.classes["@mozilla.org/scripterror;1"]
         .createInstance(Components.interfaces.nsIScriptError);
 
       // initialize a script error
@@ -7569,6 +7598,13 @@ Tilt.Document = {
 
     var doc = this.currentContentDocument,
       node = this.currentParentNode,
+      canvas;
+
+    if ("undefined" === typeof doc || doc === null ||
+        "undefined" === typeof node || node === null) {
+
+      return null;
+    }
 
     // create the canvas element
     canvas = doc.createElement("canvas");
