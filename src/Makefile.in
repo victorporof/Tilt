@@ -8,7 +8,7 @@ chrome_jar_file := $(jar_target_dir)/$(extension_name).jar
 jar_source_root := chrome
 
 # The sources for the JAR file.
-jar_sources := $(wildcard $(jar_source_root)/content/Tilt-content.js) \
+jar_sources := $(wildcard $(jar_source_root)/content/Tilt-extension.js) \
                $(wildcard $(jar_source_root)/content/browserEntryPoint.js) \
                $(wildcard $(jar_source_root)/content/*.xul) \
                $(wildcard $(jar_source_root)/content/*.xml) \
