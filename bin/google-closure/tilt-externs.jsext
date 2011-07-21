@@ -26,7 +26,7 @@ Components.classes["@mozilla.org/consoleservice;1"]
 Components.classes["@mozilla.org/scripterror;1"]
   .createInstance(Components.interfaces.nsIScriptError);
 
-p.alert;
+prompt.alert;
 scriptError.init;
 consoleService.logMessage;
 consoleService.logStringMessage;
