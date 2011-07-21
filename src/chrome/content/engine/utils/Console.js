@@ -34,18 +34,44 @@ var EXPORTED_SYMBOLS = ["Tilt.Console", "Tilt.StringBundle"];
 Tilt.Console = {
 
   /**
+   * Shows a modal alert message popup.
+   * 
+   * @param {String} title: the title of the popup
+   * @param {String} message: the message to be logged
+   */
+  alert: function(title, message) {  
+    var prompt;
+  
+    if ("undefined" === typeof message) {
+      message = "undefined";
+    }
+    try {
+      prompt = Components.classes["@mozilla.org/embedcomp/prompt-service;1"]
+        .getService(Components.interfaces.nsIPromptService);
+
+      prompt.alert(null, title, message);
+    }
+    catch(e) {
+      // running from an unprivileged environment
+      alert(message);
+    }
+  },
+
+  /**
    * Logs a message to the console.
    * If this is not inside an extension environment, an alert() is used.
    *
    * @param {String} message: the message to be logged
    */
   log: function(message) {
+    var consoleService;
+
     if ("undefined" === typeof message) {
       message = "undefined";
     }
     try {
       // get the console service
-      var consoleService = Components.classes["@mozilla.org/consoleservice;1"]
+      consoleService = Components.classes["@mozilla.org/consoleservice;1"]
         .getService(Components.interfaces.nsIConsoleService);
 
       // log the message
@@ -85,16 +111,18 @@ Tilt.Console = {
   error: function(message, sourceName, sourceLine,
                   lineNumber, columnNumber, flags, category) {
 
+    var consoleService, scriptError;
+
     if ("undefined" === typeof message) {
       message = "undefined";
     }
     try {
       // get the console service
-      var consoleService = Components.classes["@mozilla.org/consoleservice;1"]
+      consoleService = Components.classes["@mozilla.org/consoleservice;1"]
         .getService(Components.interfaces.nsIConsoleService);
 
       // also the script error service
-      var scriptError = Components.classes["@mozilla.org/scripterror;1"]
+      scriptError = Components.classes["@mozilla.org/scripterror;1"]
         .createInstance(Components.interfaces.nsIScriptError);
 
       // initialize a script error
