@@ -18,6 +18,12 @@
 
   <keyset>
     <key id="tilt-menu-key"
+      modifiers="accel shift" key="M"
+      oncommand="TiltChrome.BrowserOverlay.initialize(event);"/>
+  </keyset>
+
+  <keyset>
+    <key id="tilt-menu-key-alternative"
       modifiers="accel shift" key="L"
       oncommand="TiltChrome.BrowserOverlay.initialize(event);"/>
   </keyset>
