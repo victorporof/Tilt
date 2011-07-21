@@ -16,12 +16,13 @@ Building is done using the [build script](https://github.com/victorporof/Tilt/bl
 
     ./build all minify
 
-Alternatively, you can just use
+Alternatively, you can just use the `engine` or `extension` param to build only a part of the project.
 
     ./build engine
     ./build extension
 
-To build only a part of the project, append the `minify` parameter to minify the sources.
+Also, you can append the `minify` parameter to minify the sources.
+
 The compiled files are in the [bin](https://github.com/victorporof/Tilt/tree/master/bin) folder. Inside [build](https://github.com/victorporof/Tilt/tree/master/bin/build) you can find the unpacked [Tilt.xpi](https://github.com/victorporof/Tilt/raw/master/bin/Tilt.xpi) archive.
 
 Tilt uses the [Google Closure compiler](https://github.com/victorporof/Tilt/tree/master/bin/google-closure) to minify the Javascript files, with the `--compilation_level ADVANCED_OPTIMIZATIONS` flag. Therefore, some [Javascript externs](https://github.com/victorporof/Tilt/blob/master/bin/google-closure/tilt-externs.jsext) must be specified so important variable names are not renamed.
