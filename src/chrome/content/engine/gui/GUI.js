@@ -71,7 +71,7 @@ Tilt.GUI.prototype = {
       elements = this.elements,
       element, i, len;
 
-    tilt.perspective();
+    tilt.ortho();
     tilt.origin();
     tilt.defaults();
 
