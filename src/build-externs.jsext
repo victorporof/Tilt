@@ -17,12 +17,16 @@ window.QueryInterface(Ci.nsIInterfaceRequestor)
   .getInterface(Ci.nsIDOMWindowUtils)
   .garbageCollect();
 
+Components.classes["@mozilla.org/embedcomp/prompt-service;1"]
+  .getService(Components.interfaces.nsIPromptService);
+      
 Components.classes["@mozilla.org/consoleservice;1"]
   .getService(Components.interfaces.nsIConsoleService);
 
 Components.classes["@mozilla.org/scripterror;1"]
   .createInstance(Components.interfaces.nsIScriptError);
 
+p.alert;
 scriptError.init;
 consoleService.logMessage;
 consoleService.logStringMessage;
