@@ -58,14 +58,22 @@ TiltChrome.BrowserOverlay = {
    * @param {object} event: the event firing this function
    */
   initialize: function(event) {
-    // if the menubar is visible, it can mess up the true innerWidth/Height
-    // of the window.content, so wait for the menubar to hide first
-    if (window.menubar.visible) {
-      window.setTimeout(this.create.bind(this), 100);
-    }
-    else {
-      // create the visualization normally
-      this.create();
+    // first, close the visualization and clean up any mess if there was any
+    this.destroy();
+
+    // if this was the page we just visualized, leave the visualization closed
+    if (this.href === window.content.location.href) {
+      this.href = null; // forget the current tab location
+    } else {
+      // if the menubar is visible, it can mess up the true innerWidth/Height
+      // of the window.content, so wait for the menubar to hide first
+      if (window.menubar.visible) {
+        window.setTimeout(this.create.bind(this), 200);
+      }
+      else {
+        // create the visualization normally
+        this.create();
+      }
     }
   },
 
@@ -104,8 +112,11 @@ TiltChrome.BrowserOverlay = {
 
   /**
    * Destroys this object, removes the iframe and sets all members to null.
+   *
+   * @param {Boolean} timeout: pass true to do the heavy lifting in a timeout
+   * @param {Boolean} gc: pass true to do a garbage collection when finished
    */
-  destroy: function() {
+  destroy: function(timeout, gc) {
     Tilt.Document.currentContentDocument = null;
     Tilt.Document.currentParentNode = null;
 
@@ -115,8 +126,8 @@ TiltChrome.BrowserOverlay = {
       this.canvas = null;
     }
 
-    // the following code may take some time, so set a small timeout
-    window.setTimeout(function() {
+    // remove any remaining traces of popups and the visualization
+    function finish() {
       if (this.panel !== null) {
         this.panel.hidePopup();
         this.panel = null;
@@ -125,12 +136,20 @@ TiltChrome.BrowserOverlay = {
         this.visualization.destroy();
         this.visualization = null;
       }
+      if (gc) {
+        window.QueryInterface(Ci.nsIInterfaceRequestor)
+          .getInterface(Ci.nsIDOMWindowUtils)
+          .garbageCollect();
+      }
+    }
 
-      window.QueryInterface(Ci.nsIInterfaceRequestor)
-        .getInterface(Ci.nsIDOMWindowUtils)
-        .garbageCollect();
-
-    }.bind(this), 100);
+    // the following code may take some time, so set a small timeout
+    if (timeout) {
+      window.setTimeout(finish.bind(this), 100);
+    }
+    else {
+      finish.call(this);
+    }
   }
 };
 /*
@@ -8855,7 +8874,7 @@ TiltChrome.Controller.MouseAndKeyboard = function() {
         mouseDragged = false;
       }
       else {
-        TiltChrome.BrowserOverlay.destroy();
+        TiltChrome.BrowserOverlay.destroy(true, true);
         TiltChrome.BrowserOverlay.href = null;
       }
     }
@@ -9064,7 +9083,7 @@ TiltChrome.UI = function() {
     };
 
     exitButton.onclick = function(x, y) {
-      TiltChrome.BrowserOverlay.destroy();
+      TiltChrome.BrowserOverlay.destroy(true, true);
       TiltChrome.BrowserOverlay.href = null;
     };
 
@@ -9170,7 +9189,7 @@ TiltChrome.Visualization = function(canvas, controller, gui) {
    * Create the Tilt object, containing useful functions for easy drawing
    */
   var tilt = new Tilt.Renderer(canvas, function failCallback() {
-    TiltChrome.BrowserOverlay.destroy();
+    TiltChrome.BrowserOverlay.destroy(true, true);
     TiltChrome.BrowserOverlay.href = null;
     Tilt.Console.alert("Tilt", Tilt.StringBundle.get("initWebGL.error"));
 
@@ -9619,7 +9638,7 @@ TiltChrome.Visualization = function(canvas, controller, gui) {
   function gClose(e) {
     if (TiltChrome.BrowserOverlay.href !== window.content.location.href) {
       TiltChrome.BrowserOverlay.href = null;
-      TiltChrome.BrowserOverlay.destroy();
+      TiltChrome.BrowserOverlay.destroy(true, true);
     }
   };
 
