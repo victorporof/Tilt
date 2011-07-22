@@ -65,49 +65,34 @@ TiltChrome.BrowserOverlay = {
     if (this.href === window.content.location.href) {
       this.href = null; // forget the current tab location
     } else {
-      // if the menubar is visible, it can mess up the true innerWidth/Height
-      // of the window.content, so wait for the menubar to hide first
-      if (window.menubar.visible) {
-        window.setTimeout(this.create.bind(this), 200);
-      }
-      else {
-        // create the visualization normally
-        this.create();
-      }
+      // the current tab has a new page, so recreate the entire visualization
+      // remember the current tab location
+      this.href = window.content.location.href;
+
+      // set the width and height to mach the content window dimensions
+      var width = window.content.innerWidth;
+      var height = window.content.innerHeight;
+
+      // get the iframe which will be used to create the canvas element
+      var iframe = document.getElementById("tilt-panel-iframe");
+
+      // inside a chrome environment the default document and parent nodes
+      // are different from an unprivileged html page, so change these
+      Tilt.Document.currentContentDocument = iframe.contentDocument;
+      Tilt.Document.currentParentNode = gBrowser.selectedBrowser.parentNode;
+
+      // retain the popup panel for future reference
+      this.panel = document.getElementById("tilt-panel");
+
+      // initialize the canvas element
+      this.canvas = Tilt.Document.initCanvas(width, height, true);
+
+      // construct the visualization using the canvas
+      this.visualization =
+        new TiltChrome.Visualization(this.canvas,
+        new TiltChrome.Controller.MouseAndKeyboard(),
+        new TiltChrome.UI());
     }
-  },
-
-  /**
-   * Creates the canvas and starts the visualization.
-   */
-  create: function() {
-    // the current tab has new page, so recreate the entire visualization
-    // remember the current tab location
-    this.href = window.content.location.href;
-
-    // set the width and height to mach the content window dimensions
-    var width = window.content.innerWidth;
-    var height = window.content.innerHeight;
-
-    // get the iframe which will be used to create the canvas element
-    var iframe = document.getElementById("tilt-panel-iframe");
-
-    // inside a chrome environment the default document and parent nodes
-    // are different from an unprivileged html page, so change these
-    Tilt.Document.currentContentDocument = iframe.contentDocument;
-    Tilt.Document.currentParentNode = gBrowser.selectedBrowser.parentNode;
-
-    // retain the popup panel for future reference
-    this.panel = document.getElementById("tilt-panel");
-
-    // initialize the canvas element
-    this.canvas = Tilt.Document.initCanvas(width, height, true);
-
-    // construct the visualization using the canvas
-    this.visualization =
-      new TiltChrome.Visualization(this.canvas,
-      new TiltChrome.Controller.MouseAndKeyboard(),
-      new TiltChrome.UI());
   },
 
   /**
@@ -9313,6 +9298,24 @@ TiltChrome.Visualization = function(canvas, controller, gui) {
       window.QueryInterface(Ci.nsIInterfaceRequestor)
         .getInterface(Ci.nsIDOMWindowUtils)
         .garbageCollect();
+    }
+
+    // this is because of some weird behaviour on Windows, if the visualization 
+    // has been started from the application menu, the width and height gets
+    // messed up, so we need to update almost immediately after it starts
+    if (tilt.frameCount === 10) {
+      tilt.width = window.content.innerWidth;
+      tilt.height = window.content.innerHeight;
+
+      if (canvas.width !== tilt.width || canvas.height !== tilt.height) {
+        canvas.width = tilt.width;
+        canvas.height = tilt.height;
+
+        controller.resize(tilt.width, tilt.height);
+        tilt.gl.viewport(0, 0, canvas.width, canvas.height);
+
+        redraw = true;
+      }
     }
   };
 
