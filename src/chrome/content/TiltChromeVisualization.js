@@ -167,6 +167,24 @@ TiltChrome.Visualization = function(canvas, controller, gui) {
         .getInterface(Ci.nsIDOMWindowUtils)
         .garbageCollect();
     }
+
+    // this is because of some weird behaviour on Windows, if the visualization 
+    // has been started from the application menu, the width and height gets
+    // messed up, so we need to update almost immediately after it starts
+    if (tilt.frameCount === 10) {
+      tilt.width = window.content.innerWidth;
+      tilt.height = window.content.innerHeight;
+
+      if (canvas.width !== tilt.width || canvas.height !== tilt.height) {
+        canvas.width = tilt.width;
+        canvas.height = tilt.height;
+
+        controller.resize(tilt.width, tilt.height);
+        tilt.gl.viewport(0, 0, canvas.width, canvas.height);
+
+        redraw = true;
+      }
+    }
   };
 
   // run the setup and draw functions
