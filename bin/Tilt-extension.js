@@ -8762,11 +8762,6 @@ TiltChrome.Controller.MouseAndKeyboard = function() {
 
     var absX = Math.abs(mouseStartX - mouseX);
     var absY = Math.abs(mouseStartY - mouseY);
-
-    if (absX < 2 && absY < 2) {
-      this.visualization.click(mouseX, mouseY);
-    }
-
     mouseX = e.clientX - e.target.offsetLeft;
     mouseY = e.clientY - e.target.offsetTop;
     mouseStartX = mouseX;
@@ -8775,6 +8770,10 @@ TiltChrome.Controller.MouseAndKeyboard = function() {
     dragY = translationY;
 
     mouseDragged = false;
+
+    if (absX < 2 && absY < 2) {
+      this.visualization.click(mouseX, mouseY);
+    }
   }.bind(this);
 
   /**
@@ -8787,10 +8786,6 @@ TiltChrome.Controller.MouseAndKeyboard = function() {
     var absX = Math.abs(mouseStartX - mouseX);
     var absY = Math.abs(mouseStartY - mouseY);
 
-    if (absX < 2 && absY < 2) {
-      this.visualization.doubleClick(mouseX, mouseY);
-    }
-
     mouseX = e.clientX - e.target.offsetLeft;
     mouseY = e.clientY - e.target.offsetTop;
     mouseStartX = mouseX;
@@ -8799,6 +8794,10 @@ TiltChrome.Controller.MouseAndKeyboard = function() {
     dragY = translationY;
 
     mouseDragged = false;
+
+    if (absX < 2 && absY < 2) {
+      this.visualization.doubleClick(mouseX, mouseY);
+    }
   }.bind(this);
 
   /**
