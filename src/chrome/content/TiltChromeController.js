@@ -270,7 +270,7 @@ TiltChrome.Controller.MouseAndKeyboard = function() {
         mouseDragged = false;
       }
       else {
-        TiltChrome.BrowserOverlay.destroy();
+        TiltChrome.BrowserOverlay.destroy(true, true);
         TiltChrome.BrowserOverlay.href = null;
       }
     }

@@ -134,7 +134,7 @@ TiltChrome.UI = function() {
     };
 
     exitButton.onclick = function(x, y) {
-      TiltChrome.BrowserOverlay.destroy();
+      TiltChrome.BrowserOverlay.destroy(true, true);
       TiltChrome.BrowserOverlay.href = null;
     };
 

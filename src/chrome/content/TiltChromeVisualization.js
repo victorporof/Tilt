@@ -42,7 +42,7 @@ TiltChrome.Visualization = function(canvas, controller, gui) {
    * Create the Tilt object, containing useful functions for easy drawing
    */
   var tilt = new Tilt.Renderer(canvas, function failCallback() {
-    TiltChrome.BrowserOverlay.destroy();
+    TiltChrome.BrowserOverlay.destroy(true, true);
     TiltChrome.BrowserOverlay.href = null;
     Tilt.Console.alert("Tilt", Tilt.StringBundle.get("initWebGL.error"));
 
@@ -491,7 +491,7 @@ TiltChrome.Visualization = function(canvas, controller, gui) {
   function gClose(e) {
     if (TiltChrome.BrowserOverlay.href !== window.content.location.href) {
       TiltChrome.BrowserOverlay.href = null;
-      TiltChrome.BrowserOverlay.destroy();
+      TiltChrome.BrowserOverlay.destroy(true, true);
     }
   };
 
