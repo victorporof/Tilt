@@ -58,22 +58,14 @@ TiltChrome.BrowserOverlay = {
    * @param {object} event: the event firing this function
    */
   initialize: function(event) {
-    // first, close the visualization and clean up any mess if there was any
-    this.destroy();
-
-    // if this was the page we just visualized, leave the visualization closed
-    if (this.href === window.content.location.href) {
-      this.href = null; // forget the current tab location
-    } else {
-      // if the menubar is visible, it can mess up the true innerWidth/Height
-      // of the window.content, so wait for the menubar to hide first
-      if (window.menubar.visible) {
-        window.setTimeout(this.create.bind(this), 200);
-      }
-      else {
-        // create the visualization normally
-        this.create();
-      }
+    // if the menubar is visible, it can mess up the true innerWidth/Height
+    // of the window.content, so wait for the menubar to hide first
+    if (window.menubar.visible) {
+      window.setTimeout(this.create.bind(this), 100);
+    }
+    else {
+      // create the visualization normally
+      this.create();
     }
   },
 
@@ -117,24 +109,28 @@ TiltChrome.BrowserOverlay = {
     Tilt.Document.currentContentDocument = null;
     Tilt.Document.currentParentNode = null;
 
-    if (this.panel !== null) {
-      this.panel.hidePopup();
-      this.panel = null;
-    }
-
-    if (this.visualization !== null) {
-      this.visualization.destroy();
-      this.visualization = null;
-    }
-
+    // quickly remove the canvas from the selected browser parent node
     if (this.canvas !== null) {
       this.canvas.parentNode.removeChild(this.canvas);
       this.canvas = null;
     }
 
-    window.QueryInterface(Ci.nsIInterfaceRequestor)
-      .getInterface(Ci.nsIDOMWindowUtils)
-      .garbageCollect();
+    // the following code may take some time, so set a small timeout
+    window.setTimeout(function() {
+      if (this.panel !== null) {
+        this.panel.hidePopup();
+        this.panel = null;
+      }
+      if (this.visualization !== null) {
+        this.visualization.destroy();
+        this.visualization = null;
+      }
+
+      window.QueryInterface(Ci.nsIInterfaceRequestor)
+        .getInterface(Ci.nsIDOMWindowUtils)
+        .garbageCollect();
+
+    }.bind(this), 100);
   }
 };
 /*
