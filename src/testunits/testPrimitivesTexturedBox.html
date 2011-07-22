@@ -14,7 +14,7 @@
           canvas = Tilt.Document.initFullScreenCanvas();
           tilt = new Tilt.Renderer(canvas);
           image = new Tilt.Texture("test_pilot.png");
-        };
+        }
 
         function draw() {
           tilt.loop(draw);
@@ -29,7 +29,7 @@
           tilt.stroke("#f00");
           tilt.strokeWeight(3);
           tilt.box(100, 100, 100, image);
-        };
+        }
 
         setup();
         draw();

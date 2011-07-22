@@ -21,7 +21,7 @@
           canvas.onmousemove = mouseMove;
           canvas.onmousedown = mousePressed;
           canvas.onmouseup = mouseReleased;
-        };
+        }
 
         function draw() {
           tilt.loop(draw);
@@ -48,7 +48,7 @@
             tilt.fill("#fff");
             tilt.box(100, 100, 100);
           }
-        };
+        }
 
         function mouseMove(e) {
           mouseX = e.clientX;

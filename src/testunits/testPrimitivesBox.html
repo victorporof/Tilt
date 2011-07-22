@@ -13,7 +13,7 @@
         function setup() {
           canvas = Tilt.Document.initFullScreenCanvas();
           tilt = new Tilt.Renderer(canvas);
-        };
+        }
 
         function draw() {
           tilt.loop(draw);
@@ -29,7 +29,7 @@
           tilt.stroke("#fff");
           tilt.strokeWeight(3);
           tilt.box(100, 100, 100);
-        };
+        }
 
         setup();
         draw();
