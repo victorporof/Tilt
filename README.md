@@ -10,11 +10,16 @@ In the bin folder you will find the latest [Tilt.xpi](https://github.com/victorp
 
 > The implementation consists of a Firefox extension containing a 3D representation of a web page, as both a fun visualization tool and a developer-friendly environment for debugging the document’s structure, contents and nesting of the DOM tree. Various information besides the actual contents will be displayed on request, regarding each node’s type, class, id, and other attributes if available. The rendering will be dynamic, in-browser, using WebGL and GLSL shaders.
 
+> It is being developed by [Victor Porof](http://twitter.com/victorporof) (3D developer responsible with the Firefox extension itself), along with [Cedric Vivier](https://github.com/neonux) (creating a WebGL optimized equivalent to the privileged canvas.drawWindow, see [#653656](https://bugzilla.mozilla.org/show_bug.cgi?id=653656)) and [Rob Campbell](https://github.com/robcee) (who first thought about creating a 3D visualization of a webpage). Everything started initially as a [Google Summer of Code](http://www.google-melange.com/gsoc/proposal/review/google/gsoc2011/victorporof/1#) project, but now, with an enthusiastic team behind it and so many new features and ideas, it has become an active Developer Tools project.
+
 <center>
 ![Screenshot](http://dl.dropbox.com/u/2388316/tilt/tilt01.png)
 </center>
 
-### How to build
+### Help
+If you have any questions, ping anyone on IRC in `#tilt` on [irc.mozilla.org](irc://irc.mozilla.org)
+
+#### How to build
 Building is done using the [build script](https://github.com/victorporof/Tilt/blob/master/src/build). There are two parts of the project which can be used: the engine and the extension itself. To build everything and also minify the sources, run the following `./build` command from a terminal:
 
     ./build all minify
@@ -27,7 +32,7 @@ Alternatively, you can just use the `engine` or `extension` param to build only 
 You can append the `minify` parameter to minify the sources when building, but this is recommended only when building a final release, as it takes quite a lot of time.
 The compiled files are in the [bin](https://github.com/victorporof/Tilt/tree/master/bin) folder. If the extension was also built, inside [build](https://github.com/victorporof/Tilt/tree/master/bin/build) you can find the unpacked [Tilt.xpi](https://github.com/victorporof/Tilt/raw/master/bin/Tilt.xpi) archive.
 
-### How to automatically install
+#### How to automatically install
 To install the extension automatically in Firefox with the `make install` or `./build` command, first edit the [makefile](https://github.com/victorporof/Tilt/blob/master/src/Makefile) and change the `profile_dir` to match your profile in Firefox. If you don't do this, installation will fail. Additionally, you may need to have the `tilt@mozilla.com` folder created in the extension profile directory, depending on the OS and Firefox version. After this quick setup (provided you already compiled everything with `./build`), run the following command to install the extension:
 
     export OSTYPE; make install;
@@ -38,7 +43,30 @@ Or, to automatically compile everything, minify and also install:
 
 Tilt uses the [Google Closure compiler](https://github.com/victorporof/Tilt/tree/master/bin/google-closure) to minify the Javascript files, with the `--compilation_level ADVANCED_OPTIMIZATIONS` flag. Therefore, some [Javascript externs](https://github.com/victorporof/Tilt/blob/master/bin/google-closure/tilt-externs.jsext) must be specified so important variable names are not renamed.
 
-### Principles
+#### WebGL engine
+The extension is based on a custom engine (having a syntax similar to [processing.js](https://github.com/jeresig/processing-js), but with specialized features destined for DOM visualizations). Feel free to contribute to the engine in any way! You can find the sources in the [src/chrome/content/engine](https://github.com/victorporof/Tilt/tree/master/src/chrome/content/engine) folder. To use it outside the extension, get the [latest build](https://github.com/victorporof/Tilt/blob/master/bin/Tilt-engine-min.js) (unminified version [here](https://github.com/victorporof/Tilt/blob/master/bin/Tilt-engine.js)), and use it in a plain webpage like this:
+
+```
+var canvas, tilt;
+
+function setup() {
+  canvas = Tilt.Document.initFullScreenCanvas();
+  tilt = new Tilt.Renderer(canvas);
+};
+
+function draw() {
+  tilt.loop(draw);
+  tilt.clear(1, 0, 0, 1);
+};
+
+setup();
+draw();
+```
+
+#### Controls
+Controlling the visualization is achieved using a virtual trackball (arcball), which rotates around the X and Y axes. Other mouse events exist to control yaw, pitch, roll, pan, zoom, as well as various additional keyboard shortcuts (arrow keys for translation, wasd for rotation). The controller is not tied to these peripherals only however, making it accessible and easily scalable for other input methods or devices. Double clicking a node brings up the Ace Cloud9 IDE editor, showing more useful information about the node and the inner HTML. <b>Current implementation may change!</b>
+
+#### Principles
 Before developing this extension, I’ve experimented with various techniques of achieving the desired visualization results and polished user experience, by implementing a few of the required features and asking for feedback from knowledgeable people working in the domain. As a result, some key aspects must be pointed out:
 
 * Building an internal representation of the DOM shall be achieved by creating an iframe overlay in XUL as a Firefox extension. From experience, other techniques like injecting code into a web page, using already existing extensions (like Firebug), or depending on cloud services or CGI scripts are all bad ideas, as they are not scalable, deliver inconsistent user experience and don’t leave the original DOM intact.
