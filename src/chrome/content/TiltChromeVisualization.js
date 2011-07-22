@@ -45,6 +45,9 @@ TiltChrome.Visualization = function(canvas, controller, gui) {
     TiltChrome.BrowserOverlay.destroy();
     TiltChrome.BrowserOverlay.href = null;
     Tilt.Console.alert("Tilt", Tilt.StringBundle.get("initWebGL.error"));
+
+    gBrowser.selectedTab =
+      gBrowser.addTab("http://get.webgl.org/troubleshooting/");
   }),
 
   /**
