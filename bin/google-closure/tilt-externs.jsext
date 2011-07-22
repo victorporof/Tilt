@@ -1,4 +1,6 @@
 window["gBrowser"] = gBrowser;
+gBrowser["addTab"] = gBrowser.addTab;
+gBrowser["selectedTab"] = gBrowser.selectedTab
 gBrowser["tabContainer"] = gBrowser.tabContainer;
 gBrowser["contentWindow"] = gBrowser.contentWindow;
 gBrowser["selectedBrowser"] = gBrowser.selectedBrowser;
