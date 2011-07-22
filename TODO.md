@@ -20,7 +20,9 @@
 * highlight a node and the children (glow, grayscale others, etc.)
 * perhaps a zoom control that isolates a dom node and its children only
 * the back of the webpage itself should, instead of a mirror image, display the entire source code
+* maybe use the Orion Code Editor instead of Ace?
 * display useful information on the sides of the nodes too
+* a color code to make the most common html elements appear clearly? like, green for a <div>
 * hide/unhide nodes
 
 ### Following months
@@ -30,7 +32,8 @@
 * better support for XUL
 
 ### Wacky ideas
-* using head tracking from a webcam image to modify/rotate the perspective on a webpage, example: http://www.filosophy.org/projects/3dpage/ by Filip Zembowicz
+* would be really neat to have this combined with the Gecko Reflow visualizer somehow: http://bit.ly/nvwbeg
+* head tracking from a webcam to modify the perspective on a webpage, example: http://www.filosophy.org/projects/3dpage/ by Filip Zembowicz
 * create some DOM art, so that it looks amazing in Tilt
 * when we have live updates, we might even create Tilt movies! 
 * minecraft?
