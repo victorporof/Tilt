@@ -283,10 +283,11 @@ Tilt.Arcball.prototype = {
     this.$mouseX += (newMouseX - this.$mouseX) * frameDelta;
     this.$mouseY += (newMouseY - this.$mouseY) * frameDelta;
 
+    // cache the new mouse coordinates
+    var mouseX = this.$mouseX, mouseY = this.$mouseY;
+
     // left mouse button handles rotation
     if (mouseButton === 1) {
-      var mouseX = this.$mouseX, mouseY = this.$mouseY;
-
       // find the sphere coordinates of the mouse positions
       this.pointToSphere(mouseX, mouseY, width, height, radius, endVec);
 
@@ -407,6 +408,14 @@ Tilt.Arcball.prototype = {
   mouseMoved: function(x, y) {
     this.$newMouseX = x;
     this.$newMouseY = y;
+  },
+
+  /**
+   * Function handling the mouseOut event.
+   * Call this when the mouse leaves the context bounds.
+   */
+  mouseOut: function() {
+    this.$mouseButton = -1;
   },
 
   /**
@@ -8850,9 +8859,10 @@ TiltChrome.Controller.MouseAndKeyboard = function() {
   /**
    * Retain the mouse drag state and position, to manipulate the arcball.
    */
+  pressX = 0,
+  pressY = 0,
   mouseX = 0,
-  mouseY = 0,
-  mouseButton = -1;
+  mouseY = 0;
 
   /**
    * Function called automatically by the visualization at the setup().
@@ -8892,9 +8902,11 @@ TiltChrome.Controller.MouseAndKeyboard = function() {
   var mousePressed = function(e) {
     e.preventDefault();
     e.stopPropagation();
-    mouseButton = e.which;
 
-    arcball.mousePressed(mouseX, mouseY, mouseButton);
+    pressX = e.clientX - e.target.offsetLeft;
+    pressY = e.clientY - e.target.offsetTop;
+
+    arcball.mousePressed(mouseX, mouseY, e.which);
   }.bind(this);
 
   /**
@@ -8903,9 +8915,14 @@ TiltChrome.Controller.MouseAndKeyboard = function() {
   var mouseReleased = function(e) {
     e.preventDefault();
     e.stopPropagation();
-    mouseButton = -1;
 
-    this.visualization.click(mouseX, mouseY);
+    var thisX = e.clientX - e.target.offsetLeft;
+    var thisY = e.clientY - e.target.offsetTop;
+
+    if (Math.abs(pressX - thisX) < 2 && Math.abs(pressY - thisY) < 2) {
+      this.visualization.click(mouseX, mouseY);
+    }
+
     arcball.mouseReleased(mouseX, mouseY);
   }.bind(this);
 
@@ -8915,9 +8932,13 @@ TiltChrome.Controller.MouseAndKeyboard = function() {
   var mouseDoubleClick = function(e) {
     e.preventDefault();
     e.stopPropagation();
-    mouseButton = -1;
 
-    this.visualization.doubleClick(mouseX, mouseY);
+    var thisX = e.clientX - e.target.offsetLeft;
+    var thisY = e.clientY - e.target.offsetTop;
+
+    if (Math.abs(pressX - thisX) < 2 && Math.abs(pressY - thisY) < 2) {
+      this.visualization.doubleClick(mouseX, mouseY);
+    }
   }.bind(this);
 
   /**
@@ -8939,7 +8960,8 @@ TiltChrome.Controller.MouseAndKeyboard = function() {
   var mouseOut = function(e) {
     e.preventDefault();
     e.stopPropagation();
-    mouseButton = -1;
+
+    arcball.mouseOut();
   }.bind(this);
 
   /**
@@ -8948,7 +8970,6 @@ TiltChrome.Controller.MouseAndKeyboard = function() {
   var mouseScroll = function(e) {
     e.preventDefault();
     e.stopPropagation();
-    mouseButton = -1;
 
     arcball.mouseScroll(e.detail);
   }.bind(this);
@@ -8977,9 +8998,6 @@ TiltChrome.Controller.MouseAndKeyboard = function() {
       // if the panel with the html editor was open, hide it now
       if ("open" === TiltChrome.BrowserOverlay.panel.state) {
         TiltChrome.BrowserOverlay.panel.hidePopup();
-
-        // reset some input events which might have been triggered
-        mouseButton = -1;
       }
       else {
         TiltChrome.BrowserOverlay.destroy(true, true);

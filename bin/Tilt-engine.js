@@ -144,10 +144,11 @@ Tilt.Arcball.prototype = {
     this.$mouseX += (newMouseX - this.$mouseX) * frameDelta;
     this.$mouseY += (newMouseY - this.$mouseY) * frameDelta;
 
+    // cache the new mouse coordinates
+    var mouseX = this.$mouseX, mouseY = this.$mouseY;
+
     // left mouse button handles rotation
     if (mouseButton === 1) {
-      var mouseX = this.$mouseX, mouseY = this.$mouseY;
-
       // find the sphere coordinates of the mouse positions
       this.pointToSphere(mouseX, mouseY, width, height, radius, endVec);
 
@@ -268,6 +269,14 @@ Tilt.Arcball.prototype = {
   mouseMoved: function(x, y) {
     this.$newMouseX = x;
     this.$newMouseY = y;
+  },
+
+  /**
+   * Function handling the mouseOut event.
+   * Call this when the mouse leaves the context bounds.
+   */
+  mouseOut: function() {
+    this.$mouseButton = -1;
   },
 
   /**
