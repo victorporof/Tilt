@@ -65,4 +65,7 @@ Tilt.clearCache = function() {
   Tilt.$activeShader = -1;
   Tilt.$enabledAttributes = -1;
   Tilt.$loadedTextures = {};
+  
+  Tilt.GLSL.$count = 0;
+  Tilt.TextureUtils.$count = 0;
 };
