@@ -57,11 +57,6 @@ TiltChrome.Visualization = function(canvas, controller, gui) {
   redraw = true,
 
   /**
-   * A background texture.
-   */
-  background = null,
-
-  /**
    * Mesh initialization properties.
    */
   texture = null,
@@ -101,13 +96,10 @@ TiltChrome.Visualization = function(canvas, controller, gui) {
     });
 
     // setup the visualization, browser event handlers and the controller
-    setupVisualization.call(this);
-    setupBrowserEvents.call(this);
     setupController.call(this);
     setupGUI.call(this);
-
-    // load the background
-    background = new Tilt.Texture("chrome://tilt/skin/tilt-background.png");
+    setupVisualization.call(this);
+    setupBrowserEvents.call(this);
 
     // set the transformations at initialization
     transforms.translation = [0, 0, 0];
@@ -126,38 +118,36 @@ TiltChrome.Visualization = function(canvas, controller, gui) {
     // prepare for the next frame of the animation loop
     tilt.loop(draw);
 
-    if (background.loaded) {
-      // only update if we really have to
-      if (redraw) {
-        redraw = false;
+    // only update if we really have to
+    if (redraw) {
+      redraw = false;
 
-        // clear the context and draw a background gradient
-        tilt.clear(0, 0, 0, 1);
-        tilt.depthTest(false);
-        tilt.image(background, 0, 0, tilt.width, tilt.height);
+      // clear the context and draw a background gradient
+      tilt.clear(0, 0, 0, 1);
 
-        // apply the necessary transformations to the model view
-        tilt.translate(tilt.width / 2,
-                       tilt.height / 2 - 30,
-                       transforms.translation[2] - thickness * 25);
+      // apply the preliminary transformations to the model view
+      tilt.translate(tilt.width / 2, tilt.height / 2 - 50, -thickness * 30);
 
-        tilt.transform(quat4.toMat4(transforms.rotation));
-        tilt.translate(transforms.translation[0],
-                       transforms.translation[1], 0);
+      // calculate the camera matrix using the rotation and translation
+      var camera = quat4.toMat4(transforms.rotation);
+      camera[12] = transforms.translation[0];
+      camera[13] = transforms.translation[1];
+      camera[14] = transforms.translation[2];
 
-        // draw the visualization mesh
-        tilt.depthTest(true);
-        tilt.strokeWeight(2);
-        mesh.draw();
-        meshWireframe.draw();
+      tilt.transform(camera);
 
-        gui.draw(tilt.frameDelta);
-      }
+      // draw the visualization mesh
+      tilt.depthTest(true);
+      tilt.strokeWeight(2);
+      mesh.draw();
+      meshWireframe.draw();
 
-      // when rendering is finished, call a loop function in the controller
-      if ("function" === typeof controller.loop) {
-        controller.loop(tilt.frameDelta);
-      }
+      gui.draw(tilt.frameDelta);
+    }
+
+    // when rendering is finished, call a loop function in the controller
+    if ("function" === typeof controller.loop) {
+      controller.loop(tilt.frameDelta);
     }
 
     // every once in a while, do a garbage collect
@@ -168,7 +158,7 @@ TiltChrome.Visualization = function(canvas, controller, gui) {
         .garbageCollect();
     }
 
-    // this is because of some weird behaviour on Windows, if the visualization 
+    // this is because of some weird behavior on Windows, if the visualization 
     // has been started from the application menu, the width and height gets
     // messed up, so we need to update almost immediately after it starts
     if (tilt.frameCount === 10) {
@@ -179,17 +169,18 @@ TiltChrome.Visualization = function(canvas, controller, gui) {
         canvas.width = tilt.width;
         canvas.height = tilt.height;
 
-        controller.resize(tilt.width, tilt.height);
+        if ("function" === typeof controller.resize) {
+          controller.resize(tilt.width, tilt.height);
+        }
+        if ("function" === typeof gui.resize) {
+          gui.resize(tilt.width, tilt.height);
+        }
         tilt.gl.viewport(0, 0, canvas.width, canvas.height);
 
         redraw = true;
       }
     }
   };
-
-  // run the setup and draw functions
-  setup.call(this);
-  draw.call(this);
 
   /**
    * Create the combined mesh representing the document visualization by
@@ -344,6 +335,7 @@ TiltChrome.Visualization = function(canvas, controller, gui) {
   function setupGUI() {
     // set a reference in the user interface for this visualization
     gui.visualization = this;
+    gui.controller = controller;
 
     // call the init function on the user interface if available
     if ("function" === typeof gui.init) {
@@ -402,11 +394,12 @@ TiltChrome.Visualization = function(canvas, controller, gui) {
     if ("function" === typeof gui.click) {
       gui.click(x, y);
     }
+    if ("open" === TiltChrome.BrowserOverlay.panel.state) {
+      TiltChrome.BrowserOverlay.panel.hidePopup();
+    }
 
     // set the focus back to the window content if it was somewhere else
-    TiltChrome.BrowserOverlay.panel.hidePopup();
     window.content.focus();
-
     redraw = true;
   };
 
@@ -521,8 +514,17 @@ TiltChrome.Visualization = function(canvas, controller, gui) {
     tilt.height = window.content.innerHeight;
     redraw = true;
 
+    if ("function" === typeof controller.resize) {
+      controller.resize(tilt.width, tilt.height);
+    }
+    if ("function" === typeof gui.resize) {
+      gui.resize(tilt.width, tilt.height);
+    }
+
     // hide the panel with the html editor (to avoid wrong positioning) 
-    TiltChrome.BrowserOverlay.panel.hidePopup();
+    if ("open" === TiltChrome.BrowserOverlay.panel.state) {
+      TiltChrome.BrowserOverlay.panel.hidePopup();
+    }
   };
 
   /**
@@ -535,9 +537,7 @@ TiltChrome.Visualization = function(canvas, controller, gui) {
       canvas.width = tilt.width;
       canvas.height = tilt.height;
 
-      controller.resize(tilt.width, tilt.height);
       tilt.gl.viewport(0, 0, canvas.width, canvas.height);
-
       draw();
     }
   }
@@ -591,4 +591,8 @@ TiltChrome.Visualization = function(canvas, controller, gui) {
       }
     }
   };
+
+  // run the setup and draw functions
+  setup.call(this);
+  draw.call(this);
 };
