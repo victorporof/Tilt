@@ -52,12 +52,12 @@ var canvas, tilt;
 function setup() {
   canvas = Tilt.Document.initFullScreenCanvas();
   tilt = new Tilt.Renderer(canvas);
-};
+}
 
 function draw() {
   tilt.loop(draw);
   tilt.clear(1, 0, 0, 1);
-};
+}
 
 setup();
 draw();
