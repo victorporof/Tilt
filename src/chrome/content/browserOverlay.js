@@ -128,7 +128,7 @@ TiltChrome.BrowserOverlay = {
       }
     }
 
-    // the following code may take some time, so set a small timeout
+    // finishing the cleanup may take some time, so set a small timeout
     if (timeout) {
       window.setTimeout(finish.bind(this), 100);
     }
