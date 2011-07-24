@@ -33,12 +33,12 @@ var EXPORTED_SYMBOLS = ["Tilt.Sprite"];
  *
  * @param {Tilt.Texture} texture: the texture to be used
  * @param {Array} region: the sub-texture coordinates as [x, y, width, height]
- * @param {Number} x: the x position of the object
- * @param {Number} y: the y position of the object
- * @param {Number} width: the width of the object
- * @param {Number} height: the height of the object
+ * @param {Object} properties: additional properties for this object
  */
-Tilt.Sprite = function(texture, region, x, y, width, height) {
+Tilt.Sprite = function(texture, region, properties) {
+
+  // make sure the properties parameter is a valid object
+  properties = properties || {};
 
   /**
    * A texture used as the pixel data for this object.
@@ -53,10 +53,20 @@ Tilt.Sprite = function(texture, region, x, y, width, height) {
   /**
    * The draw coordinates of this object.
    */
-  this.x = x || 0;
-  this.y = y || 0;
-  this.width = width || this.region[2];
-  this.height = height || this.region[3];
+  this.x = properties.x || 0;
+  this.y = properties.y || 0;
+  this.width = properties.width || this.region[2];
+  this.height = properties.height || this.region[3];
+
+  /**
+   * Variable specifying if this object shouldn't be drawn.
+   */
+  this.hidden = properties.hidden || false;
+
+  /**
+   * Sets if depth testing should be enabled or not for this object.
+   */
+  this.depthTest = properties.depthTest || false;
 
   /**
    * The bounds of this object (used for clicking and intersections).
@@ -74,7 +84,7 @@ Tilt.Sprite.prototype = {
   /**
    * Clears the generated texture coords, which will be regenerated at draw.
    */
-  refresh: function() {
+  update$texCoord: function() {
     this.$texCoord = null;
   },
 
@@ -82,16 +92,12 @@ Tilt.Sprite.prototype = {
    * Updates this object's internal params.
    */
   update: function() {
-    var bounds = this.$bounds,
-      x = this.x,
-      y = this.y,
-      width = this.width,
-      height = this.height;
+    var bounds = this.$bounds;
 
-    bounds[0] = x;
-    bounds[1] = y;
-    bounds[2] = width;
-    bounds[3] = height;
+    bounds[0] = this.x;
+    bounds[1] = this.y;
+    bounds[2] = this.width;
+    bounds[3] = this.height;
   },
 
   /**
@@ -101,12 +107,16 @@ Tilt.Sprite.prototype = {
   draw: function(tilt) {
     tilt = tilt || Tilt.$renderer;
 
+    // cache these variables for easy access
+    var reg = this.region,
+      tex = this.texture,
+      x = this.x,
+      y = this.y,
+      width = this.width,
+      height = this.height;
+
     // initialize the texture coordinates buffer if it was null
     if (this.$texCoord === null && this.texture.loaded) {
-
-      // cache these variables for easy access
-      var reg = this.region,
-        tex = this.texture;
 
       // create the texture coordinates representing the sub-texture
       this.$texCoord = new Tilt.VertexBuffer([
@@ -116,8 +126,14 @@ Tilt.Sprite.prototype = {
         (reg[0] + reg[2]) / tex.width, (reg[1] + reg[3]) / tex.height], 2);
     }
 
-    tilt.image(
-      this.texture, this.x, this.y, this.width, this.height, this.$texCoord);
+    if (this.depthTest) {
+      tilt.depthTest(true);
+      tilt.image(tex, x, y, width, height, this.$texCoord);
+      tilt.depthTest(false);
+    }
+    else {
+      tilt.image(tex, x, y, width, height, this.$texCoord);
+    }
   },
 
   /**
