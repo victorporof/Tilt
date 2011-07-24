@@ -51,12 +51,12 @@ Tilt.Texture = function(image, parameters, readyCallback) {
   /**
    * A reference to the WebGL texture object.
    */
-  this.ref = null;
+  this.$ref = null;
 
   /**
    * Each texture has an unique id assigned.
    */
-  this.id = 0;
+  this.$id = -1;
 
   /**
    * Variables specifying the width and height of the texture.
@@ -99,12 +99,12 @@ Tilt.Texture.prototype = {
    * @param {Object} parameters: an object containing the texture properties
    */
   initTexture: function(image, parameters) {
-    this.ref = Tilt.TextureUtils.create(image, parameters);
+    this.$ref = Tilt.TextureUtils.create(image, parameters);
 
     // cache for faster access
-    this.id = this.ref.id;
-    this.width = this.ref.width;
-    this.height = this.ref.height;
+    this.$id = this.$ref.id;
+    this.width = this.$ref.width;
+    this.height = this.$ref.height;
     this.loaded = true;
 
     if ("undefined" !== typeof this.onload) {
@@ -112,9 +112,9 @@ Tilt.Texture.prototype = {
     }
 
     // cleanup
-    delete this.ref.id;
-    delete this.ref.width;
-    delete this.ref.height;
+    delete this.$ref.id;
+    delete this.$ref.width;
+    delete this.$ref.height;
     delete this.onload;
 
     image = null;
