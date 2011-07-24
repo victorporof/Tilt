@@ -35,26 +35,33 @@ var EXPORTED_SYMBOLS = ["Tilt.Button"];
  * @param {Number} y: the y position of the object
  * @param {Tilt.Sprite} sprite: the sprite to be drawn as background
  * @param {Function} onclick: optional, function to be called when clicked
+ * @param {Object} properties: additional properties for this object
  */
-Tilt.Button = function(x, y, sprite, onclick) {
+Tilt.Button = function(x, y, sprite, onclick, properties) {
+
+  // make sure the properties parameter is a valid object
+  properties = properties || {};
 
   /**
    * The draw coordinates of this object.
    */
   this.x = x || 0;
   this.y = y || 0;
-  this.width = sprite.width;
-  this.height = sprite.height;
 
   /**
    * A sprite used as a background for this object.
    */
-  this.sprite = sprite;
+  this.sprite = sprite || { width: 0, height: 0 };
+
+  /**
+   * Variable specifying if this object shouldn't be drawn.
+   */
+  this.hidden = properties.hidden || false;
 
   /**
    * The bounds of this object (used for clicking and intersections).
    */
-  this.$bounds = [this.x, this.y, this.width, this.height];
+  this.$bounds = [this.x, this.y, this.sprite.width, this.sprite.height];
 
   // if the onclick closure is specified in the constructor, save it here
   if ("function" === typeof onclick) {
@@ -71,19 +78,15 @@ Tilt.Button.prototype = {
     var sprite = this.sprite,
       bounds = this.$bounds,
       x = this.x,
-      y = this.y,
-      width = this.width,
-      height = this.height;
+      y = this.y;
 
     bounds[0] = x;
     bounds[1] = y;
-    bounds[2] = width;
-    bounds[3] = height;
+    bounds[2] = sprite.width;
+    bounds[3] = sprite.height;
 
     sprite.x = x;
     sprite.y = y;
-    sprite.width = width;
-    sprite.height = height;
   },
 
   /**
@@ -92,7 +95,10 @@ Tilt.Button.prototype = {
    */
   draw: function(tilt) {
     tilt = tilt || Tilt.$renderer;
-    this.sprite.draw(tilt);
+
+    if ("undefined" !== typeof this.sprite.texture) {
+      this.sprite.draw(tilt);
+    }
   },
 
   /**
