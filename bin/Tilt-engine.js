@@ -32,7 +32,7 @@ var EXPORTED_SYMBOLS = ["Tilt.Arcball"];
  * Arcball constructor.
  * This is a general purpose 3D rotation controller described by Ken Shoemake
  * in the Graphics Interface ’92 Proceedings. It features good behavior
- * easy implementation, cheap execution, & optional axis constrain.
+ * easy implementation, cheap execution. TODO: optional axis constrain.
  *
  * @param {Number} width: the width of canvas
  * @param {Number} height: the height of canvas
@@ -44,40 +44,51 @@ Tilt.Arcball = function(width, height, radius) {
   /**
    * Values retaining the current horizontal and vertical mouse coordinates.
    */
-  this.mouseX = 0;
-  this.mouseY = 0;
-  this.mouseDragX = 0;
-  this.mouseDragY = 0;
+  this.$mouseX = 0;
+  this.$mouseY = 0;
+  this.$oldMouseX = 0;
+  this.$oldMouseY = 0;
+  this.$newMouseX = 0;
+  this.$newMouseY = 0;
+  this.$mouseButton = -1;
+  this.$scrollValue = 0;
 
   /**
-   * Additionally, this implementation also handles zoom.
+   * Array retaining the current pressed key codes.
    */
-  this.scrollValue = 0;
+  this.$keyCode = [];
+  this.$keyCoded = false;
 
   /**
    * The vectors representing the mouse coordinates mapped on the arcball
    * and their perpendicular converted from (x, y) to (x, y, z) at specific
    * events like mousePressed and mouseDragged.
    */
-  this.startVec = vec3.create();
-  this.endVec = vec3.create();
-  this.pVec = vec3.create();
+  this.$startVec = vec3.create();
+  this.$endVec = vec3.create();
+  this.$pVec = vec3.create();
 
   /**
-   * The corresponding rotation quaternions created using the mouse vectors.
+   * The corresponding rotation quaternions.
    */
-  this.lastRot = quat4.create([0, 0, 0, 1]);
-  this.deltaRot = quat4.create([0, 0, 0, 1]);
-  this.currentRot = quat4.create([0, 0, 0, 1]);
+  this.$lastRot = quat4.create([0, 0, 0, 1]);
+  this.$deltaRot = quat4.create([0, 0, 0, 1]);
+  this.$currentRot = quat4.create([0, 0, 0, 1]);
+  
+  /**
+   * The current camera translation coordinates.
+   */
+  this.$lastPan = [0, 0];
+  this.$currentPan = [0, 0];
+  this.$currentTrans = vec3.create();
 
   /**
-   * The zoom, calculated using mouse scroll deltas.
+   * Additional rotation and translation vectors.
    */
-  this.currentZoom = 0;
+  this.$addKeyRot = [0, 0];
+  this.$addKeyTrans = [0, 0];
 
-  /**
-   * Set the current dimensions of the arcball.
-   */
+  // set the current dimensions of the arcball
   this.resize(width, height, radius);
 };
 
@@ -99,46 +110,125 @@ Tilt.Arcball.prototype = {
       frameDelta = Tilt.Math.clamp(frameDelta / 100, 0.01, 0.99);
     }
 
-    // update the zoom based on the mouse scroll
-    this.currentZoom += (this.scrollValue - this.currentZoom) * frameDelta;
+    // cache some variables for easier access
+    var radius = this.$radius,
+      width = this.$width,
+      height = this.$height,
 
-    // update the mouse coordinates
-    this.mouseX += (this.mouseDragX - this.mouseX) * frameDelta;
-    this.mouseY += (this.mouseDragY - this.mouseY) * frameDelta;
+      oldMouseX = this.$oldMouseX,
+      oldMouseY = this.$oldMouseY,
+      newMouseX = this.$newMouseX,
+      newMouseY = this.$newMouseY,
+      mouseButton = this.$mouseButton,
+      scrollValue = this.$scrollValue,
 
-    var radius = this.radius,
-      width = this.width,
-      height = this.height,
-      mouseX = this.mouseX,
-      mouseY = this.mouseY;
+      keyCode = this.$keyCode,
+      keyCoded = this.$keyCoded,
 
-    // find the sphere coordinates of the mouse positions
-    this.pointToSphere(mouseX, mouseY, width, height, radius, this.endVec);
+      startVec = this.$startVec,
+      endVec = this.$endVec,
+      pVec = this.$pVec,
 
-    // compute the vector perpendicular to the start & end vectors
-    vec3.cross(this.startVec, this.endVec, this.pVec);
+      lastRot = this.$lastRot,
+      deltaRot = this.$deltaRot,
+      currentRot = this.$currentRot,
 
-    // if the begin and end vectors don't coincide
-    if (vec3.length(this.pVec) > 0) {
-      this.deltaRot[0] = this.pVec[0];
-      this.deltaRot[1] = this.pVec[1];
-      this.deltaRot[2] = this.pVec[2];
+      lastPan = this.$lastPan,
+      currentPan = this.$currentPan,
+      currentTrans = this.$currentTrans,
 
-      // in the quaternion values, w is cosine (theta / 2),
-      // where theta is the rotation angle
-      this.deltaRot[3] = -vec3.dot(this.startVec, this.endVec);
-    } else {
-      // return an identity rotation quaternion
-      this.deltaRot[0] = 0;
-      this.deltaRot[1] = 0;
-      this.deltaRot[2] = 0;
-      this.deltaRot[3] = 1;
+      addKeyRot = this.$addKeyRot,
+      addKeyTrans = this.$addKeyTrans;
+
+    // smoothly update the mouse coordinates
+    this.$mouseX += (newMouseX - this.$mouseX) * frameDelta;
+    this.$mouseY += (newMouseY - this.$mouseY) * frameDelta;
+
+    // left mouse button handles rotation
+    if (mouseButton === 1) {
+      var mouseX = this.$mouseX, mouseY = this.$mouseY;
+
+      // find the sphere coordinates of the mouse positions
+      this.pointToSphere(mouseX, mouseY, width, height, radius, endVec);
+
+      // compute the vector perpendicular to the start & end vectors
+      vec3.cross(startVec, endVec, pVec);
+
+      // if the begin and end vectors don't coincide
+      if (vec3.length(pVec) > 0) {
+        deltaRot[0] = pVec[0];
+        deltaRot[1] = pVec[1];
+        deltaRot[2] = pVec[2];
+
+        // in the quaternion values, w is cosine (theta / 2),
+        // where theta is the rotation angle
+        deltaRot[3] = -vec3.dot(startVec, endVec);
+      } else {
+        // return an identity rotation quaternion
+        deltaRot[0] = 0;
+        deltaRot[1] = 0;
+        deltaRot[2] = 0;
+        deltaRot[3] = 1;
+      }
+
+      // calculate the current rotation based on the mouse click events
+      quat4.multiply(lastRot, deltaRot, currentRot);
+    }
+    else {
+      quat4.set(currentRot, lastRot);
     }
 
-    // calculate the current rotation using the delta quaternion
+    // right mouse button handles panning
+    if (mouseButton === 3) {
+      currentPan[0] = lastPan[0] + (newMouseX - oldMouseX);
+      currentPan[1] = lastPan[1] + (newMouseY - oldMouseY);
+    }
+    else {
+      lastPan[0] = currentPan[0];
+      lastPan[1] = currentPan[1];
+    }
+
+    // handle additional rotation and translation by the keyboard
+    if (keyCode[65]) { // w
+      addKeyRot[1] -= frameDelta / 1000;
+    }
+    if (keyCode[68]) { // s
+      addKeyRot[1] += frameDelta / 1000;
+    }
+    if (keyCode[87]) { // a
+      addKeyRot[0] += frameDelta / 1000;
+    }
+    if (keyCode[83]) { // d
+      addKeyRot[0] -= frameDelta / 1000;
+    }
+    if (keyCode[37]) { // left
+      addKeyTrans[0] += frameDelta * 50;
+    }
+    if (keyCode[39]) { // right
+      addKeyTrans[0] -= frameDelta * 50;
+    }
+    if (keyCode[38]) { // up
+      addKeyTrans[1] += frameDelta * 50;
+    }
+    if (keyCode[40]) { // down
+      addKeyTrans[1] -= frameDelta * 50;
+    }
+
+    // create an additional rotation based on the key events
+    Tilt.Math.quat4fromEuler(addKeyRot[1], addKeyRot[0], 0, deltaRot);
+    quat4.multiply(currentRot, deltaRot);
+
+    // create an additional translation based on the key events
+    currentTrans[0] = currentPan[0] + addKeyTrans[0];
+    currentTrans[1] = currentPan[1] + addKeyTrans[1];
+
+    // update the zoom based on the mouse scroll
+    currentTrans[2] += (scrollValue - currentTrans[2]) / 10;
+
+    // return the current rotation and translation
     return {
-      rotation: quat4.multiply(this.lastRot, this.deltaRot, this.currentRot),
-      zoom: this.currentZoom
+      rotation: currentRot,
+      translation: currentTrans
     };
   },
 
@@ -148,31 +238,36 @@ Tilt.Arcball.prototype = {
    *
    * @param {Number} x: the current horizontal coordinate of the mouse
    * @param {Number} y: the current vertical coordinate of the mouse
+   * @param {Number} button: which mouse button was pressed
    */
-  mousePressed: function(x, y) {
-    this.mouseX = x;
-    this.mouseY = y;
-
-    var radius = this.radius,
-      width = this.width,
-      height = this.height,
-      mouseX = this.mouseX,
-      mouseY = this.mouseY;
-
-    this.pointToSphere(mouseX, mouseY, width, height, radius, this.startVec);
-    quat4.set(this.currentRot, this.lastRot);
+  mousePressed: function(x, y, button) {
+    this.$mouseX = x;
+    this.$mouseY = y;
+    this.$mouseButton = button;
+    this.$save();
   },
 
   /**
-   * Function handling the mouseDragged event.
-   * Call this when the mouse was dragged.
+   * Function handling the mouseReleased event.
+   * Call this when a mouse button was released.
    *
    * @param {Number} x: the current horizontal coordinate of the mouse
    * @param {Number} y: the current vertical coordinate of the mouse
    */
-  mouseDragged: function(x, y) {
-    this.mouseDragX = x;
-    this.mouseDragY = y;
+  mouseReleased: function(x, y) {
+    this.$mouseButton = -1;
+  },
+
+  /**
+   * Function handling the mouseMoved event.
+   * Call this when the mouse was moved.
+   *
+   * @param {Number} x: the current horizontal coordinate of the mouse
+   * @param {Number} y: the current vertical coordinate of the mouse
+   */
+  mouseMoved: function(x, y) {
+    this.$newMouseX = x;
+    this.$newMouseY = y;
   },
 
   /**
@@ -182,7 +277,35 @@ Tilt.Arcball.prototype = {
    * @param {Number} scroll: the mouse wheel direction and speed
    */
   mouseScroll: function(scroll) {
-    this.scrollValue -= scroll * 10;
+    this.$scrollValue -= scroll * 10;
+  },
+
+  /**
+   * Function handling the keyPressed event.
+   * Call this when the a key was pressed.
+   *
+   * @param {Number} code: the code corresponding to the key pressed
+   */
+  keyPressed: function(code) {
+    this.$keyCode[code] = true;
+    
+    if (code === 17 || code === 224) {
+      this.$keyCoded = true;
+    }
+  },
+
+  /**
+   * Function handling the keyReleased event.
+   * Call this when the a key was released.
+   *
+   * @param {Number} code: the code corresponding to the key released
+   */
+  keyReleased: function(code) {
+    this.$keyCode[code] = false;
+
+    if (code === 17 || code === 224) {
+      this.$keyCoded = false;
+    }
   },
 
   /**
@@ -231,18 +354,33 @@ Tilt.Arcball.prototype = {
    */
   resize: function(newWidth, newHeight, newRadius) {
     // set the new width, height and radius dimensions
-    this.width = newWidth;
-    this.height = newHeight;
-    this.radius = "undefined" !== typeof newRadius ? newRadius : newHeight;
+    this.$width = newWidth;
+    this.$height = newHeight;
+    this.$radius = "undefined" !== typeof newRadius ? newRadius : newHeight;
+    this.$save();
+  },
 
-    var radius = this.radius,
-      width = this.width,
-      height = this.height,
-      mouseX = this.mouseX,
-      mouseY = this.mouseY;
+  /**
+   * Saves the current arcball state, typically after mouse or resize events.
+   */
+  $save: function() {
+    var radius = this.$radius,
+      width = this.$width,
+      height = this.$height,
+      mouseX = this.$mouseX,
+      mouseY = this.$mouseY,
+      addKeyRot = this.$addKeyRot;
 
-    this.pointToSphere(mouseX, mouseY, width, height, radius, this.startVec);
-    quat4.set(this.currentRot, this.lastRot);
+    this.$oldMouseX = mouseX;
+    this.$oldMouseY = mouseY;
+    this.$newMouseX = mouseX;
+    this.$newMouseY = mouseY;
+
+    this.pointToSphere(mouseX, mouseY, width, height, radius, this.$startVec);
+    quat4.set(this.$currentRot, this.$lastRot);
+
+    addKeyRot[0] = 0;
+    addKeyRot[1] = 0;
   },
 
   /**
@@ -524,6 +662,9 @@ Tilt.clearCache = function() {
   Tilt.$activeShader = -1;
   Tilt.$enabledAttributes = -1;
   Tilt.$loadedTextures = {};
+  
+  Tilt.GLSL.$count = 0;
+  Tilt.TextureUtils.$count = 0;
 };
 /*
  * Program.js - A wrapper for a GLSL program
@@ -568,26 +709,26 @@ Tilt.Program = function(vertShaderSrc, fragShaderSrc) {
   /**
    * A reference to the actual GLSL program.
    */
-  this.ref = null;
+  this.$ref = null;
 
   /**
    * Each program has an unique id assigned.
    */
-  this.id = 0;
+  this.$id = -1;
 
   /**
    * Two arrays: an attributes array property, containing all the attributes
    * and a uniforms array, containing all the uniforms. These variables are
    * automatically cached as string-value hashes.
    */
-  this.attributes = null;
-  this.uniforms = null;
+  this.$attributes = null;
+  this.$uniforms = null;
 
   /**
    * Each program has an assigned object for caching all the current
    * attributes and uniforms at runtime, when using the shader.
    */
-  this.cache = {};
+  this.$cache = {};
 
   // if the sources are specified in the constructor, initialize directly
   if (arguments.length === 2) {
@@ -604,17 +745,17 @@ Tilt.Program.prototype = {
    * @param {String} fragShaderSrc: the fragment shader source code
    */
   initProgram: function(vertShaderSrc, fragShaderSrc) {
-    this.ref = Tilt.GLSL.create(vertShaderSrc, fragShaderSrc);
+    this.$ref = Tilt.GLSL.create(vertShaderSrc, fragShaderSrc);
 
     // cache for faster access
-    this.id = this.ref.id;
-    this.attributes = this.ref.attributes;
-    this.uniforms = this.ref.uniforms;
+    this.$id = this.$ref.id;
+    this.$attributes = this.$ref.attributes;
+    this.$uniforms = this.$ref.uniforms;
 
     // cleanup
-    delete this.ref.id;
-    delete this.ref.attributes;
-    delete this.ref.uniforms;
+    delete this.$ref.id;
+    delete this.$ref.attributes;
+    delete this.$ref.uniforms;
   },
 
   /**
@@ -660,23 +801,23 @@ Tilt.Program.prototype = {
    */
   use: function() {
     // check if the program wasn't already active
-    if (Tilt.$activeShader !== this.id) {
-      Tilt.$activeShader = this.id;
+    if (Tilt.$activeShader !== this.$id) {
+      Tilt.$activeShader = this.$id;
 
       // cache the WebGL context variable
       var gl = Tilt.$gl;
 
       // use the the program if it wasn't already set
-      gl.useProgram(this.ref);
+      gl.useProgram(this.$ref);
 
       // check if the required vertex attributes aren't already set
-      if (Tilt.$enabledAttributes < this.attributes.length) {
-        Tilt.$enabledAttributes = this.attributes.length;
+      if (Tilt.$enabledAttributes < this.$attributes.length) {
+        Tilt.$enabledAttributes = this.$attributes.length;
 
         // enable any necessary vertex attributes using the cache
-        for (var i in this.attributes) {
-          if (this.attributes.hasOwnProperty(i) && i !== "length") {
-            gl.enableVertexAttribArray(this.attributes[i]);
+        for (var i in this.$attributes) {
+          if (this.$attributes.hasOwnProperty(i) && i !== "length") {
+            gl.enableVertexAttribArray(this.$attributes[i]);
           }
         }
       }
@@ -692,7 +833,7 @@ Tilt.Program.prototype = {
   bindVertexBuffer: function(attribute, buffer) {
     // get the cached attribute value from the shader
     var gl = Tilt.$gl,
-      attr = this.attributes[attribute],
+      attr = this.$attributes[attribute],
       size = buffer.itemSize;
 
     gl.bindBuffer(gl.ARRAY_BUFFER, buffer.ref);
@@ -706,16 +847,17 @@ Tilt.Program.prototype = {
    * @param {Float32Array} m: the matrix to be bound
    */
   bindUniformMatrix: function(uniform, m) {
-    var m0 = m[0] + m[1] + m[2],
+    var cache = this.$cache,
+      m0 = m[0] + m[1] + m[2],
       m1 = m[4] + m[5] + m[6],
       m2 = m[8] + m[9] + m[10],
       m3 = m[12] + m[13] + m[14],
       hit = m0 + m1 + m2 + m3;
 
     // check the cache to see if this uniform wasn't already set
-    if (this.cache[uniform] !== hit) {
-      this.cache[uniform] = hit;
-      Tilt.$gl.uniformMatrix4fv(this.uniforms[uniform], false, m);
+    if (cache[uniform] !== hit) {
+      cache[uniform] = hit;
+      Tilt.$gl.uniformMatrix4fv(this.$uniforms[uniform], false, m);
     }
   },
 
@@ -726,16 +868,17 @@ Tilt.Program.prototype = {
    * @param {Float32Array} v: the vector to be bound
    */
   bindUniformVec4: function(uniform, v) {
-    var a = v[3] * 255,
+    var cache = this.$cache,
+      a = v[3] * 255,
       r = v[0] * 255,
       g = v[1] * 255,
       b = v[2] * 255,
       hit = a << 24 | r << 16 | g << 8 | b;
 
     // check the cache to see if this uniform wasn't already set
-    if (this.cache[uniform] !== hit) {
-      this.cache[uniform] = hit;
-      Tilt.$gl.uniform4fv(this.uniforms[uniform], v);
+    if (cache[uniform] !== hit) {
+      cache[uniform] = hit;
+      Tilt.$gl.uniform4fv(this.$uniforms[uniform], v);
     }
   },
 
@@ -746,10 +889,12 @@ Tilt.Program.prototype = {
    * @param {Number} variable: the variable to be bound
    */
   bindUniformFloat: function(uniform, variable) {
+    var cache = this.$cache;
+
     // check the cache to see if this uniform wasn't already set
-    if (this.cache[uniform] !== variable) {
-      this.cache[uniform] = variable;
-      Tilt.$gl.uniform1f(this.uniforms[uniform], variable);
+    if (cache[uniform] !== variable) {
+      cache[uniform] = variable;
+      Tilt.$gl.uniform1f(this.$uniforms[uniform], variable);
     }
   },
 
@@ -759,16 +904,17 @@ Tilt.Program.prototype = {
    * @param {String} sampler: the sampler name to bind the texture to
    * @param {Tilt.Texture} texture: the texture to be bound
    */
-  bindTexture: function(sampler, texture) {
+  bindTexture: function(sampler, texture, unit) {
+    var cache = this.$cache,
+      id = texture.$id;
+
     // check the cache to see if this texture wasn't already set
-    if (this.cache[sampler] !== texture.id) {
-      this.cache[sampler] = texture.id;
+    if (cache[sampler] !== id) {
+      cache[sampler] = id;
 
-      // cache the WebGL context variable
       var gl = Tilt.$gl;
-
-      gl.bindTexture(gl.TEXTURE_2D, texture.ref);
-      gl.uniform1i(this.uniforms[sampler], 0);
+      gl.bindTexture(gl.TEXTURE_2D, texture.$ref);
+      gl.uniform1i(this.$uniforms[sampler], 0);
     }
   },
 
@@ -920,7 +1066,7 @@ Tilt.GLSL = {
     }
 
     // generate an id for the program
-    program.id = ++this.count;
+    program.id = this.$count++;
 
     // create an array of all the attributes, uniforms & words from the shader
     // which will be searched for to automatically cache the shader variables
@@ -1027,7 +1173,7 @@ Tilt.GLSL = {
   /**
    * The total number of shaders created.
    */
-  count: 0
+  $count: 0
 };
 /*
  * Texture.js - A WebGL texture wrapper
@@ -1082,12 +1228,12 @@ Tilt.Texture = function(image, parameters, readyCallback) {
   /**
    * A reference to the WebGL texture object.
    */
-  this.ref = null;
+  this.$ref = null;
 
   /**
    * Each texture has an unique id assigned.
    */
-  this.id = 0;
+  this.$id = -1;
 
   /**
    * Variables specifying the width and height of the texture.
@@ -1130,12 +1276,12 @@ Tilt.Texture.prototype = {
    * @param {Object} parameters: an object containing the texture properties
    */
   initTexture: function(image, parameters) {
-    this.ref = Tilt.TextureUtils.create(image, parameters);
+    this.$ref = Tilt.TextureUtils.create(image, parameters);
 
     // cache for faster access
-    this.id = this.ref.id;
-    this.width = this.ref.width;
-    this.height = this.ref.height;
+    this.$id = this.$ref.id;
+    this.width = this.$ref.width;
+    this.height = this.$ref.height;
     this.loaded = true;
 
     if ("undefined" !== typeof this.onload) {
@@ -1143,9 +1289,9 @@ Tilt.Texture.prototype = {
     }
 
     // cleanup
-    delete this.ref.id;
-    delete this.ref.width;
-    delete this.ref.height;
+    delete this.$ref.id;
+    delete this.$ref.width;
+    delete this.$ref.height;
     delete this.onload;
 
     image = null;
@@ -1261,7 +1407,7 @@ Tilt.TextureUtils = {
     texture.height = height;
 
     // generate an id for the texture
-    texture.id = ++this.count;
+    texture.id = this.$count++;
 
     // set the required texture params and do some cleanup
     this.setTextureParams(parameters);
@@ -1425,7 +1571,7 @@ Tilt.TextureUtils = {
   /**
    * The total number of shaders created.
    */
-  count: 0
+  $count: 0
 };
 /*
  * Button.js - A simple button
@@ -1464,26 +1610,33 @@ var EXPORTED_SYMBOLS = ["Tilt.Button"];
  * @param {Number} y: the y position of the object
  * @param {Tilt.Sprite} sprite: the sprite to be drawn as background
  * @param {Function} onclick: optional, function to be called when clicked
+ * @param {Object} properties: additional properties for this object
  */
-Tilt.Button = function(x, y, sprite, onclick) {
+Tilt.Button = function(x, y, sprite, onclick, properties) {
+
+  // make sure the properties parameter is a valid object
+  properties = properties || {};
 
   /**
    * The draw coordinates of this object.
    */
   this.x = x || 0;
   this.y = y || 0;
-  this.width = sprite.width;
-  this.height = sprite.height;
 
   /**
    * A sprite used as a background for this object.
    */
-  this.sprite = sprite;
+  this.sprite = sprite || { width: 0, height: 0 };
+
+  /**
+   * Variable specifying if this object shouldn't be drawn.
+   */
+  this.hidden = properties.hidden || false;
 
   /**
    * The bounds of this object (used for clicking and intersections).
    */
-  this.$bounds = [this.x, this.y, this.width, this.height];
+  this.$bounds = [this.x, this.y, this.sprite.width, this.sprite.height];
 
   // if the onclick closure is specified in the constructor, save it here
   if ("function" === typeof onclick) {
@@ -1500,19 +1653,15 @@ Tilt.Button.prototype = {
     var sprite = this.sprite,
       bounds = this.$bounds,
       x = this.x,
-      y = this.y,
-      width = this.width,
-      height = this.height;
+      y = this.y;
 
     bounds[0] = x;
     bounds[1] = y;
-    bounds[2] = width;
-    bounds[3] = height;
+    bounds[2] = sprite.width;
+    bounds[3] = sprite.height;
 
     sprite.x = x;
     sprite.y = y;
-    sprite.width = width;
-    sprite.height = height;
   },
 
   /**
@@ -1521,7 +1670,10 @@ Tilt.Button.prototype = {
    */
   draw: function(tilt) {
     tilt = tilt || Tilt.$renderer;
-    this.sprite.draw(tilt);
+
+    if ("undefined" !== typeof this.sprite.texture) {
+      this.sprite.draw(tilt);
+    }
   },
 
   /**
@@ -1542,7 +1694,7 @@ Tilt.Button.prototype = {
   }
 };
 /*
- * Lightbox.js - A light box composed of a full screen rect and a sprite
+ * Container.js - A container holding various GUI elements
  * version 0.1
  *
  * Copyright (c) 2011 Victor Porof
@@ -1569,53 +1721,48 @@ Tilt.Button.prototype = {
 "use strict";
 
 var Tilt = Tilt || {};
-var EXPORTED_SYMBOLS = ["Tilt.Lightbox"];
+var EXPORTED_SYMBOLS = ["Tilt.Container"];
 
 /**
- * Lightbox constructor.
+ * Container constructor.
  *
- * @param {String} color: the background, defined in hex or as rgb() or rgba()
- * @param {Tilt.Sprite} sprite: the sprite to be drawn on top
- * @param {Boolean} hidden: true if the lightbox should initially be hidden
+ * @param {Array} elements: array of GUI elements added to this container
+ * @param {Object} properties: additional properties for this object
  */
-Tilt.Lightbox = function(color, sprite, hidden) {
+Tilt.Container = function(elements, properties) {
 
-  /**
-   * The color of the full screen rectangle.
-   */
-  this.color = color;
+  // make sure the properties parameter is a valid object
+  properties = properties || {};
+  elements = elements || [];
 
   /**
    * A texture used as the pixel data for this object.
    */
-  this.sprite = sprite;
-  
-  /**
-   * Variable specifying if the lightbox should be hidden.
-   */
-  this.hidden = hidden;
+  this.elements = elements instanceof Array ? elements : [elements];
 
   /**
-   * The bounds of this object (used for clicking and intersections).
+   * The color of the full screen rectangle.
    */
-  this.$bounds = [sprite.x, sprite.y, sprite.width, sprite.height];
+  this.background = properties.background || null;
+
+  /**
+   * Variable specifying if this object shouldn't be drawn.
+   */
+  this.hidden = properties.hidden || false;
 };
 
-Tilt.Lightbox.prototype = {
+Tilt.Container.prototype = {
 
   /**
    * Updates this object's internal params.
    */
   update: function() {
-    var sprite = this.sprite,
-      bounds = this.$bounds,
-      sbounds = sprite.$bounds;
+    var elements = this.elements,
+      i, len;
 
-    sprite.update();
-    bounds[0] = sbounds[0];
-    bounds[1] = sbounds[1];
-    bounds[2] = sbounds[2];
-    bounds[3] = sbounds[3];
+    for (i = 0, len = elements.length; i < len; i++) {
+      elements[i].update();
+    }
   },
 
   /**
@@ -1625,17 +1772,40 @@ Tilt.Lightbox.prototype = {
   draw: function(tilt) {
     tilt = tilt || Tilt.$renderer;
 
-    tilt.fill(this.color);
-    tilt.noStroke();
-    tilt.rect(0, 0, tilt.width, tilt.height);
+    if (this.background !== null) {
+      tilt.fill(this.background);
+      tilt.noStroke();
+      tilt.rect(0, 0, tilt.width, tilt.height);
+    }
 
-    this.sprite.draw(tilt);
+    var elements = this.elements,
+      element, i, len;
+
+    for (i = 0, len = elements.length; i < len; i++) {
+      element = elements[i];
+
+      if (!element.hidden) {
+        element.draw(tilt);
+      }
+    }
   },
 
   /**
    * Destroys this object and deletes all members.
    */
   destroy: function() {
+    for (var e in this.elements) {
+      try {
+        if ("function" === typeof this.elements[e].destroy) {
+          this.elements[e].destroy();
+        }
+      }
+      catch(e) {}
+      finally {
+        delete this.elements[e];
+      }
+    }
+
     for (var i in this) {
       try {
         if ("function" === typeof this[i].destroy) {
@@ -1684,12 +1854,12 @@ var EXPORTED_SYMBOLS = ["Tilt.Sprite"];
  *
  * @param {Tilt.Texture} texture: the texture to be used
  * @param {Array} region: the sub-texture coordinates as [x, y, width, height]
- * @param {Number} x: the x position of the object
- * @param {Number} y: the y position of the object
- * @param {Number} width: the width of the object
- * @param {Number} height: the height of the object
+ * @param {Object} properties: additional properties for this object
  */
-Tilt.Sprite = function(texture, region, x, y, width, height) {
+Tilt.Sprite = function(texture, region, properties) {
+
+  // make sure the properties parameter is a valid object
+  properties = properties || {};
 
   /**
    * A texture used as the pixel data for this object.
@@ -1704,10 +1874,20 @@ Tilt.Sprite = function(texture, region, x, y, width, height) {
   /**
    * The draw coordinates of this object.
    */
-  this.x = x || 0;
-  this.y = y || 0;
-  this.width = width || this.region[2];
-  this.height = height || this.region[3];
+  this.x = properties.x || 0;
+  this.y = properties.y || 0;
+  this.width = properties.width || this.region[2];
+  this.height = properties.height || this.region[3];
+
+  /**
+   * Variable specifying if this object shouldn't be drawn.
+   */
+  this.hidden = properties.hidden || false;
+
+  /**
+   * Sets if depth testing should be enabled or not for this object.
+   */
+  this.depthTest = properties.depthTest || false;
 
   /**
    * The bounds of this object (used for clicking and intersections).
@@ -1725,7 +1905,7 @@ Tilt.Sprite.prototype = {
   /**
    * Clears the generated texture coords, which will be regenerated at draw.
    */
-  refresh: function() {
+  update$texCoord: function() {
     this.$texCoord = null;
   },
 
@@ -1733,16 +1913,12 @@ Tilt.Sprite.prototype = {
    * Updates this object's internal params.
    */
   update: function() {
-    var bounds = this.$bounds,
-      x = this.x,
-      y = this.y,
-      width = this.width,
-      height = this.height;
+    var bounds = this.$bounds;
 
-    bounds[0] = x;
-    bounds[1] = y;
-    bounds[2] = width;
-    bounds[3] = height;
+    bounds[0] = this.x;
+    bounds[1] = this.y;
+    bounds[2] = this.width;
+    bounds[3] = this.height;
   },
 
   /**
@@ -1752,12 +1928,16 @@ Tilt.Sprite.prototype = {
   draw: function(tilt) {
     tilt = tilt || Tilt.$renderer;
 
+    // cache these variables for easy access
+    var reg = this.region,
+      tex = this.texture,
+      x = this.x,
+      y = this.y,
+      width = this.width,
+      height = this.height;
+
     // initialize the texture coordinates buffer if it was null
     if (this.$texCoord === null && this.texture.loaded) {
-
-      // cache these variables for easy access
-      var reg = this.region,
-        tex = this.texture;
 
       // create the texture coordinates representing the sub-texture
       this.$texCoord = new Tilt.VertexBuffer([
@@ -1767,8 +1947,14 @@ Tilt.Sprite.prototype = {
         (reg[0] + reg[2]) / tex.width, (reg[1] + reg[3]) / tex.height], 2);
     }
 
-    tilt.image(
-      this.texture, this.x, this.y, this.width, this.height, this.$texCoord);
+    if (this.depthTest) {
+      tilt.depthTest(true);
+      tilt.image(tex, x, y, width, height, this.$texCoord);
+      tilt.depthTest(false);
+    }
+    else {
+      tilt.image(tex, x, y, width, height, this.$texCoord);
+    }
   },
 
   /**
@@ -1863,11 +2049,13 @@ Tilt.GUI.prototype = {
 
     tilt.ortho();
     tilt.origin();
-    tilt.defaults();
+    tilt.blendMode("alpha");
+    tilt.depthTest(false);
 
     for (i = 0, len = elements.length; i < len; i++) {
       element = elements[i];
       element.update();
+
       if (!element.hidden) {
         element.draw(tilt);
       }
@@ -1882,22 +2070,23 @@ Tilt.GUI.prototype = {
    */
   click: function(x, y) {
     var elements = this.elements,
-      element, bounds, boundsX, boundsY, boundsWidth, boundsHeight, i, len;
+      element, subelements, i, j, len, len2;
 
     for (i = 0, len = elements.length; i < len; i++) {
       element = elements[i];
-      bounds = element.$bounds || [-1, -1, -1, -1];
-      boundsX = bounds[0];
-      boundsY = bounds[1];
-      boundsWidth = bounds[2];
-      boundsHeight = bounds[3];
 
-      if (x > boundsX && x < boundsX + boundsWidth &&
-          y > boundsY && y < boundsY + boundsHeight) {
+      if (element instanceof Tilt.Container) {
+        // a container can have one or more elements, verify each one if it is
+        // valid to receive the click event 
+        subelements = element.elements;
 
-        if ("function" === typeof element.onclick) {
-          element.onclick(x, y);
+        for (j = 0, len2 = subelements.length; j < len2; j++) {
+          this.element$onClick(x, y, subelements[j]);
         }
+      }
+      else {
+        // normally check if the element is valid to receive a click event
+        this.element$onClick(x, y, element);
       }
     }
   },
@@ -1909,6 +2098,35 @@ Tilt.GUI.prototype = {
    * @param {Number} y: the current vertical coordinate of the mouse
    */
   doubleClick: function(x, y) {
+    // TODO: implementation
+  },
+
+  /**
+   * Checks if a GUI element is valid to receive a click event. If this is the 
+   * case, then the onclick function is called when available.
+   *
+   * @param {Number} x: the current horizontal coordinate of the mouse
+   * @param {Number} y: the current vertical coordinate of the mouse
+   * @param {Object} element: the GUI element to be checked
+   */
+  element$onClick: function(x, y, element) {
+    if ("undefined" === typeof element) {
+      return;
+    }
+
+    var bounds = element.$bounds || [-1, -1, -1, -1],
+      boundsX = bounds[0],
+      boundsY = bounds[1],
+      boundsWidth = bounds[2],
+      boundsHeight = bounds[3];
+
+    if (x > boundsX && x < boundsX + boundsWidth &&
+        y > boundsY && y < boundsY + boundsHeight) {
+
+      if ("function" === typeof element.onclick) {
+        element.onclick(x, y);
+      }
+    }
   },
 
   /**
@@ -6404,6 +6622,12 @@ Tilt.Renderer = function(canvas, failCallback, successCallback) {
     this.DEPTH_BUFFER_BIT = this.gl.DEPTH_BUFFER_BIT;
     this.STENCIL_BUFFER_BIT = this.gl.STENCIL_BUFFER_BIT;
 
+    this.MAX_TEXTURE_SIZE = 
+      this.gl.getParameter(this.gl.MAX_TEXTURE_SIZE);
+
+    this.MAX_TEXTURE_IMAGE_UNITS =
+      this.gl.getParameter(this.gl.MAX_TEXTURE_IMAGE_UNITS);
+
     // if successful, run a success callback function if available
     if ("function" === typeof successCallback) {
       successCallback();
@@ -6441,30 +6665,30 @@ Tilt.Renderer = function(canvas, failCallback, successCallback) {
   /**
    * The current clear color used to clear the color buffer bit.
    */
-  this.clearColor = [0, 0, 0, 0];
+  this.$clearColor = [0, 0, 0, 0];
 
   /**
    * The current tint color applied to any objects which can be tinted.
    * These mostly represent images or primitives which are textured.
    */
-  this.tintColor = [0, 0, 0, 0];
+  this.$tintColor = [1, 1, 1, 1];
 
   /**
    * The current fill color applied to any objects which can be filled.
    * These are rectangles, circles, boxes, 2d or 3d primitives in general.
    */
-  this.fillColor = [0, 0, 0, 0];
+  this.$fillColor = [1, 1, 1, 1];
 
   /**
    * The current stroke color applied to any objects which can be stroked.
    * This property mostly refers to lines.
    */
-  this.strokeColor = [0, 0, 0, 0];
+  this.$strokeColor = [0, 0, 0, 1];
 
   /**
    * Variable representing the current stroke weight.
    */
-  this.strokeWeightValue = 0;
+  this.$strokeWeightValue = 1;
 
   /**
    * A shader useful for drawing vertices with only a color component.
@@ -6484,21 +6708,21 @@ Tilt.Renderer = function(canvas, failCallback, successCallback) {
   /**
    * Vertices buffer representing the corners of a rectangle.
    */
-  this.rectangle = new Tilt.Rectangle();
-  this.rectangleWireframe = new Tilt.RectangleWireframe();
+  this.$rectangle = new Tilt.Rectangle();
+  this.$rectangleWireframe = new Tilt.RectangleWireframe();
 
   /**
    * Vertices buffer representing the corners of a cube.
    */
-  this.cube = new Tilt.Cube();
-  this.cubeWireframe = new Tilt.CubeWireframe();
+  this.$cube = new Tilt.Cube();
+  this.$cubeWireframe = new Tilt.CubeWireframe();
 
   /**
    * Helpers for managing variables like frameCount, frameRate, frameDelta,
    * used internally, in the requestAnimFrame function.
    */
-  this.lastTime = 0;
-  this.currentTime = null;
+  this.$lastTime = 0;
+  this.$currentTime = null;
 
   /**
    * Time passed since initialization.
@@ -6525,8 +6749,13 @@ Tilt.Renderer = function(canvas, failCallback, successCallback) {
   this.origin();
   this.perspective();
 
-  // set the default tint, fill, stroke and stroke weight
-  this.defaults();
+  // set the default tint, fill, stroke and other visual properties
+  this.tint("#fff");
+  this.fill("#fff");
+  this.stroke("#000");
+  this.strokeWeight(1);
+  this.blendMode("alpha");
+  this.depthTest(false);
 };
 
 Tilt.Renderer.prototype = {
@@ -6542,7 +6771,7 @@ Tilt.Renderer.prototype = {
    */
   clear: function(r, g, b, a) {
     // cache some variables for easy access
-    var col = this.clearColor,
+    var col = this.$clearColor,
       gl = this.gl;
 
     if (col[0] !== r || col[1] !== g || col[2] !== b || col[3] !== a) {
@@ -6614,7 +6843,9 @@ Tilt.Renderer.prototype = {
    * Sets a default orthographic projection (recommended for 2d rendering).
    */
   ortho: function() {
-    mat4.ortho(0, this.width, this.height, 0, -1000, 1000, this.projMatrix);
+    var clip = 1000000;
+    mat4.ortho(0, this.width, this.height, 0, -clip, clip, this.projMatrix);
+    mat4.translate(this.projMatrix, [0, 0, -clip + 1]);
   },
 
   /**
@@ -6721,30 +6952,18 @@ Tilt.Renderer.prototype = {
   },
 
   /**
-   * Sets a default visual style throughout the renderer.
-   */
-  defaults: function() {
-    this.blendMode("alpha");
-    this.depthTest(false);
-    this.tint("#fff");
-    this.fill("#fff");
-    this.stroke("#000");
-    this.strokeWeight(1);    
-  },
-
-  /**
    * Sets the current tint color.
    * @param {String} color: the color, defined in hex or as rgb() or rgba()
    */
   tint: function(color) {
-    this.tintColor = Tilt.Math.hex2rgba(color);
+    this.$tintColor = Tilt.Math.hex2rgba(color);
   },
 
   /**
    * Disables the current tint color value.
    */
   noTint: function() {
-    var tint = this.tintColor;
+    var tint = this.$tintColor;
     tint[0] = 1;
     tint[1] = 1;
     tint[2] = 1;
@@ -6756,14 +6975,14 @@ Tilt.Renderer.prototype = {
    * @param {String} color: the color, defined in hex or as rgb() or rgba()
    */
   fill: function(color) {
-    this.fillColor = Tilt.Math.hex2rgba(color);
+    this.$fillColor = Tilt.Math.hex2rgba(color);
   },
 
   /**
    * Disables the current fill color value.
    */
   noFill: function() {
-    var fill = this.fillColor;
+    var fill = this.$fillColor;
     fill[0] = 0;
     fill[1] = 0;
     fill[2] = 0;
@@ -6775,14 +6994,14 @@ Tilt.Renderer.prototype = {
    * @param {String} color: the color, defined in hex or as rgb() or rgba()
    */
   stroke: function(color) {
-    this.strokeColor = Tilt.Math.hex2rgba(color);
+    this.$strokeColor = Tilt.Math.hex2rgba(color);
   },
 
   /**
    * Disables the current stroke color value.
    */
   noStroke: function() {
-    var stroke = this.strokeColor;
+    var stroke = this.$strokeColor;
     stroke[0] = 0;
     stroke[1] = 0;
     stroke[2] = 0;
@@ -6794,8 +7013,8 @@ Tilt.Renderer.prototype = {
    * @param {Number} weight: the stroke weight
    */
   strokeWeight: function(value) {
-    if (this.strokeWeightValue !== value) {
-      this.strokeWeightValue = value;
+    if (this.$strokeWeightValue !== value) {
+      this.$strokeWeightValue = value;
       this.gl.lineWidth(value);
     }
   },
@@ -6888,8 +7107,8 @@ Tilt.Renderer.prototype = {
    */
   triangle: function(v0, v1, v2) {
     var vertices = new Tilt.VertexBuffer(v0.concat(v1, v2), 3),
-      fill = this.fillColor,
-      stroke = this.strokeColor;
+      fill = this.$fillColor,
+      stroke = this.$strokeColor;
 
     // draw the outline only if the stroke alpha channel is not transparent
     if (stroke[3]) {
@@ -6916,7 +7135,7 @@ Tilt.Renderer.prototype = {
    * @param {String} mode: either "corner" or "center"
    */
   rectMode: function(mode) {
-    this.rectangle.rectModeValue = mode;
+    this.$rectangle.rectModeValue = mode;
   },
 
   /**
@@ -6928,13 +7147,13 @@ Tilt.Renderer.prototype = {
    * @param {Number} height: the height of the object
    */
   rect: function(x, y, width, height) {
-    var rectangle = this.rectangle,
-      wireframe = this.rectangleWireframe,
-      fill = this.fillColor,
-      stroke = this.strokeColor;
+    var rectangle = this.$rectangle,
+      wireframe = this.$rectangleWireframe,
+      fill = this.$fillColor,
+      stroke = this.$strokeColor;
 
     // if rectMode is set to "center", we need to offset the origin
-    if ("center" === this.rectangle.rectModeValue) {
+    if ("center" === this.$rectangle.rectModeValue) {
       x -= width / 2;
       y -= height / 2;
     }
@@ -6972,13 +7191,13 @@ Tilt.Renderer.prototype = {
    * @param {String} mode: either "corner" or "center"
    */
   imageMode: function(mode) {
-    this.rectangle.imageModeValue = mode;
+    this.$rectangle.imageModeValue = mode;
   },
 
   /**
    * Draws an image using the specified parameters.
    *
-   * @param {Tilt.Textrue} t: the texture to be used
+   * @param {Tilt.Texture} t: the texture to be used
    * @param {Number} x: the x position of the object
    * @param {Number} y: the y position of the object
    * @param {Number} width: the width of the object
@@ -6986,9 +7205,9 @@ Tilt.Renderer.prototype = {
    * @param {Tilt.VertexBuffer} texCoord: optional, custom texture coordinates
    */
   image: function(t, x, y, width, height, texCoord) {
-    var rectangle = this.rectangle,
-      tint = this.tintColor,
-      stroke = this.strokeColor,
+    var rectangle = this.$rectangle,
+      tint = this.$tintColor,
+      stroke = this.$strokeColor,
       texCoordBuffer = texCoord || rectangle.texCoord;
 
     // if the width and height are not specified, we use the embedded
@@ -7029,11 +7248,11 @@ Tilt.Renderer.prototype = {
    * @param {Tilt.Texture} texture: the texture to be used
    */
   box: function(width, height, depth, texture) {
-    var cube = this.cube,
-      wireframe = this.cubeWireframe,
-      tint = this.tintColor,
-      fill = this.fillColor,
-      stroke = this.strokeColor;
+    var cube = this.$cube,
+      wireframe = this.$cubeWireframe,
+      tint = this.$tintColor,
+      fill = this.$fillColor,
+      stroke = this.$strokeColor;
 
     // in memory, the box is represented as a simple perfect 1x1 cube, so
     // some transformations are applied to achieve the desired shape
@@ -7137,13 +7356,13 @@ Tilt.Renderer.prototype = {
     this.perspective();
 
     // calculate the frame delta and frame rate using the current time
-    this.currentTime = new Date().getTime();
+    this.$currentTime = new Date().getTime();
 
-    if (this.lastTime !== 0) {
-      this.frameDelta = this.currentTime - this.lastTime;
+    if (this.$lastTime !== 0) {
+      this.frameDelta = this.$currentTime - this.$lastTime;
       this.frameRate = 1000 / this.frameDelta;
     }
-    this.lastTime = this.currentTime;
+    this.$lastTime = this.$currentTime;
 
     // increment the elapsed time and total frame count
     this.elapsedTime += this.frameDelta;
