@@ -73,11 +73,13 @@ Tilt.GUI.prototype = {
 
     tilt.ortho();
     tilt.origin();
-    tilt.defaults();
+    tilt.blendMode("alpha");
+    tilt.depthTest(false);
 
     for (i = 0, len = elements.length; i < len; i++) {
       element = elements[i];
       element.update();
+
       if (!element.hidden) {
         element.draw(tilt);
       }
@@ -92,22 +94,23 @@ Tilt.GUI.prototype = {
    */
   click: function(x, y) {
     var elements = this.elements,
-      element, bounds, boundsX, boundsY, boundsWidth, boundsHeight, i, len;
+      element, subelements, i, j, len, len2;
 
     for (i = 0, len = elements.length; i < len; i++) {
       element = elements[i];
-      bounds = element.$bounds || [-1, -1, -1, -1];
-      boundsX = bounds[0];
-      boundsY = bounds[1];
-      boundsWidth = bounds[2];
-      boundsHeight = bounds[3];
 
-      if (x > boundsX && x < boundsX + boundsWidth &&
-          y > boundsY && y < boundsY + boundsHeight) {
+      if (element instanceof Tilt.Container) {
+        // a container can have one or more elements, verify each one if it is
+        // valid to receive the click event 
+        subelements = element.elements;
 
-        if ("function" === typeof element.onclick) {
-          element.onclick(x, y);
+        for (j = 0, len2 = subelements.length; j < len2; j++) {
+          this.element$onClick(x, y, subelements[j]);
         }
+      }
+      else {
+        // normally check if the element is valid to receive a click event
+        this.element$onClick(x, y, element);
       }
     }
   },
@@ -119,6 +122,35 @@ Tilt.GUI.prototype = {
    * @param {Number} y: the current vertical coordinate of the mouse
    */
   doubleClick: function(x, y) {
+    // TODO: implementation
+  },
+
+  /**
+   * Checks if a GUI element is valid to receive a click event. If this is the 
+   * case, then the onclick function is called when available.
+   *
+   * @param {Number} x: the current horizontal coordinate of the mouse
+   * @param {Number} y: the current vertical coordinate of the mouse
+   * @param {Object} element: the GUI element to be checked
+   */
+  element$onClick: function(x, y, element) {
+    if ("undefined" === typeof element) {
+      return;
+    }
+
+    var bounds = element.$bounds || [-1, -1, -1, -1],
+      boundsX = bounds[0],
+      boundsY = bounds[1],
+      boundsWidth = bounds[2],
+      boundsHeight = bounds[3];
+
+    if (x > boundsX && x < boundsX + boundsWidth &&
+        y > boundsY && y < boundsY + boundsHeight) {
+
+      if ("function" === typeof element.onclick) {
+        element.onclick(x, y);
+      }
+    }
   },
 
   /**
