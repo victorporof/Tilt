@@ -32,7 +32,7 @@ var EXPORTED_SYMBOLS = ["Tilt.Arcball"];
  * Arcball constructor.
  * This is a general purpose 3D rotation controller described by Ken Shoemake
  * in the Graphics Interface ’92 Proceedings. It features good behavior
- * easy implementation, cheap execution, & optional axis constrain.
+ * easy implementation, cheap execution. TODO: optional axis constrain.
  *
  * @param {Number} width: the width of canvas
  * @param {Number} height: the height of canvas
@@ -44,40 +44,51 @@ Tilt.Arcball = function(width, height, radius) {
   /**
    * Values retaining the current horizontal and vertical mouse coordinates.
    */
-  this.mouseX = 0;
-  this.mouseY = 0;
-  this.mouseDragX = 0;
-  this.mouseDragY = 0;
+  this.$mouseX = 0;
+  this.$mouseY = 0;
+  this.$oldMouseX = 0;
+  this.$oldMouseY = 0;
+  this.$newMouseX = 0;
+  this.$newMouseY = 0;
+  this.$mouseButton = -1;
+  this.$scrollValue = 0;
 
   /**
-   * Additionally, this implementation also handles zoom.
+   * Array retaining the current pressed key codes.
    */
-  this.scrollValue = 0;
+  this.$keyCode = [];
+  this.$keyCoded = false;
 
   /**
    * The vectors representing the mouse coordinates mapped on the arcball
    * and their perpendicular converted from (x, y) to (x, y, z) at specific
    * events like mousePressed and mouseDragged.
    */
-  this.startVec = vec3.create();
-  this.endVec = vec3.create();
-  this.pVec = vec3.create();
+  this.$startVec = vec3.create();
+  this.$endVec = vec3.create();
+  this.$pVec = vec3.create();
 
   /**
-   * The corresponding rotation quaternions created using the mouse vectors.
+   * The corresponding rotation quaternions.
    */
-  this.lastRot = quat4.create([0, 0, 0, 1]);
-  this.deltaRot = quat4.create([0, 0, 0, 1]);
-  this.currentRot = quat4.create([0, 0, 0, 1]);
+  this.$lastRot = quat4.create([0, 0, 0, 1]);
+  this.$deltaRot = quat4.create([0, 0, 0, 1]);
+  this.$currentRot = quat4.create([0, 0, 0, 1]);
+  
+  /**
+   * The current camera translation coordinates.
+   */
+  this.$lastPan = [0, 0];
+  this.$currentPan = [0, 0];
+  this.$currentTrans = vec3.create();
 
   /**
-   * The zoom, calculated using mouse scroll deltas.
+   * Additional rotation and translation vectors.
    */
-  this.currentZoom = 0;
+  this.$addKeyRot = [0, 0];
+  this.$addKeyTrans = [0, 0];
 
-  /**
-   * Set the current dimensions of the arcball.
-   */
+  // set the current dimensions of the arcball
   this.resize(width, height, radius);
 };
 
@@ -99,46 +110,125 @@ Tilt.Arcball.prototype = {
       frameDelta = Tilt.Math.clamp(frameDelta / 100, 0.01, 0.99);
     }
 
-    // update the zoom based on the mouse scroll
-    this.currentZoom += (this.scrollValue - this.currentZoom) * frameDelta;
+    // cache some variables for easier access
+    var radius = this.$radius,
+      width = this.$width,
+      height = this.$height,
 
-    // update the mouse coordinates
-    this.mouseX += (this.mouseDragX - this.mouseX) * frameDelta;
-    this.mouseY += (this.mouseDragY - this.mouseY) * frameDelta;
+      oldMouseX = this.$oldMouseX,
+      oldMouseY = this.$oldMouseY,
+      newMouseX = this.$newMouseX,
+      newMouseY = this.$newMouseY,
+      mouseButton = this.$mouseButton,
+      scrollValue = this.$scrollValue,
 
-    var radius = this.radius,
-      width = this.width,
-      height = this.height,
-      mouseX = this.mouseX,
-      mouseY = this.mouseY;
+      keyCode = this.$keyCode,
+      keyCoded = this.$keyCoded,
 
-    // find the sphere coordinates of the mouse positions
-    this.pointToSphere(mouseX, mouseY, width, height, radius, this.endVec);
+      startVec = this.$startVec,
+      endVec = this.$endVec,
+      pVec = this.$pVec,
 
-    // compute the vector perpendicular to the start & end vectors
-    vec3.cross(this.startVec, this.endVec, this.pVec);
+      lastRot = this.$lastRot,
+      deltaRot = this.$deltaRot,
+      currentRot = this.$currentRot,
 
-    // if the begin and end vectors don't coincide
-    if (vec3.length(this.pVec) > 0) {
-      this.deltaRot[0] = this.pVec[0];
-      this.deltaRot[1] = this.pVec[1];
-      this.deltaRot[2] = this.pVec[2];
+      lastPan = this.$lastPan,
+      currentPan = this.$currentPan,
+      currentTrans = this.$currentTrans,
 
-      // in the quaternion values, w is cosine (theta / 2),
-      // where theta is the rotation angle
-      this.deltaRot[3] = -vec3.dot(this.startVec, this.endVec);
-    } else {
-      // return an identity rotation quaternion
-      this.deltaRot[0] = 0;
-      this.deltaRot[1] = 0;
-      this.deltaRot[2] = 0;
-      this.deltaRot[3] = 1;
+      addKeyRot = this.$addKeyRot,
+      addKeyTrans = this.$addKeyTrans;
+
+    // smoothly update the mouse coordinates
+    this.$mouseX += (newMouseX - this.$mouseX) * frameDelta;
+    this.$mouseY += (newMouseY - this.$mouseY) * frameDelta;
+
+    // left mouse button handles rotation
+    if (mouseButton === 1) {
+      var mouseX = this.$mouseX, mouseY = this.$mouseY;
+
+      // find the sphere coordinates of the mouse positions
+      this.pointToSphere(mouseX, mouseY, width, height, radius, endVec);
+
+      // compute the vector perpendicular to the start & end vectors
+      vec3.cross(startVec, endVec, pVec);
+
+      // if the begin and end vectors don't coincide
+      if (vec3.length(pVec) > 0) {
+        deltaRot[0] = pVec[0];
+        deltaRot[1] = pVec[1];
+        deltaRot[2] = pVec[2];
+
+        // in the quaternion values, w is cosine (theta / 2),
+        // where theta is the rotation angle
+        deltaRot[3] = -vec3.dot(startVec, endVec);
+      } else {
+        // return an identity rotation quaternion
+        deltaRot[0] = 0;
+        deltaRot[1] = 0;
+        deltaRot[2] = 0;
+        deltaRot[3] = 1;
+      }
+
+      // calculate the current rotation based on the mouse click events
+      quat4.multiply(lastRot, deltaRot, currentRot);
+    }
+    else {
+      quat4.set(currentRot, lastRot);
     }
 
-    // calculate the current rotation using the delta quaternion
+    // right mouse button handles panning
+    if (mouseButton === 3) {
+      currentPan[0] = lastPan[0] + (newMouseX - oldMouseX);
+      currentPan[1] = lastPan[1] + (newMouseY - oldMouseY);
+    }
+    else {
+      lastPan[0] = currentPan[0];
+      lastPan[1] = currentPan[1];
+    }
+
+    // handle additional rotation and translation by the keyboard
+    if (keyCode[65]) { // w
+      addKeyRot[1] -= frameDelta / 1000;
+    }
+    if (keyCode[68]) { // s
+      addKeyRot[1] += frameDelta / 1000;
+    }
+    if (keyCode[87]) { // a
+      addKeyRot[0] += frameDelta / 1000;
+    }
+    if (keyCode[83]) { // d
+      addKeyRot[0] -= frameDelta / 1000;
+    }
+    if (keyCode[37]) { // left
+      addKeyTrans[0] += frameDelta * 50;
+    }
+    if (keyCode[39]) { // right
+      addKeyTrans[0] -= frameDelta * 50;
+    }
+    if (keyCode[38]) { // up
+      addKeyTrans[1] += frameDelta * 50;
+    }
+    if (keyCode[40]) { // down
+      addKeyTrans[1] -= frameDelta * 50;
+    }
+
+    // create an additional rotation based on the key events
+    Tilt.Math.quat4fromEuler(addKeyRot[1], addKeyRot[0], 0, deltaRot);
+    quat4.multiply(currentRot, deltaRot);
+
+    // create an additional translation based on the key events
+    currentTrans[0] = currentPan[0] + addKeyTrans[0];
+    currentTrans[1] = currentPan[1] + addKeyTrans[1];
+
+    // update the zoom based on the mouse scroll
+    currentTrans[2] += (scrollValue - currentTrans[2]) / 10;
+
+    // return the current rotation and translation
     return {
-      rotation: quat4.multiply(this.lastRot, this.deltaRot, this.currentRot),
-      zoom: this.currentZoom
+      rotation: currentRot,
+      translation: currentTrans
     };
   },
 
@@ -148,31 +238,36 @@ Tilt.Arcball.prototype = {
    *
    * @param {Number} x: the current horizontal coordinate of the mouse
    * @param {Number} y: the current vertical coordinate of the mouse
+   * @param {Number} button: which mouse button was pressed
    */
-  mousePressed: function(x, y) {
-    this.mouseX = x;
-    this.mouseY = y;
-
-    var radius = this.radius,
-      width = this.width,
-      height = this.height,
-      mouseX = this.mouseX,
-      mouseY = this.mouseY;
-
-    this.pointToSphere(mouseX, mouseY, width, height, radius, this.startVec);
-    quat4.set(this.currentRot, this.lastRot);
+  mousePressed: function(x, y, button) {
+    this.$mouseX = x;
+    this.$mouseY = y;
+    this.$mouseButton = button;
+    this.$save();
   },
 
   /**
-   * Function handling the mouseDragged event.
-   * Call this when the mouse was dragged.
+   * Function handling the mouseReleased event.
+   * Call this when a mouse button was released.
    *
    * @param {Number} x: the current horizontal coordinate of the mouse
    * @param {Number} y: the current vertical coordinate of the mouse
    */
-  mouseDragged: function(x, y) {
-    this.mouseDragX = x;
-    this.mouseDragY = y;
+  mouseReleased: function(x, y) {
+    this.$mouseButton = -1;
+  },
+
+  /**
+   * Function handling the mouseMoved event.
+   * Call this when the mouse was moved.
+   *
+   * @param {Number} x: the current horizontal coordinate of the mouse
+   * @param {Number} y: the current vertical coordinate of the mouse
+   */
+  mouseMoved: function(x, y) {
+    this.$newMouseX = x;
+    this.$newMouseY = y;
   },
 
   /**
@@ -182,7 +277,35 @@ Tilt.Arcball.prototype = {
    * @param {Number} scroll: the mouse wheel direction and speed
    */
   mouseScroll: function(scroll) {
-    this.scrollValue -= scroll * 10;
+    this.$scrollValue -= scroll * 10;
+  },
+
+  /**
+   * Function handling the keyPressed event.
+   * Call this when the a key was pressed.
+   *
+   * @param {Number} code: the code corresponding to the key pressed
+   */
+  keyPressed: function(code) {
+    this.$keyCode[code] = true;
+    
+    if (code === 17 || code === 224) {
+      this.$keyCoded = true;
+    }
+  },
+
+  /**
+   * Function handling the keyReleased event.
+   * Call this when the a key was released.
+   *
+   * @param {Number} code: the code corresponding to the key released
+   */
+  keyReleased: function(code) {
+    this.$keyCode[code] = false;
+
+    if (code === 17 || code === 224) {
+      this.$keyCoded = false;
+    }
   },
 
   /**
@@ -231,18 +354,33 @@ Tilt.Arcball.prototype = {
    */
   resize: function(newWidth, newHeight, newRadius) {
     // set the new width, height and radius dimensions
-    this.width = newWidth;
-    this.height = newHeight;
-    this.radius = "undefined" !== typeof newRadius ? newRadius : newHeight;
+    this.$width = newWidth;
+    this.$height = newHeight;
+    this.$radius = "undefined" !== typeof newRadius ? newRadius : newHeight;
+    this.$save();
+  },
 
-    var radius = this.radius,
-      width = this.width,
-      height = this.height,
-      mouseX = this.mouseX,
-      mouseY = this.mouseY;
+  /**
+   * Saves the current arcball state, typically after mouse or resize events.
+   */
+  $save: function() {
+    var radius = this.$radius,
+      width = this.$width,
+      height = this.$height,
+      mouseX = this.$mouseX,
+      mouseY = this.$mouseY,
+      addKeyRot = this.$addKeyRot;
 
-    this.pointToSphere(mouseX, mouseY, width, height, radius, this.startVec);
-    quat4.set(this.currentRot, this.lastRot);
+    this.$oldMouseX = mouseX;
+    this.$oldMouseY = mouseY;
+    this.$newMouseX = mouseX;
+    this.$newMouseY = mouseY;
+
+    this.pointToSphere(mouseX, mouseY, width, height, radius, this.$startVec);
+    quat4.set(this.$currentRot, this.$lastRot);
+
+    addKeyRot[0] = 0;
+    addKeyRot[1] = 0;
   },
 
   /**
