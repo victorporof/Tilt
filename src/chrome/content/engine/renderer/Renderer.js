@@ -63,6 +63,12 @@ Tilt.Renderer = function(canvas, failCallback, successCallback) {
     this.DEPTH_BUFFER_BIT = this.gl.DEPTH_BUFFER_BIT;
     this.STENCIL_BUFFER_BIT = this.gl.STENCIL_BUFFER_BIT;
 
+    this.MAX_TEXTURE_SIZE = 
+      this.gl.getParameter(this.gl.MAX_TEXTURE_SIZE);
+
+    this.MAX_TEXTURE_IMAGE_UNITS =
+      this.gl.getParameter(this.gl.MAX_TEXTURE_IMAGE_UNITS);
+
     // if successful, run a success callback function if available
     if ("function" === typeof successCallback) {
       successCallback();
@@ -100,30 +106,30 @@ Tilt.Renderer = function(canvas, failCallback, successCallback) {
   /**
    * The current clear color used to clear the color buffer bit.
    */
-  this.clearColor = [0, 0, 0, 0];
+  this.$clearColor = [0, 0, 0, 0];
 
   /**
    * The current tint color applied to any objects which can be tinted.
    * These mostly represent images or primitives which are textured.
    */
-  this.tintColor = [0, 0, 0, 0];
+  this.$tintColor = [1, 1, 1, 1];
 
   /**
    * The current fill color applied to any objects which can be filled.
    * These are rectangles, circles, boxes, 2d or 3d primitives in general.
    */
-  this.fillColor = [0, 0, 0, 0];
+  this.$fillColor = [1, 1, 1, 1];
 
   /**
    * The current stroke color applied to any objects which can be stroked.
    * This property mostly refers to lines.
    */
-  this.strokeColor = [0, 0, 0, 0];
+  this.$strokeColor = [0, 0, 0, 1];
 
   /**
    * Variable representing the current stroke weight.
    */
-  this.strokeWeightValue = 0;
+  this.$strokeWeightValue = 1;
 
   /**
    * A shader useful for drawing vertices with only a color component.
@@ -143,21 +149,21 @@ Tilt.Renderer = function(canvas, failCallback, successCallback) {
   /**
    * Vertices buffer representing the corners of a rectangle.
    */
-  this.rectangle = new Tilt.Rectangle();
-  this.rectangleWireframe = new Tilt.RectangleWireframe();
+  this.$rectangle = new Tilt.Rectangle();
+  this.$rectangleWireframe = new Tilt.RectangleWireframe();
 
   /**
    * Vertices buffer representing the corners of a cube.
    */
-  this.cube = new Tilt.Cube();
-  this.cubeWireframe = new Tilt.CubeWireframe();
+  this.$cube = new Tilt.Cube();
+  this.$cubeWireframe = new Tilt.CubeWireframe();
 
   /**
    * Helpers for managing variables like frameCount, frameRate, frameDelta,
    * used internally, in the requestAnimFrame function.
    */
-  this.lastTime = 0;
-  this.currentTime = null;
+  this.$lastTime = 0;
+  this.$currentTime = null;
 
   /**
    * Time passed since initialization.
@@ -184,8 +190,13 @@ Tilt.Renderer = function(canvas, failCallback, successCallback) {
   this.origin();
   this.perspective();
 
-  // set the default tint, fill, stroke and stroke weight
-  this.defaults();
+  // set the default tint, fill, stroke and other visual properties
+  this.tint("#fff");
+  this.fill("#fff");
+  this.stroke("#000");
+  this.strokeWeight(1);
+  this.blendMode("alpha");
+  this.depthTest(false);
 };
 
 Tilt.Renderer.prototype = {
@@ -201,7 +212,7 @@ Tilt.Renderer.prototype = {
    */
   clear: function(r, g, b, a) {
     // cache some variables for easy access
-    var col = this.clearColor,
+    var col = this.$clearColor,
       gl = this.gl;
 
     if (col[0] !== r || col[1] !== g || col[2] !== b || col[3] !== a) {
@@ -273,7 +284,9 @@ Tilt.Renderer.prototype = {
    * Sets a default orthographic projection (recommended for 2d rendering).
    */
   ortho: function() {
-    mat4.ortho(0, this.width, this.height, 0, -1000, 1000, this.projMatrix);
+    var clip = 1000000;
+    mat4.ortho(0, this.width, this.height, 0, -clip, clip, this.projMatrix);
+    mat4.translate(this.projMatrix, [0, 0, -clip + 1]);
   },
 
   /**
@@ -380,30 +393,18 @@ Tilt.Renderer.prototype = {
   },
 
   /**
-   * Sets a default visual style throughout the renderer.
-   */
-  defaults: function() {
-    this.blendMode("alpha");
-    this.depthTest(false);
-    this.tint("#fff");
-    this.fill("#fff");
-    this.stroke("#000");
-    this.strokeWeight(1);    
-  },
-
-  /**
    * Sets the current tint color.
    * @param {String} color: the color, defined in hex or as rgb() or rgba()
    */
   tint: function(color) {
-    this.tintColor = Tilt.Math.hex2rgba(color);
+    this.$tintColor = Tilt.Math.hex2rgba(color);
   },
 
   /**
    * Disables the current tint color value.
    */
   noTint: function() {
-    var tint = this.tintColor;
+    var tint = this.$tintColor;
     tint[0] = 1;
     tint[1] = 1;
     tint[2] = 1;
@@ -415,14 +416,14 @@ Tilt.Renderer.prototype = {
    * @param {String} color: the color, defined in hex or as rgb() or rgba()
    */
   fill: function(color) {
-    this.fillColor = Tilt.Math.hex2rgba(color);
+    this.$fillColor = Tilt.Math.hex2rgba(color);
   },
 
   /**
    * Disables the current fill color value.
    */
   noFill: function() {
-    var fill = this.fillColor;
+    var fill = this.$fillColor;
     fill[0] = 0;
     fill[1] = 0;
     fill[2] = 0;
@@ -434,14 +435,14 @@ Tilt.Renderer.prototype = {
    * @param {String} color: the color, defined in hex or as rgb() or rgba()
    */
   stroke: function(color) {
-    this.strokeColor = Tilt.Math.hex2rgba(color);
+    this.$strokeColor = Tilt.Math.hex2rgba(color);
   },
 
   /**
    * Disables the current stroke color value.
    */
   noStroke: function() {
-    var stroke = this.strokeColor;
+    var stroke = this.$strokeColor;
     stroke[0] = 0;
     stroke[1] = 0;
     stroke[2] = 0;
@@ -453,8 +454,8 @@ Tilt.Renderer.prototype = {
    * @param {Number} weight: the stroke weight
    */
   strokeWeight: function(value) {
-    if (this.strokeWeightValue !== value) {
-      this.strokeWeightValue = value;
+    if (this.$strokeWeightValue !== value) {
+      this.$strokeWeightValue = value;
       this.gl.lineWidth(value);
     }
   },
@@ -547,8 +548,8 @@ Tilt.Renderer.prototype = {
    */
   triangle: function(v0, v1, v2) {
     var vertices = new Tilt.VertexBuffer(v0.concat(v1, v2), 3),
-      fill = this.fillColor,
-      stroke = this.strokeColor;
+      fill = this.$fillColor,
+      stroke = this.$strokeColor;
 
     // draw the outline only if the stroke alpha channel is not transparent
     if (stroke[3]) {
@@ -575,7 +576,7 @@ Tilt.Renderer.prototype = {
    * @param {String} mode: either "corner" or "center"
    */
   rectMode: function(mode) {
-    this.rectangle.rectModeValue = mode;
+    this.$rectangle.rectModeValue = mode;
   },
 
   /**
@@ -587,13 +588,13 @@ Tilt.Renderer.prototype = {
    * @param {Number} height: the height of the object
    */
   rect: function(x, y, width, height) {
-    var rectangle = this.rectangle,
-      wireframe = this.rectangleWireframe,
-      fill = this.fillColor,
-      stroke = this.strokeColor;
+    var rectangle = this.$rectangle,
+      wireframe = this.$rectangleWireframe,
+      fill = this.$fillColor,
+      stroke = this.$strokeColor;
 
     // if rectMode is set to "center", we need to offset the origin
-    if ("center" === this.rectangle.rectModeValue) {
+    if ("center" === this.$rectangle.rectModeValue) {
       x -= width / 2;
       y -= height / 2;
     }
@@ -631,13 +632,13 @@ Tilt.Renderer.prototype = {
    * @param {String} mode: either "corner" or "center"
    */
   imageMode: function(mode) {
-    this.rectangle.imageModeValue = mode;
+    this.$rectangle.imageModeValue = mode;
   },
 
   /**
    * Draws an image using the specified parameters.
    *
-   * @param {Tilt.Textrue} t: the texture to be used
+   * @param {Tilt.Texture} t: the texture to be used
    * @param {Number} x: the x position of the object
    * @param {Number} y: the y position of the object
    * @param {Number} width: the width of the object
@@ -645,9 +646,9 @@ Tilt.Renderer.prototype = {
    * @param {Tilt.VertexBuffer} texCoord: optional, custom texture coordinates
    */
   image: function(t, x, y, width, height, texCoord) {
-    var rectangle = this.rectangle,
-      tint = this.tintColor,
-      stroke = this.strokeColor,
+    var rectangle = this.$rectangle,
+      tint = this.$tintColor,
+      stroke = this.$strokeColor,
       texCoordBuffer = texCoord || rectangle.texCoord;
 
     // if the width and height are not specified, we use the embedded
@@ -688,11 +689,11 @@ Tilt.Renderer.prototype = {
    * @param {Tilt.Texture} texture: the texture to be used
    */
   box: function(width, height, depth, texture) {
-    var cube = this.cube,
-      wireframe = this.cubeWireframe,
-      tint = this.tintColor,
-      fill = this.fillColor,
-      stroke = this.strokeColor;
+    var cube = this.$cube,
+      wireframe = this.$cubeWireframe,
+      tint = this.$tintColor,
+      fill = this.$fillColor,
+      stroke = this.$strokeColor;
 
     // in memory, the box is represented as a simple perfect 1x1 cube, so
     // some transformations are applied to achieve the desired shape
@@ -796,13 +797,13 @@ Tilt.Renderer.prototype = {
     this.perspective();
 
     // calculate the frame delta and frame rate using the current time
-    this.currentTime = new Date().getTime();
+    this.$currentTime = new Date().getTime();
 
-    if (this.lastTime !== 0) {
-      this.frameDelta = this.currentTime - this.lastTime;
+    if (this.$lastTime !== 0) {
+      this.frameDelta = this.$currentTime - this.$lastTime;
       this.frameRate = 1000 / this.frameDelta;
     }
-    this.lastTime = this.currentTime;
+    this.$lastTime = this.$currentTime;
 
     // increment the elapsed time and total frame count
     this.elapsedTime += this.frameDelta;
