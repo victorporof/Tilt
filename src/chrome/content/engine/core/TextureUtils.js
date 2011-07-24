@@ -67,7 +67,7 @@ Tilt.TextureUtils = {
     texture.height = height;
 
     // generate an id for the texture
-    texture.id = ++this.count;
+    texture.id = this.$count++;
 
     // set the required texture params and do some cleanup
     this.setTextureParams(parameters);
@@ -231,5 +231,5 @@ Tilt.TextureUtils = {
   /**
    * The total number of shaders created.
    */
-  count: 0
+  $count: 0
 };

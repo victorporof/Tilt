@@ -129,7 +129,7 @@ Tilt.GLSL = {
     }
 
     // generate an id for the program
-    program.id = ++this.count;
+    program.id = this.$count++;
 
     // create an array of all the attributes, uniforms & words from the shader
     // which will be searched for to automatically cache the shader variables
@@ -236,5 +236,5 @@ Tilt.GLSL = {
   /**
    * The total number of shaders created.
    */
-  count: 0
+  $count: 0
 };
