@@ -2,8 +2,6 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-	<key>currentDocument</key>
-	<string>chrome/content/TiltChromeVisualization.js</string>
 	<key>documents</key>
 	<array>
 		<dict>
@@ -49,36 +47,6 @@
 			<key>firstVisibleLine</key>
 			<integer>0</integer>
 		</dict>
-		<key>chrome/content/TiltChromeController.js</key>
-		<dict>
-			<key>caret</key>
-			<dict>
-				<key>column</key>
-				<integer>0</integer>
-				<key>line</key>
-				<integer>69</integer>
-			</dict>
-			<key>columnSelection</key>
-			<false/>
-			<key>firstVisibleColumn</key>
-			<integer>0</integer>
-			<key>firstVisibleLine</key>
-			<integer>57</integer>
-			<key>selectFrom</key>
-			<dict>
-				<key>column</key>
-				<integer>0</integer>
-				<key>line</key>
-				<integer>68</integer>
-			</dict>
-			<key>selectTo</key>
-			<dict>
-				<key>column</key>
-				<integer>0</integer>
-				<key>line</key>
-				<integer>69</integer>
-			</dict>
-		</dict>
 		<key>chrome/content/TiltChromeUI.js</key>
 		<dict>
 			<key>caret</key>
@@ -86,26 +54,26 @@
 				<key>column</key>
 				<integer>0</integer>
 				<key>line</key>
-				<integer>255</integer>
+				<integer>231</integer>
 			</dict>
 			<key>firstVisibleColumn</key>
 			<integer>0</integer>
 			<key>firstVisibleLine</key>
-			<integer>241</integer>
+			<integer>206</integer>
 		</dict>
 		<key>chrome/content/TiltChromeVisualization.js</key>
 		<dict>
 			<key>caret</key>
 			<dict>
 				<key>column</key>
-				<integer>30</integer>
+				<integer>0</integer>
 				<key>line</key>
-				<integer>142</integer>
+				<integer>146</integer>
 			</dict>
 			<key>firstVisibleColumn</key>
 			<integer>0</integer>
 			<key>firstVisibleLine</key>
-			<integer>122</integer>
+			<integer>113</integer>
 		</dict>
 		<key>chrome/content/browserOverlay.js</key>
 		<dict>
@@ -120,34 +88,6 @@
 			<integer>0</integer>
 			<key>firstVisibleLine</key>
 			<integer>96</integer>
-		</dict>
-		<key>chrome/content/browserOverlay.xul</key>
-		<dict>
-			<key>caret</key>
-			<dict>
-				<key>column</key>
-				<integer>11</integer>
-				<key>line</key>
-				<integer>11</integer>
-			</dict>
-			<key>firstVisibleColumn</key>
-			<integer>0</integer>
-			<key>firstVisibleLine</key>
-			<integer>0</integer>
-		</dict>
-		<key>chrome/content/engine/cameras/Arcball.js</key>
-		<dict>
-			<key>caret</key>
-			<dict>
-				<key>column</key>
-				<integer>0</integer>
-				<key>line</key>
-				<integer>89</integer>
-			</dict>
-			<key>firstVisibleColumn</key>
-			<integer>0</integer>
-			<key>firstVisibleLine</key>
-			<integer>103</integer>
 		</dict>
 		<key>chrome/content/engine/core/Buffer.js</key>
 		<dict>
@@ -191,7 +131,7 @@
 			<key>firstVisibleColumn</key>
 			<integer>0</integer>
 			<key>firstVisibleLine</key>
-			<integer>0</integer>
+			<integer>28</integer>
 		</dict>
 		<key>chrome/content/engine/core/Program.js</key>
 		<dict>
@@ -212,14 +152,14 @@
 			<key>caret</key>
 			<dict>
 				<key>column</key>
-				<integer>23</integer>
+				<integer>0</integer>
 				<key>line</key>
-				<integer>131</integer>
+				<integer>222</integer>
 			</dict>
 			<key>firstVisibleColumn</key>
 			<integer>0</integer>
 			<key>firstVisibleLine</key>
-			<integer>0</integer>
+			<integer>197</integer>
 		</dict>
 		<key>chrome/content/engine/core/Texture.js</key>
 		<dict>
@@ -320,48 +260,6 @@
 				<key>line</key>
 				<integer>41</integer>
 			</dict>
-		</dict>
-		<key>chrome/content/engine/lib/beautify-html.js</key>
-		<dict>
-			<key>caret</key>
-			<dict>
-				<key>column</key>
-				<integer>0</integer>
-				<key>line</key>
-				<integer>0</integer>
-			</dict>
-			<key>firstVisibleColumn</key>
-			<integer>0</integer>
-			<key>firstVisibleLine</key>
-			<integer>0</integer>
-		</dict>
-		<key>chrome/content/engine/lib/beautify.js</key>
-		<dict>
-			<key>caret</key>
-			<dict>
-				<key>column</key>
-				<integer>0</integer>
-				<key>line</key>
-				<integer>0</integer>
-			</dict>
-			<key>firstVisibleColumn</key>
-			<integer>0</integer>
-			<key>firstVisibleLine</key>
-			<integer>0</integer>
-		</dict>
-		<key>chrome/content/engine/lib/glMatrix-0.9.6.js</key>
-		<dict>
-			<key>caret</key>
-			<dict>
-				<key>column</key>
-				<integer>2</integer>
-				<key>line</key>
-				<integer>221</integer>
-			</dict>
-			<key>firstVisibleColumn</key>
-			<integer>0</integer>
-			<key>firstVisibleLine</key>
-			<integer>267</integer>
 		</dict>
 		<key>chrome/content/engine/lib/json.js</key>
 		<dict>
@@ -564,44 +462,9 @@
 			<integer>0</integer>
 		</dict>
 	</dict>
-	<key>openDocuments</key>
-	<array>
-		<string>install.rdf</string>
-		<string>chrome/content/browserOverlay.js</string>
-		<string>chrome/content/TiltChromeVisualization.js</string>
-		<string>chrome/content/engine/core/Cache.js</string>
-		<string>Tilt.komodoproject</string>
-		<string>chrome/content/engine/core/Program.js</string>
-		<string>chrome/content/engine/renderer/RequestAnimFrame.js</string>
-		<string>chrome/content/TiltChromeUI.js</string>
-		<string>chrome/content/engine/utils/Xhr.js</string>
-		<string>chrome/content/engine/lib/json.js</string>
-		<string>chrome/content/engine/gui/controls/Container.js</string>
-		<string>chrome/content/engine/gui/GUI.js</string>
-		<string>chrome/content/engine/renderer/geometry/Cube.js</string>
-		<string>chrome/content/engine/gui/controls/Button.js</string>
-		<string>chrome/content/engine/gui/controls/Sprite.js</string>
-		<string>chrome/content/engine/core/Texture.js</string>
-		<string>chrome/content/engine/core/ProgramUtils.js</string>
-		<string>chrome/content/engine/core/Buffer.js</string>
-		<string>chrome/content/engine/core/TextureUtils.js</string>
-		<string>chrome/content/engine/renderer/Renderer.js</string>
-		<string>chrome/content/engine/utils/WebGL.js</string>
-		<string>chrome/content/engine/renderer/Shaders.js</string>
-		<string>chrome/content/engine/utils/Console.js</string>
-		<string>chrome/content/engine/utils/Document.js</string>
-		<string>chrome/content/engine/utils/Math.js</string>
-		<string>chrome/content/engine/utils/String.js</string>
-		<string>chrome/content/TiltChromeController.js</string>
-		<string>chrome/content/browserOverlay.xul</string>
-		<string>chrome/content/engine/cameras/Arcball.js</string>
-		<string>chrome/content/engine/lib/glMatrix-0.9.6.js</string>
-		<string>chrome/content/engine/lib/beautify.js</string>
-		<string>chrome/content/engine/lib/beautify-html.js</string>
-	</array>
 	<key>showFileHierarchyDrawer</key>
 	<true/>
 	<key>windowFrame</key>
-	<string>{{508, 67}, {792, 811}}</string>
+	<string>{{606, 67}, {716, 811}}</string>
 </dict>
 </plist>
