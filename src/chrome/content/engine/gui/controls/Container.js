@@ -1,5 +1,5 @@
 /*
- * Lightbox.js - A light box composed of a full screen rect and a sprite
+ * Container.js - A container holding various GUI elements
  * version 0.1
  *
  * Copyright (c) 2011 Victor Porof
@@ -26,53 +26,48 @@
 "use strict";
 
 var Tilt = Tilt || {};
-var EXPORTED_SYMBOLS = ["Tilt.Lightbox"];
+var EXPORTED_SYMBOLS = ["Tilt.Container"];
 
 /**
- * Lightbox constructor.
+ * Container constructor.
  *
- * @param {String} color: the background, defined in hex or as rgb() or rgba()
- * @param {Tilt.Sprite} sprite: the sprite to be drawn on top
- * @param {Boolean} hidden: true if the lightbox should initially be hidden
+ * @param {Array} elements: array of GUI elements added to this container
+ * @param {Object} properties: additional properties for this object
  */
-Tilt.Lightbox = function(color, sprite, hidden) {
+Tilt.Container = function(elements, properties) {
 
-  /**
-   * The color of the full screen rectangle.
-   */
-  this.color = color;
+  // make sure the properties parameter is a valid object
+  properties = properties || {};
+  elements = elements || [];
 
   /**
    * A texture used as the pixel data for this object.
    */
-  this.sprite = sprite;
-  
-  /**
-   * Variable specifying if the lightbox should be hidden.
-   */
-  this.hidden = hidden;
+  this.elements = elements instanceof Array ? elements : [elements];
 
   /**
-   * The bounds of this object (used for clicking and intersections).
+   * The color of the full screen rectangle.
    */
-  this.$bounds = [sprite.x, sprite.y, sprite.width, sprite.height];
+  this.background = properties.background || null;
+
+  /**
+   * Variable specifying if this object shouldn't be drawn.
+   */
+  this.hidden = properties.hidden || false;
 };
 
-Tilt.Lightbox.prototype = {
+Tilt.Container.prototype = {
 
   /**
    * Updates this object's internal params.
    */
   update: function() {
-    var sprite = this.sprite,
-      bounds = this.$bounds,
-      sbounds = sprite.$bounds;
+    var elements = this.elements,
+      i, len;
 
-    sprite.update();
-    bounds[0] = sbounds[0];
-    bounds[1] = sbounds[1];
-    bounds[2] = sbounds[2];
-    bounds[3] = sbounds[3];
+    for (i = 0, len = elements.length; i < len; i++) {
+      elements[i].update();
+    }
   },
 
   /**
@@ -82,17 +77,40 @@ Tilt.Lightbox.prototype = {
   draw: function(tilt) {
     tilt = tilt || Tilt.$renderer;
 
-    tilt.fill(this.color);
-    tilt.noStroke();
-    tilt.rect(0, 0, tilt.width, tilt.height);
+    if (this.background !== null) {
+      tilt.fill(this.background);
+      tilt.noStroke();
+      tilt.rect(0, 0, tilt.width, tilt.height);
+    }
 
-    this.sprite.draw(tilt);
+    var elements = this.elements,
+      element, i, len;
+
+    for (i = 0, len = elements.length; i < len; i++) {
+      element = elements[i];
+
+      if (!element.hidden) {
+        element.draw(tilt);
+      }
+    }
   },
 
   /**
    * Destroys this object and deletes all members.
    */
   destroy: function() {
+    for (var e in this.elements) {
+      try {
+        if ("function" === typeof this.elements[e].destroy) {
+          this.elements[e].destroy();
+        }
+      }
+      catch(e) {}
+      finally {
+        delete this.elements[e];
+      }
+    }
+
     for (var i in this) {
       try {
         if ("function" === typeof this[i].destroy) {
