@@ -66,6 +66,128 @@ draw();
 ## Controls
 Controlling the visualization is achieved using a virtual trackball (arcball), which rotates around the X and Y axes. Other mouse events exist to control yaw, pitch, roll, pan, zoom, as well as various additional keyboard shortcuts (arrow keys for translation, wasd for rotation). The controller is not tied to these peripherals only however, making it accessible and easily scalable for other input methods or devices. Double clicking a node brings up the Ace Cloud9 IDE editor, showing more useful information about the node and the inner HTML. <b>Current implementation may change!</b>
 
+## Implement a custom controller
+The controller is initialized in [browserOverlay.js](https://github.com/victorporof/Tilt/blob/master/src/chrome/content/browserOverlay.js) when constructing the visualization:
+
+```
+this.visualization =
+  new TiltChrome.Visualization(this.canvas,
+  new TiltChrome.Controller.MouseAndKeyboard(),
+  new TiltChrome.UI());
+```
+
+The current mouse and keyboard implementation is in [TiltChromeController.js](https://github.com/victorporof/Tilt/blob/master/src/chrome/content/TiltChromeController.js). You can implement your own controller by creating a new object respecting a predefined interface. Each controller should have the `init`, `loop`, `resize` and `destroy` functions, and you can access the public delegate methods in the visualization using `this.visualization.publicMethod`. Generally, you should need to handle only the following events:
+
+* `this.visualization.setTranslation(x, y, z)`
+* `this.visualization.setRotation(quaternion)`
+* `this.visualization.click(x, y)`
+* `this.visualization.doubleClick(x, y)`.
+
+The controller pattern is:
+
+```
+TiltChrome.Controller.MyCustomController = function() {
+
+  /**
+   * Function called automatically by the visualization at the setup().
+   * @param {HTMLCanvasElement} canvas: the canvas element
+   */
+  this.init = function(canvas) {
+    // perform custom initialization, add event listeners...
+  };
+
+  /**
+   * Function called automatically by the visualization each frame in draw().
+   * @param {Number} frameDelta: the delta time elapsed between frames
+   */
+  this.loop = function(frameDelta) {
+    // access the visualization using this.visualization
+    // manipulate the current model view transformation using
+    //  this.visualization.setTranslation(x, y, z) or
+    //  this.visualization.setRotation(quaternion)
+  };
+
+  /**
+   * Delegate method, called when the controller needs to be resized.
+   *
+   * @param width: the new width of the visualization
+   * @param height: the new height of the visualization
+   */
+  this.resize = function(width, height) {
+  };
+
+  /**
+   * Destroys this object and sets all members to null.
+   * @param {HTMLCanvasElement} canvas: the canvas dom element
+   */
+  this.destroy = function(canvas) {
+    // remove any events listeners and do the cleanup
+  };
+};
+```
+
+## Implement a custom GUI
+Just like the controller, the user interface is initialized when constructing the visualization. The current <b>work in progress</b> implementation is in [TiltChromeUI.js](https://github.com/victorporof/Tilt/blob/master/src/chrome/content/TiltChromeUI.js). You can implement your own user interface by creating a new object respecting a predefined interface. 
+
+Each UI should have the `init`, `draw`, `resize` and `destroy` functions. Moreover, you can specify events like `click` or `doubleClick`, handled automatically by the controller.
+
+The GUI pattern is:
+
+```
+TiltChrome.MyCustomUserInterface = function() {
+
+  /**
+   * Function called automatically by the visualization at the setup().
+   * @param {HTMLCanvasElement} canvas: the canvas element
+   */
+  this.init = function(canvas) {
+    // access the visualization using this.visualization
+    // initialize all the GUI components here
+  };
+
+  /**
+   * Called automatically by the visualization after each frame in draw().
+   * @param {Number} frameDelta: the delta time elapsed between frames
+   */
+  this.draw = function(frameDelta) {
+  };
+
+  /**
+   * Delegate click method, handled by the controller.
+   *
+   * @param {Number} x: the current horizontal coordinate
+   * @param {Number} y: the current vertical coordinate
+   */
+  this.click = function(x, y) {
+  };
+
+  /**
+   * Delegate double click method, handled by the controller.
+   *
+   * @param {Number} x: the current horizontal coordinate
+   * @param {Number} y: the current vertical coordinate
+   */
+  this.doubleClick = function(x, y) {
+  };
+
+  /**
+   * Delegate method, called when the user interface needs to be resized.
+   *
+   * @param width: the new width of the visualization
+   * @param height: the new height of the visualization
+   */
+  this.resize = function(width, height) {
+  };
+
+  /**
+   * Destroys this object and sets all members to null.
+   */
+  this.destroy = function(canvas) {
+    // destroy all the GUI components here
+  };
+};
+```
+
 ## Principles
 Before developing this extension, I’ve experimented with various techniques of achieving the desired visualization results and polished user experience, by implementing a few of the required features and asking for feedback from knowledgeable people working in the domain. As a result, some key aspects must be pointed out:
 
