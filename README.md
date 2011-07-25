@@ -22,26 +22,34 @@ If you have any questions, ping anyone on IRC in `#tilt` on [irc.mozilla.org](ir
 ## How to build
 Building is done using the [build script](https://github.com/victorporof/Tilt/blob/master/src/build). There are two parts of the project which can be used: the engine and the extension itself. To build everything and also minify the sources, run the following `./build` command from a terminal:
 
-    ./build all minify
+```
+./build all minify
+```
 
 Alternatively, you can just use the `engine` or `extension` param to build only a part of the project.
 
-    ./build engine
-    ./build extension
+```
+./build engine
+./build extension
+```
 
 You can append the `minify` parameter to minify the sources when building, but this is recommended only when building a final release, as it takes quite a lot of time.
 The compiled files are in the [bin](https://github.com/victorporof/Tilt/tree/master/bin) folder. If the extension was also built, inside [build](https://github.com/victorporof/Tilt/tree/master/bin/build) you can find the unpacked [Tilt.xpi](https://github.com/victorporof/Tilt/raw/master/bin/Tilt.xpi) archive.
 
+Tilt uses the [Google Closure compiler](https://github.com/victorporof/Tilt/tree/master/bin/google-closure) to minify the Javascript files, with the `--compilation_level ADVANCED_OPTIMIZATIONS` flag. Therefore, some [Javascript externs](https://github.com/victorporof/Tilt/blob/master/bin/google-closure/tilt-externs.jsext) must be specified so important variable names are not renamed.
+
 ## How to automatically install
 To install the extension automatically in Firefox with the `make install` or `./build` command, first edit the [makefile](https://github.com/victorporof/Tilt/blob/master/src/Makefile) and change the `profile_dir` to match your profile in Firefox. If you don't do this, installation will fail. Additionally, you may need to have the `tilt@mozilla.com` folder created in the extension profile directory, depending on the OS and Firefox version. After this quick setup (provided you already compiled everything with `./build`), run the following command to install the extension:
 
-    export OSTYPE; make install;
+```
+export OSTYPE; make install;
+```
 
 Or, to automatically compile everything, minify and also install:
 
-    ./build all minify install
-
-Tilt uses the [Google Closure compiler](https://github.com/victorporof/Tilt/tree/master/bin/google-closure) to minify the Javascript files, with the `--compilation_level ADVANCED_OPTIMIZATIONS` flag. Therefore, some [Javascript externs](https://github.com/victorporof/Tilt/blob/master/bin/google-closure/tilt-externs.jsext) must be specified so important variable names are not renamed.
+```
+./build all minify install
+```
 
 ## WebGL engine
 The extension is based on a custom engine (having a syntax similar to [processing.js](https://github.com/jeresig/processing-js), but with specialized features destined for DOM visualizations). Feel free to contribute to the engine in any way! You can find the sources in the [src/chrome/content/engine](https://github.com/victorporof/Tilt/tree/master/src/chrome/content/engine) folder. To use it outside the extension, get the [latest build](https://github.com/victorporof/Tilt/blob/master/bin/Tilt-engine-min.js) (unminified version [here](https://github.com/victorporof/Tilt/blob/master/bin/Tilt-engine.js)), and use it in a plain webpage like this:
