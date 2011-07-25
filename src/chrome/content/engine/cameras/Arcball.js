@@ -158,7 +158,7 @@ Tilt.Arcball.prototype = {
       this.$rotating = true;
 
       // find the sphere coordinates of the mouse positions
-      this.pointToSphere(x, y, width, height, radius, endVec);        
+      this.pointToSphere(x, y, width, height, radius, endVec);
 
       // compute the vector perpendicular to the start & end vectors
       vec3.cross(startVec, endVec, pVec);
@@ -396,10 +396,7 @@ Tilt.Arcball.prototype = {
    * Saves the current arcball state, typically after mouse or resize events.
    */
   $save: function() {
-    var radius = this.$radius,
-      width = this.$width,
-      height = this.$height,
-      x = this.$mousePress[0],
+    var x = this.$mousePress[0],
       y = this.$mousePress[1];
 
     this.$mouseMove[0] = x;
