@@ -75,8 +75,7 @@ TiltChrome.Controller.MouseAndKeyboard = function() {
 
     // update the visualization
     vis.setRotation(coord.rotation);
-    vis.setTranslation(
-      coord.translation[0], coord.translation[1], coord.translation[2]);
+    vis.setTranslation(coord.translation);
   };
 
   /**
@@ -99,10 +98,10 @@ TiltChrome.Controller.MouseAndKeyboard = function() {
     e.preventDefault();
     e.stopPropagation();
 
-    var thisX = e.clientX - e.target.offsetLeft;
-    var thisY = e.clientY - e.target.offsetTop;
+    var releaseX = e.clientX - e.target.offsetLeft;
+    var releaseY = e.clientY - e.target.offsetTop;
 
-    if (Math.abs(pressX - thisX) < 2 && Math.abs(pressY - thisY) < 2) {
+    if (Math.abs(pressX - releaseX) < 2 && Math.abs(pressY - releaseY) < 2) {
       this.visualization.click(mouseX, mouseY);
     }
 
@@ -116,10 +115,10 @@ TiltChrome.Controller.MouseAndKeyboard = function() {
     e.preventDefault();
     e.stopPropagation();
 
-    var thisX = e.clientX - e.target.offsetLeft;
-    var thisY = e.clientY - e.target.offsetTop;
+    var releaseX = e.clientX - e.target.offsetLeft;
+    var releaseY = e.clientY - e.target.offsetTop;
 
-    if (Math.abs(pressX - thisX) < 2 && Math.abs(pressY - thisY) < 2) {
+    if (Math.abs(pressX - releaseX) < 2 && Math.abs(pressY - releaseY) < 2) {
       this.visualization.doubleClick(mouseX, mouseY);
     }
   }.bind(this);
