@@ -44,12 +44,11 @@ Tilt.Arcball = function(width, height, radius) {
   /**
    * Values retaining the current horizontal and vertical mouse coordinates.
    */
-  this.$mouseX = 0;
-  this.$mouseY = 0;
-  this.$firstMouseX = 0;
-  this.$firstMouseY = 0;
-  this.$currentMouseX = 0;
-  this.$currentMouseY = 0;
+  this.$mousePress = [0, 0];
+  this.$mouseRelease = [0, 0];
+  this.$mouseMove = [0, 0];
+  this.$mouseLerp = [0, 0];
+
   this.$mouseButton = -1;
   this.$scrollValue = 0;
 
@@ -114,43 +113,52 @@ Tilt.Arcball.prototype = {
     var radius = this.$radius,
       width = this.$width,
       height = this.$height,
-
-      firstMouseX = this.$firstMouseX,
-      firstMouseY = this.$firstMouseY,
-      currentMouseX = this.$currentMouseX,
-      currentMouseY = this.$currentMouseY,
+      //
+      mousePress = this.$mousePress,
+      mouseRelease = this.$mouseRelease,
+      mouseMove = this.$mouseMove,
+      mouseLerp = this.$mouseLerp,
       mouseButton = this.$mouseButton,
       scrollValue = this.$scrollValue,
-
+      //
       keyCode = this.$keyCode,
       keyCoded = this.$keyCoded,
-
+      //
       startVec = this.$startVec,
       endVec = this.$endVec,
       pVec = this.$pVec,
-
+      //
       lastRot = this.$lastRot,
       deltaRot = this.$deltaRot,
       currentRot = this.$currentRot,
-
+      //
       lastTrans = this.$lastTrans,
       deltaTrans = this.$deltaTrans,
       currentTrans = this.$currentTrans,
-
+      //
       addKeyRot = this.$addKeyRot,
       addKeyTrans = this.$addKeyTrans;
 
     // smoothly update the mouse coordinates
-    this.$mouseX += (currentMouseX - this.$mouseX) * frameDelta;
-    this.$mouseY += (currentMouseY - this.$mouseY) * frameDelta;
+    mouseLerp[0] += (mouseMove[0] - mouseLerp[0]) * frameDelta;
+    mouseLerp[1] += (mouseMove[1] - mouseLerp[1]) * frameDelta;
 
-    // cache the mouse coordinates
-    var mouseX = this.$mouseX, mouseY = this.$mouseY;
+    // cache the interpolated mouse coordinates
+    var x = mouseLerp[0],
+      y = mouseLerp[1];
+
+    if (mouseButton === 3 || x === mouseRelease[0] && y === mouseRelease[1]) {
+      this.$rotating = false;
+    }
 
     // left mouse button handles rotation
-    if (mouseButton === 1) {
+    if (mouseButton === 1 || this.$rotating) {
+      // the rotation doesn't stop immediately after the left mouse button is
+      // released, so add a flag to smoothly continue it until it ends
+      this.$rotating = true;
+
       // find the sphere coordinates of the mouse positions
-      this.pointToSphere(mouseX, mouseY, width, height, radius, endVec);
+      this.pointToSphere(x, y, width, height, radius, endVec);        
 
       // compute the vector perpendicular to the start & end vectors
       vec3.cross(startVec, endVec, pVec);
@@ -181,8 +189,8 @@ Tilt.Arcball.prototype = {
 
     // right mouse button handles panning
     if (mouseButton === 3) {
-      deltaTrans[0] = currentMouseX - firstMouseX;
-      deltaTrans[1] = currentMouseY - firstMouseY;
+      deltaTrans[0] = mouseMove[0] - mousePress[0];
+      deltaTrans[1] = mouseMove[1] - mousePress[1];
 
       currentTrans[0] = lastTrans[0] + deltaTrans[0];
       currentTrans[1] = lastTrans[1] + deltaTrans[1];
@@ -193,49 +201,47 @@ Tilt.Arcball.prototype = {
     }
 
     // mouse wheel handles zooming
-    if (scrollValue !== 0) {
-      deltaTrans[2] = (scrollValue - currentTrans[2]) / 10;
-      currentTrans[2] += deltaTrans[2];
-    }
+    deltaTrans[2] = (scrollValue - currentTrans[2]) / 10;
+    currentTrans[2] += deltaTrans[2];
 
     // handle additional rotation and translation by the keyboard
     if (keyCode[65]) { // w
-      addKeyRot[1] = -frameDelta / 5;
+      addKeyRot[0] -= frameDelta / 5;
     }
     if (keyCode[68]) { // s
-      addKeyRot[1] = frameDelta / 5;
+      addKeyRot[0] += frameDelta / 5;
     }
     if (keyCode[87]) { // a
-      addKeyRot[0] = frameDelta / 5;
+      addKeyRot[1] += frameDelta / 5;
     }
     if (keyCode[83]) { // d
-      addKeyRot[0] = -frameDelta / 5;
+      addKeyRot[1] -= frameDelta / 5;
     }
     if (keyCode[37]) { // left
-      addKeyTrans[0] = frameDelta * 50;
+      addKeyTrans[0] += frameDelta * 50;
     }
     if (keyCode[39]) { // right
-      addKeyTrans[0] = -frameDelta * 50;
+      addKeyTrans[0] -= frameDelta * 50;
     }
     if (keyCode[38]) { // up
-      addKeyTrans[1] = frameDelta * 50;
+      addKeyTrans[1] += frameDelta * 50;
     }
     if (keyCode[40]) { // down
-      addKeyTrans[1] = -frameDelta * 50;
+      addKeyTrans[1] -= frameDelta * 50;
     }
 
     // create an additional rotation based on the key events
-    Tilt.Math.quat4fromEuler(addKeyRot[1], addKeyRot[0], 0, deltaRot);
-    quat4.multiply(currentRot, deltaRot);
+    Tilt.Math.quat4fromEuler(addKeyRot[0], addKeyRot[1], 0, deltaRot);
 
     // create an additional translation based on the key events
-    currentTrans[0] += addKeyTrans[0];
-    currentTrans[1] += addKeyTrans[1];
+    deltaTrans[0] = addKeyTrans[0];
+    deltaTrans[1] = addKeyTrans[1];
+    deltaTrans[2] = 0;
 
     // return the current rotation and translation
     return {
-      rotation: currentRot,
-      translation: currentTrans
+      rotation: quat4.multiply(deltaRot, currentRot),
+      translation: vec3.add(deltaTrans, currentTrans)
     };
   },
 
@@ -248,10 +254,17 @@ Tilt.Arcball.prototype = {
    * @param {Number} button: which mouse button was pressed
    */
   mousePressed: function(x, y, button) {
-    this.$mouseX = x;
-    this.$mouseY = y;
+    this.$mousePress[0] = x;
+    this.$mousePress[1] = y;
     this.$mouseButton = button;
     this.$save();
+
+    var radius = this.$radius,
+      width = this.$width,
+      height = this.$height;
+
+    this.pointToSphere(x, y, width, height, radius, this.$startVec);
+    quat4.set(this.$currentRot, this.$lastRot);
   },
 
   /**
@@ -262,6 +275,8 @@ Tilt.Arcball.prototype = {
    * @param {Number} y: the current vertical coordinate of the mouse
    */
   mouseReleased: function(x, y) {
+    this.$mouseRelease[0] = x;
+    this.$mouseRelease[1] = y;
     this.$mouseButton = -1;
   },
 
@@ -273,8 +288,10 @@ Tilt.Arcball.prototype = {
    * @param {Number} y: the current vertical coordinate of the mouse
    */
   mouseMoved: function(x, y) {
-    this.$currentMouseX = x;
-    this.$currentMouseY = y;
+    if (this.$mouseButton !== -1) {
+      this.$mouseMove[0] = x;
+      this.$mouseMove[1] = y;
+    }
   },
 
   /**
@@ -303,7 +320,7 @@ Tilt.Arcball.prototype = {
    */
   keyPressed: function(code) {
     this.$keyCode[code] = true;
-    
+
     if (code === 17 || code === 224) {
       this.$keyCoded = true;
     }
@@ -317,7 +334,6 @@ Tilt.Arcball.prototype = {
    */
   keyReleased: function(code) {
     this.$keyCode[code] = false;
-    this.$save();
 
     if (code === 17 || code === 224) {
       this.$keyCoded = false;
@@ -383,23 +399,15 @@ Tilt.Arcball.prototype = {
     var radius = this.$radius,
       width = this.$width,
       height = this.$height,
-      mouseX = this.$mouseX,
-      mouseY = this.$mouseY,
-      addKeyRot = this.$addKeyRot,
-      addKeyTrans = this.$addKeyTrans;
+      x = this.$mousePress[0],
+      y = this.$mousePress[1];
 
-    this.$firstMouseX = mouseX;
-    this.$firstMouseY = mouseY;
-    this.$currentMouseX = mouseX;
-    this.$currentMouseY = mouseY;
-
-    this.pointToSphere(mouseX, mouseY, width, height, radius, this.$startVec);
-    quat4.set(this.$currentRot, this.$lastRot);
-
-    addKeyRot[0] = 0;
-    addKeyRot[1] = 0;
-    addKeyTrans[0] = 0;
-    addKeyTrans[1] = 0;
+    this.$mouseMove[0] = x;
+    this.$mouseMove[1] = y;
+    this.$mouseRelease[0] = x;
+    this.$mouseRelease[1] = y;
+    this.$mouseLerp[0] = x;
+    this.$mouseLerp[1] = y;
   },
 
   /**
