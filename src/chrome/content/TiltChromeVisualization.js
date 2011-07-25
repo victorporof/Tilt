@@ -352,19 +352,18 @@ TiltChrome.Visualization = function(canvas, controller, gui) {
 
   /**
    * Delegate translation method, used by the controller.
-   *
-   * @param {Number} x: the new translation on the x axis
-   * @param {Number} y: the new translation on the y axis
-   * @param {Number} z: the new translation on the z axis
+   * @param {Array} translation: the new translation on the [x, y, z] axis
    */
-  this.setTranslation = function(x, y, z) {
+  this.setTranslation = function(translation) {
+    var x = translation[0],
+      y = translation[1],
+      z = translation[2];
+    
     if (transforms.translation[0] != x ||
         transforms.translation[1] != y ||
         transforms.translation[2] != z) {
 
-      transforms.translation[0] = x;
-      transforms.translation[1] = y;
-      transforms.translation[2] = z;
+      vec3.set(translation, transforms.translation);
       redraw = true;
     }
   };
@@ -374,10 +373,15 @@ TiltChrome.Visualization = function(canvas, controller, gui) {
    * @param {Array} quaternion: the rotation quaternion, as [x, y, z, w]
    */
   this.setRotation = function(quaternion) {
-    if (transforms.rotation[0] != quaternion[0] ||
-        transforms.rotation[1] != quaternion[1] ||
-        transforms.rotation[2] != quaternion[2] ||
-        transforms.rotation[3] != quaternion[3]) {
+    var x = quaternion[0],
+      y = quaternion[1],
+      z = quaternion[2],
+      w = quaternion[3];
+
+    if (transforms.rotation[0] != x ||
+        transforms.rotation[1] != y ||
+        transforms.rotation[2] != z ||
+        transforms.rotation[3] != w) {
 
       quat4.set(quaternion, transforms.rotation);
       redraw = true;
