@@ -40,12 +40,10 @@ TiltChrome.Controller.MouseAndKeyboard = function() {
   var arcball = null,
 
   /**
-   * Retain the mouse drag state and position, to manipulate the arcball.
+   * Retain the position for the mousePressed event.
    */
   pressX = 0,
-  pressY = 0,
-  mouseX = 0,
-  mouseY = 0;
+  pressY = 0;
 
   /**
    * Function called automatically by the visualization at the setup().
@@ -88,7 +86,7 @@ TiltChrome.Controller.MouseAndKeyboard = function() {
     pressX = e.clientX - e.target.offsetLeft;
     pressY = e.clientY - e.target.offsetTop;
 
-    arcball.mousePressed(mouseX, mouseY, e.which);
+    arcball.mousePressed(pressX, pressY, e.which);
   }.bind(this);
 
   /**
@@ -102,10 +100,10 @@ TiltChrome.Controller.MouseAndKeyboard = function() {
     var releaseY = e.clientY - e.target.offsetTop;
 
     if (Math.abs(pressX - releaseX) < 2 && Math.abs(pressY - releaseY) < 2) {
-      this.visualization.click(mouseX, mouseY);
+      this.visualization.click(releaseX, releaseY);
     }
 
-    arcball.mouseReleased(mouseX, mouseY);
+    arcball.mouseReleased(releaseX, releaseY);
   }.bind(this);
 
   /**
@@ -119,7 +117,7 @@ TiltChrome.Controller.MouseAndKeyboard = function() {
     var releaseY = e.clientY - e.target.offsetTop;
 
     if (Math.abs(pressX - releaseX) < 2 && Math.abs(pressY - releaseY) < 2) {
-      this.visualization.doubleClick(mouseX, mouseY);
+      this.visualization.doubleClick(releaseX, releaseY);
     }
   }.bind(this);
 
@@ -130,10 +128,10 @@ TiltChrome.Controller.MouseAndKeyboard = function() {
     e.preventDefault();
     e.stopPropagation();
 
-    mouseX = e.clientX - e.target.offsetLeft;
-    mouseY = e.clientY - e.target.offsetTop;
+    var moveX = e.clientX - e.target.offsetLeft;
+    var moveY = e.clientY - e.target.offsetTop;
 
-    arcball.mouseMoved(mouseX, mouseY);
+    arcball.mouseMoved(moveX, moveY);
   }.bind(this);
 
   /**
