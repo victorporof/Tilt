@@ -131,10 +131,10 @@ TiltChrome.Visualization = function(canvas, controller, gui) {
       // calculate the camera matrix using the rotation and translation
       var camera = quat4.toMat4(transforms.rotation);
       camera[12] = transforms.translation[0];
-      camera[13] = transforms.translation[1];
       camera[14] = transforms.translation[2];
 
       tilt.transform(camera);
+      tilt.translate(0, transforms.translation[1], 0);
 
       // draw the visualization mesh
       tilt.depthTest(true);
