@@ -49,6 +49,9 @@ Tilt.Arcball = function(width, height, radius) {
   this.$mouseMove = [0, 0];
   this.$mouseLerp = [0, 0];
 
+  /**
+   * Other mouse flags: current pressed mouse button and the scroll amount.
+   */
   this.$mouseButton = -1;
   this.$scrollValue = 0;
 
