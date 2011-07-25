@@ -46,10 +46,10 @@ Tilt.Arcball = function(width, height, radius) {
    */
   this.$mouseX = 0;
   this.$mouseY = 0;
-  this.$oldMouseX = 0;
-  this.$oldMouseY = 0;
-  this.$newMouseX = 0;
-  this.$newMouseY = 0;
+  this.$firstMouseX = 0;
+  this.$firstMouseY = 0;
+  this.$currentMouseX = 0;
+  this.$currentMouseY = 0;
   this.$mouseButton = -1;
   this.$scrollValue = 0;
 
@@ -78,8 +78,8 @@ Tilt.Arcball = function(width, height, radius) {
   /**
    * The current camera translation coordinates.
    */
-  this.$lastPan = [0, 0];
-  this.$currentPan = [0, 0];
+  this.$lastTrans = vec3.create();
+  this.$deltaTrans = vec3.create();
   this.$currentTrans = vec3.create();
 
   /**
@@ -115,10 +115,10 @@ Tilt.Arcball.prototype = {
       width = this.$width,
       height = this.$height,
 
-      oldMouseX = this.$oldMouseX,
-      oldMouseY = this.$oldMouseY,
-      newMouseX = this.$newMouseX,
-      newMouseY = this.$newMouseY,
+      firstMouseX = this.$firstMouseX,
+      firstMouseY = this.$firstMouseY,
+      currentMouseX = this.$currentMouseX,
+      currentMouseY = this.$currentMouseY,
       mouseButton = this.$mouseButton,
       scrollValue = this.$scrollValue,
 
@@ -133,18 +133,18 @@ Tilt.Arcball.prototype = {
       deltaRot = this.$deltaRot,
       currentRot = this.$currentRot,
 
-      lastPan = this.$lastPan,
-      currentPan = this.$currentPan,
+      lastTrans = this.$lastTrans,
+      deltaTrans = this.$deltaTrans,
       currentTrans = this.$currentTrans,
 
       addKeyRot = this.$addKeyRot,
       addKeyTrans = this.$addKeyTrans;
 
     // smoothly update the mouse coordinates
-    this.$mouseX += (newMouseX - this.$mouseX) * frameDelta;
-    this.$mouseY += (newMouseY - this.$mouseY) * frameDelta;
+    this.$mouseX += (currentMouseX - this.$mouseX) * frameDelta;
+    this.$mouseY += (currentMouseY - this.$mouseY) * frameDelta;
 
-    // cache the new mouse coordinates
+    // cache the mouse coordinates
     var mouseX = this.$mouseX, mouseY = this.$mouseY;
 
     // left mouse button handles rotation
@@ -181,38 +181,47 @@ Tilt.Arcball.prototype = {
 
     // right mouse button handles panning
     if (mouseButton === 3) {
-      currentPan[0] = lastPan[0] + (newMouseX - oldMouseX);
-      currentPan[1] = lastPan[1] + (newMouseY - oldMouseY);
+      deltaTrans[0] = currentMouseX - firstMouseX;
+      deltaTrans[1] = currentMouseY - firstMouseY;
+
+      currentTrans[0] = lastTrans[0] + deltaTrans[0];
+      currentTrans[1] = lastTrans[1] + deltaTrans[1];
     }
     else {
-      lastPan[0] = currentPan[0];
-      lastPan[1] = currentPan[1];
+      lastTrans[0] = currentTrans[0];
+      lastTrans[1] = currentTrans[1];
+    }
+
+    // mouse wheel handles zooming
+    if (scrollValue !== 0) {
+      deltaTrans[2] = (scrollValue - currentTrans[2]) / 10;
+      currentTrans[2] += deltaTrans[2];
     }
 
     // handle additional rotation and translation by the keyboard
     if (keyCode[65]) { // w
-      addKeyRot[1] -= frameDelta / 1000;
+      addKeyRot[1] = -frameDelta / 5;
     }
     if (keyCode[68]) { // s
-      addKeyRot[1] += frameDelta / 1000;
+      addKeyRot[1] = frameDelta / 5;
     }
     if (keyCode[87]) { // a
-      addKeyRot[0] += frameDelta / 1000;
+      addKeyRot[0] = frameDelta / 5;
     }
     if (keyCode[83]) { // d
-      addKeyRot[0] -= frameDelta / 1000;
+      addKeyRot[0] = -frameDelta / 5;
     }
     if (keyCode[37]) { // left
-      addKeyTrans[0] += frameDelta * 50;
+      addKeyTrans[0] = frameDelta * 50;
     }
     if (keyCode[39]) { // right
-      addKeyTrans[0] -= frameDelta * 50;
+      addKeyTrans[0] = -frameDelta * 50;
     }
     if (keyCode[38]) { // up
-      addKeyTrans[1] += frameDelta * 50;
+      addKeyTrans[1] = frameDelta * 50;
     }
     if (keyCode[40]) { // down
-      addKeyTrans[1] -= frameDelta * 50;
+      addKeyTrans[1] = -frameDelta * 50;
     }
 
     // create an additional rotation based on the key events
@@ -220,11 +229,8 @@ Tilt.Arcball.prototype = {
     quat4.multiply(currentRot, deltaRot);
 
     // create an additional translation based on the key events
-    currentTrans[0] = currentPan[0] + addKeyTrans[0];
-    currentTrans[1] = currentPan[1] + addKeyTrans[1];
-
-    // update the zoom based on the mouse scroll
-    currentTrans[2] += (scrollValue - currentTrans[2]) / 10;
+    currentTrans[0] += addKeyTrans[0];
+    currentTrans[1] += addKeyTrans[1];
 
     // return the current rotation and translation
     return {
@@ -267,8 +273,8 @@ Tilt.Arcball.prototype = {
    * @param {Number} y: the current vertical coordinate of the mouse
    */
   mouseMoved: function(x, y) {
-    this.$newMouseX = x;
-    this.$newMouseY = y;
+    this.$currentMouseX = x;
+    this.$currentMouseY = y;
   },
 
   /**
@@ -311,6 +317,7 @@ Tilt.Arcball.prototype = {
    */
   keyReleased: function(code) {
     this.$keyCode[code] = false;
+    this.$save();
 
     if (code === 17 || code === 224) {
       this.$keyCoded = false;
@@ -378,18 +385,21 @@ Tilt.Arcball.prototype = {
       height = this.$height,
       mouseX = this.$mouseX,
       mouseY = this.$mouseY,
-      addKeyRot = this.$addKeyRot;
+      addKeyRot = this.$addKeyRot,
+      addKeyTrans = this.$addKeyTrans;
 
-    this.$oldMouseX = mouseX;
-    this.$oldMouseY = mouseY;
-    this.$newMouseX = mouseX;
-    this.$newMouseY = mouseY;
+    this.$firstMouseX = mouseX;
+    this.$firstMouseY = mouseY;
+    this.$currentMouseX = mouseX;
+    this.$currentMouseY = mouseY;
 
     this.pointToSphere(mouseX, mouseY, width, height, radius, this.$startVec);
     quat4.set(this.$currentRot, this.$lastRot);
 
     addKeyRot[0] = 0;
     addKeyRot[1] = 0;
+    addKeyTrans[0] = 0;
+    addKeyTrans[1] = 0;
   },
 
   /**
