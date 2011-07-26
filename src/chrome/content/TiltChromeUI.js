@@ -183,7 +183,7 @@ TiltChrome.UI = function() {
 
     var handleReset = function() {
       // var id = window.setInterval(function() {
-      //   if (Math.abs(vec3.length(this.controller.translation)) < 0.1 && 
+      //   if (Math.abs(vec3.length(this.controller.translation)) < 0.1 &&
       //       Math.abs(vec3.length(this.controller.rotation)) < 0.1) {
       //     window.clearInterval(id);
       //   }
@@ -201,11 +201,11 @@ TiltChrome.UI = function() {
       // else {
       //   this.zoomAmmount += value;
       // }
-      // 
+      //
       // var id = window.setInterval(function() {
       //   var prev = this.controller.translation[2];
       //   var dist = (this.zoomAmmount - prev) / 20;
-      // 
+      //
       //   if (Math.abs(dist) < 0.01) {
       //     window.clearInterval(id);
       //   }
@@ -223,7 +223,7 @@ TiltChrome.UI = function() {
 
       helpPopup.elements[0].x = helpX;
       helpPopup.elements[0].y = helpY;
-      helpPopup.elements[1] = 
+      helpPopup.elements[1] =
         new Tilt.Button(exitX, exitY, { width: 32, height: 32 }, function() {
           helpPopup.elements[1].destroy();
           helpPopup.elements.pop();
@@ -240,10 +240,10 @@ TiltChrome.UI = function() {
 
     gui.push(
       background,
-      helpPopup, // colorAdjustPopup,
-      /* arcballSprite, resetButton, zoomInButton, zoomOutButton,
+      helpPopup, colorAdjustPopup,
+      arcballSprite, resetButton, zoomInButton, zoomOutButton,
       viewModeNormalButton, colorAdjustButton,
-      eyeButton, optionsButton, exportButton, */ helpButton, exitButton);
+      eyeButton, optionsButton, exportButton,  helpButton, exitButton);
   };
 
   /**
@@ -300,16 +300,26 @@ TiltChrome.UI = function() {
     }
     catch(e) {}
 
-    for (var i in this) {
-      try {
-        if ("function" === typeof this[i].destroy) {
-          this[i].destroy();
-        }
-      }
-      catch(e) {}
-      finally {
-        delete this[i];
-      }
-    }
+    texture = null;
+    background = null;
+
+    helpPopup = null;
+    optionsButton = null;
+    exportButton = null;
+    helpButton = null;
+    exitButton = null;
+
+    arcballSprite = null;
+    eyeButton = null;
+    resetButton = null;
+    zoomInButton = null;
+    zoomOutButton = null;
+
+    viewModeNormalButton = null;
+    viewModeWireframeButton = null;
+    colorAdjustButton = null;
+    colorAdjustPopup = null;
+
+    Tilt.destroyObject(this);
   };
 };
