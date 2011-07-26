@@ -168,7 +168,7 @@ Tilt.Program.prototype = {
       attr = this.$attributes[attribute],
       size = buffer.itemSize;
 
-    gl.bindBuffer(gl.ARRAY_BUFFER, buffer.ref);
+    gl.bindBuffer(gl.ARRAY_BUFFER, buffer.$ref);
     gl.vertexAttribPointer(attr, size, gl.FLOAT, false, 0, 0);
   },
 
@@ -255,15 +255,7 @@ Tilt.Program.prototype = {
    */
   destroy: function() {
     for (var i in this) {
-      try {
-        if ("function" === typeof this[i].destroy) {
-          this[i].destroy();
-        }
-      }
-      catch(e) {}
-      finally {
-        delete this[i];
-      }
+      delete this[i];
     }
   }
 };
