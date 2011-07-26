@@ -122,9 +122,11 @@ TiltChrome.BrowserOverlay = {
         this.visualization = null;
       }
       if (gc) {
-        window.QueryInterface(Ci.nsIInterfaceRequestor)
-          .getInterface(Ci.nsIDOMWindowUtils)
-          .garbageCollect();
+        window.setTimeout(function() {
+          window.QueryInterface(Ci.nsIInterfaceRequestor)
+            .getInterface(Ci.nsIDOMWindowUtils)
+            .garbageCollect();
+        }, 100);
       }
     }
 
@@ -188,6 +190,9 @@ Tilt.Arcball = function(width, height, radius) {
   this.$mouseMove = [0, 0];
   this.$mouseLerp = [0, 0];
 
+  /**
+   * Other mouse flags: current pressed mouse button and the scroll amount.
+   */
   this.$mouseButton = -1;
   this.$scrollValue = 0;
 
@@ -212,7 +217,7 @@ Tilt.Arcball = function(width, height, radius) {
   this.$lastRot = quat4.create([0, 0, 0, 1]);
   this.$deltaRot = quat4.create([0, 0, 0, 1]);
   this.$currentRot = quat4.create([0, 0, 0, 1]);
-  
+
   /**
    * The current camera translation coordinates.
    */
@@ -297,7 +302,7 @@ Tilt.Arcball.prototype = {
       this.$rotating = true;
 
       // find the sphere coordinates of the mouse positions
-      this.pointToSphere(x, y, width, height, radius, endVec);        
+      this.pointToSphere(x, y, width, height, radius, endVec);
 
       // compute the vector perpendicular to the start & end vectors
       vec3.cross(startVec, endVec, pVec);
@@ -535,18 +540,18 @@ Tilt.Arcball.prototype = {
    * Saves the current arcball state, typically after mouse or resize events.
    */
   $save: function() {
-    var radius = this.$radius,
-      width = this.$width,
-      height = this.$height,
-      x = this.$mousePress[0],
-      y = this.$mousePress[1];
+    var x = this.$mousePress[0],
+      y = this.$mousePress[1],
+      mouseMove = this.$mouseMove,
+      mouseRelease = this.$mouseRelease,
+      mouseLerp = this.$mouseLerp;
 
-    this.$mouseMove[0] = x;
-    this.$mouseMove[1] = y;
-    this.$mouseRelease[0] = x;
-    this.$mouseRelease[1] = y;
-    this.$mouseLerp[0] = x;
-    this.$mouseLerp[1] = y;
+    mouseMove[0] = x;
+    mouseMove[1] = y;
+    mouseRelease[0] = x;
+    mouseRelease[1] = y;
+    mouseLerp[0] = x;
+    mouseLerp[1] = y;
   },
 
   /**
@@ -602,7 +607,7 @@ Tilt.VertexBuffer = function(elementsArray, itemSize, numItems) {
   /**
    * The array buffer.
    */
-  this.ref = null;
+  this.$ref = null;
 
   /**
    * Variables defining the internal structure of the buffer.
@@ -620,9 +625,6 @@ Tilt.VertexBuffer = function(elementsArray, itemSize, numItems) {
   if ("undefined" !== typeof elementsArray) {
     this.initBuffer(elementsArray, itemSize, numItems);
   }
-
-  // cleanup
-  elementsArray = null;
 };
 
 Tilt.VertexBuffer.prototype = {
@@ -647,8 +649,8 @@ Tilt.VertexBuffer.prototype = {
       i, len;
 
     // create an array buffer and bind the elements as a Float32Array
-    this.ref = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, this.ref);
+    this.$ref = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, this.$ref);
     gl.bufferData(gl.ARRAY_BUFFER, array, gl.STATIC_DRAW);
 
     // remember some properties, useful when binding the buffer to a shader
@@ -688,7 +690,7 @@ Tilt.IndexBuffer = function(elementsArray, numItems) {
   /**
    * The element array buffer.
    */
-  this.ref = null;
+  this.$ref = null;
 
   /**
    * This is an array-like object.
@@ -706,9 +708,6 @@ Tilt.IndexBuffer = function(elementsArray, numItems) {
   if ("undefined" !== typeof elementsArray) {
     this.initBuffer(elementsArray, numItems);
   }
-
-  // cleanup
-  elementsArray = null;
 };
 
 Tilt.IndexBuffer.prototype = {
@@ -733,8 +732,8 @@ Tilt.IndexBuffer.prototype = {
       i, len;
 
     // create an array buffer and bind the elements as a Uint16Array
-    this.ref = gl.createBuffer();
-    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.ref);
+    this.$ref = gl.createBuffer();
+    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.$ref);
     gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, array, gl.STATIC_DRAW);
 
     // remember some properties, useful when binding the buffer to a shader
@@ -828,10 +827,27 @@ Tilt.clearCache = function() {
   Tilt.$activeShader = -1;
   Tilt.$enabledAttributes = -1;
   Tilt.$loadedTextures = {};
-  
+
   Tilt.GLSL.$count = 0;
   Tilt.TextureUtils.$count = 0;
 };
+
+/**
+ * Destroys an object and deletes all members.
+ */
+Tilt.destroyObject = function(scope) {
+  for (var i in scope) {
+    try {
+      if ("function" === typeof scope[i].destroy) {
+        scope[i].destroy();
+      }
+    }
+    catch(e) {}
+    finally {
+      delete scope[i];
+    }
+  }
+}
 /*
  * Program.js - A wrapper for a GLSL program
  * version 0.1
@@ -1002,7 +1018,7 @@ Tilt.Program.prototype = {
       attr = this.$attributes[attribute],
       size = buffer.itemSize;
 
-    gl.bindBuffer(gl.ARRAY_BUFFER, buffer.ref);
+    gl.bindBuffer(gl.ARRAY_BUFFER, buffer.$ref);
     gl.vertexAttribPointer(attr, size, gl.FLOAT, false, 0, 0);
   },
 
@@ -1089,15 +1105,7 @@ Tilt.Program.prototype = {
    */
   destroy: function() {
     for (var i in this) {
-      try {
-        if ("function" === typeof this[i].destroy) {
-          this[i].destroy();
-        }
-      }
-      catch(e) {}
-      finally {
-        delete this[i];
-      }
+      delete this[i];
     }
   }
 };
@@ -1492,15 +1500,7 @@ Tilt.Texture.prototype = {
    */
   destroy: function() {
     for (var i in this) {
-      try {
-        if ("function" === typeof this[i].destroy) {
-          this[i].destroy();
-        }
-      }
-      catch(e) {}
-      finally {
-        delete this[i];
-      }
+      delete this[i];
     }
   }
 };
@@ -1845,18 +1845,8 @@ Tilt.Button.prototype = {
   /**
    * Destroys this object and deletes all members.
    */
-  destroy: function(canvas) {
-    for (var i in this) {
-      try {
-        if ("function" === typeof this[i].destroy) {
-          this[i].destroy();
-        }
-      }
-      catch(e) {}
-      finally {
-        delete this[i];
-      }
-    }
+  destroy: function() {
+    Tilt.destroyObject(this);
   }
 };
 /*
@@ -1960,29 +1950,11 @@ Tilt.Container.prototype = {
    * Destroys this object and deletes all members.
    */
   destroy: function() {
-    for (var e in this.elements) {
-      try {
-        if ("function" === typeof this.elements[e].destroy) {
-          this.elements[e].destroy();
-        }
-      }
-      catch(e) {}
-      finally {
-        delete this.elements[e];
-      }
+    for (var i in this.elements) {
+      Tilt.destroyObject(elements[i]);
     }
 
-    for (var i in this) {
-      try {
-        if ("function" === typeof this[i].destroy) {
-          this[i].destroy();
-        }
-      }
-      catch(e) {}
-      finally {
-        delete this[i];
-      }
-    }
+    Tilt.destroyObject(this);
   }
 };
 /*
@@ -2127,17 +2099,7 @@ Tilt.Sprite.prototype = {
    * Destroys this object and deletes all members.
    */
   destroy: function() {
-    for (var i in this) {
-      try {
-        if ("function" === typeof this[i].destroy) {
-          this[i].destroy();
-        }
-      }
-      catch(e) {}
-      finally {
-        delete this[i];
-      }
-    }
+    Tilt.destroyObject(this);
   }
 };
 /*
@@ -2243,7 +2205,7 @@ Tilt.GUI.prototype = {
 
       if (element instanceof Tilt.Container) {
         // a container can have one or more elements, verify each one if it is
-        // valid to receive the click event 
+        // valid to receive the click event
         subelements = element.elements;
 
         for (j = 0, len2 = subelements.length; j < len2; j++) {
@@ -2268,7 +2230,7 @@ Tilt.GUI.prototype = {
   },
 
   /**
-   * Checks if a GUI element is valid to receive a click event. If this is the 
+   * Checks if a GUI element is valid to receive a click event. If this is the
    * case, then the onclick function is called when available.
    *
    * @param {Number} x: the current horizontal coordinate of the mouse
@@ -2299,29 +2261,11 @@ Tilt.GUI.prototype = {
    * Destroys this object and deletes all members.
    */
   destroy: function() {
-    for (var e in this.elements) {
-      try {
-        if ("function" === typeof this.elements[e].destroy) {
-          this.elements[e].destroy();
-        }
-      }
-      catch(e) {}
-      finally {
-        delete this.elements[e];
-      }
+    for (var i in this.elements) {
+      Tilt.destroyObject(elements[i]);
     }
 
-    for (var i in this) {
-      try {
-        if ("function" === typeof this[i].destroy) {
-          this[i].destroy();
-        }
-      }
-      catch(e) {}
-      finally {
-        delete this[i];
-      }
-    }
+    Tilt.destroyObject(this);
   }
 };
 /*
@@ -6374,17 +6318,7 @@ Tilt.Cube.prototype = {
    * Destroys this object and deletes all members.
    */
   destroy: function() {
-    for (var i in this) {
-      try {
-        if ("function" === typeof this[i].destroy) {
-          this[i].destroy();
-        }
-      }
-      catch(e) {}
-      finally {
-        delete this[i];
-      }
-    }
+    Tilt.destroyObject(this);
   }
 };
 /*
@@ -6460,17 +6394,7 @@ Tilt.CubeWireframe.prototype = {
    * Destroys this object and deletes all members.
    */
   destroy: function() {
-    for (var i in this) {
-      try {
-        if ("function" === typeof this[i].destroy) {
-          this[i].destroy();
-        }
-      }
-      catch(e) {}
-      finally {
-        delete this[i];
-      }
-    }
+    Tilt.destroyObject(this);
   }
 };
 /*
@@ -6525,17 +6449,7 @@ Tilt.Rectangle.prototype = {
    * Destroys this object and deletes all members.
    */
   destroy: function() {
-    for (var i in this) {
-      try {
-        if ("function" === typeof this[i].destroy) {
-          this[i].destroy();
-        }
-      }
-      catch(e) {}
-      finally {
-        delete this[i];
-      }
-    }
+    Tilt.destroyObject(this);
   }
 };
 /*
@@ -6585,17 +6499,7 @@ Tilt.RectangleWireframe.prototype = {
    * Destroys this object and deletes all members.
    */
   destroy: function() {
-    for (var i in this) {
-      try {
-        if ("function" === typeof this[i].destroy) {
-          this[i].destroy();
-        }
-      }
-      catch(e) {}
-      finally {
-        delete this[i];
-      }
-    }
+    Tilt.destroyObject(this);
   }
 };
 /*
@@ -6710,17 +6614,7 @@ Tilt.Mesh.prototype = {
    * Destroys this object and deletes all members.
    */
   destroy: function() {
-    for (var i in this) {
-      try {
-        if ("function" === typeof this[i].destroy) {
-          this[i].destroy();
-        }
-      }
-      catch(e) {}
-      finally {
-        delete this[i];
-      }
-    }
+    Tilt.destroyObject(this);
   }
 };
 /*
@@ -6788,7 +6682,7 @@ Tilt.Renderer = function(canvas, failCallback, successCallback) {
     this.DEPTH_BUFFER_BIT = this.gl.DEPTH_BUFFER_BIT;
     this.STENCIL_BUFFER_BIT = this.gl.STENCIL_BUFFER_BIT;
 
-    this.MAX_TEXTURE_SIZE = 
+    this.MAX_TEXTURE_SIZE =
       this.gl.getParameter(this.gl.MAX_TEXTURE_SIZE);
 
     this.MAX_TEXTURE_IMAGE_UNITS =
@@ -6952,7 +6846,7 @@ Tilt.Renderer.prototype = {
       b *= 255;
       a *= 255;
       this.canvas.setAttribute("style",
-        "background: rgba(" + r + ", " + g + ", " + b + ", " + a + "); " + 
+        "background: rgba(" + r + ", " + g + ", " + b + ", " + a + "); " +
         "width: 100%; height: 100%;");
     }
 
@@ -6997,7 +6891,7 @@ Tilt.Renderer.prototype = {
       x = w / 2,
       y = h / 2,
       z = y / Math.tan(Tilt.Math.radians(45) / 2),
-      znear = z / 10,
+      znear = z / 2,
       zfar = z * 100,
       aspect = w / h;
 
@@ -7471,7 +7365,7 @@ Tilt.Renderer.prototype = {
   drawIndexedVertices: function(drawMode, indicesBuffer) {
     var gl = this.gl;
 
-    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indicesBuffer.ref);
+    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indicesBuffer.$ref);
     gl.drawElements(drawMode, indicesBuffer.numItems, gl.UNSIGNED_SHORT, 0);
   },
 
@@ -7540,18 +7434,7 @@ Tilt.Renderer.prototype = {
    */
   destroy: function() {
     Tilt.clearCache();
-
-    for (var i in this) {
-      try {
-        if ("function" === typeof this[i].destroy) {
-          this[i].destroy();
-        }
-      }
-      catch(e) {}
-      finally {
-        delete this[i];
-      }
-    }
+    Tilt.destroyObject(this);
   }
 };
 /*
@@ -9047,32 +8930,22 @@ TiltChrome.Controller.MouseAndKeyboard = function() {
     window.removeEventListener("keydown", keyPressed, false);
     window.removeEventListener("keyup", keyReleased, false);
 
-    try {
-      mousePressed = null;
-      mouseReleased = null;
-      mouseDoubleClick = null;
-      mouseMoved = null;
-      mouseOut = null;
-      mouseScroll = null;
-      keyPressed = null;
-      keyReleased = null;
+    mousePressed = null;
+    mouseReleased = null;
+    mouseDoubleClick = null;
+    mouseMoved = null;
+    mouseOut = null;
+    mouseScroll = null;
+    keyPressed = null;
+    keyReleased = null;
 
+    try {
       arcball.destroy();
       arcball = null;
     }
     catch (e) {}
 
-    for (var i in this) {
-      try {
-        if ("function" === typeof this[i].destroy) {
-          this[i].destroy();
-        }
-      }
-      catch(e) {}
-      finally {
-        delete this[i];
-      }
-    }
+    Tilt.destroyObject(this);
   };
 };
 /*
@@ -9260,7 +9133,7 @@ TiltChrome.UI = function() {
 
     var handleReset = function() {
       // var id = window.setInterval(function() {
-      //   if (Math.abs(vec3.length(this.controller.translation)) < 0.1 && 
+      //   if (Math.abs(vec3.length(this.controller.translation)) < 0.1 &&
       //       Math.abs(vec3.length(this.controller.rotation)) < 0.1) {
       //     window.clearInterval(id);
       //   }
@@ -9278,11 +9151,11 @@ TiltChrome.UI = function() {
       // else {
       //   this.zoomAmmount += value;
       // }
-      // 
+      //
       // var id = window.setInterval(function() {
       //   var prev = this.controller.translation[2];
       //   var dist = (this.zoomAmmount - prev) / 20;
-      // 
+      //
       //   if (Math.abs(dist) < 0.01) {
       //     window.clearInterval(id);
       //   }
@@ -9300,7 +9173,7 @@ TiltChrome.UI = function() {
 
       helpPopup.elements[0].x = helpX;
       helpPopup.elements[0].y = helpY;
-      helpPopup.elements[1] = 
+      helpPopup.elements[1] =
         new Tilt.Button(exitX, exitY, { width: 32, height: 32 }, function() {
           helpPopup.elements[1].destroy();
           helpPopup.elements.pop();
@@ -9317,10 +9190,10 @@ TiltChrome.UI = function() {
 
     gui.push(
       background,
-      helpPopup, // colorAdjustPopup,
-      /* arcballSprite, resetButton, zoomInButton, zoomOutButton,
+      helpPopup, colorAdjustPopup,
+      arcballSprite, resetButton, zoomInButton, zoomOutButton,
       viewModeNormalButton, colorAdjustButton,
-      eyeButton, optionsButton, exportButton, */ helpButton, exitButton);
+      eyeButton, optionsButton, exportButton,  helpButton, exitButton);
   };
 
   /**
@@ -9377,17 +9250,27 @@ TiltChrome.UI = function() {
     }
     catch(e) {}
 
-    for (var i in this) {
-      try {
-        if ("function" === typeof this[i].destroy) {
-          this[i].destroy();
-        }
-      }
-      catch(e) {}
-      finally {
-        delete this[i];
-      }
-    }
+    texture = null;
+    background = null;
+
+    helpPopup = null;
+    optionsButton = null;
+    exportButton = null;
+    helpButton = null;
+    exitButton = null;
+
+    arcballSprite = null;
+    eyeButton = null;
+    resetButton = null;
+    zoomInButton = null;
+    zoomOutButton = null;
+
+    viewModeNormalButton = null;
+    viewModeWireframeButton = null;
+    colorAdjustButton = null;
+    colorAdjustPopup = null;
+
+    Tilt.destroyObject(this);
   };
 };
 /*
@@ -9523,10 +9406,10 @@ TiltChrome.Visualization = function(canvas, controller, gui) {
       // calculate the camera matrix using the rotation and translation
       var camera = quat4.toMat4(transforms.rotation);
       camera[12] = transforms.translation[0];
+      camera[13] = transforms.translation[1];
       camera[14] = transforms.translation[2];
 
       tilt.transform(camera);
-      tilt.translate(0, transforms.translation[1], 0);
 
       // draw the visualization mesh
       tilt.depthTest(true);
@@ -9550,7 +9433,7 @@ TiltChrome.Visualization = function(canvas, controller, gui) {
         .garbageCollect();
     }
 
-    // this is because of some weird behavior on Windows, if the visualization 
+    // this is because of some weird behavior on Windows, if the visualization
     // has been started from the application menu, the width and height gets
     // messed up, so we need to update almost immediately after it starts
     if (tilt.frameCount === 10) {
@@ -9580,7 +9463,8 @@ TiltChrome.Visualization = function(canvas, controller, gui) {
    */
   function setupVisualization() {
     // reset the mesh arrays
-    var vertices = [],
+    var zoffset = 0,
+      vertices = [],
       texCoord = [],
       indices = [],
       wireframeIndices = [],
@@ -9604,7 +9488,7 @@ TiltChrome.Visualization = function(canvas, controller, gui) {
         // the entire mesh's pivot is the screen center
         var x = coord.x - tilt.width / 2,
          y = coord.y - tilt.height / 2,
-         z = depth * thickness,
+         z = depth * thickness + zoffset,
          w = coord.width,
          h = coord.height;
 
@@ -9677,6 +9561,8 @@ TiltChrome.Visualization = function(canvas, controller, gui) {
           i + 10, i + 9,  i + 9,  i + 6,  i + 6,  i + 5,  i + 5,  i + 10);
         wireframeIndices.push(
           i + 8,  i + 11, i + 11, i + 4,  i + 4,  i + 7,  i + 7,  i + 8);
+
+        zoffset += 0.01;
       }
     });
 
@@ -9734,7 +9620,7 @@ TiltChrome.Visualization = function(canvas, controller, gui) {
       gui.init(canvas);
     }
   };
-  
+
   /**
    * Delegate method, sending a redraw signal.
    */
@@ -9750,7 +9636,7 @@ TiltChrome.Visualization = function(canvas, controller, gui) {
     var x = translation[0],
       y = translation[1],
       z = translation[2];
-    
+
     if (transforms.translation[0] != x ||
         transforms.translation[1] != y ||
         transforms.translation[2] != z) {
@@ -9886,7 +9772,7 @@ TiltChrome.Visualization = function(canvas, controller, gui) {
 
       // get the content document containing the html editor, and add the html
       editor.innerHTML = html;
-      iframe.contentWindow.onload();
+      iframe.contentWindow.refreshEditor();
     }
 
     redraw = true;
@@ -9917,7 +9803,7 @@ TiltChrome.Visualization = function(canvas, controller, gui) {
       gui.resize(tilt.width, tilt.height);
     }
 
-    // hide the panel with the html editor (to avoid wrong positioning) 
+    // hide the panel with the html editor (to avoid wrong positioning)
     if ("open" === TiltChrome.BrowserOverlay.panel.state) {
       TiltChrome.BrowserOverlay.panel.hidePopup();
     }
@@ -9975,17 +9861,7 @@ TiltChrome.Visualization = function(canvas, controller, gui) {
     }
     catch (e) {}
 
-    for (var i in this) {
-      try {
-        if ("function" === typeof this[i].destroy) {
-          this[i].destroy();
-        }
-      }
-      catch(e) {}
-      finally {
-        delete this[i];
-      }
-    }
+    Tilt.destroyObject(this);
   };
 
   // run the setup and draw functions
