@@ -42,7 +42,7 @@ Tilt.VertexBuffer = function(elementsArray, itemSize, numItems) {
   /**
    * The array buffer.
    */
-  this.ref = null;
+  this.$ref = null;
 
   /**
    * Variables defining the internal structure of the buffer.
@@ -60,9 +60,6 @@ Tilt.VertexBuffer = function(elementsArray, itemSize, numItems) {
   if ("undefined" !== typeof elementsArray) {
     this.initBuffer(elementsArray, itemSize, numItems);
   }
-
-  // cleanup
-  elementsArray = null;
 };
 
 Tilt.VertexBuffer.prototype = {
@@ -87,8 +84,8 @@ Tilt.VertexBuffer.prototype = {
       i, len;
 
     // create an array buffer and bind the elements as a Float32Array
-    this.ref = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, this.ref);
+    this.$ref = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, this.$ref);
     gl.bufferData(gl.ARRAY_BUFFER, array, gl.STATIC_DRAW);
 
     // remember some properties, useful when binding the buffer to a shader
@@ -128,7 +125,7 @@ Tilt.IndexBuffer = function(elementsArray, numItems) {
   /**
    * The element array buffer.
    */
-  this.ref = null;
+  this.$ref = null;
 
   /**
    * This is an array-like object.
@@ -146,9 +143,6 @@ Tilt.IndexBuffer = function(elementsArray, numItems) {
   if ("undefined" !== typeof elementsArray) {
     this.initBuffer(elementsArray, numItems);
   }
-
-  // cleanup
-  elementsArray = null;
 };
 
 Tilt.IndexBuffer.prototype = {
@@ -173,8 +167,8 @@ Tilt.IndexBuffer.prototype = {
       i, len;
 
     // create an array buffer and bind the elements as a Uint16Array
-    this.ref = gl.createBuffer();
-    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.ref);
+    this.$ref = gl.createBuffer();
+    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.$ref);
     gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, array, gl.STATIC_DRAW);
 
     // remember some properties, useful when binding the buffer to a shader
