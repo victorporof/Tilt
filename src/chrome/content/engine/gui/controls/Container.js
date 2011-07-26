@@ -99,28 +99,10 @@ Tilt.Container.prototype = {
    * Destroys this object and deletes all members.
    */
   destroy: function() {
-    for (var e in this.elements) {
-      try {
-        if ("function" === typeof this.elements[e].destroy) {
-          this.elements[e].destroy();
-        }
-      }
-      catch(e) {}
-      finally {
-        delete this.elements[e];
-      }
+    for (var i in this.elements) {
+      Tilt.destroyObject(elements[i]);
     }
 
-    for (var i in this) {
-      try {
-        if ("function" === typeof this[i].destroy) {
-          this[i].destroy();
-        }
-      }
-      catch(e) {}
-      finally {
-        delete this[i];
-      }
-    }
+    Tilt.destroyObject(this);
   }
 };

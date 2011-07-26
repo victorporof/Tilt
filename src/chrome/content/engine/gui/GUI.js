@@ -101,7 +101,7 @@ Tilt.GUI.prototype = {
 
       if (element instanceof Tilt.Container) {
         // a container can have one or more elements, verify each one if it is
-        // valid to receive the click event 
+        // valid to receive the click event
         subelements = element.elements;
 
         for (j = 0, len2 = subelements.length; j < len2; j++) {
@@ -126,7 +126,7 @@ Tilt.GUI.prototype = {
   },
 
   /**
-   * Checks if a GUI element is valid to receive a click event. If this is the 
+   * Checks if a GUI element is valid to receive a click event. If this is the
    * case, then the onclick function is called when available.
    *
    * @param {Number} x: the current horizontal coordinate of the mouse
@@ -157,28 +157,10 @@ Tilt.GUI.prototype = {
    * Destroys this object and deletes all members.
    */
   destroy: function() {
-    for (var e in this.elements) {
-      try {
-        if ("function" === typeof this.elements[e].destroy) {
-          this.elements[e].destroy();
-        }
-      }
-      catch(e) {}
-      finally {
-        delete this.elements[e];
-      }
+    for (var i in this.elements) {
+      Tilt.destroyObject(elements[i]);
     }
 
-    for (var i in this) {
-      try {
-        if ("function" === typeof this[i].destroy) {
-          this[i].destroy();
-        }
-      }
-      catch(e) {}
-      finally {
-        delete this[i];
-      }
-    }
+    Tilt.destroyObject(this);
   }
 };

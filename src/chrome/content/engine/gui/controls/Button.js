@@ -104,17 +104,7 @@ Tilt.Button.prototype = {
   /**
    * Destroys this object and deletes all members.
    */
-  destroy: function(canvas) {
-    for (var i in this) {
-      try {
-        if ("function" === typeof this[i].destroy) {
-          this[i].destroy();
-        }
-      }
-      catch(e) {}
-      finally {
-        delete this[i];
-      }
-    }
+  destroy: function() {
+    Tilt.destroyObject(this);
   }
 };
