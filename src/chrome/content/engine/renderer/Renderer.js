@@ -63,7 +63,7 @@ Tilt.Renderer = function(canvas, failCallback, successCallback) {
     this.DEPTH_BUFFER_BIT = this.gl.DEPTH_BUFFER_BIT;
     this.STENCIL_BUFFER_BIT = this.gl.STENCIL_BUFFER_BIT;
 
-    this.MAX_TEXTURE_SIZE = 
+    this.MAX_TEXTURE_SIZE =
       this.gl.getParameter(this.gl.MAX_TEXTURE_SIZE);
 
     this.MAX_TEXTURE_IMAGE_UNITS =
@@ -227,7 +227,7 @@ Tilt.Renderer.prototype = {
       b *= 255;
       a *= 255;
       this.canvas.setAttribute("style",
-        "background: rgba(" + r + ", " + g + ", " + b + ", " + a + "); " + 
+        "background: rgba(" + r + ", " + g + ", " + b + ", " + a + "); " +
         "width: 100%; height: 100%;");
     }
 
@@ -272,7 +272,7 @@ Tilt.Renderer.prototype = {
       x = w / 2,
       y = h / 2,
       z = y / Math.tan(Tilt.Math.radians(45) / 2),
-      znear = z / 10,
+      znear = z / 2,
       zfar = z * 100,
       aspect = w / h;
 
@@ -746,7 +746,7 @@ Tilt.Renderer.prototype = {
   drawIndexedVertices: function(drawMode, indicesBuffer) {
     var gl = this.gl;
 
-    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indicesBuffer.ref);
+    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indicesBuffer.$ref);
     gl.drawElements(drawMode, indicesBuffer.numItems, gl.UNSIGNED_SHORT, 0);
   },
 
@@ -815,17 +815,6 @@ Tilt.Renderer.prototype = {
    */
   destroy: function() {
     Tilt.clearCache();
-
-    for (var i in this) {
-      try {
-        if ("function" === typeof this[i].destroy) {
-          this[i].destroy();
-        }
-      }
-      catch(e) {}
-      finally {
-        delete this[i];
-      }
-    }
+    Tilt.destroyObject(this);
   }
 };
