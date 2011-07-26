@@ -65,7 +65,24 @@ Tilt.clearCache = function() {
   Tilt.$activeShader = -1;
   Tilt.$enabledAttributes = -1;
   Tilt.$loadedTextures = {};
-  
+
   Tilt.GLSL.$count = 0;
   Tilt.TextureUtils.$count = 0;
 };
+
+/**
+ * Destroys an object and deletes all members.
+ */
+Tilt.destroyObject = function(scope) {
+  for (var i in scope) {
+    try {
+      if ("function" === typeof scope[i].destroy) {
+        scope[i].destroy();
+      }
+    }
+    catch(e) {}
+    finally {
+      delete scope[i];
+    }
+  }
+}
