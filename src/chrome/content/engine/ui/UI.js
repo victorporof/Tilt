@@ -1,5 +1,5 @@
 /*
- * GUI.js - Handler for all the GUI elements
+ * UI.js - Handler for all the user interface elements
  * version 0.1
  *
  * Copyright (c) 2011 Victor Porof
@@ -26,24 +26,24 @@
 "use strict";
 
 var Tilt = Tilt || {};
-var EXPORTED_SYMBOLS = ["Tilt.GUI"];
+var EXPORTED_SYMBOLS = ["Tilt.UI"];
 
 /**
- * GUI constructor.
+ * UI constructor.
  */
-Tilt.GUI = function() {
+Tilt.UI = function() {
 
   /**
-   * All the GUI elements will be added to this list for proper handling.
+   * All the UI elements will be added to this list for proper handling.
    */
   this.elements = [];
 };
 
-Tilt.GUI.prototype = {
+Tilt.UI.prototype = {
 
   /**
-   * Adds a GUI element to the handler stack.
-   * @param {Object} a valid Tilt GUI object (ex: Tilt.Button)
+   * Adds a UI element to the handler stack.
+   * @param {Object} a valid Tilt UI object (ex: Tilt.Button)
    */
   push: function() {
     for (var i = 0, len = arguments.length; i < len; i++) {
@@ -52,8 +52,8 @@ Tilt.GUI.prototype = {
   },
 
   /**
-   * Removes a GUI element from the handler stack.
-   * @param {Object} a valid Tilt GUI object (ex: Tilt.Button)
+   * Removes a UI element from the handler stack.
+   * @param {Object} a valid Tilt UI object (ex: Tilt.Button)
    */
   remove: function() {
     for (var i = 0, len = arguments.length, index = -1; i < len; i++) {
@@ -64,7 +64,7 @@ Tilt.GUI.prototype = {
   },
 
   /**
-   * Draws all the GUI handled elements.
+   * Draws all the handled elements.
    */
   draw: function() {
     var tilt = Tilt.$renderer,
@@ -93,26 +93,7 @@ Tilt.GUI.prototype = {
    * @param {Number} y: the current vertical coordinate of the mouse
    */
   click: function(x, y) {
-    var elements = this.elements,
-      element, subelements, i, j, len, len2;
-
-    for (i = 0, len = elements.length; i < len; i++) {
-      element = elements[i];
-
-      if (element instanceof Tilt.Container) {
-        // a container can have one or more elements, verify each one if it is
-        // valid to receive the click event
-        subelements = element.elements;
-
-        for (j = 0, len2 = subelements.length; j < len2; j++) {
-          this.element$onClick(x, y, subelements[j]);
-        }
-      }
-      else {
-        // normally check if the element is valid to receive a click event
-        this.element$onClick(x, y, element);
-      }
-    }
+    this.ui$handleEvent(x, y, this.element$handleMouseEvent, "click");
   },
 
   /**
@@ -122,19 +103,54 @@ Tilt.GUI.prototype = {
    * @param {Number} y: the current vertical coordinate of the mouse
    */
   doubleClick: function(x, y) {
-    // TODO: implementation
+    this.ui$handleEvent(x, y, this.element$handleMouseEvent, "dblclick");
   },
 
   /**
-   * Checks if a GUI element is valid to receive a click event. If this is the
-   * case, then the onclick function is called when available.
+   * Follows all the elements handled by this object and checks if the element
+   * is valid to receive a custom event, in which case the event is fired.
    *
    * @param {Number} x: the current horizontal coordinate of the mouse
    * @param {Number} y: the current vertical coordinate of the mouse
-   * @param {Object} element: the GUI element to be checked
+   * @param {String} e: the name of the event function
    */
-  element$onClick: function(x, y, element) {
+  ui$handleEvent: function(x, y, handle, e) {
+    var elements = this.elements,
+      element, subelements, i, j, len, len2;
+
+    for (i = 0, len = elements.length; i < len; i++) {
+      element = elements[i];
+
+      // a container can have one or more elements, verify each one if it is
+      // valid to receive the click event
+      if (element instanceof Tilt.Container) {
+        subelements = element.elements;
+
+        for (j = 0, len2 = subelements.length; j < len2; j++) {
+          handle(x, y, subelements[j], "on" + e);
+        }
+      }
+      else {
+        // normally check if the element is valid to receive a click event
+        handle(x, y, element, "on" + e);
+      }
+    }
+  },
+
+  /**
+   * Checks if a UI element is valid to receive an event. If this is the case
+   * then the event function is called when available.
+   *
+   * @param {Number} x: the current horizontal coordinate of the mouse
+   * @param {Number} y: the current vertical coordinate of the mouse
+   * @param {Object} element: the UI element to be checked
+   * @param {String} e: the name of the event function
+   */
+  element$handleMouseEvent: function(x, y, element, e) {
     if ("undefined" === typeof element) {
+      return;
+    }
+    if ("function" !== typeof element[e]) {
       return;
     }
 
@@ -147,9 +163,7 @@ Tilt.GUI.prototype = {
     if (x > boundsX && x < boundsX + boundsWidth &&
         y > boundsY && y < boundsY + boundsHeight) {
 
-      if ("function" === typeof element.onclick) {
-        element.onclick(x, y);
-      }
+      element[e](x, y);
     }
   },
 
