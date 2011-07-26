@@ -122,9 +122,11 @@ TiltChrome.BrowserOverlay = {
         this.visualization = null;
       }
       if (gc) {
-        window.QueryInterface(Ci.nsIInterfaceRequestor)
-          .getInterface(Ci.nsIDOMWindowUtils)
-          .garbageCollect();
+        window.setTimeout(function() {
+          window.QueryInterface(Ci.nsIInterfaceRequestor)
+            .getInterface(Ci.nsIDOMWindowUtils)
+            .garbageCollect();
+        }, 100);
       }
     }
 
