@@ -257,6 +257,8 @@ Tilt.Arcball.prototype = {
    * @param {Number} button: which mouse button was pressed
    */
   mousePressed: function(x, y, button) {
+    this.$clearInterval();
+
     this.$mousePress[0] = x;
     this.$mousePress[1] = y;
     this.$mouseButton = button;
@@ -312,6 +314,7 @@ Tilt.Arcball.prototype = {
    * @param {Number} scroll: the mouse wheel direction and speed
    */
   mouseScroll: function(scroll) {
+    this.$clearInterval();
     this.$scrollValue -= scroll * 10;
   },
 
@@ -322,6 +325,7 @@ Tilt.Arcball.prototype = {
    * @param {Number} code: the code corresponding to the key pressed
    */
   keyPressed: function(code) {
+    this.$clearInterval();
     this.$keyCode[code] = true;
 
     if (code === 17 || code === 224) {
@@ -396,6 +400,90 @@ Tilt.Arcball.prototype = {
   },
 
   /**
+   * Resets the rotation and translation to origin.
+   * @param {Number} factor: the reset interpolation factor between frames
+   */
+  reset: function(factor) {
+    var scrollValue = this.$scrollValue,
+      lastRot = this.$lastRot,
+      deltaRot = this.$deltaRot,
+      currentRot = this.$currentRot,
+      lastTrans = this.$lastTrans,
+      deltaTrans = this.$deltaTrans,
+      currentTrans = this.$currentTrans,
+      addKeyRot = this.$addKeyRot,
+      addKeyTrans = this.$addKeyTrans;
+
+    // if the interpolation is not specified, reset everything immediately
+    if (!factor) {
+      quat4.set([0, 0, 0, 1], lastRot);
+      quat4.set([0, 0, 0, 1], deltaRot);
+      quat4.set([0, 0, 0, 1], currentRot);
+      vec3.set([0, 0, 0], lastTrans);
+      vec3.set([0, 0, 0], deltaTrans);
+      vec3.set([0, 0, 0], currentTrans);
+
+      addKeyRot[0] = 0;
+      addKeyRot[1] = 0;
+      addKeyTrans[0] = 0;
+      addKeyTrans[1] = 0;
+    }
+    else {
+      // create an interval and smoothly reset all the values to identity
+      this.$setInterval(function() {
+        var inverse = quat4.inverse(lastRot);
+
+        // reset the rotation quaternion and translation vector
+        quat4.slerp(lastRot, inverse, 1 - factor);
+        quat4.slerp(deltaRot, inverse, 1 - factor);
+        quat4.slerp(currentRot, inverse, 1 - factor);
+        vec3.scale(lastTrans, factor);
+        vec3.scale(deltaTrans, factor);
+        vec3.scale(currentTrans, factor);
+
+        // reset any additional transforms by the keyboard or mouse
+        addKeyRot[0] *= factor;
+        addKeyRot[1] *= factor;
+        addKeyTrans[0] *= factor;
+        addKeyTrans[1] *= factor;
+        this.$scrollValue *= factor;
+
+        // clear the loop if the all values are very close to zero
+        if (vec3.length(lastRot) < 0.001 &&
+            vec3.length(deltaRot) < 0.001 &&
+            vec3.length(currentRot) < 0.001 &&
+            vec3.length(lastTrans) < 0.01 &&
+            vec3.length(deltaTrans) < 0.01 &&
+            vec3.length(currentTrans) < 0.01 &&
+            vec3.length([addKeyRot[0], addKeyRot[1], scrollValue]) < 0.01 &&
+            vec3.length([addKeyTrans[0], addKeyTrans[1], scrollValue]) < 0.01)
+        {
+          this.$clearInterval();
+        }
+      }.bind(this), 1000 / 60);
+    }
+  },
+
+  /**
+   * Creates a looping interval function.
+   */
+  $setInterval: function(func, time) {
+    if ("undefined" === typeof this.$currentInterval) {
+      this.$currentInterval = window.setInterval(func, time);
+    }
+  },
+
+  /**
+   * Stops the current interval function from looping.
+   */
+  $clearInterval: function() {
+    if ("undefined" !== typeof this.$currentInterval) {
+      window.clearInterval(this.$currentInterval);
+      delete this.$currentInterval;
+    }
+  },
+
+  /**
    * Saves the current arcball state, typically after mouse or resize events.
    */
   $save: function() {
@@ -412,7 +500,7 @@ Tilt.Arcball.prototype = {
     mouseLerp[0] = x;
     mouseLerp[1] = y;
   },
-
+  
   /**
    * Destroys this object and deletes all members.
    */
