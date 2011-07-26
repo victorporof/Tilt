@@ -400,6 +400,14 @@ Tilt.Arcball.prototype = {
   },
 
   /**
+   * Moves the camera forward or backward depending on the passed amount.
+   * @param {Number} amount: the amount of zooming to do
+   */
+  zoom: function(amount) {
+    this.$scrollValue += amount;
+  },
+
+  /**
    * Resets the rotation and translation to origin.
    * @param {Number} factor: the reset interpolation factor between frames
    */
