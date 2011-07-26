@@ -131,10 +131,10 @@ TiltChrome.Visualization = function(canvas, controller, gui) {
       // calculate the camera matrix using the rotation and translation
       var camera = quat4.toMat4(transforms.rotation);
       camera[12] = transforms.translation[0];
+      camera[13] = transforms.translation[1];
       camera[14] = transforms.translation[2];
 
       tilt.transform(camera);
-      tilt.translate(0, transforms.translation[1], 0);
 
       // draw the visualization mesh
       tilt.depthTest(true);
@@ -158,7 +158,7 @@ TiltChrome.Visualization = function(canvas, controller, gui) {
         .garbageCollect();
     }
 
-    // this is because of some weird behavior on Windows, if the visualization 
+    // this is because of some weird behavior on Windows, if the visualization
     // has been started from the application menu, the width and height gets
     // messed up, so we need to update almost immediately after it starts
     if (tilt.frameCount === 10) {
@@ -188,7 +188,8 @@ TiltChrome.Visualization = function(canvas, controller, gui) {
    */
   function setupVisualization() {
     // reset the mesh arrays
-    var vertices = [],
+    var zoffset = 0,
+      vertices = [],
       texCoord = [],
       indices = [],
       wireframeIndices = [],
@@ -212,7 +213,7 @@ TiltChrome.Visualization = function(canvas, controller, gui) {
         // the entire mesh's pivot is the screen center
         var x = coord.x - tilt.width / 2,
          y = coord.y - tilt.height / 2,
-         z = depth * thickness,
+         z = depth * thickness + zoffset,
          w = coord.width,
          h = coord.height;
 
@@ -285,6 +286,8 @@ TiltChrome.Visualization = function(canvas, controller, gui) {
           i + 10, i + 9,  i + 9,  i + 6,  i + 6,  i + 5,  i + 5,  i + 10);
         wireframeIndices.push(
           i + 8,  i + 11, i + 11, i + 4,  i + 4,  i + 7,  i + 7,  i + 8);
+
+        zoffset += 0.01;
       }
     });
 
@@ -342,7 +345,7 @@ TiltChrome.Visualization = function(canvas, controller, gui) {
       gui.init(canvas);
     }
   };
-  
+
   /**
    * Delegate method, sending a redraw signal.
    */
@@ -358,7 +361,7 @@ TiltChrome.Visualization = function(canvas, controller, gui) {
     var x = translation[0],
       y = translation[1],
       z = translation[2];
-    
+
     if (transforms.translation[0] != x ||
         transforms.translation[1] != y ||
         transforms.translation[2] != z) {
@@ -494,7 +497,7 @@ TiltChrome.Visualization = function(canvas, controller, gui) {
 
       // get the content document containing the html editor, and add the html
       editor.innerHTML = html;
-      iframe.contentWindow.onload();
+      iframe.contentWindow.refreshEditor();
     }
 
     redraw = true;
@@ -525,7 +528,7 @@ TiltChrome.Visualization = function(canvas, controller, gui) {
       gui.resize(tilt.width, tilt.height);
     }
 
-    // hide the panel with the html editor (to avoid wrong positioning) 
+    // hide the panel with the html editor (to avoid wrong positioning)
     if ("open" === TiltChrome.BrowserOverlay.panel.state) {
       TiltChrome.BrowserOverlay.panel.hidePopup();
     }
@@ -583,17 +586,7 @@ TiltChrome.Visualization = function(canvas, controller, gui) {
     }
     catch (e) {}
 
-    for (var i in this) {
-      try {
-        if ("function" === typeof this[i].destroy) {
-          this[i].destroy();
-        }
-      }
-      catch(e) {}
-      finally {
-        delete this[i];
-      }
-    }
+    Tilt.destroyObject(this);
   };
 
   // run the setup and draw functions
