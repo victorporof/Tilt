@@ -272,7 +272,7 @@ Tilt.Renderer.prototype = {
       x = w / 2,
       y = h / 2,
       z = y / Math.tan(Tilt.Math.radians(45) / 2),
-      znear = z / 2,
+      znear = z / 10,
       zfar = z * 100,
       aspect = w / h;
 
