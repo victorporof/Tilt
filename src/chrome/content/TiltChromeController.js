@@ -37,20 +37,20 @@ TiltChrome.Controller.MouseAndKeyboard = function() {
   /**
    * Arcball used to control the visualization using the mouse.
    */
-  var arcball = null,
+  this.arcball = null;
 
   /**
    * Retain the position for the mousePressed event.
    */
-  pressX = 0,
-  pressY = 0;
+  var pressX = 0,
+    pressY = 0;
 
   /**
    * Function called automatically by the visualization at the setup().
    * @param {HTMLCanvasElement} canvas: the canvas element
    */
   this.init = function(canvas) {
-    arcball = new Tilt.Arcball(canvas.width, canvas.height);
+    this.arcball = new Tilt.Arcball(canvas.width, canvas.height);
 
     // bind commonly used mouse and keyboard events with the controller
     canvas.addEventListener("mousedown", mousePressed, false);
@@ -69,7 +69,7 @@ TiltChrome.Controller.MouseAndKeyboard = function() {
    */
   this.loop = function(frameDelta) {
     var vis = this.visualization,
-      coord = arcball.loop(frameDelta);
+      coord = this.arcball.loop(frameDelta);
 
     // update the visualization
     vis.setRotation(coord.rotation);
@@ -86,7 +86,7 @@ TiltChrome.Controller.MouseAndKeyboard = function() {
     pressX = e.clientX - e.target.offsetLeft;
     pressY = e.clientY - e.target.offsetTop;
 
-    arcball.mousePressed(pressX, pressY, e.which);
+    this.arcball.mousePressed(pressX, pressY, e.which);
   }.bind(this);
 
   /**
@@ -103,7 +103,7 @@ TiltChrome.Controller.MouseAndKeyboard = function() {
       this.visualization.click(releaseX, releaseY);
     }
 
-    arcball.mouseReleased(releaseX, releaseY);
+    this.arcball.mouseReleased(releaseX, releaseY);
   }.bind(this);
 
   /**
@@ -131,7 +131,7 @@ TiltChrome.Controller.MouseAndKeyboard = function() {
     var moveX = e.clientX - e.target.offsetLeft;
     var moveY = e.clientY - e.target.offsetTop;
 
-    arcball.mouseMoved(moveX, moveY);
+    this.arcball.mouseMoved(moveX, moveY);
   }.bind(this);
 
   /**
@@ -141,7 +141,7 @@ TiltChrome.Controller.MouseAndKeyboard = function() {
     e.preventDefault();
     e.stopPropagation();
 
-    arcball.mouseOut();
+    this.arcball.mouseOut();
   }.bind(this);
 
   /**
@@ -151,7 +151,7 @@ TiltChrome.Controller.MouseAndKeyboard = function() {
     e.preventDefault();
     e.stopPropagation();
 
-    arcball.mouseScroll(e.detail);
+    this.arcball.mouseScroll(e.detail);
   }.bind(this);
 
   /**
@@ -165,7 +165,7 @@ TiltChrome.Controller.MouseAndKeyboard = function() {
       return;
     }
 
-    arcball.keyPressed(code);
+    this.arcball.keyPressed(code);
   }.bind(this);
 
   /**
@@ -185,7 +185,7 @@ TiltChrome.Controller.MouseAndKeyboard = function() {
       }
     }
 
-    arcball.keyReleased(code);
+    this.arcball.keyReleased(code);
   }.bind(this);
 
   /**
@@ -195,7 +195,7 @@ TiltChrome.Controller.MouseAndKeyboard = function() {
    * @param height: the new height of the visualization
    */
   this.resize = function(width, height) {
-    arcball.resize(width, height);
+    this.arcball.resize(width, height);
   };
 
   /**
@@ -222,8 +222,8 @@ TiltChrome.Controller.MouseAndKeyboard = function() {
     keyReleased = null;
 
     try {
-      arcball.destroy();
-      arcball = null;
+      this.arcball.destroy();
+      this.arcball = null;
     }
     catch (e) {}
 
