@@ -76,7 +76,7 @@ Tilt.Arcball = function(width, height, radius) {
   this.$lastRot = quat4.create([0, 0, 0, 1]);
   this.$deltaRot = quat4.create([0, 0, 0, 1]);
   this.$currentRot = quat4.create([0, 0, 0, 1]);
-  
+
   /**
    * The current camera translation coordinates.
    */
@@ -400,14 +400,17 @@ Tilt.Arcball.prototype = {
    */
   $save: function() {
     var x = this.$mousePress[0],
-      y = this.$mousePress[1];
+      y = this.$mousePress[1],
+      mouseMove = this.$mouseMove,
+      mouseRelease = this.$mouseRelease,
+      mouseLerp = this.$mouseLerp;
 
-    this.$mouseMove[0] = x;
-    this.$mouseMove[1] = y;
-    this.$mouseRelease[0] = x;
-    this.$mouseRelease[1] = y;
-    this.$mouseLerp[0] = x;
-    this.$mouseLerp[1] = y;
+    mouseMove[0] = x;
+    mouseMove[1] = y;
+    mouseRelease[0] = x;
+    mouseRelease[1] = y;
+    mouseLerp[0] = x;
+    mouseLerp[1] = y;
   },
 
   /**
