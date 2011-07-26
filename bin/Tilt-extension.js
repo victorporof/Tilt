@@ -398,6 +398,8 @@ Tilt.Arcball.prototype = {
    * @param {Number} button: which mouse button was pressed
    */
   mousePressed: function(x, y, button) {
+    this.$clearInterval();
+
     this.$mousePress[0] = x;
     this.$mousePress[1] = y;
     this.$mouseButton = button;
@@ -453,6 +455,7 @@ Tilt.Arcball.prototype = {
    * @param {Number} scroll: the mouse wheel direction and speed
    */
   mouseScroll: function(scroll) {
+    this.$clearInterval();
     this.$scrollValue -= scroll * 10;
   },
 
@@ -463,6 +466,7 @@ Tilt.Arcball.prototype = {
    * @param {Number} code: the code corresponding to the key pressed
    */
   keyPressed: function(code) {
+    this.$clearInterval();
     this.$keyCode[code] = true;
 
     if (code === 17 || code === 224) {
@@ -537,6 +541,90 @@ Tilt.Arcball.prototype = {
   },
 
   /**
+   * Resets the rotation and translation to origin.
+   * @param {Number} factor: the reset interpolation factor between frames
+   */
+  reset: function(factor) {
+    var scrollValue = this.$scrollValue,
+      lastRot = this.$lastRot,
+      deltaRot = this.$deltaRot,
+      currentRot = this.$currentRot,
+      lastTrans = this.$lastTrans,
+      deltaTrans = this.$deltaTrans,
+      currentTrans = this.$currentTrans,
+      addKeyRot = this.$addKeyRot,
+      addKeyTrans = this.$addKeyTrans;
+
+    // if the interpolation is not specified, reset everything immediately
+    if (!factor) {
+      quat4.set([0, 0, 0, 1], lastRot);
+      quat4.set([0, 0, 0, 1], deltaRot);
+      quat4.set([0, 0, 0, 1], currentRot);
+      vec3.set([0, 0, 0], lastTrans);
+      vec3.set([0, 0, 0], deltaTrans);
+      vec3.set([0, 0, 0], currentTrans);
+
+      addKeyRot[0] = 0;
+      addKeyRot[1] = 0;
+      addKeyTrans[0] = 0;
+      addKeyTrans[1] = 0;
+    }
+    else {
+      // create an interval and smoothly reset all the values to identity
+      this.$setInterval(function() {
+        var inverse = quat4.inverse(lastRot);
+
+        // reset the rotation quaternion and translation vector
+        quat4.slerp(lastRot, inverse, 1 - factor);
+        quat4.slerp(deltaRot, inverse, 1 - factor);
+        quat4.slerp(currentRot, inverse, 1 - factor);
+        vec3.scale(lastTrans, factor);
+        vec3.scale(deltaTrans, factor);
+        vec3.scale(currentTrans, factor);
+
+        // reset any additional transforms by the keyboard or mouse
+        addKeyRot[0] *= factor;
+        addKeyRot[1] *= factor;
+        addKeyTrans[0] *= factor;
+        addKeyTrans[1] *= factor;
+        this.$scrollValue *= factor;
+
+        // clear the loop if the all values are very close to zero
+        if (vec3.length(lastRot) < 0.001 &&
+            vec3.length(deltaRot) < 0.001 &&
+            vec3.length(currentRot) < 0.001 &&
+            vec3.length(lastTrans) < 0.01 &&
+            vec3.length(deltaTrans) < 0.01 &&
+            vec3.length(currentTrans) < 0.01 &&
+            vec3.length([addKeyRot[0], addKeyRot[1], scrollValue]) < 0.01 &&
+            vec3.length([addKeyTrans[0], addKeyTrans[1], scrollValue]) < 0.01)
+        {
+          this.$clearInterval();
+        }
+      }.bind(this), 1000 / 60);
+    }
+  },
+
+  /**
+   * Creates a looping interval function.
+   */
+  $setInterval: function(func, time) {
+    if ("undefined" === typeof this.$currentInterval) {
+      this.$currentInterval = window.setInterval(func, time);
+    }
+  },
+
+  /**
+   * Stops the current interval function from looping.
+   */
+  $clearInterval: function() {
+    if ("undefined" !== typeof this.$currentInterval) {
+      window.clearInterval(this.$currentInterval);
+      delete this.$currentInterval;
+    }
+  },
+
+  /**
    * Saves the current arcball state, typically after mouse or resize events.
    */
   $save: function() {
@@ -553,7 +641,7 @@ Tilt.Arcball.prototype = {
     mouseLerp[0] = x;
     mouseLerp[1] = y;
   },
-
+  
   /**
    * Destroys this object and deletes all members.
    */
@@ -1738,535 +1826,6 @@ Tilt.TextureUtils = {
    * The total number of shaders created.
    */
   $count: 0
-};
-/*
- * Button.js - A simple button
- * version 0.1
- *
- * Copyright (c) 2011 Victor Porof
- *
- * This software is provided 'as-is', without any express or implied
- * warranty. In no event will the authors be held liable for any damages
- * arising from the use of this software.
- *
- * Permission is granted to anyone to use this software for any purpose,
- * including commercial applications, and to alter it and redistribute it
- * freely, subject to the following restrictions:
- *
- *    1. The origin of this software must not be misrepresented; you must not
- *    claim that you wrote the original software. If you use this software
- *    in a product, an acknowledgment in the product documentation would be
- *    appreciated but is not required.
- *
- *    2. Altered source versions must be plainly marked as such, and must not
- *    be misrepresented as being the original software.
- *
- *    3. This notice may not be removed or altered from any source
- *    distribution.
- */
-"use strict";
-
-var Tilt = Tilt || {};
-var EXPORTED_SYMBOLS = ["Tilt.Button"];
-
-/**
- * Button constructor.
- *
- * @param {Number} x: the x position of the object
- * @param {Number} y: the y position of the object
- * @param {Tilt.Sprite} sprite: the sprite to be drawn as background
- * @param {Function} onclick: optional, function to be called when clicked
- * @param {Object} properties: additional properties for this object
- */
-Tilt.Button = function(x, y, sprite, onclick, properties) {
-
-  // make sure the properties parameter is a valid object
-  properties = properties || {};
-
-  /**
-   * The draw coordinates of this object.
-   */
-  this.x = x || 0;
-  this.y = y || 0;
-
-  /**
-   * A sprite used as a background for this object.
-   */
-  this.sprite = sprite || { width: 0, height: 0 };
-
-  /**
-   * Variable specifying if this object shouldn't be drawn.
-   */
-  this.hidden = properties.hidden || false;
-
-  /**
-   * The bounds of this object (used for clicking and intersections).
-   */
-  this.$bounds = [this.x, this.y, this.sprite.width, this.sprite.height];
-
-  // if the onclick closure is specified in the constructor, save it here
-  if ("function" === typeof onclick) {
-    this.onclick = onclick;
-  }
-};
-
-Tilt.Button.prototype = {
-
-  /**
-   * Updates this object's internal params.
-   */
-  update: function() {
-    var sprite = this.sprite,
-      bounds = this.$bounds,
-      x = this.x,
-      y = this.y;
-
-    bounds[0] = x;
-    bounds[1] = y;
-    bounds[2] = sprite.width;
-    bounds[3] = sprite.height;
-
-    sprite.x = x;
-    sprite.y = y;
-  },
-
-  /**
-   * Draws this object using the specified internal params.
-   * @param {Tilt.Renderer} tilt: optional, a reference to a Tilt.Renderer
-   */
-  draw: function(tilt) {
-    tilt = tilt || Tilt.$renderer;
-
-    if ("undefined" !== typeof this.sprite.texture) {
-      this.sprite.draw(tilt);
-    }
-  },
-
-  /**
-   * Destroys this object and deletes all members.
-   */
-  destroy: function() {
-    Tilt.destroyObject(this);
-  }
-};
-/*
- * Container.js - A container holding various GUI elements
- * version 0.1
- *
- * Copyright (c) 2011 Victor Porof
- *
- * This software is provided 'as-is', without any express or implied
- * warranty. In no event will the authors be held liable for any damages
- * arising from the use of this software.
- *
- * Permission is granted to anyone to use this software for any purpose,
- * including commercial applications, and to alter it and redistribute it
- * freely, subject to the following restrictions:
- *
- *    1. The origin of this software must not be misrepresented; you must not
- *    claim that you wrote the original software. If you use this software
- *    in a product, an acknowledgment in the product documentation would be
- *    appreciated but is not required.
- *
- *    2. Altered source versions must be plainly marked as such, and must not
- *    be misrepresented as being the original software.
- *
- *    3. This notice may not be removed or altered from any source
- *    distribution.
- */
-"use strict";
-
-var Tilt = Tilt || {};
-var EXPORTED_SYMBOLS = ["Tilt.Container"];
-
-/**
- * Container constructor.
- *
- * @param {Array} elements: array of GUI elements added to this container
- * @param {Object} properties: additional properties for this object
- */
-Tilt.Container = function(elements, properties) {
-
-  // make sure the properties parameter is a valid object
-  properties = properties || {};
-  elements = elements || [];
-
-  /**
-   * A texture used as the pixel data for this object.
-   */
-  this.elements = elements instanceof Array ? elements : [elements];
-
-  /**
-   * The color of the full screen rectangle.
-   */
-  this.background = properties.background || null;
-
-  /**
-   * Variable specifying if this object shouldn't be drawn.
-   */
-  this.hidden = properties.hidden || false;
-};
-
-Tilt.Container.prototype = {
-
-  /**
-   * Updates this object's internal params.
-   */
-  update: function() {
-    var elements = this.elements,
-      i, len;
-
-    for (i = 0, len = elements.length; i < len; i++) {
-      elements[i].update();
-    }
-  },
-
-  /**
-   * Draws this object using the specified internal params.
-   * @param {Tilt.Renderer} tilt: optional, a reference to a Tilt.Renderer
-   */
-  draw: function(tilt) {
-    tilt = tilt || Tilt.$renderer;
-
-    if (this.background !== null) {
-      tilt.fill(this.background);
-      tilt.noStroke();
-      tilt.rect(0, 0, tilt.width, tilt.height);
-    }
-
-    var elements = this.elements,
-      element, i, len;
-
-    for (i = 0, len = elements.length; i < len; i++) {
-      element = elements[i];
-
-      if (!element.hidden) {
-        element.draw(tilt);
-      }
-    }
-  },
-
-  /**
-   * Destroys this object and deletes all members.
-   */
-  destroy: function() {
-    for (var i in this.elements) {
-      Tilt.destroyObject(elements[i]);
-    }
-
-    Tilt.destroyObject(this);
-  }
-};
-/*
- * Sprite.js - A handy wrapper for a texture
- * version 0.1
- *
- * Copyright (c) 2011 Victor Porof
- *
- * This software is provided 'as-is', without any express or implied
- * warranty. In no event will the authors be held liable for any damages
- * arising from the use of this software.
- *
- * Permission is granted to anyone to use this software for any purpose,
- * including commercial applications, and to alter it and redistribute it
- * freely, subject to the following restrictions:
- *
- *    1. The origin of this software must not be misrepresented; you must not
- *    claim that you wrote the original software. If you use this software
- *    in a product, an acknowledgment in the product documentation would be
- *    appreciated but is not required.
- *
- *    2. Altered source versions must be plainly marked as such, and must not
- *    be misrepresented as being the original software.
- *
- *    3. This notice may not be removed or altered from any source
- *    distribution.
- */
-"use strict";
-
-var Tilt = Tilt || {};
-var EXPORTED_SYMBOLS = ["Tilt.Sprite"];
-
-/**
- * Sprite constructor.
- *
- * @param {Tilt.Texture} texture: the texture to be used
- * @param {Array} region: the sub-texture coordinates as [x, y, width, height]
- * @param {Object} properties: additional properties for this object
- */
-Tilt.Sprite = function(texture, region, properties) {
-
-  // make sure the properties parameter is a valid object
-  properties = properties || {};
-
-  /**
-   * A texture used as the pixel data for this object.
-   */
-  this.texture = texture;
-
-  /**
-   * The sub-texture coordinates array.
-   */
-  this.region = region || [0, 0, texture.width, texture.height];
-
-  /**
-   * The draw coordinates of this object.
-   */
-  this.x = properties.x || 0;
-  this.y = properties.y || 0;
-  this.width = properties.width || this.region[2];
-  this.height = properties.height || this.region[3];
-
-  /**
-   * Variable specifying if this object shouldn't be drawn.
-   */
-  this.hidden = properties.hidden || false;
-
-  /**
-   * Sets if depth testing should be enabled or not for this object.
-   */
-  this.depthTest = properties.depthTest || false;
-
-  /**
-   * The bounds of this object (used for clicking and intersections).
-   */
-  this.$bounds = [this.x, this.y, this.width, this.height];
-
-  /**
-   * Buffer of 2-component texture coordinates (u, v) for the sprite.
-   */
-  this.$texCoord = null;
-};
-
-Tilt.Sprite.prototype = {
-
-  /**
-   * Clears the generated texture coords, which will be regenerated at draw.
-   */
-  update$texCoord: function() {
-    this.$texCoord = null;
-  },
-
-  /**
-   * Updates this object's internal params.
-   */
-  update: function() {
-    var bounds = this.$bounds;
-
-    bounds[0] = this.x;
-    bounds[1] = this.y;
-    bounds[2] = this.width;
-    bounds[3] = this.height;
-  },
-
-  /**
-   * Draws this object using the specified internal params.
-   * @param {Tilt.Renderer} tilt: optional, a reference to a Tilt.Renderer
-   */
-  draw: function(tilt) {
-    tilt = tilt || Tilt.$renderer;
-
-    // cache these variables for easy access
-    var reg = this.region,
-      tex = this.texture,
-      x = this.x,
-      y = this.y,
-      width = this.width,
-      height = this.height;
-
-    // initialize the texture coordinates buffer if it was null
-    if (this.$texCoord === null && this.texture.loaded) {
-
-      // create the texture coordinates representing the sub-texture
-      this.$texCoord = new Tilt.VertexBuffer([
-        (reg[0]         ) / tex.width, (reg[1]         ) / tex.height,
-        (reg[0] + reg[2]) / tex.width, (reg[1]         ) / tex.height,
-        (reg[0]         ) / tex.width, (reg[1] + reg[3]) / tex.height,
-        (reg[0] + reg[2]) / tex.width, (reg[1] + reg[3]) / tex.height], 2);
-    }
-
-    if (this.depthTest) {
-      tilt.depthTest(true);
-      tilt.image(tex, x, y, width, height, this.$texCoord);
-      tilt.depthTest(false);
-    }
-    else {
-      tilt.image(tex, x, y, width, height, this.$texCoord);
-    }
-  },
-
-  /**
-   * Destroys this object and deletes all members.
-   */
-  destroy: function() {
-    Tilt.destroyObject(this);
-  }
-};
-/*
- * GUI.js - Handler for all the GUI elements
- * version 0.1
- *
- * Copyright (c) 2011 Victor Porof
- *
- * This software is provided 'as-is', without any express or implied
- * warranty. In no event will the authors be held liable for any damages
- * arising from the use of this software.
- *
- * Permission is granted to anyone to use this software for any purpose,
- * including commercial applications, and to alter it and redistribute it
- * freely, subject to the following restrictions:
- *
- *    1. The origin of this software must not be misrepresented; you must not
- *    claim that you wrote the original software. If you use this software
- *    in a product, an acknowledgment in the product documentation would be
- *    appreciated but is not required.
- *
- *    2. Altered source versions must be plainly marked as such, and must not
- *    be misrepresented as being the original software.
- *
- *    3. This notice may not be removed or altered from any source
- *    distribution.
- */
-"use strict";
-
-var Tilt = Tilt || {};
-var EXPORTED_SYMBOLS = ["Tilt.GUI"];
-
-/**
- * GUI constructor.
- */
-Tilt.GUI = function() {
-
-  /**
-   * All the GUI elements will be added to this list for proper handling.
-   */
-  this.elements = [];
-};
-
-Tilt.GUI.prototype = {
-
-  /**
-   * Adds a GUI element to the handler stack.
-   * @param {Object} a valid Tilt GUI object (ex: Tilt.Button)
-   */
-  push: function() {
-    for (var i = 0, len = arguments.length; i < len; i++) {
-      this.elements.push(arguments[i]);
-    }
-  },
-
-  /**
-   * Removes a GUI element from the handler stack.
-   * @param {Object} a valid Tilt GUI object (ex: Tilt.Button)
-   */
-  remove: function() {
-    for (var i = 0, len = arguments.length, index = -1; i < len; i++) {
-      if ((index = this.elements.indexOf(arguments[i])) !== -1) {
-        this.elements.splice(index, 1);
-      }
-    }
-  },
-
-  /**
-   * Draws all the GUI handled elements.
-   */
-  draw: function() {
-    var tilt = Tilt.$renderer,
-      elements = this.elements,
-      element, i, len;
-
-    tilt.ortho();
-    tilt.origin();
-    tilt.blendMode("alpha");
-    tilt.depthTest(false);
-
-    for (i = 0, len = elements.length; i < len; i++) {
-      element = elements[i];
-      element.update();
-
-      if (!element.hidden) {
-        element.draw(tilt);
-      }
-    }
-  },
-
-  /**
-   * Delegate click method.
-   *
-   * @param {Number} x: the current horizontal coordinate of the mouse
-   * @param {Number} y: the current vertical coordinate of the mouse
-   */
-  click: function(x, y) {
-    var elements = this.elements,
-      element, subelements, i, j, len, len2;
-
-    for (i = 0, len = elements.length; i < len; i++) {
-      element = elements[i];
-
-      if (element instanceof Tilt.Container) {
-        // a container can have one or more elements, verify each one if it is
-        // valid to receive the click event
-        subelements = element.elements;
-
-        for (j = 0, len2 = subelements.length; j < len2; j++) {
-          this.element$onClick(x, y, subelements[j]);
-        }
-      }
-      else {
-        // normally check if the element is valid to receive a click event
-        this.element$onClick(x, y, element);
-      }
-    }
-  },
-
-  /**
-   * Delegate double click method.
-   *
-   * @param {Number} x: the current horizontal coordinate of the mouse
-   * @param {Number} y: the current vertical coordinate of the mouse
-   */
-  doubleClick: function(x, y) {
-    // TODO: implementation
-  },
-
-  /**
-   * Checks if a GUI element is valid to receive a click event. If this is the
-   * case, then the onclick function is called when available.
-   *
-   * @param {Number} x: the current horizontal coordinate of the mouse
-   * @param {Number} y: the current vertical coordinate of the mouse
-   * @param {Object} element: the GUI element to be checked
-   */
-  element$onClick: function(x, y, element) {
-    if ("undefined" === typeof element) {
-      return;
-    }
-
-    var bounds = element.$bounds || [-1, -1, -1, -1],
-      boundsX = bounds[0],
-      boundsY = bounds[1],
-      boundsWidth = bounds[2],
-      boundsHeight = bounds[3];
-
-    if (x > boundsX && x < boundsX + boundsWidth &&
-        y > boundsY && y < boundsY + boundsHeight) {
-
-      if ("function" === typeof element.onclick) {
-        element.onclick(x, y);
-      }
-    }
-  },
-
-  /**
-   * Destroys this object and deletes all members.
-   */
-  destroy: function() {
-    for (var i in this.elements) {
-      Tilt.destroyObject(elements[i]);
-    }
-
-    Tilt.destroyObject(this);
-  }
 };
 /*
 
@@ -6891,7 +6450,7 @@ Tilt.Renderer.prototype = {
       x = w / 2,
       y = h / 2,
       z = y / Math.tan(Tilt.Math.radians(45) / 2),
-      znear = z / 2,
+      znear = z / 10,
       zfar = z * 100,
       aspect = w / h;
 
@@ -7590,6 +7149,549 @@ Tilt.Shaders.Texture = {
 "  gl_FragColor = color * tex;",
 "}"
 ].join("\n")
+};
+/*
+ * Button.js - A simple button
+ * version 0.1
+ *
+ * Copyright (c) 2011 Victor Porof
+ *
+ * This software is provided 'as-is', without any express or implied
+ * warranty. In no event will the authors be held liable for any damages
+ * arising from the use of this software.
+ *
+ * Permission is granted to anyone to use this software for any purpose,
+ * including commercial applications, and to alter it and redistribute it
+ * freely, subject to the following restrictions:
+ *
+ *    1. The origin of this software must not be misrepresented; you must not
+ *    claim that you wrote the original software. If you use this software
+ *    in a product, an acknowledgment in the product documentation would be
+ *    appreciated but is not required.
+ *
+ *    2. Altered source versions must be plainly marked as such, and must not
+ *    be misrepresented as being the original software.
+ *
+ *    3. This notice may not be removed or altered from any source
+ *    distribution.
+ */
+"use strict";
+
+var Tilt = Tilt || {};
+var EXPORTED_SYMBOLS = ["Tilt.Button"];
+
+/**
+ * Button constructor.
+ *
+ * @param {Number} x: the x position of the object
+ * @param {Number} y: the y position of the object
+ * @param {Tilt.Sprite} sprite: the sprite to be drawn as background
+ * @param {Function} onclick: optional, function to be called when clicked
+ * @param {Object} properties: additional properties for this object
+ */
+Tilt.Button = function(x, y, sprite, onclick, properties) {
+
+  // make sure the properties parameter is a valid object
+  properties = properties || {};
+
+  /**
+   * The draw coordinates of this object.
+   */
+  this.x = x || 0;
+  this.y = y || 0;
+
+  /**
+   * A sprite used as a background for this object.
+   */
+  this.sprite = sprite || { width: 0, height: 0 };
+
+  /**
+   * Variable specifying if this object shouldn't be drawn.
+   */
+  this.hidden = properties.hidden || false;
+
+  /**
+   * The bounds of this object (used for clicking and intersections).
+   */
+  this.$bounds = [this.x, this.y, this.sprite.width, this.sprite.height];
+
+  // if the onclick closure is specified in the constructor, save it here
+  if ("function" === typeof onclick) {
+    this.onclick = onclick;
+  }
+};
+
+Tilt.Button.prototype = {
+
+  /**
+   * Updates this object's internal params.
+   */
+  update: function() {
+    var sprite = this.sprite,
+      bounds = this.$bounds,
+      x = this.x,
+      y = this.y;
+
+    bounds[0] = x;
+    bounds[1] = y;
+    bounds[2] = sprite.width;
+    bounds[3] = sprite.height;
+
+    sprite.x = x;
+    sprite.y = y;
+  },
+
+  /**
+   * Draws this object using the specified internal params.
+   * @param {Tilt.Renderer} tilt: optional, a reference to a Tilt.Renderer
+   */
+  draw: function(tilt) {
+    tilt = tilt || Tilt.$renderer;
+
+    if ("undefined" !== typeof this.sprite.texture) {
+      this.sprite.draw(tilt);
+    }
+  },
+
+  /**
+   * Destroys this object and deletes all members.
+   */
+  destroy: function() {
+    Tilt.destroyObject(this);
+  }
+};
+/*
+ * Container.js - A container holding various GUI elements
+ * version 0.1
+ *
+ * Copyright (c) 2011 Victor Porof
+ *
+ * This software is provided 'as-is', without any express or implied
+ * warranty. In no event will the authors be held liable for any damages
+ * arising from the use of this software.
+ *
+ * Permission is granted to anyone to use this software for any purpose,
+ * including commercial applications, and to alter it and redistribute it
+ * freely, subject to the following restrictions:
+ *
+ *    1. The origin of this software must not be misrepresented; you must not
+ *    claim that you wrote the original software. If you use this software
+ *    in a product, an acknowledgment in the product documentation would be
+ *    appreciated but is not required.
+ *
+ *    2. Altered source versions must be plainly marked as such, and must not
+ *    be misrepresented as being the original software.
+ *
+ *    3. This notice may not be removed or altered from any source
+ *    distribution.
+ */
+"use strict";
+
+var Tilt = Tilt || {};
+var EXPORTED_SYMBOLS = ["Tilt.Container"];
+
+/**
+ * Container constructor.
+ *
+ * @param {Array} elements: array of GUI elements added to this container
+ * @param {Object} properties: additional properties for this object
+ */
+Tilt.Container = function(elements, properties) {
+
+  // make sure the properties parameter is a valid object
+  properties = properties || {};
+  elements = elements || [];
+
+  /**
+   * A texture used as the pixel data for this object.
+   */
+  this.elements = elements instanceof Array ? elements : [elements];
+
+  /**
+   * The color of the full screen rectangle.
+   */
+  this.background = properties.background || null;
+
+  /**
+   * Variable specifying if this object shouldn't be drawn.
+   */
+  this.hidden = properties.hidden || false;
+};
+
+Tilt.Container.prototype = {
+
+  /**
+   * Updates this object's internal params.
+   */
+  update: function() {
+    var elements = this.elements,
+      i, len;
+
+    for (i = 0, len = elements.length; i < len; i++) {
+      elements[i].update();
+    }
+  },
+
+  /**
+   * Draws this object using the specified internal params.
+   * @param {Tilt.Renderer} tilt: optional, a reference to a Tilt.Renderer
+   */
+  draw: function(tilt) {
+    tilt = tilt || Tilt.$renderer;
+
+    if (this.background !== null) {
+      tilt.fill(this.background);
+      tilt.noStroke();
+      tilt.rect(0, 0, tilt.width, tilt.height);
+    }
+
+    var elements = this.elements,
+      element, i, len;
+
+    for (i = 0, len = elements.length; i < len; i++) {
+      element = elements[i];
+
+      if (!element.hidden) {
+        element.draw(tilt);
+      }
+    }
+  },
+
+  /**
+   * Destroys this object and deletes all members.
+   */
+  destroy: function() {
+    for (var i in this.elements) {
+      Tilt.destroyObject(elements[i]);
+    }
+
+    Tilt.destroyObject(this);
+  }
+};
+/*
+ * Sprite.js - A handy wrapper for a texture
+ * version 0.1
+ *
+ * Copyright (c) 2011 Victor Porof
+ *
+ * This software is provided 'as-is', without any express or implied
+ * warranty. In no event will the authors be held liable for any damages
+ * arising from the use of this software.
+ *
+ * Permission is granted to anyone to use this software for any purpose,
+ * including commercial applications, and to alter it and redistribute it
+ * freely, subject to the following restrictions:
+ *
+ *    1. The origin of this software must not be misrepresented; you must not
+ *    claim that you wrote the original software. If you use this software
+ *    in a product, an acknowledgment in the product documentation would be
+ *    appreciated but is not required.
+ *
+ *    2. Altered source versions must be plainly marked as such, and must not
+ *    be misrepresented as being the original software.
+ *
+ *    3. This notice may not be removed or altered from any source
+ *    distribution.
+ */
+"use strict";
+
+var Tilt = Tilt || {};
+var EXPORTED_SYMBOLS = ["Tilt.Sprite"];
+
+/**
+ * Sprite constructor.
+ *
+ * @param {Tilt.Texture} texture: the texture to be used
+ * @param {Array} region: the sub-texture coordinates as [x, y, width, height]
+ * @param {Object} properties: additional properties for this object
+ */
+Tilt.Sprite = function(texture, region, properties) {
+
+  // make sure the properties parameter is a valid object
+  properties = properties || {};
+
+  /**
+   * A texture used as the pixel data for this object.
+   */
+  this.texture = texture;
+
+  /**
+   * The sub-texture coordinates array.
+   */
+  this.region = region || [0, 0, texture.width, texture.height];
+
+  /**
+   * The draw coordinates of this object.
+   */
+  this.x = properties.x || 0;
+  this.y = properties.y || 0;
+  this.width = properties.width || this.region[2];
+  this.height = properties.height || this.region[3];
+
+  /**
+   * Variable specifying if this object shouldn't be drawn.
+   */
+  this.hidden = properties.hidden || false;
+
+  /**
+   * Sets if depth testing should be enabled or not for this object.
+   */
+  this.depthTest = properties.depthTest || false;
+
+  /**
+   * The bounds of this object (used for clicking and intersections).
+   */
+  this.$bounds = [this.x, this.y, this.width, this.height];
+
+  /**
+   * Buffer of 2-component texture coordinates (u, v) for the sprite.
+   */
+  this.$texCoord = null;
+};
+
+Tilt.Sprite.prototype = {
+
+  /**
+   * Clears the generated texture coords, which will be regenerated at draw.
+   */
+  update$texCoord: function() {
+    this.$texCoord = null;
+  },
+
+  /**
+   * Updates this object's internal params.
+   */
+  update: function() {
+    var bounds = this.$bounds;
+
+    bounds[0] = this.x;
+    bounds[1] = this.y;
+    bounds[2] = this.width;
+    bounds[3] = this.height;
+  },
+
+  /**
+   * Draws this object using the specified internal params.
+   * @param {Tilt.Renderer} tilt: optional, a reference to a Tilt.Renderer
+   */
+  draw: function(tilt) {
+    tilt = tilt || Tilt.$renderer;
+
+    // cache these variables for easy access
+    var reg = this.region,
+      tex = this.texture,
+      x = this.x,
+      y = this.y,
+      width = this.width,
+      height = this.height;
+
+    // initialize the texture coordinates buffer if it was null
+    if (this.$texCoord === null && this.texture.loaded) {
+
+      // create the texture coordinates representing the sub-texture
+      this.$texCoord = new Tilt.VertexBuffer([
+        (reg[0]         ) / tex.width, (reg[1]         ) / tex.height,
+        (reg[0] + reg[2]) / tex.width, (reg[1]         ) / tex.height,
+        (reg[0]         ) / tex.width, (reg[1] + reg[3]) / tex.height,
+        (reg[0] + reg[2]) / tex.width, (reg[1] + reg[3]) / tex.height], 2);
+    }
+
+    if (this.depthTest) {
+      tilt.depthTest(true);
+      tilt.image(tex, x, y, width, height, this.$texCoord);
+      tilt.depthTest(false);
+    }
+    else {
+      tilt.image(tex, x, y, width, height, this.$texCoord);
+    }
+  },
+
+  /**
+   * Destroys this object and deletes all members.
+   */
+  destroy: function() {
+    Tilt.destroyObject(this);
+  }
+};
+/*
+ * UI.js - Handler for all the user interface elements
+ * version 0.1
+ *
+ * Copyright (c) 2011 Victor Porof
+ *
+ * This software is provided 'as-is', without any express or implied
+ * warranty. In no event will the authors be held liable for any damages
+ * arising from the use of this software.
+ *
+ * Permission is granted to anyone to use this software for any purpose,
+ * including commercial applications, and to alter it and redistribute it
+ * freely, subject to the following restrictions:
+ *
+ *    1. The origin of this software must not be misrepresented; you must not
+ *    claim that you wrote the original software. If you use this software
+ *    in a product, an acknowledgment in the product documentation would be
+ *    appreciated but is not required.
+ *
+ *    2. Altered source versions must be plainly marked as such, and must not
+ *    be misrepresented as being the original software.
+ *
+ *    3. This notice may not be removed or altered from any source
+ *    distribution.
+ */
+"use strict";
+
+var Tilt = Tilt || {};
+var EXPORTED_SYMBOLS = ["Tilt.UI"];
+
+/**
+ * UI constructor.
+ */
+Tilt.UI = function() {
+
+  /**
+   * All the UI elements will be added to this list for proper handling.
+   */
+  this.elements = [];
+};
+
+Tilt.UI.prototype = {
+
+  /**
+   * Adds a UI element to the handler stack.
+   * @param {Object} a valid Tilt UI object (ex: Tilt.Button)
+   */
+  push: function() {
+    for (var i = 0, len = arguments.length; i < len; i++) {
+      this.elements.push(arguments[i]);
+    }
+  },
+
+  /**
+   * Removes a UI element from the handler stack.
+   * @param {Object} a valid Tilt UI object (ex: Tilt.Button)
+   */
+  remove: function() {
+    for (var i = 0, len = arguments.length, index = -1; i < len; i++) {
+      if ((index = this.elements.indexOf(arguments[i])) !== -1) {
+        this.elements.splice(index, 1);
+      }
+    }
+  },
+
+  /**
+   * Draws all the handled elements.
+   */
+  draw: function() {
+    var tilt = Tilt.$renderer,
+      elements = this.elements,
+      element, i, len;
+
+    tilt.ortho();
+    tilt.origin();
+    tilt.blendMode("alpha");
+    tilt.depthTest(false);
+
+    for (i = 0, len = elements.length; i < len; i++) {
+      element = elements[i];
+      element.update();
+
+      if (!element.hidden) {
+        element.draw(tilt);
+      }
+    }
+  },
+
+  /**
+   * Delegate click method.
+   *
+   * @param {Number} x: the current horizontal coordinate of the mouse
+   * @param {Number} y: the current vertical coordinate of the mouse
+   */
+  click: function(x, y) {
+    this.ui$handleEvent(x, y, this.element$handleMouseEvent, "click");
+  },
+
+  /**
+   * Delegate double click method.
+   *
+   * @param {Number} x: the current horizontal coordinate of the mouse
+   * @param {Number} y: the current vertical coordinate of the mouse
+   */
+  doubleClick: function(x, y) {
+    this.ui$handleEvent(x, y, this.element$handleMouseEvent, "dblclick");
+  },
+
+  /**
+   * Follows all the elements handled by this object and checks if the element
+   * is valid to receive a custom event, in which case the event is fired.
+   *
+   * @param {Number} x: the current horizontal coordinate of the mouse
+   * @param {Number} y: the current vertical coordinate of the mouse
+   * @param {String} e: the name of the event function
+   */
+  ui$handleEvent: function(x, y, handle, e) {
+    var elements = this.elements,
+      element, subelements, i, j, len, len2;
+
+    for (i = 0, len = elements.length; i < len; i++) {
+      element = elements[i];
+
+      // a container can have one or more elements, verify each one if it is
+      // valid to receive the click event
+      if (element instanceof Tilt.Container) {
+        subelements = element.elements;
+
+        for (j = 0, len2 = subelements.length; j < len2; j++) {
+          handle(x, y, subelements[j], "on" + e);
+        }
+      }
+      else {
+        // normally check if the element is valid to receive a click event
+        handle(x, y, element, "on" + e);
+      }
+    }
+  },
+
+  /**
+   * Checks if a UI element is valid to receive an event. If this is the case
+   * then the event function is called when available.
+   *
+   * @param {Number} x: the current horizontal coordinate of the mouse
+   * @param {Number} y: the current vertical coordinate of the mouse
+   * @param {Object} element: the UI element to be checked
+   * @param {String} e: the name of the event function
+   */
+  element$handleMouseEvent: function(x, y, element, e) {
+    if ("undefined" === typeof element) {
+      return;
+    }
+    if ("function" !== typeof element[e]) {
+      return;
+    }
+
+    var bounds = element.$bounds || [-1, -1, -1, -1],
+      boundsX = bounds[0],
+      boundsY = bounds[1],
+      boundsWidth = bounds[2],
+      boundsHeight = bounds[3];
+
+    if (x > boundsX && x < boundsX + boundsWidth &&
+        y > boundsY && y < boundsY + boundsHeight) {
+
+      element[e](x, y);
+    }
+  },
+
+  /**
+   * Destroys this object and deletes all members.
+   */
+  destroy: function() {
+    for (var i in this.elements) {
+      Tilt.destroyObject(elements[i]);
+    }
+
+    Tilt.destroyObject(this);
+  }
 };
 /*
  * Console.js - Various console helper functions for Tilt
@@ -8755,20 +8857,20 @@ TiltChrome.Controller.MouseAndKeyboard = function() {
   /**
    * Arcball used to control the visualization using the mouse.
    */
-  var arcball = null,
+  this.arcball = null;
 
   /**
    * Retain the position for the mousePressed event.
    */
-  pressX = 0,
-  pressY = 0;
+  var pressX = 0,
+    pressY = 0;
 
   /**
    * Function called automatically by the visualization at the setup().
    * @param {HTMLCanvasElement} canvas: the canvas element
    */
   this.init = function(canvas) {
-    arcball = new Tilt.Arcball(canvas.width, canvas.height);
+    this.arcball = new Tilt.Arcball(canvas.width, canvas.height);
 
     // bind commonly used mouse and keyboard events with the controller
     canvas.addEventListener("mousedown", mousePressed, false);
@@ -8787,7 +8889,7 @@ TiltChrome.Controller.MouseAndKeyboard = function() {
    */
   this.loop = function(frameDelta) {
     var vis = this.visualization,
-      coord = arcball.loop(frameDelta);
+      coord = this.arcball.loop(frameDelta);
 
     // update the visualization
     vis.setRotation(coord.rotation);
@@ -8804,7 +8906,7 @@ TiltChrome.Controller.MouseAndKeyboard = function() {
     pressX = e.clientX - e.target.offsetLeft;
     pressY = e.clientY - e.target.offsetTop;
 
-    arcball.mousePressed(pressX, pressY, e.which);
+    this.arcball.mousePressed(pressX, pressY, e.which);
   }.bind(this);
 
   /**
@@ -8821,7 +8923,7 @@ TiltChrome.Controller.MouseAndKeyboard = function() {
       this.visualization.click(releaseX, releaseY);
     }
 
-    arcball.mouseReleased(releaseX, releaseY);
+    this.arcball.mouseReleased(releaseX, releaseY);
   }.bind(this);
 
   /**
@@ -8849,7 +8951,7 @@ TiltChrome.Controller.MouseAndKeyboard = function() {
     var moveX = e.clientX - e.target.offsetLeft;
     var moveY = e.clientY - e.target.offsetTop;
 
-    arcball.mouseMoved(moveX, moveY);
+    this.arcball.mouseMoved(moveX, moveY);
   }.bind(this);
 
   /**
@@ -8859,7 +8961,7 @@ TiltChrome.Controller.MouseAndKeyboard = function() {
     e.preventDefault();
     e.stopPropagation();
 
-    arcball.mouseOut();
+    this.arcball.mouseOut();
   }.bind(this);
 
   /**
@@ -8869,7 +8971,7 @@ TiltChrome.Controller.MouseAndKeyboard = function() {
     e.preventDefault();
     e.stopPropagation();
 
-    arcball.mouseScroll(e.detail);
+    this.arcball.mouseScroll(e.detail);
   }.bind(this);
 
   /**
@@ -8883,7 +8985,7 @@ TiltChrome.Controller.MouseAndKeyboard = function() {
       return;
     }
 
-    arcball.keyPressed(code);
+    this.arcball.keyPressed(code);
   }.bind(this);
 
   /**
@@ -8903,7 +9005,7 @@ TiltChrome.Controller.MouseAndKeyboard = function() {
       }
     }
 
-    arcball.keyReleased(code);
+    this.arcball.keyReleased(code);
   }.bind(this);
 
   /**
@@ -8913,7 +9015,7 @@ TiltChrome.Controller.MouseAndKeyboard = function() {
    * @param height: the new height of the visualization
    */
   this.resize = function(width, height) {
-    arcball.resize(width, height);
+    this.arcball.resize(width, height);
   };
 
   /**
@@ -8940,8 +9042,8 @@ TiltChrome.Controller.MouseAndKeyboard = function() {
     keyReleased = null;
 
     try {
-      arcball.destroy();
-      arcball = null;
+      this.arcball.destroy();
+      this.arcball = null;
     }
     catch (e) {}
 
@@ -8949,7 +9051,7 @@ TiltChrome.Controller.MouseAndKeyboard = function() {
   };
 };
 /*
- * TiltChromeGUI.js - UI implementation for the visualization
+ * TiltChromeUI.js - UI implementation for the visualization
  * version 0.1
  *
  * Copyright (c) 2011 Victor Porof
@@ -8984,12 +9086,12 @@ var EXPORTED_SYMBOLS = ["TiltChrome.UI"];
 TiltChrome.UI = function() {
 
   /**
-   * Handler for all the GUI elements.
+   * Handler for all the user interface elements.
    */
-  var gui = null,
+  var ui = null,
 
   /**
-   * The texture containing all the GUI elements.
+   * The texture containing all the interface elements.
    */
   texture = null,
 
@@ -9033,9 +9135,9 @@ TiltChrome.UI = function() {
    * @param {HTMLCanvasElement} canvas: the canvas element
    */
   this.init = function(canvas) {
-    gui = new Tilt.GUI();
+    ui = new Tilt.UI();
 
-    texture = new Tilt.Texture("chrome://tilt/skin/tilt-gui.png", {
+    texture = new Tilt.Texture("chrome://tilt/skin/tilt-ui.png", {
       minFilter: "nearest",
       magFilter: "nearest"
     });
@@ -9103,15 +9205,15 @@ TiltChrome.UI = function() {
     }.bind(this);
 
     eyeButton.onclick = function(x, y) {
-      if (gui.elements.length !== 3) {
-        gui.remove(
+      if (ui.elements.length !== 3) {
+        ui.remove(
           helpPopup, colorAdjustPopup,
           arcballSprite, resetButton, zoomInButton, zoomOutButton,
           viewModeNormalButton, colorAdjustButton,
           optionsButton, exportButton, helpButton);
       }
       else {
-        gui.push(
+        ui.push(
           helpPopup, colorAdjustPopup,
           arcballSprite, resetButton, zoomInButton, zoomOutButton,
           viewModeNormalButton, colorAdjustButton,
@@ -9120,7 +9222,11 @@ TiltChrome.UI = function() {
     }.bind(this);
 
     resetButton.onclick = function(x, y) {
-      handleReset();
+      handleReset(0.95);
+    }.bind(this);
+
+    resetButton.ondblclick = function(x, y) {
+      handleReset(0);
     }.bind(this);
 
     zoomInButton.onclick = function(x, y) {
@@ -9131,17 +9237,8 @@ TiltChrome.UI = function() {
       handleZoom(-200);
     }.bind(this);
 
-    var handleReset = function() {
-      // var id = window.setInterval(function() {
-      //   if (Math.abs(vec3.length(this.controller.translation)) < 0.1 &&
-      //       Math.abs(vec3.length(this.controller.rotation)) < 0.1) {
-      //     window.clearInterval(id);
-      //   }
-      //   else {
-      //     vec3.scale(this.controller.translation, 0.8);
-      //     vec3.scale(this.controller.rotation, 0.8);
-      //   }
-      // }.bind(this), 1000 / 60);
+    var handleReset = function(time) {
+      this.controller.arcball.reset(time);
     }.bind(this);
 
     var handleZoom = function(value) {
@@ -9188,7 +9285,7 @@ TiltChrome.UI = function() {
       TiltChrome.BrowserOverlay.href = null;
     }.bind(this);
 
-    gui.push(
+    ui.push(
       background,
       helpPopup, colorAdjustPopup,
       arcballSprite, resetButton, zoomInButton, zoomOutButton,
@@ -9201,7 +9298,7 @@ TiltChrome.UI = function() {
    * @param {Number} frameDelta: the delta time elapsed between frames
    */
   this.draw = function(frameDelta) {
-    gui.draw();
+    ui.draw();
   };
 
   /**
@@ -9211,7 +9308,7 @@ TiltChrome.UI = function() {
    * @param {Number} y: the current vertical coordinate
    */
   this.click = function(x, y) {
-    gui.click(x, y);
+    ui.click(x, y);
   };
 
   /**
@@ -9221,7 +9318,7 @@ TiltChrome.UI = function() {
    * @param {Number} y: the current vertical coordinate
    */
   this.doubleClick = function(x, y) {
-    gui.doubleClick(x, y);
+    ui.doubleClick(x, y);
   };
 
   /**
@@ -9245,8 +9342,8 @@ TiltChrome.UI = function() {
    */
   this.destroy = function(canvas) {
     try {
-      gui.destroy();
-      gui = null;
+      ui.destroy();
+      ui = null;
     }
     catch(e) {}
 
@@ -9406,10 +9503,10 @@ TiltChrome.Visualization = function(canvas, controller, gui) {
       // calculate the camera matrix using the rotation and translation
       var camera = quat4.toMat4(transforms.rotation);
       camera[12] = transforms.translation[0];
-      camera[13] = transforms.translation[1];
       camera[14] = transforms.translation[2];
 
       tilt.transform(camera);
+      tilt.translate(0, transforms.translation[1], 0);
 
       // draw the visualization mesh
       tilt.depthTest(true);
