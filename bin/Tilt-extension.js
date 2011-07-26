@@ -541,6 +541,14 @@ Tilt.Arcball.prototype = {
   },
 
   /**
+   * Moves the camera forward or backward depending on the passed amount.
+   * @param {Number} amount: the amount of zooming to do
+   */
+  zoom: function(amount) {
+    this.$scrollValue += amount;
+  },
+
+  /**
    * Resets the rotation and translation to origin.
    * @param {Number} factor: the reset interpolation factor between frames
    */
@@ -9041,12 +9049,6 @@ TiltChrome.Controller.MouseAndKeyboard = function() {
     keyPressed = null;
     keyReleased = null;
 
-    try {
-      this.arcball.destroy();
-      this.arcball = null;
-    }
-    catch (e) {}
-
     Tilt.destroyObject(this);
   };
 };
@@ -9241,25 +9243,8 @@ TiltChrome.UI = function() {
       this.controller.arcball.reset(time);
     }.bind(this);
 
-    var handleZoom = function(value) {
-      // if ("undefined" === typeof this.zoomAmmount) {
-      //   this.zoomAmmount = value;
-      // }
-      // else {
-      //   this.zoomAmmount += value;
-      // }
-      //
-      // var id = window.setInterval(function() {
-      //   var prev = this.controller.translation[2];
-      //   var dist = (this.zoomAmmount - prev) / 20;
-      //
-      //   if (Math.abs(dist) < 0.01) {
-      //     window.clearInterval(id);
-      //   }
-      //   else {
-      //     this.controller.translation[2] += dist;
-      //   }
-      // }.bind(this), 1000 / 60);
+    var handleZoom = function(amount) {
+      this.controller.arcball.zoom(amount);
     }.bind(this);
 
     helpButton.onclick = function(x, y) {
