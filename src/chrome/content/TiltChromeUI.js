@@ -1,5 +1,5 @@
 /*
- * TiltChromeGUI.js - UI implementation for the visualization
+ * TiltChromeUI.js - UI implementation for the visualization
  * version 0.1
  *
  * Copyright (c) 2011 Victor Porof
@@ -34,12 +34,12 @@ var EXPORTED_SYMBOLS = ["TiltChrome.UI"];
 TiltChrome.UI = function() {
 
   /**
-   * Handler for all the GUI elements.
+   * Handler for all the user interface elements.
    */
-  var gui = null,
+  var ui = null,
 
   /**
-   * The texture containing all the GUI elements.
+   * The texture containing all the interface elements.
    */
   texture = null,
 
@@ -83,9 +83,9 @@ TiltChrome.UI = function() {
    * @param {HTMLCanvasElement} canvas: the canvas element
    */
   this.init = function(canvas) {
-    gui = new Tilt.GUI();
+    ui = new Tilt.UI();
 
-    texture = new Tilt.Texture("chrome://tilt/skin/tilt-gui.png", {
+    texture = new Tilt.Texture("chrome://tilt/skin/tilt-ui.png", {
       minFilter: "nearest",
       magFilter: "nearest"
     });
@@ -153,15 +153,15 @@ TiltChrome.UI = function() {
     }.bind(this);
 
     eyeButton.onclick = function(x, y) {
-      if (gui.elements.length !== 3) {
-        gui.remove(
+      if (ui.elements.length !== 3) {
+        ui.remove(
           helpPopup, colorAdjustPopup,
           arcballSprite, resetButton, zoomInButton, zoomOutButton,
           viewModeNormalButton, colorAdjustButton,
           optionsButton, exportButton, helpButton);
       }
       else {
-        gui.push(
+        ui.push(
           helpPopup, colorAdjustPopup,
           arcballSprite, resetButton, zoomInButton, zoomOutButton,
           viewModeNormalButton, colorAdjustButton,
@@ -170,7 +170,11 @@ TiltChrome.UI = function() {
     }.bind(this);
 
     resetButton.onclick = function(x, y) {
-      handleReset();
+      handleReset(0.95);
+    }.bind(this);
+
+    resetButton.ondblclick = function(x, y) {
+      handleReset(0);
     }.bind(this);
 
     zoomInButton.onclick = function(x, y) {
@@ -181,17 +185,8 @@ TiltChrome.UI = function() {
       handleZoom(-200);
     }.bind(this);
 
-    var handleReset = function() {
-      // var id = window.setInterval(function() {
-      //   if (Math.abs(vec3.length(this.controller.translation)) < 0.1 &&
-      //       Math.abs(vec3.length(this.controller.rotation)) < 0.1) {
-      //     window.clearInterval(id);
-      //   }
-      //   else {
-      //     vec3.scale(this.controller.translation, 0.8);
-      //     vec3.scale(this.controller.rotation, 0.8);
-      //   }
-      // }.bind(this), 1000 / 60);
+    var handleReset = function(time) {
+      this.controller.arcball.reset(time);
     }.bind(this);
 
     var handleZoom = function(value) {
@@ -238,7 +233,7 @@ TiltChrome.UI = function() {
       TiltChrome.BrowserOverlay.href = null;
     }.bind(this);
 
-    gui.push(
+    ui.push(
       background,
       helpPopup, colorAdjustPopup,
       arcballSprite, resetButton, zoomInButton, zoomOutButton,
@@ -251,7 +246,7 @@ TiltChrome.UI = function() {
    * @param {Number} frameDelta: the delta time elapsed between frames
    */
   this.draw = function(frameDelta) {
-    gui.draw();
+    ui.draw();
   };
 
   /**
@@ -261,7 +256,7 @@ TiltChrome.UI = function() {
    * @param {Number} y: the current vertical coordinate
    */
   this.click = function(x, y) {
-    gui.click(x, y);
+    ui.click(x, y);
   };
 
   /**
@@ -271,7 +266,7 @@ TiltChrome.UI = function() {
    * @param {Number} y: the current vertical coordinate
    */
   this.doubleClick = function(x, y) {
-    gui.doubleClick(x, y);
+    ui.doubleClick(x, y);
   };
 
   /**
@@ -295,8 +290,8 @@ TiltChrome.UI = function() {
    */
   this.destroy = function(canvas) {
     try {
-      gui.destroy();
-      gui = null;
+      ui.destroy();
+      ui = null;
     }
     catch(e) {}
 
