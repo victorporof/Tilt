@@ -54,6 +54,20 @@ Tilt.Math = {
   },
 
   /**
+   * Re-maps a number from one range to another.
+   *
+   * @param {Number} value: the number to map
+   * @param {Number} low1: the normal lower bound of the number
+   * @param {Number} high1: the normal upper bound of the number
+   * @param {Number} low2: the new lower bound of the number
+   * @param {Number} high2: the new upper bound of the number
+   */
+  map: function(value, low1, high1, low2, high2) {
+    value = this.clamp(value, low1, high1);
+    return low2 + (high2 - low2) * ((value - low1) / (high1 - low1));	
+  },
+
+  /**
    * Returns if number is power of two.
    *
    * @param {Number} x: the number to be verified
