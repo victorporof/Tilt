@@ -134,12 +134,12 @@ TiltChrome.Controller.MyCustomController = function() {
 };
 ```
 
-## Implement a custom GUI
+## Implement a custom UI
 Just like the controller, the user interface is initialized when constructing the visualization. The current <b>work in progress</b> implementation is in [TiltChromeUI.js](https://github.com/victorporof/Tilt/blob/master/src/chrome/content/TiltChromeUI.js). You can implement your own user interface by creating a new object respecting a predefined interface. 
 
 Each UI should have the `init`, `draw`, `resize` and `destroy` functions. Moreover, you can specify events like `click` or `doubleClick`, handled automatically by the controller.
 
-The GUI pattern is:
+The UI pattern is:
 
 ```
 TiltChrome.MyCustomUserInterface = function() {
@@ -150,7 +150,8 @@ TiltChrome.MyCustomUserInterface = function() {
    */
   this.init = function(canvas) {
     // access the visualization using this.visualization
-    // initialize all the GUI components here
+    // and the controller using this.controller
+    // initialize all the UI components here
   };
 
   /**
@@ -191,7 +192,7 @@ TiltChrome.MyCustomUserInterface = function() {
    * Destroys this object and sets all members to null.
    */
   this.destroy = function(canvas) {
-    // destroy all the GUI components here
+    // destroy all the UI components here
   };
 };
 ```
