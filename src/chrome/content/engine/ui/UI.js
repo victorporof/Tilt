@@ -46,8 +46,21 @@ Tilt.UI.prototype = {
    * @param {Object} a valid Tilt UI object (ex: Tilt.Button)
    */
   push: function() {
-    for (var i = 0, len = arguments.length; i < len; i++) {
-      this.elements.push(arguments[i]);
+    var i, j, len, len2, argument;
+    
+    for (i = 0, len = arguments.length; i < len; i++) {
+      argument = arguments[i];
+
+      if (argument instanceof Array) {
+        for (j = 0, len2 = argument.length; j < len2; j++) {
+          argument[j].$ui = this;
+          this.elements.push(argument[j]);
+        }
+      }
+      else {
+        argument.$ui = this;
+        this.elements.push(argument);
+      }
     }
   },
 
@@ -56,17 +69,33 @@ Tilt.UI.prototype = {
    * @param {Object} a valid Tilt UI object (ex: Tilt.Button)
    */
   remove: function() {
-    for (var i = 0, len = arguments.length, index = -1; i < len; i++) {
-      if ((index = this.elements.indexOf(arguments[i])) !== -1) {
-        this.elements.splice(index, 1);
+    var i, j, len, len2, argument, index;
+    
+    for (i = 0, len = arguments.length, index = -1; i < len; i++) {
+      argument = arguments[i];
+
+      if (argument instanceof Array) {
+        for (j = 0, len2 = argument.length, index = -1; j < len2; j++) {
+          if ((index = this.elements.indexOf(argument[j])) !== -1) {
+            argument[j].$ui = null;
+            this.elements.splice(index, 1);
+          }
+        }
+      }
+      else {
+        if ((index = this.elements.indexOf(argument)) !== -1) {             
+          argument.$ui = null;
+          this.elements.splice(index, 1);
+        }
       }
     }
   },
 
   /**
    * Draws all the handled elements.
+   * @param {Number} frameDelta: the delta time elapsed between frames
    */
-  draw: function() {
+  draw: function(frameDelta) {
     var tilt = Tilt.$renderer,
       elements = this.elements,
       element, i, len;
@@ -87,6 +116,30 @@ Tilt.UI.prototype = {
   },
 
   /**
+   * Delegate mouse down method.
+   *
+   * @param {Number} x: the current horizontal coordinate of the mouse
+   * @param {Number} y: the current vertical coordinate of the mouse
+   * @param {Number} b: which mouse button was pressed
+   */
+  mouseDown: function(x, y, b) {
+    this.$mousePressed = true;
+    this.ui$handleEvent(x, y, this.element$handleMouseEvent, "mousedown");
+  },
+
+  /**
+   * Delegate mouse up method.
+   *
+   * @param {Number} x: the current horizontal coordinate of the mouse
+   * @param {Number} y: the current vertical coordinate of the mouse
+   * @param {Number} b: which mouse button was released
+   */
+  mouseUp: function(x, y, b) {
+    this.$mousePressed = false;
+    this.ui$handleEvent(x, y, this.element$handleMouseEvent, "mouseup");
+  },
+
+  /**
    * Delegate click method.
    *
    * @param {Number} x: the current horizontal coordinate of the mouse
@@ -104,6 +157,17 @@ Tilt.UI.prototype = {
    */
   doubleClick: function(x, y) {
     this.ui$handleEvent(x, y, this.element$handleMouseEvent, "dblclick");
+  },
+
+  /**
+   * Delegate mouse move method.
+   *
+   * @param {Number} x: the current horizontal coordinate of the mouse
+   * @param {Number} y: the current vertical coordinate of the mouse
+   */
+  mouseMove: function(x, y) {
+    this.$mouseX = x;
+    this.$mouseY = y;
   },
 
   /**
