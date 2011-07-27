@@ -97,6 +97,10 @@ TiltChrome.UI = function() {
       magFilter: "nearest"
     });
 
+    texture.onload = function() {
+      this.visualization.redraw();
+    }.bind(this);
+
     background = new Tilt.Sprite(texture, [0, 1024 - 256, 256, 256], {
       width: canvas.width,
       height: canvas.height,
@@ -117,89 +121,6 @@ TiltChrome.UI = function() {
 
     helpButton = new Tilt.Button(canvas.width - 150, 0,
       new Tilt.Sprite(texture, [942, 80, 55, 38]));
-
-    exitButton = new Tilt.Button(canvas.width - 50, 0,
-      new Tilt.Sprite(texture, [942, 120, 50, 38]));
-
-    arcballSprite = new Tilt.Sprite(texture, [0, 0, 145, 145], {
-      x: 10,
-      y: 10
-    });
-
-    eyeButton = new Tilt.Button(0, 0,
-      new Tilt.Sprite(texture, [0, 147, 42, 42]));
-
-    resetButton = new Tilt.Button(60, 150,
-      new Tilt.Sprite(texture, [0, 190, 42, 42]));
-
-    zoomInButton = new Tilt.Button(100, 150,
-      new Tilt.Sprite(texture, [0, 234, 42, 42]));
-
-    zoomOutButton = new Tilt.Button(20, 150,
-      new Tilt.Sprite(texture, [0, 278, 42, 42]));
-
-    viewModeNormalButton = new Tilt.Button(50, 200,
-      new Tilt.Sprite(texture, [438, 0, 66, 66]));
-
-    viewModeWireframeButton = new Tilt.Button(50, 200,
-      new Tilt.Sprite(texture, [438, 67, 66, 66]));
-
-    colorAdjustButton = new Tilt.Button(50, 260,
-      new Tilt.Sprite(texture, [505, 0, 66, 66]));
-
-    var colorAdjustPopupSprite = new Tilt.Sprite(texture, [572, 0, 231, 93], {
-      x: 88,
-      y: 258
-    });
-    colorAdjustPopup = new Tilt.Container([colorAdjustPopupSprite], {
-      hidden: false
-    });
-
-    var hueSliderSprite = new Tilt.Sprite(texture, [573, 95, 32, 32]);
-    hueSlider = new Tilt.Slider(146, 269, 130, hueSliderSprite);
-
-    var saturationSliderSprite = new Tilt.Sprite(texture, [573, 95, 32, 32]);
-    saturationSlider = new Tilt.Slider(146, 288, 130, saturationSliderSprite);
-
-    var brightnessSliderSprite = new Tilt.Sprite(texture, [573, 95, 32, 32]);
-    brightnessSlider = new Tilt.Slider(146, 307, 130, brightnessSliderSprite);
-
-    texture.onload = function() {
-      this.visualization.redraw();
-    }.bind(this);
-
-    eyeButton.onclick = function(x, y) {
-      if (ui.elements.length === alwaysVisibleElements.length) {
-        ui.push(hideableElements);
-      }
-      else {
-        ui.remove(hideableElements);
-      }
-    }.bind(this);
-
-    resetButton.onclick = function(x, y) {
-      handleReset(0.95);
-    }.bind(this);
-
-    resetButton.ondblclick = function(x, y) {
-      handleReset(0);
-    }.bind(this);
-
-    zoomInButton.onclick = function(x, y) {
-      handleZoom(200);
-    }.bind(this);
-
-    zoomOutButton.onclick = function(x, y) {
-      handleZoom(-200);
-    }.bind(this);
-
-    var handleReset = function(time) {
-      this.controller.arcball.reset(time);
-    }.bind(this);
-
-    var handleZoom = function(amount) {
-      this.controller.arcball.zoom(amount);
-    }.bind(this);
 
     helpButton.onclick = function(x, y) {
       var helpX = canvas.width / 2 - 305,
@@ -223,10 +144,77 @@ TiltChrome.UI = function() {
       helpPopup.hidden = false;
     }.bind(this);
 
+    exitButton = new Tilt.Button(canvas.width - 50, 0,
+      new Tilt.Sprite(texture, [942, 120, 50, 38]));
+
     exitButton.onclick = function(x, y) {
       TiltChrome.BrowserOverlay.destroy(true, true);
       TiltChrome.BrowserOverlay.href = null;
     }.bind(this);
+
+    arcballSprite = new Tilt.Sprite(texture, [0, 0, 145, 145], {
+      x: 10,
+      y: 10
+    });
+
+    eyeButton = new Tilt.Button(0, 0,
+      new Tilt.Sprite(texture, [0, 147, 42, 42]));
+
+    eyeButton.onclick = function(x, y) {
+      if (ui.elements.length === alwaysVisibleElements.length) {
+        ui.push(hideableElements);
+      }
+      else {
+        ui.remove(hideableElements);
+      }
+    }.bind(this);
+
+    resetButton = new Tilt.Button(60, 150,
+      new Tilt.Sprite(texture, [0, 190, 42, 42]));
+
+    resetButton.onclick = function(x, y) {
+      this.controller.arcball.reset(0.95);
+    }.bind(this);
+
+    resetButton.ondblclick = function(x, y) {
+      this.controller.arcball.reset(0);
+    }.bind(this);
+
+    zoomInButton = new Tilt.Button(100, 150,
+      new Tilt.Sprite(texture, [0, 234, 42, 42]));
+
+    zoomInButton.onclick = function(x, y) {
+      this.controller.arcball.zoom(200);
+    }.bind(this);
+
+    zoomOutButton = new Tilt.Button(20, 150,
+      new Tilt.Sprite(texture, [0, 278, 42, 42]));
+
+    zoomOutButton.onclick = function(x, y) {
+      this.controller.arcball.zoom(-200);
+    }.bind(this);
+
+    viewModeNormalButton = new Tilt.Button(50, 200,
+      new Tilt.Sprite(texture, [438, 0, 66, 66]));
+
+    viewModeWireframeButton = new Tilt.Button(50, 200,
+      new Tilt.Sprite(texture, [438, 67, 66, 66]));
+
+    colorAdjustButton = new Tilt.Button(50, 260,
+      new Tilt.Sprite(texture, [505, 0, 66, 66]));
+
+    var colorAdjustPopupSprite = new Tilt.Sprite(texture, [572, 0, 231, 93], {
+      x: 88,
+      y: 258
+    });
+    colorAdjustPopup = new Tilt.Container([colorAdjustPopupSprite], {
+      hidden: false
+    });
+
+    var sliderSprite = new Tilt.Sprite(texture, [574, 96, 29, 29]);
+    hueSlider = new Tilt.Slider(152, 271, 120, sliderSprite);
+    saturationSlider = new Tilt.Slider(152, 290, 120, sliderSprite);
+    brightnessSlider = new Tilt.Slider(152, 308, 120, sliderSprite);
 
     var alwaysVisibleElements = [
       background, eyeButton, exitButton
