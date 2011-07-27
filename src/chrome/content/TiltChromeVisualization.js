@@ -33,10 +33,10 @@ var EXPORTED_SYMBOLS = ["TiltChrome.Visualization"];
  *
  * @param {HTMLCanvasElement} canvas: the canvas element used for rendering
  * @param {TiltChrome.Controller} controller: the controller handling events
- * @param {TiltChrome.GUI} controller: the visualization user interface
+ * @param {TiltChrome.GUI} ui: the visualization user interface
  * @return {TiltChrome.Visualization} the newly created object
  */
-TiltChrome.Visualization = function(canvas, controller, gui) {
+TiltChrome.Visualization = function(canvas, controller, ui) {
 
   /**
    * Create the Tilt object, containing useful functions for easy drawing
@@ -129,12 +129,11 @@ TiltChrome.Visualization = function(canvas, controller, gui) {
       tilt.translate(tilt.width / 2, tilt.height / 2 - 50, -thickness * 30);
 
       // calculate the camera matrix using the rotation and translation
-      var camera = quat4.toMat4(transforms.rotation);
-      camera[12] = transforms.translation[0];
-      camera[14] = transforms.translation[2];
+      tilt.translate(transforms.translation[0],
+                     transforms.translation[1],
+                     transforms.translation[2]);
 
-      tilt.transform(camera);
-      tilt.translate(0, transforms.translation[1], 0);
+      tilt.transform(quat4.toMat4(transforms.rotation));
 
       // draw the visualization mesh
       tilt.depthTest(true);
@@ -142,7 +141,7 @@ TiltChrome.Visualization = function(canvas, controller, gui) {
       mesh.draw();
       meshWireframe.draw();
 
-      gui.draw(tilt.frameDelta);
+      ui.draw(tilt.frameDelta);
     }
 
     // when rendering is finished, call a loop function in the controller
@@ -172,11 +171,11 @@ TiltChrome.Visualization = function(canvas, controller, gui) {
         if ("function" === typeof controller.resize) {
           controller.resize(tilt.width, tilt.height);
         }
-        if ("function" === typeof gui.resize) {
-          gui.resize(tilt.width, tilt.height);
+        if ("function" === typeof ui.resize) {
+          ui.resize(tilt.width, tilt.height);
         }
-        tilt.gl.viewport(0, 0, canvas.width, canvas.height);
 
+        tilt.gl.viewport(0, 0, canvas.width, canvas.height);
         redraw = true;
       }
     }
@@ -188,8 +187,7 @@ TiltChrome.Visualization = function(canvas, controller, gui) {
    */
   function setupVisualization() {
     // reset the mesh arrays
-    var zoffset = 0,
-      vertices = [],
+    var vertices = [],
       texCoord = [],
       indices = [],
       wireframeIndices = [],
@@ -197,11 +195,11 @@ TiltChrome.Visualization = function(canvas, controller, gui) {
 
     // traverse the document
     Tilt.Document.traverse(function(node, depth) {
-      if (node.localName === "a" ||
+      if (node.localName === "img" ||
+          node.localName === "a" ||
           node.localName === "b" ||
           node.localName === "i" ||
-          node.localName === "u" ||
-          node.localName === "img") {
+          node.localName === "u") {
         return;
       }
 
@@ -213,7 +211,7 @@ TiltChrome.Visualization = function(canvas, controller, gui) {
         // the entire mesh's pivot is the screen center
         var x = coord.x - tilt.width / 2,
          y = coord.y - tilt.height / 2,
-         z = depth * thickness + zoffset,
+         z = depth * thickness,
          w = coord.width,
          h = coord.height;
 
@@ -221,23 +219,23 @@ TiltChrome.Visualization = function(canvas, controller, gui) {
         var i = vertices.length / 3; // a vertex has 3 coords: x, y & z
 
         // compute the vertices
-        vertices.push(x,     y,     z);                     /* front */ // 0
-        vertices.push(x + w, y,     z);                                 // 1
-        vertices.push(x + w, y + h, z);                                 // 2
-        vertices.push(x,     y + h, z);                                 // 3
+        vertices.push(x,     y,     z);                   /* front */ // 0
+        vertices.push(x + w, y,     z);                               // 1
+        vertices.push(x + w, y + h, z);                               // 2
+        vertices.push(x,     y + h, z);                               // 3
 
         // we don't duplicate vertices for the left and right faces, because
         // they can be reused from the bottom and top faces; we do, however,
         // duplicate some vertices from front face, because it has custom
         // texture coordinates which are not shared by the other faces
-        vertices.push(x,     y + h, z - thickness);         /* top */    // 4
-        vertices.push(x + w, y + h, z - thickness);                      // 5
-        vertices.push(x + w, y + h, z);                                  // 6
-        vertices.push(x,     y + h, z);                                  // 7
-        vertices.push(x,     y,     z);                     /* bottom */ // 8
-        vertices.push(x + w, y,     z);                                  // 9
-        vertices.push(x + w, y,     z - thickness);                      // 10
-        vertices.push(x,     y,     z - thickness);                      // 11
+        vertices.push(x,     y + h, z - thickness);      /* top */    // 4
+        vertices.push(x + w, y + h, z - thickness);                   // 5
+        vertices.push(x + w, y + h, z);                               // 6
+        vertices.push(x,     y + h, z);                               // 7
+        vertices.push(x,     y,     z);                  /* bottom */ // 8
+        vertices.push(x + w, y,     z);                               // 9
+        vertices.push(x + w, y,     z - thickness);                   // 10
+        vertices.push(x,     y,     z - thickness);                   // 11
 
         // compute the texture coordinates
         texCoord.push(
@@ -286,8 +284,6 @@ TiltChrome.Visualization = function(canvas, controller, gui) {
           i + 10, i + 9,  i + 9,  i + 6,  i + 6,  i + 5,  i + 5,  i + 10);
         wireframeIndices.push(
           i + 8,  i + 11, i + 11, i + 4,  i + 4,  i + 7,  i + 7,  i + 8);
-
-        zoffset += 0.01;
       }
     });
 
@@ -303,7 +299,7 @@ TiltChrome.Visualization = function(canvas, controller, gui) {
     meshWireframe = new Tilt.Mesh({
       vertices: mesh.vertices,
       indices: new Tilt.IndexBuffer(wireframeIndices),
-      color: "#999",
+      color: "#0003",
       drawMode: tilt.LINES
     });
   };
@@ -337,12 +333,12 @@ TiltChrome.Visualization = function(canvas, controller, gui) {
    */
   function setupGUI() {
     // set a reference in the user interface for this visualization
-    gui.visualization = this;
-    gui.controller = controller;
+    ui.visualization = this;
+    ui.controller = controller;
 
     // call the init function on the user interface if available
-    if ("function" === typeof gui.init) {
-      gui.init(canvas);
+    if ("function" === typeof ui.init) {
+      ui.init(canvas);
     }
   };
 
@@ -392,14 +388,42 @@ TiltChrome.Visualization = function(canvas, controller, gui) {
   };
 
   /**
-   * Delegate click method, used by the controller.
+   * Delegate mouse down method, issued by the controller.
+   *
+   * @param {Number} x: the current horizontal coordinate
+   * @param {Number} y: the current vertical coordinate
+   * @param {Number} button: which mouse button was pressed
+   */
+  this.mouseDown = function(x, y, button) {
+    if ("function" === typeof ui.mouseDown) {
+      ui.mouseDown(x, y, button);
+    }
+    redraw = true;
+  };
+
+  /**
+   * Delegate mouse up method, issued by the controller.
+   *
+   * @param {Number} x: the current horizontal coordinate
+   * @param {Number} y: the current vertical coordinate
+   * @param {Number} button: which mouse button was released
+   */
+  this.mouseUp = function(x, y, button) {
+    if ("function" === typeof ui.mouseUp) {
+      ui.mouseUp(x, y, button);
+    }
+    redraw = true;
+  };
+
+  /**
+   * Delegate click method, issued by the controller.
    *
    * @param {Number} x: the current horizontal coordinate
    * @param {Number} y: the current vertical coordinate
    */
   this.click = function(x, y) {
-    if ("function" === typeof gui.click) {
-      gui.click(x, y);
+    if ("function" === typeof ui.click) {
+      ui.click(x, y);
     }
     if ("open" === TiltChrome.BrowserOverlay.panel.state) {
       TiltChrome.BrowserOverlay.panel.hidePopup();
@@ -411,14 +435,14 @@ TiltChrome.Visualization = function(canvas, controller, gui) {
   };
 
   /**
-   * Delegate double click method, used by the controller.
+   * Delegate double click method, issued by the controller.
    *
    * @param {Number} x: the current horizontal coordinate
    * @param {Number} y: the current vertical coordinate
    */
   this.doubleClick = function(x, y) {
-    if ("function" === typeof gui.doubleClick) {
-      gui.doubleClick(x, y);
+    if ("function" === typeof ui.doubleClick) {
+      ui.doubleClick(x, y);
     }
 
     // create a ray following the mouse direction from the near clipping plane
@@ -504,6 +528,46 @@ TiltChrome.Visualization = function(canvas, controller, gui) {
   };
 
   /**
+   * Delegate mouse scroll method, issued by the controller.
+   * @param {Number} scroll: the mouse wheel direction and speed
+   */
+  this.mouseScroll = function(scroll) {
+    if ("function" === typeof ui.mouseScroll) {
+      ui.mouseScroll(scroll);
+    }
+  };
+
+  /**
+   * Delegate mouse move method, issued by the controller.
+   *
+   * @param {Number} x: the current horizontal coordinate
+   * @param {Number} y: the current vertical coordinate
+   */
+  this.mouseMove = function(x, y) {
+    if ("function" === typeof ui.mouseMove) {
+      ui.mouseMove(x, y);
+    }
+  };
+
+  /**
+   * Delegate mouse over method, issued by the controller.
+   */
+  this.mouseOver = function() {
+    if ("function" === typeof ui.mouseOver) {
+      ui.mouseOver(x, y);
+    }
+  };
+
+  /**
+   * Delegate mouse out method, issued by the controller.
+   */
+  this.mouseOut = function() {
+    if ("function" === typeof ui.mouseOut) {
+      ui.mouseOut(x, y);
+    }
+  };
+
+  /**
    * Event method called when the tab container of the current browser closes.
    */
   function gClose(e) {
@@ -524,8 +588,8 @@ TiltChrome.Visualization = function(canvas, controller, gui) {
     if ("function" === typeof controller.resize) {
       controller.resize(tilt.width, tilt.height);
     }
-    if ("function" === typeof gui.resize) {
-      gui.resize(tilt.width, tilt.height);
+    if ("function" === typeof ui.resize) {
+      ui.resize(tilt.width, tilt.height);
     }
 
     // hide the panel with the html editor (to avoid wrong positioning)
@@ -565,8 +629,8 @@ TiltChrome.Visualization = function(canvas, controller, gui) {
       controller.destroy(canvas);
       controller = null;
 
-      gui.destroy(canvas);
-      gui = null;
+      ui.destroy(canvas);
+      ui = null;
 
       background.destroy();
       background = null;
