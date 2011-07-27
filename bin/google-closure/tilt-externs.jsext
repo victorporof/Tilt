@@ -32,3 +32,5 @@ prompt.alert;
 scriptError.init;
 consoleService.logMessage;
 consoleService.logStringMessage;
+
+iframe.contentWindow.refreshEditor
