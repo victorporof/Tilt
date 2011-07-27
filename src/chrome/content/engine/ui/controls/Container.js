@@ -33,6 +33,8 @@ var EXPORTED_SYMBOLS = ["Tilt.Container"];
  *
  * @param {Array} elements: array of GUI elements added to this container
  * @param {Object} properties: additional properties for this object
+ *  @param {Boolean} hidden: true if this object should be hidden
+ *  @param {String} background: color to fill the screen
  */
 Tilt.Container = function(elements, properties) {
 

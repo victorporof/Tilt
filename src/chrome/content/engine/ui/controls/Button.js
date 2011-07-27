@@ -36,6 +36,7 @@ var EXPORTED_SYMBOLS = ["Tilt.Button"];
  * @param {Tilt.Sprite} sprite: the sprite to be drawn as background
  * @param {Function} onclick: optional, function to be called when clicked
  * @param {Object} properties: additional properties for this object
+ *  @param {Boolean} hidden: true if this object should be hidden
  */
 Tilt.Button = function(x, y, sprite, onclick, properties) {
 
