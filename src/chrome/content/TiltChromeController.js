@@ -40,10 +40,9 @@ TiltChrome.Controller.MouseAndKeyboard = function() {
   this.arcball = null;
 
   /**
-   * Retain the position for the mousePressed event.
+   * Retain the position for the mouseDown event.
    */
-  var pressX = 0,
-    pressY = 0;
+  var downX = 0, downY = 0;
 
   /**
    * Function called automatically by the visualization at the setup().
@@ -53,14 +52,15 @@ TiltChrome.Controller.MouseAndKeyboard = function() {
     this.arcball = new Tilt.Arcball(canvas.width, canvas.height);
 
     // bind commonly used mouse and keyboard events with the controller
-    canvas.addEventListener("mousedown", mousePressed, false);
-    canvas.addEventListener("mouseup", mouseReleased, false);
-    canvas.addEventListener("dblclick", mouseDoubleClick, false);
-    canvas.addEventListener("mousemove", mouseMoved, false);
+    canvas.addEventListener("mousedown", mouseDown, false);
+    canvas.addEventListener("mouseup", mouseUp, false);
+    canvas.addEventListener("click", click, false);
+    canvas.addEventListener("dblclick", doubleClick, false);
+    canvas.addEventListener("mousemove", mouseMove, false);
     canvas.addEventListener("mouseout", mouseOut, false);
     canvas.addEventListener("DOMMouseScroll", mouseScroll, false);
-    window.addEventListener("keydown", keyPressed, false);
-    window.addEventListener("keyup", keyReleased, false);
+    window.addEventListener("keydown", keyDown, false);
+    window.addEventListener("keyup", keyUp, false);
   };
 
   /**
@@ -79,59 +79,69 @@ TiltChrome.Controller.MouseAndKeyboard = function() {
   /**
    * Called once after every time a mouse button is pressed.
    */
-  var mousePressed = function(e) {
+  var mouseDown = function(e) {
     e.preventDefault();
     e.stopPropagation();
 
-    pressX = e.clientX - e.target.offsetLeft;
-    pressY = e.clientY - e.target.offsetTop;
+    downX = e.clientX - e.target.offsetLeft;
+    downY = e.clientY - e.target.offsetTop;
 
-    this.arcball.mousePressed(pressX, pressY, e.which);
+    this.arcball.mouseDown(downX, downY, e.which);
+    this.visualization.mouseDown(downX, downY, e.which);
   }.bind(this);
 
   /**
    * Called every time a mouse button is released.
    */
-  var mouseReleased = function(e) {
+  var mouseUp = function(e) {
     e.preventDefault();
     e.stopPropagation();
 
-    var releaseX = e.clientX - e.target.offsetLeft;
-    var releaseY = e.clientY - e.target.offsetTop;
+    var upX = e.clientX - e.target.offsetLeft;
+    var upY = e.clientY - e.target.offsetTop;
 
-    if (Math.abs(pressX - releaseX) < 2 && Math.abs(pressY - releaseY) < 2) {
-      this.visualization.click(releaseX, releaseY);
-    }
-
-    this.arcball.mouseReleased(releaseX, releaseY);
+    this.arcball.mouseUp(upX, upY, e.which);
+    this.visualization.mouseUp(upX, upY, e.which);
   }.bind(this);
 
   /**
    * Called every time a mouse button is double clicked.
    */
-  var mouseDoubleClick = function(e) {
+  var click = function(e) {
     e.preventDefault();
     e.stopPropagation();
 
-    var releaseX = e.clientX - e.target.offsetLeft;
-    var releaseY = e.clientY - e.target.offsetTop;
+    var clickX = e.clientX - e.target.offsetLeft;
+    var clickY = e.clientY - e.target.offsetTop;
 
-    if (Math.abs(pressX - releaseX) < 2 && Math.abs(pressY - releaseY) < 2) {
-      this.visualization.doubleClick(releaseX, releaseY);
-    }
+    this.visualization.click(clickX, clickY);
+  }.bind(this);
+
+  /**
+   * Called every time a mouse button is double clicked.
+   */
+  var doubleClick = function(e) {
+    e.preventDefault();
+    e.stopPropagation();
+
+    var doubleClickX = e.clientX - e.target.offsetLeft;
+    var doubleClickY = e.clientY - e.target.offsetTop;
+
+    this.visualization.doubleClick(doubleClickX, doubleClickY);
   }.bind(this);
 
   /**
    * Called every time the mouse moves.
    */
-  var mouseMoved = function(e) {
+  var mouseMove = function(e) {
     e.preventDefault();
     e.stopPropagation();
 
     var moveX = e.clientX - e.target.offsetLeft;
     var moveY = e.clientY - e.target.offsetTop;
 
-    this.arcball.mouseMoved(moveX, moveY);
+    this.arcball.mouseMove(moveX, moveY);
+    this.visualization.mouseMove(moveX, moveY);
   }.bind(this);
 
   /**
@@ -142,6 +152,7 @@ TiltChrome.Controller.MouseAndKeyboard = function() {
     e.stopPropagation();
 
     this.arcball.mouseOut();
+    this.visualization.mouseOut();
   }.bind(this);
 
   /**
@@ -157,7 +168,7 @@ TiltChrome.Controller.MouseAndKeyboard = function() {
   /**
    * Called when a key is pressed.
    */
-  var keyPressed = function(e) {
+  var keyDown = function(e) {
     var code = e.keyCode || e.which;
 
     // handle key events only if the html editor is not open
@@ -165,13 +176,13 @@ TiltChrome.Controller.MouseAndKeyboard = function() {
       return;
     }
 
-    this.arcball.keyPressed(code);
+    this.arcball.keyDown(code);
   }.bind(this);
 
   /**
    * Called when a key is released.
    */
-  var keyReleased = function(e) {
+  var keyUp = function(e) {
     var code = e.keyCode || e.which;
 
     if (code === 27) {
@@ -185,7 +196,7 @@ TiltChrome.Controller.MouseAndKeyboard = function() {
       }
     }
 
-    this.arcball.keyReleased(code);
+    this.arcball.keyUp(code);
   }.bind(this);
 
   /**
@@ -203,23 +214,25 @@ TiltChrome.Controller.MouseAndKeyboard = function() {
    * @param {HTMLCanvasElement} canvas: the canvas dom element
    */
   this.destroy = function(canvas) {
-    canvas.removeEventListener("mousedown", mousePressed, false);
-    canvas.removeEventListener("mouseup", mouseReleased, false);
-    canvas.removeEventListener("dblclick", mouseDoubleClick, false);
-    canvas.removeEventListener("mousemove", mouseMoved, false);
+    canvas.removeEventListener("mousedown", mouseDown, false);
+    canvas.removeEventListener("mouseup", mouseUp, false);
+    canvas.removeEventListener("click", click, false);
+    canvas.removeEventListener("dblclick", doubleClick, false);
+    canvas.removeEventListener("mousemove", mouseMove, false);
     canvas.removeEventListener("mouseout", mouseOut, false);
     canvas.removeEventListener("DOMMouseScroll", mouseScroll, false);
-    window.removeEventListener("keydown", keyPressed, false);
-    window.removeEventListener("keyup", keyReleased, false);
+    window.removeEventListener("keydown", keyDown, false);
+    window.removeEventListener("keyup", keyUp, false);
 
-    mousePressed = null;
-    mouseReleased = null;
-    mouseDoubleClick = null;
-    mouseMoved = null;
+    mouseDown = null;
+    mouseUp = null;
+    click = null;
+    doubleClick = null;
+    mouseMove = null;
     mouseOut = null;
     mouseScroll = null;
-    keyPressed = null;
-    keyReleased = null;
+    keyDown = null;
+    keyUp = null;
 
     Tilt.destroyObject(this);
   };
