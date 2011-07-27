@@ -76,7 +76,9 @@ TiltChrome.UI = function() {
   viewModeNormalButton = null,
   viewModeWireframeButton = null,
   colorAdjustButton = null,
-  colorAdjustPopup = null;
+  colorAdjustPopup = null,
+  
+  slider = null;
 
   /**
    * Function called automatically by the visualization at the setup().
@@ -102,13 +104,13 @@ TiltChrome.UI = function() {
       hidden: true
     });
 
-    optionsButton = new Tilt.Button(canvas.width - 320, 0,
+    optionsButton = new Tilt.Button(canvas.width - 290, 0,
       new Tilt.Sprite(texture, [942, 0, 77, 38]));
 
-    exportButton = new Tilt.Button(canvas.width - 240, 0,
+    exportButton = new Tilt.Button(canvas.width - 220, 0,
       new Tilt.Sprite(texture, [942, 40, 70, 38]));
 
-    helpButton = new Tilt.Button(canvas.width - 160, 0,
+    helpButton = new Tilt.Button(canvas.width - 150, 0,
       new Tilt.Sprite(texture, [942, 80, 55, 38]));
 
     exitButton = new Tilt.Button(canvas.width - 50, 0,
@@ -148,24 +150,19 @@ TiltChrome.UI = function() {
       hidden: false
     });
 
+    var sliderHandlerSprite = new Tilt.Sprite(texture, [573, 95, 20, 20]);
+    slider = new Tilt.Slider(150, 275, 135, sliderHandlerSprite);
+
     texture.onload = function() {
       this.visualization.redraw();
     }.bind(this);
 
     eyeButton.onclick = function(x, y) {
-      if (ui.elements.length !== 3) {
-        ui.remove(
-          helpPopup, colorAdjustPopup,
-          arcballSprite, resetButton, zoomInButton, zoomOutButton,
-          viewModeNormalButton, colorAdjustButton,
-          optionsButton, exportButton, helpButton);
+      if (ui.elements.length === alwaysVisibleElements.length) {
+        ui.push(hideableElements);
       }
       else {
-        ui.push(
-          helpPopup, colorAdjustPopup,
-          arcballSprite, resetButton, zoomInButton, zoomOutButton,
-          viewModeNormalButton, colorAdjustButton,
-          optionsButton, exportButton, helpButton);
+        ui.remove(hideableElements);
       }
     }.bind(this);
 
@@ -201,13 +198,17 @@ TiltChrome.UI = function() {
 
       helpPopup.elements[0].x = helpX;
       helpPopup.elements[0].y = helpY;
-      helpPopup.elements[1] =
-        new Tilt.Button(exitX, exitY, { width: 32, height: 32 }, function() {
-          helpPopup.elements[1].destroy();
-          helpPopup.elements.pop();
-          helpPopup.hidden = true;
-        });
 
+      var exitButton = new Tilt.Button(exitX, exitY, {
+        width: 32,
+        height: 32
+      }, function() {
+        helpPopup.elements[1].destroy();
+        helpPopup.elements.pop();
+        helpPopup.hidden = true;
+      });
+
+      helpPopup.elements[1] = exitButton;
       helpPopup.hidden = false;
     }.bind(this);
 
@@ -216,12 +217,18 @@ TiltChrome.UI = function() {
       TiltChrome.BrowserOverlay.href = null;
     }.bind(this);
 
-    ui.push(
-      background,
-      helpPopup, colorAdjustPopup,
+    var alwaysVisibleElements = [
+      background, eyeButton, exitButton
+    ];
+
+    var hideableElements = [
+      helpPopup, colorAdjustPopup, slider,
       arcballSprite, resetButton, zoomInButton, zoomOutButton,
       viewModeNormalButton, colorAdjustButton,
-      eyeButton, optionsButton, exportButton,  helpButton, exitButton);
+      optionsButton, exportButton, helpButton
+    ];
+
+    ui.push(alwaysVisibleElements, hideableElements);
   };
 
   /**
@@ -229,7 +236,29 @@ TiltChrome.UI = function() {
    * @param {Number} frameDelta: the delta time elapsed between frames
    */
   this.draw = function(frameDelta) {
-    ui.draw();
+    ui.draw(frameDelta);
+  };
+
+  /**
+   * Delegate mouse down method, handled by the controller.
+   *
+   * @param {Number} x: the current horizontal coordinate
+   * @param {Number} y: the current vertical coordinate
+   * @param {Number} button: which mouse button was pressed
+   */
+  this.mouseDown = function(x, y, button) {
+    ui.mouseDown(x, y, button);
+  };
+
+  /**
+   * Delegate mouse up method, handled by the controller.
+   *
+   * @param {Number} x: the current horizontal coordinate
+   * @param {Number} y: the current vertical coordinate
+   * @param {Number} button: which mouse button was released
+   */
+  this.mouseUp = function(x, y, button) {
+    ui.mouseUp(x, y, button);
   };
 
   /**
@@ -250,6 +279,16 @@ TiltChrome.UI = function() {
    */
   this.doubleClick = function(x, y) {
     ui.doubleClick(x, y);
+  };
+
+  /**
+   * Delegate mouse move method, handled by the controller.
+   *
+   * @param {Number} x: the current horizontal coordinate
+   * @param {Number} y: the current vertical coordinate
+   */
+  this.mouseMove = function(x, y) {
+    ui.mouseMove(x, y);
   };
 
   /**
