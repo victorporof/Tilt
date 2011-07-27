@@ -299,7 +299,7 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
     meshWireframe = new Tilt.Mesh({
       vertices: mesh.vertices,
       indices: new Tilt.IndexBuffer(wireframeIndices),
-      color: "#0003",
+      color: "#0004",
       drawMode: tilt.LINES
     });
   };
