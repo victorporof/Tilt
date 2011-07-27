@@ -196,7 +196,7 @@ Tilt.Renderer = function(canvas, failCallback, successCallback) {
   this.stroke("#000");
   this.strokeWeight(1);
   this.blendMode("alpha");
-  this.depthTest(false);
+  this.depthTest(true);
 };
 
 Tilt.Renderer.prototype = {
@@ -808,6 +808,10 @@ Tilt.Renderer.prototype = {
     // increment the elapsed time and total frame count
     this.elapsedTime += this.frameDelta;
     this.frameCount++;
+
+    // clear the cache associated with the shaders
+    // this.colorShader.clearCache();
+    // this.textureShader.clearCache();
   },
 
   /**
