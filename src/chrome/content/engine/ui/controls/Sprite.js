@@ -34,6 +34,12 @@ var EXPORTED_SYMBOLS = ["Tilt.Sprite"];
  * @param {Tilt.Texture} texture: the texture to be used
  * @param {Array} region: the sub-texture coordinates as [x, y, width, height]
  * @param {Object} properties: additional properties for this object
+ *  @param {Boolean} hidden: true if this object should be hidden
+ *  @param {Boolean} depthTest: true to use depth testing
+ *  @param {Number} x: the x position of the object
+ *  @param {Number} y: the y position of the object
+ *  @param {Number} width: the width of the object
+ *  @param {Number} height: the height of the object
  */
 Tilt.Sprite = function(texture, region, properties) {
 
