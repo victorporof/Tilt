@@ -97,12 +97,15 @@ Tilt.Slider.prototype = {
 
     if (ui.$mousePressed) {
       if (this.$mousePressed) {
-        sprite.x = Tilt.Math.clamp(mx || 0, this.x, this.x + this.width);
+        this.value = Tilt.Math.map(mx, this.x, this.x + this.width, 0, 100);
       }
     }
     else {
       this.$mousePressed = false;
     }
+
+    sprite.x = Tilt.Math.map(this.value, 0, 100, this.x, this.x + this.width);
+    sprite.y = this.y;
 
     bounds[0] = sprite.x;
     bounds[1] = sprite.y;
