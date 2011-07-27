@@ -115,7 +115,7 @@ TiltChrome.Controller.MouseAndKeyboard = function() {
     var clickY = e.clientY - e.target.offsetTop;
 
     if (Math.abs(downX - clickX) < 2 && Math.abs(downY - clickY) < 2) {
-      this.visualization.click(releaseX, releaseY);
+      this.visualization.click(clickX, clickY);
     }
   }.bind(this);
 
@@ -130,7 +130,7 @@ TiltChrome.Controller.MouseAndKeyboard = function() {
     var dblClickY = e.clientY - e.target.offsetTop;
 
     if (Math.abs(downX - dblClickX) < 2 && Math.abs(downY - dblClickY) < 2) {
-      this.visualization.doubleClick(doubleClickX, doubleClickY);
+      this.visualization.doubleClick(dblClickX, dblClickY);
     }
   }.bind(this);
 
