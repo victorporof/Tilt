@@ -249,14 +249,14 @@ Tilt.Arcball.prototype = {
   },
 
   /**
-   * Function handling the mousePressed event.
+   * Function handling the mouseDown event.
    * Call this when the mouse was pressed.
    *
    * @param {Number} x: the current horizontal coordinate of the mouse
    * @param {Number} y: the current vertical coordinate of the mouse
    * @param {Number} button: which mouse button was pressed
    */
-  mousePressed: function(x, y, button) {
+  mouseDown: function(x, y, button) {
     this.$clearInterval();
 
     this.$mousePress[0] = x;
@@ -273,26 +273,27 @@ Tilt.Arcball.prototype = {
   },
 
   /**
-   * Function handling the mouseReleased event.
+   * Function handling the mouseUp event.
    * Call this when a mouse button was released.
    *
    * @param {Number} x: the current horizontal coordinate of the mouse
    * @param {Number} y: the current vertical coordinate of the mouse
+   * @param {Number} button: which mouse button was released
    */
-  mouseReleased: function(x, y) {
+  mouseUp: function(x, y, button) {
     this.$mouseRelease[0] = x;
     this.$mouseRelease[1] = y;
     this.$mouseButton = -1;
   },
 
   /**
-   * Function handling the mouseMoved event.
+   * Function handling the mouseMove event.
    * Call this when the mouse was moved.
    *
    * @param {Number} x: the current horizontal coordinate of the mouse
    * @param {Number} y: the current vertical coordinate of the mouse
    */
-  mouseMoved: function(x, y) {
+  mouseMove: function(x, y) {
     if (this.$mouseButton !== -1) {
       this.$mouseMove[0] = x;
       this.$mouseMove[1] = y;
@@ -319,12 +320,12 @@ Tilt.Arcball.prototype = {
   },
 
   /**
-   * Function handling the keyPressed event.
+   * Function handling the keyDown event.
    * Call this when the a key was pressed.
    *
    * @param {Number} code: the code corresponding to the key pressed
    */
-  keyPressed: function(code) {
+  keyDown: function(code) {
     this.$clearInterval();
     this.$keyCode[code] = true;
 
@@ -334,12 +335,12 @@ Tilt.Arcball.prototype = {
   },
 
   /**
-   * Function handling the keyReleased event.
+   * Function handling the keyUp event.
    * Call this when the a key was released.
    *
    * @param {Number} code: the code corresponding to the key released
    */
-  keyReleased: function(code) {
+  keyUp: function(code) {
     this.$keyCode[code] = false;
 
     if (code === 17 || code === 224) {
