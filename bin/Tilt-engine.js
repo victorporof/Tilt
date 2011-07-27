@@ -7349,12 +7349,15 @@ Tilt.Slider.prototype = {
 
     if (ui.$mousePressed) {
       if (this.$mousePressed) {
-        sprite.x = Tilt.Math.clamp(mx || 0, this.x, this.x + this.width);
+        this.value = Tilt.Math.map(mx, this.x, this.x + this.width, 0, 100);
       }
     }
     else {
       this.$mousePressed = false;
     }
+
+    sprite.x = Tilt.Math.map(this.value, 0, 100, this.x, this.x + this.width);
+    sprite.y = this.y;
 
     bounds[0] = sprite.x;
     bounds[1] = sprite.y;
@@ -8350,6 +8353,20 @@ Tilt.Math = {
    */
   degrees: function(radians) {
     return radians * 180 / Math.PI;
+  },
+
+  /**
+   * Re-maps a number from one range to another.
+   *
+   * @param {Number} value: the number to map
+   * @param {Number} low1: the normal lower bound of the number
+   * @param {Number} high1: the normal upper bound of the number
+   * @param {Number} low2: the new lower bound of the number
+   * @param {Number} high2: the new upper bound of the number
+   */
+  map: function(value, low1, high1, low2, high2) {
+    value = this.clamp(value, low1, high1);
+    return low2 + (high2 - low2) * ((value - low1) / (high1 - low1));	
   },
 
   /**
