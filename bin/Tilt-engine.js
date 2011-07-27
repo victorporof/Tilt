@@ -249,14 +249,14 @@ Tilt.Arcball.prototype = {
   },
 
   /**
-   * Function handling the mousePressed event.
+   * Function handling the mouseDown event.
    * Call this when the mouse was pressed.
    *
    * @param {Number} x: the current horizontal coordinate of the mouse
    * @param {Number} y: the current vertical coordinate of the mouse
    * @param {Number} button: which mouse button was pressed
    */
-  mousePressed: function(x, y, button) {
+  mouseDown: function(x, y, button) {
     this.$clearInterval();
 
     this.$mousePress[0] = x;
@@ -273,26 +273,27 @@ Tilt.Arcball.prototype = {
   },
 
   /**
-   * Function handling the mouseReleased event.
+   * Function handling the mouseUp event.
    * Call this when a mouse button was released.
    *
    * @param {Number} x: the current horizontal coordinate of the mouse
    * @param {Number} y: the current vertical coordinate of the mouse
+   * @param {Number} button: which mouse button was released
    */
-  mouseReleased: function(x, y) {
+  mouseUp: function(x, y, button) {
     this.$mouseRelease[0] = x;
     this.$mouseRelease[1] = y;
     this.$mouseButton = -1;
   },
 
   /**
-   * Function handling the mouseMoved event.
+   * Function handling the mouseMove event.
    * Call this when the mouse was moved.
    *
    * @param {Number} x: the current horizontal coordinate of the mouse
    * @param {Number} y: the current vertical coordinate of the mouse
    */
-  mouseMoved: function(x, y) {
+  mouseMove: function(x, y) {
     if (this.$mouseButton !== -1) {
       this.$mouseMove[0] = x;
       this.$mouseMove[1] = y;
@@ -319,12 +320,12 @@ Tilt.Arcball.prototype = {
   },
 
   /**
-   * Function handling the keyPressed event.
+   * Function handling the keyDown event.
    * Call this when the a key was pressed.
    *
    * @param {Number} code: the code corresponding to the key pressed
    */
-  keyPressed: function(code) {
+  keyDown: function(code) {
     this.$clearInterval();
     this.$keyCode[code] = true;
 
@@ -334,12 +335,12 @@ Tilt.Arcball.prototype = {
   },
 
   /**
-   * Function handling the keyReleased event.
+   * Function handling the keyUp event.
    * Call this when the a key was released.
    *
    * @param {Number} code: the code corresponding to the key released
    */
-  keyReleased: function(code) {
+  keyUp: function(code) {
     this.$keyCode[code] = false;
 
     if (code === 17 || code === 224) {
@@ -1053,6 +1054,13 @@ Tilt.Program.prototype = {
       gl.bindTexture(gl.TEXTURE_2D, texture.$ref);
       gl.uniform1i(this.$uniforms[sampler], 0);
     }
+  },
+
+  /**
+   * Clears any bound uniforms from the cache.
+   */
+  clearCache: function() {
+    this.$cache = {};
   },
 
   /**
@@ -6241,7 +6249,7 @@ Tilt.Renderer = function(canvas, failCallback, successCallback) {
   this.stroke("#000");
   this.strokeWeight(1);
   this.blendMode("alpha");
-  this.depthTest(false);
+  this.depthTest(true);
 };
 
 Tilt.Renderer.prototype = {
@@ -6853,6 +6861,10 @@ Tilt.Renderer.prototype = {
     // increment the elapsed time and total frame count
     this.elapsedTime += this.frameDelta;
     this.frameCount++;
+
+    // clear the cache associated with the shaders
+    // this.colorShader.clearCache();
+    // this.textureShader.clearCache();
   },
 
   /**
@@ -7055,6 +7067,7 @@ var EXPORTED_SYMBOLS = ["Tilt.Button"];
  * @param {Tilt.Sprite} sprite: the sprite to be drawn as background
  * @param {Function} onclick: optional, function to be called when clicked
  * @param {Object} properties: additional properties for this object
+ *  @param {Boolean} hidden: true if this object should be hidden
  */
 Tilt.Button = function(x, y, sprite, onclick, properties) {
 
@@ -7162,6 +7175,8 @@ var EXPORTED_SYMBOLS = ["Tilt.Container"];
  *
  * @param {Array} elements: array of GUI elements added to this container
  * @param {Object} properties: additional properties for this object
+ *  @param {Boolean} hidden: true if this object should be hidden
+ *  @param {String} background: color to fill the screen
  */
 Tilt.Container = function(elements, properties) {
 
@@ -7236,6 +7251,137 @@ Tilt.Container.prototype = {
   }
 };
 /*
+ * Slider.js - A simple horizontal slider
+ * version 0.1
+ *
+ * Copyright (c) 2011 Victor Porof
+ *
+ * This software is provided 'as-is', without any express or implied
+ * warranty. In no event will the authors be held liable for any damages
+ * arising from the use of this software.
+ *
+ * Permission is granted to anyone to use this software for any purpose,
+ * including commercial applications, and to alter it and redistribute it
+ * freely, subject to the following restrictions:
+ *
+ *    1. The origin of this software must not be misrepresented; you must not
+ *    claim that you wrote the original software. If you use this software
+ *    in a product, an acknowledgment in the product documentation would be
+ *    appreciated but is not required.
+ *
+ *    2. Altered source versions must be plainly marked as such, and must not
+ *    be misrepresented as being the original software.
+ *
+ *    3. This notice may not be removed or altered from any source
+ *    distribution.
+ */
+"use strict";
+
+var Tilt = Tilt || {};
+var EXPORTED_SYMBOLS = ["Tilt.Slider"];
+
+/**
+ * Slider constructor.
+ *
+ * @param {Number} x: the x position of the object
+ * @param {Number} y: the y position of the object
+ * @param {Tilt.Sprite} sprite: the sprite to be drawn for the handler
+ * @param {Function} onclick: optional, function to be called when clicked
+ * @param {Object} properties: additional properties for this object
+ *  @param {Boolean} hidden: true if this object should be hidden
+ */
+Tilt.Slider = function(x, y, width, sprite, properties) {
+
+  // make sure the properties parameter is a valid object
+  properties = properties || {};
+
+  /**
+   * The draw coordinates of this object.
+   */
+  this.x = x || 0;
+  this.y = y || 0;
+
+  /**
+   * The slider size (area in which the handler is moved).
+   */
+  this.width = width || 100;
+
+  /**
+   * A sprite used as a background for this object.
+   */
+  this.sprite = sprite || { width: 0, height: 0 };
+  this.sprite.x = this.x;
+  this.sprite.y = this.y;
+
+  /**
+   * The slider value (also defining the handler position).
+   */
+  this.value = 0;
+
+  /**
+   * Variable specifying if this object shouldn't be drawn.
+   */
+  this.hidden = properties.hidden || false;
+
+  /**
+   * The bounds of this object (used for clicking and intersections).
+   */
+  this.$bounds = [this.x, this.y, this.sprite.width, this.sprite.height];
+
+  /**
+   * 
+   */
+  this.onmousedown = function() {
+    this.$mousePressed = true;
+  };
+};
+
+Tilt.Slider.prototype = {
+
+  /**
+   * Updates this object's internal params.
+   */
+  update: function() {
+    var sprite = this.sprite,
+      bounds = this.$bounds,
+      ui = this.$ui,
+      mx = ui.$mouseX - sprite.width / 2;
+
+    if (ui.$mousePressed) {
+      if (this.$mousePressed) {
+        sprite.x = Tilt.Math.clamp(mx || 0, this.x, this.x + this.width);
+      }
+    }
+    else {
+      this.$mousePressed = false;
+    }
+
+    bounds[0] = sprite.x;
+    bounds[1] = sprite.y;
+    bounds[2] = sprite.width;
+    bounds[3] = sprite.height;
+  },
+
+  /**
+   * Draws this object using the specified internal params.
+   * @param {Tilt.Renderer} tilt: optional, a reference to a Tilt.Renderer
+   */
+  draw: function(tilt) {
+    tilt = tilt || Tilt.$renderer;
+
+    if ("undefined" !== typeof this.sprite.texture) {
+      this.sprite.draw(tilt);
+    }
+  },
+
+  /**
+   * Destroys this object and deletes all members.
+   */
+  destroy: function() {
+    Tilt.destroyObject(this);
+  }
+};
+/*
  * Sprite.js - A handy wrapper for a texture
  * version 0.1
  *
@@ -7271,6 +7417,12 @@ var EXPORTED_SYMBOLS = ["Tilt.Sprite"];
  * @param {Tilt.Texture} texture: the texture to be used
  * @param {Array} region: the sub-texture coordinates as [x, y, width, height]
  * @param {Object} properties: additional properties for this object
+ *  @param {Boolean} hidden: true if this object should be hidden
+ *  @param {Boolean} depthTest: true to use depth testing
+ *  @param {Number} x: the x position of the object
+ *  @param {Number} y: the y position of the object
+ *  @param {Number} width: the width of the object
+ *  @param {Number} height: the height of the object
  */
 Tilt.Sprite = function(texture, region, properties) {
 
@@ -7428,8 +7580,21 @@ Tilt.UI.prototype = {
    * @param {Object} a valid Tilt UI object (ex: Tilt.Button)
    */
   push: function() {
-    for (var i = 0, len = arguments.length; i < len; i++) {
-      this.elements.push(arguments[i]);
+    var i, j, len, len2, argument;
+    
+    for (i = 0, len = arguments.length; i < len; i++) {
+      argument = arguments[i];
+
+      if (argument instanceof Array) {
+        for (j = 0, len2 = argument.length; j < len2; j++) {
+          argument[j].$ui = this;
+          this.elements.push(argument[j]);
+        }
+      }
+      else {
+        argument.$ui = this;
+        this.elements.push(argument);
+      }
     }
   },
 
@@ -7438,17 +7603,33 @@ Tilt.UI.prototype = {
    * @param {Object} a valid Tilt UI object (ex: Tilt.Button)
    */
   remove: function() {
-    for (var i = 0, len = arguments.length, index = -1; i < len; i++) {
-      if ((index = this.elements.indexOf(arguments[i])) !== -1) {
-        this.elements.splice(index, 1);
+    var i, j, len, len2, argument, index;
+    
+    for (i = 0, len = arguments.length, index = -1; i < len; i++) {
+      argument = arguments[i];
+
+      if (argument instanceof Array) {
+        for (j = 0, len2 = argument.length, index = -1; j < len2; j++) {
+          if ((index = this.elements.indexOf(argument[j])) !== -1) {
+            argument[j].$ui = null;
+            this.elements.splice(index, 1);
+          }
+        }
+      }
+      else {
+        if ((index = this.elements.indexOf(argument)) !== -1) {             
+          argument.$ui = null;
+          this.elements.splice(index, 1);
+        }
       }
     }
   },
 
   /**
    * Draws all the handled elements.
+   * @param {Number} frameDelta: the delta time elapsed between frames
    */
-  draw: function() {
+  draw: function(frameDelta) {
     var tilt = Tilt.$renderer,
       elements = this.elements,
       element, i, len;
@@ -7469,6 +7650,30 @@ Tilt.UI.prototype = {
   },
 
   /**
+   * Delegate mouse down method.
+   *
+   * @param {Number} x: the current horizontal coordinate of the mouse
+   * @param {Number} y: the current vertical coordinate of the mouse
+   * @param {Number} b: which mouse button was pressed
+   */
+  mouseDown: function(x, y, b) {
+    this.$mousePressed = true;
+    this.ui$handleEvent(x, y, this.element$handleMouseEvent, "mousedown");
+  },
+
+  /**
+   * Delegate mouse up method.
+   *
+   * @param {Number} x: the current horizontal coordinate of the mouse
+   * @param {Number} y: the current vertical coordinate of the mouse
+   * @param {Number} b: which mouse button was released
+   */
+  mouseUp: function(x, y, b) {
+    this.$mousePressed = false;
+    this.ui$handleEvent(x, y, this.element$handleMouseEvent, "mouseup");
+  },
+
+  /**
    * Delegate click method.
    *
    * @param {Number} x: the current horizontal coordinate of the mouse
@@ -7486,6 +7691,17 @@ Tilt.UI.prototype = {
    */
   doubleClick: function(x, y) {
     this.ui$handleEvent(x, y, this.element$handleMouseEvent, "dblclick");
+  },
+
+  /**
+   * Delegate mouse move method.
+   *
+   * @param {Number} x: the current horizontal coordinate of the mouse
+   * @param {Number} y: the current vertical coordinate of the mouse
+   */
+  mouseMove: function(x, y) {
+    this.$mouseX = x;
+    this.$mouseY = y;
   },
 
   /**
