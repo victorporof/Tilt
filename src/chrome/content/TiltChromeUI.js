@@ -77,8 +77,13 @@ TiltChrome.UI = function() {
   viewModeWireframeButton = null,
   colorAdjustButton = null,
   colorAdjustPopup = null,
-  
-  slider = null;
+
+  /**
+   * Sliders.
+   */
+  hueSlider = null,
+  saturationSlider = null,
+  brightnessSlider = null;
 
   /**
    * Function called automatically by the visualization at the setup().
@@ -150,8 +155,14 @@ TiltChrome.UI = function() {
       hidden: false
     });
 
-    var sliderHandlerSprite = new Tilt.Sprite(texture, [573, 95, 20, 20]);
-    slider = new Tilt.Slider(150, 275, 135, sliderHandlerSprite);
+    var hueSliderSprite = new Tilt.Sprite(texture, [573, 95, 32, 32]);
+    hueSlider = new Tilt.Slider(146, 269, 130, hueSliderSprite);
+
+    var saturationSliderSprite = new Tilt.Sprite(texture, [573, 95, 32, 32]);
+    saturationSlider = new Tilt.Slider(146, 288, 130, saturationSliderSprite);
+
+    var brightnessSliderSprite = new Tilt.Sprite(texture, [573, 95, 32, 32]);
+    brightnessSlider = new Tilt.Slider(146, 307, 130, brightnessSliderSprite);
 
     texture.onload = function() {
       this.visualization.redraw();
@@ -222,7 +233,8 @@ TiltChrome.UI = function() {
     ];
 
     var hideableElements = [
-      helpPopup, colorAdjustPopup, slider,
+      helpPopup, colorAdjustPopup,
+      hueSlider, saturationSlider, brightnessSlider,
       arcballSprite, resetButton, zoomInButton, zoomOutButton,
       viewModeNormalButton, colorAdjustButton,
       optionsButton, exportButton, helpButton
