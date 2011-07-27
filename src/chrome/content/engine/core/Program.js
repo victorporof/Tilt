@@ -251,6 +251,13 @@ Tilt.Program.prototype = {
   },
 
   /**
+   * Clears any bound uniforms from the cache.
+   */
+  clearCache: function() {
+    this.$cache = {};
+  },
+
+  /**
    * Destroys this object and deletes all members.
    */
   destroy: function() {
