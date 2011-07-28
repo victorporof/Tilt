@@ -409,6 +409,16 @@ Tilt.Arcball.prototype = {
   },
 
   /**
+   * Cancels any current actions.
+   */
+  cancel: function() {
+    this.$clearInterval();
+
+    this.$save();
+    this.$mouseButton = -1;
+  },
+
+  /**
    * Resets the rotation and translation to origin.
    * @param {Number} factor: the reset interpolation factor between frames
    */
