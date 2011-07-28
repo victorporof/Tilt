@@ -302,5 +302,214 @@ Tilt.Document = {
     finally {
       node = null;
     }
+  },
+
+  /**
+   * Returns the modified css values from a computed style
+   *
+   * @param {CSSComputedStyle} style: the style to analyze
+   * @return {String} the custom css text
+   */
+  getModifiedCss: function(style) {
+    var cssText = ["{"], n, v, t, i,
+      defaults = '\
+background-attachment: scroll;\
+background-clip: border-box;\
+background-color: transparent;\
+background-image: none;\
+background-origin: padding-box;\
+background-position: 0% 0%;\
+background-repeat: repeat;\
+background-size: auto auto;\
+border-bottom-color: rgb(0, 0, 0);\
+border-bottom-left-radius: 0px;\
+border-bottom-right-radius: 0px;\
+border-bottom-style: none;\
+border-bottom-width: 0px;\
+border-collapse: separate;\
+border-left-color: rgb(0, 0, 0);\
+border-left-style: none;\
+border-left-width: 0px;\
+border-right-color: rgb(0, 0, 0);\
+border-right-style: none;\
+border-right-width: 0px;\
+border-spacing: 0px 0px;\
+border-top-color: rgb(0, 0, 0);\
+border-top-left-radius: 0px;\
+border-top-right-radius: 0px;\
+border-top-style: none;\
+border-top-width: 0px;\
+bottom: auto;\
+box-shadow: none;\
+caption-side: top;\
+clear: none;\
+clip: auto;\
+color: rgb(0, 0, 0);\
+content: none;\
+counter-increment: none;\
+counter-reset: none;\
+cursor: auto;\
+direction: ltr;\
+display: block;\
+empty-cells: -moz-show-background;\
+float: none;\
+font-family: serif;\
+font-size: 16px;\
+font-size-adjust: none;\
+font-stretch: normal;\
+font-style: normal;\
+font-variant: normal;\
+font-weight: 400;\
+height: 0px;\
+ime-mode: auto;\
+left: auto;\
+letter-spacing: normal;\
+line-height: 19.2px;\
+list-style-image: none;\
+list-style-position: outside;\
+list-style-type: disc;\
+margin-bottom: 8px;\
+margin-left: 8px;\
+margin-right: 8px;\
+margin-top: 8px;\
+marker-offset: auto;\
+max-height: none;\
+max-width: none;\
+min-height: 0px;\
+min-width: 0px;\
+opacity: 1;\
+outline-color: rgb(0, 0, 0);\
+outline-offset: 0px;\
+outline-style: none;\
+outline-width: 0px;\
+overflow: visible;\
+overflow-x: visible;\
+overflow-y: visible;\
+padding-bottom: 0px;\
+padding-left: 0px;\
+padding-right: 0px;\
+padding-top: 0px;\
+page-break-after: auto;\
+page-break-before: auto;\
+pointer-events: auto;\
+position: static;\
+quotes: "“" "”" "‘" "’";\
+resize: none;\
+right: auto;\
+table-layout: auto;\
+text-align: start;\
+text-decoration: none;\
+text-indent: 0px;\
+text-overflow: clip;\
+text-shadow: none;\
+text-transform: none;\
+top: auto;\
+unicode-bidi: embed;\
+vertical-align: baseline;\
+visibility: visible;\
+white-space: normal;\
+width: 1157px;\
+word-spacing: 0px;\
+word-wrap: normal;\
+z-index: auto;\
+-moz-animation-delay: 0s;\
+-moz-animation-direction: normal;\
+-moz-animation-duration: 0s;\
+-moz-animation-fill-mode: none;\
+-moz-animation-iteration-count: 1;\
+-moz-animation-name: none;\
+-moz-animation-play-state: running;\
+-moz-animation-timing-function: cubic-bezier(0.25, 0.1, 0.25, 1);\
+-moz-appearance: none;\
+-moz-background-inline-policy: continuous;\
+-moz-binding: none;\
+-moz-border-bottom-colors: none;\
+-moz-border-image: none;\
+-moz-border-left-colors: none;\
+-moz-border-right-colors: none;\
+-moz-border-top-colors: none;\
+-moz-box-align: stretch;\
+-moz-box-direction: normal;\
+-moz-box-flex: 0;\
+-moz-box-ordinal-group: 1;\
+-moz-box-orient: horizontal;\
+-moz-box-pack: start;\
+-moz-box-sizing: content-box;\
+-moz-column-count: auto;\
+-moz-column-gap: 16px;\
+-moz-column-rule-color: rgb(0, 0, 0);\
+-moz-column-rule-style: none;\
+-moz-column-rule-width: 0px;\
+-moz-column-width: auto;\
+-moz-float-edge: content-box;\
+-moz-font-feature-settings: normal;\
+-moz-font-language-override: normal;\
+-moz-force-broken-image-icon: 0;\
+-moz-hyphens: manual;\
+-moz-image-region: auto;\
+-moz-orient: horizontal;\
+-moz-outline-radius-bottomleft: 0px;\
+-moz-outline-radius-bottomright: 0px;\
+-moz-outline-radius-topleft: 0px;\
+-moz-outline-radius-topright: 0px;\
+-moz-stack-sizing: stretch-to-fit;\
+-moz-tab-size: 8;\
+-moz-text-blink: none;\
+-moz-text-decoration-color: rgb(0, 0, 0);\
+-moz-text-decoration-line: none;\
+-moz-text-decoration-style: solid;\
+-moz-transform: none;\
+-moz-transform-origin: 50% 50%;\
+-moz-transition-delay: 0s;\
+-moz-transition-duration: 0s;\
+-moz-transition-property: all;\
+-moz-transition-timing-function: cubic-bezier(0.25, 0.1, 0.25, 1);\
+-moz-user-focus: none;\
+-moz-user-input: auto;\
+-moz-user-modify: read-only;\
+-moz-user-select: auto;\
+-moz-window-shadow: default;\
+clip-path: none;\
+clip-rule: nonzero;\
+color-interpolation: srgb;\
+color-interpolation-filters: linearrgb;\
+dominant-baseline: auto;\
+fill: rgb(0, 0, 0);\
+fill-opacity: 1;\
+fill-rule: nonzero;\
+filter: none;\
+flood-color: rgb(0, 0, 0);\
+flood-opacity: 1;\
+image-rendering: auto;\
+lighting-color: rgb(255, 255, 255);\
+marker-end: none;\
+marker-mid: none;\
+marker-start: none;\
+mask: none;\
+shape-rendering: auto;\
+stop-color: rgb(0, 0, 0);\
+stop-opacity: 1;\
+stroke: none;\
+stroke-dasharray: none;\
+stroke-dashoffset: 0px;\
+stroke-linecap: butt;\
+stroke-linejoin: miter;\
+stroke-miterlimit: 4;\
+stroke-opacity: 1;\
+stroke-width: 1px;\
+text-anchor: start;\
+text-rendering: auto;';
+
+    for (i = 0; i < style.length; i++) {
+      n = style[i];
+      v = style.getPropertyValue(n);
+      t = n + ": " + v + ";";
+
+      if (defaults.indexOf(t) === -1 && n !== "quotes") {
+        cssText.push("  " + t);
+      }
+    }
+
+    return cssText.join("\n") + "\n}\n";
   }
 };
