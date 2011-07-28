@@ -213,11 +213,15 @@ TiltChrome.UI = function() {
     viewModeButton.onclick = function() {
       if (viewModeButton.sprite === viewModeWireframeSprite) {
         viewModeButton.sprite = viewModeNormalSprite;
+        this.visualization.setMeshWireframeColor([1, 1, 1, 0.5]);
+        this.visualization.setMeshDrawMode("stroke");
       }
       else {
         viewModeButton.sprite = viewModeWireframeSprite;
+        this.visualization.setMeshWireframeColor([0, 0, 0, 0.25]);
+        this.visualization.setMeshDrawMode("both");
       }
-    };
+    }.bind(this);
 
     colorAdjustButton = new Tilt.Button(50, 260,
       new Tilt.Sprite(texture, [505, 0, 66, 66]));
@@ -279,6 +283,19 @@ TiltChrome.UI = function() {
    */
   this.draw = function(frameDelta) {
     ui.draw(frameDelta);
+
+    var rgba = Tilt.Math.hsv2rgb(
+      hueSlider.value / 100,
+      saturationSlider.value / 100,
+      brightnessSlider.value / 100);
+
+    rgba[0] /= 255;
+    rgba[1] /= 255;
+    rgba[2] /= 255;
+    rgba[3] = alphaSlider.value / 100;
+
+    this.visualization.setMeshColor(rgba);
+    this.visualization.setMeshTextureAlpha(textureSlider.value / 100);
   };
 
   /**
