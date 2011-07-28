@@ -43,49 +43,78 @@ Tilt.UI.prototype = {
 
   /**
    * Adds a UI element to the handler stack.
-   * @param {Object} a valid Tilt UI object (ex: Tilt.Button)
+   * @param {Array} elements: array of valid Tilt UI objects (ex: Tilt.Button)
+   * @param {Array} container: optional, the container array for the objects
    */
-  push: function() {
-    var i, j, len, len2, argument;
-    
-    for (i = 0, len = arguments.length; i < len; i++) {
-      argument = arguments[i];
+  push: function(elements, container) {
+    var i, len, element;
 
-      if (argument instanceof Array) {
-        for (j = 0, len2 = argument.length; j < len2; j++) {
-          argument[j].$ui = this;
-          this.elements.push(argument[j]);
+    if ("undefined" === typeof container) {
+      container = this.elements;
+    }
+    if (elements instanceof Array) {
+      for (i = 0, len = elements.length; i < len; i++) {
+
+        // get the current element from the array
+        element = elements[i];
+
+        if (element instanceof Array) {
+          this.push(element);
+        }
+        else {
+          element.$ui = this;
+          container.push(element);
         }
       }
-      else {
-        argument.$ui = this;
-        this.elements.push(argument);
-      }
+    }
+    else {
+      element = elements;
+      element.$ui = this;
+      container.push(element);
     }
   },
 
   /**
    * Removes a UI element from the handler stack.
-   * @param {Object} a valid Tilt UI object (ex: Tilt.Button)
+   * @param {Array} elements: array of valid Tilt UI objects (ex: Tilt.Button)
+   * @param {Array} container: optional, the container array for the objects
    */
-  remove: function() {
-    var i, j, len, len2, argument, index;
-    
-    for (i = 0, len = arguments.length, index = -1; i < len; i++) {
-      argument = arguments[i];
+  remove: function(elements, container) {
+    var i, len, element, index;
 
-      if (argument instanceof Array) {
-        for (j = 0, len2 = argument.length, index = -1; j < len2; j++) {
-          if ((index = this.elements.indexOf(argument[j])) !== -1) {
-            argument[j].$ui = null;
-            this.elements.splice(index, 1);
+    if ("undefined" === typeof container) {
+      container = this.elements;
+    }
+    if (elements instanceof Array) {
+      for (i = 0, len = elements.length, index = -1; i < len; i++) {
+
+        // get the current element from the array
+        element = elements[i];
+
+        if (element instanceof Array) {
+          this.remove(element);
+        }
+        else {
+          if ((index = this.elements.indexOf(element)) !== -1) {             
+            element.$ui = null;
+            container.splice(index, 1);
+
+            if (element.elements instanceof Array) {
+              this.remove(element.elements);
+            }
           }
         }
       }
-      else {
-        if ((index = this.elements.indexOf(argument)) !== -1) {             
-          argument.$ui = null;
-          this.elements.splice(index, 1);
+    }
+    else {
+      element = elements;
+
+      if ((index = this.elements.indexOf(element)) !== -1) {             
+        element.$ui = null;
+        container.splice(index, 1);
+
+        if (element.elements instanceof Array) {
+          this.remove(element.elements);
         }
       }
     }
@@ -107,9 +136,9 @@ Tilt.UI.prototype = {
 
     for (i = 0, len = elements.length; i < len; i++) {
       element = elements[i];
-      element.update();
 
       if (!element.hidden) {
+        element.update();
         element.draw(tilt);
       }
     }
@@ -121,10 +150,13 @@ Tilt.UI.prototype = {
    * @param {Number} x: the current horizontal coordinate of the mouse
    * @param {Number} y: the current vertical coordinate of the mouse
    * @param {Number} b: which mouse button was pressed
+   * @return {Boolean} true if the mouse is over a handled element
    */
   mouseDown: function(x, y, b) {
     this.$mousePressed = true;
     this.ui$handleEvent(x, y, this.element$handleMouseEvent, "mousedown");
+
+    return this.$mousePressedOver;
   },
 
   /**
@@ -133,10 +165,18 @@ Tilt.UI.prototype = {
    * @param {Number} x: the current horizontal coordinate of the mouse
    * @param {Number} y: the current vertical coordinate of the mouse
    * @param {Number} b: which mouse button was released
+   * @return {Boolean} true if the mouse was pressed over a handled element
    */
   mouseUp: function(x, y, b) {
     this.$mousePressed = false;
     this.ui$handleEvent(x, y, this.element$handleMouseEvent, "mouseup");
+
+    try {
+      return this.$mousePressedOver;
+    }
+    finally {
+      this.$mousePressedOver = false;
+    }
   },
 
   /**
@@ -191,12 +231,12 @@ Tilt.UI.prototype = {
         subelements = element.elements;
 
         for (j = 0, len2 = subelements.length; j < len2; j++) {
-          handle(x, y, subelements[j], "on" + e);
+          handle.call(this, x, y, subelements[j], "on" + e);
         }
       }
       else {
         // normally check if the element is valid to receive a click event
-        handle(x, y, element, "on" + e);
+        handle.call(this, x, y, element, "on" + e);
       }
     }
   },
@@ -227,6 +267,9 @@ Tilt.UI.prototype = {
     if (x > boundsX && x < boundsX + boundsWidth &&
         y > boundsY && y < boundsY + boundsHeight) {
 
+      if (e === "onmousedown") {
+        this.$mousePressedOver = true;
+      }
       element[e](x, y);
     }
   },
@@ -236,7 +279,7 @@ Tilt.UI.prototype = {
    */
   destroy: function() {
     for (var i in this.elements) {
-      Tilt.destroyObject(elements[i]);
+      Tilt.destroyObject(this.elements[i]);
     }
 
     Tilt.destroyObject(this);
