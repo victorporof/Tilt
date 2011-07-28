@@ -664,6 +664,10 @@ Tilt.Renderer.prototype = {
    * @param {Tilt.VertexBuffer} texCoord: optional, custom texture coordinates
    */
   image: function(texture, x, y, width, height, texCoord) {
+    if (!texture.loaded) {
+      return;
+    }
+
     var rectangle = this.$rectangle,
       tint = this.$tintColor,
       stroke = this.$strokeColor,
