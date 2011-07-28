@@ -108,13 +108,14 @@ Tilt.Shaders.Texture = {
 "#endif",
 
 "uniform vec4 color;",
+"uniform float texalpha;",
 "uniform sampler2D sampler;",
 
 "varying vec2 texCoord;",
 
 "void main(void) {",
 "  vec4 tex = texture2D(sampler, vec2(texCoord.s, texCoord.t));",
-"  gl_FragColor = color * tex;",
+"  gl_FragColor = color * tex * texalpha + color * (1.0 - texalpha);",
 "}"
 ].join("\n")
 };
