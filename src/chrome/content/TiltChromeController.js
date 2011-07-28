@@ -37,19 +37,24 @@ TiltChrome.Controller.MouseAndKeyboard = function() {
   /**
    * Arcball used to control the visualization using the mouse.
    */
-  this.arcball = null;
+  var arcball = null,
+
+  /**
+   * Variable specifying if the controller should be paused.
+   */
+  paused = false,
 
   /**
    * Retain the position for the mouseDown event.
    */
-  var downX = 0, downY = 0;
+  downX = 0, downY = 0;
 
   /**
    * Function called automatically by the visualization at the setup().
    * @param {HTMLCanvasElement} canvas: the canvas element
    */
   this.init = function(canvas) {
-    this.arcball = new Tilt.Arcball(canvas.width, canvas.height);
+    arcball = new Tilt.Arcball(canvas.width, canvas.height);
 
     // bind commonly used mouse and keyboard events with the controller
     canvas.addEventListener("mousedown", mouseDown, false);
@@ -69,7 +74,7 @@ TiltChrome.Controller.MouseAndKeyboard = function() {
    */
   this.loop = function(frameDelta) {
     var vis = this.visualization,
-      coord = this.arcball.loop(frameDelta);
+      coord = arcball.loop(frameDelta);
 
     // update the visualization
     vis.setRotation(coord.rotation);
@@ -80,34 +85,44 @@ TiltChrome.Controller.MouseAndKeyboard = function() {
    * Called once after every time a mouse button is pressed.
    */
   var mouseDown = function(e) {
+    if (paused) {
+      return;
+    }
+
     e.preventDefault();
     e.stopPropagation();
 
     downX = e.clientX - e.target.offsetLeft;
     downY = e.clientY - e.target.offsetTop;
 
-    this.arcball.mouseDown(downX, downY, e.which);
-    this.visualization.mouseDown(downX, downY, e.which);
+    arcball.mouseDown(downX, downY, e.which);
   }.bind(this);
 
   /**
    * Called every time a mouse button is released.
    */
   var mouseUp = function(e) {
+    if (paused) {
+      return;
+    }
+
     e.preventDefault();
     e.stopPropagation();
 
     var upX = e.clientX - e.target.offsetLeft;
     var upY = e.clientY - e.target.offsetTop;
 
-    this.arcball.mouseUp(upX, upY, e.which);
-    this.visualization.mouseUp(upX, upY, e.which);
+    arcball.mouseUp(upX, upY, e.which);
   }.bind(this);
 
   /**
-   * Called every time a mouse button is double clicked.
+   * Called every time a mouse button is clicked.
    */
   var click = function(e) {
+    if (paused) {
+      return;
+    }
+
     e.preventDefault();
     e.stopPropagation();
 
@@ -123,6 +138,10 @@ TiltChrome.Controller.MouseAndKeyboard = function() {
    * Called every time a mouse button is double clicked.
    */
   var doubleClick = function(e) {
+    if (paused) {
+      return;
+    }
+
     e.preventDefault();
     e.stopPropagation();
 
@@ -138,14 +157,17 @@ TiltChrome.Controller.MouseAndKeyboard = function() {
    * Called every time the mouse moves.
    */
   var mouseMove = function(e) {
+    if (paused) {
+      return;
+    }
+
     e.preventDefault();
     e.stopPropagation();
 
     var moveX = e.clientX - e.target.offsetLeft;
     var moveY = e.clientY - e.target.offsetTop;
 
-    this.arcball.mouseMove(moveX, moveY);
-    this.visualization.mouseMove(moveX, moveY);
+    arcball.mouseMove(moveX, moveY);
   }.bind(this);
 
   /**
@@ -155,8 +177,7 @@ TiltChrome.Controller.MouseAndKeyboard = function() {
     e.preventDefault();
     e.stopPropagation();
 
-    this.arcball.mouseOut();
-    this.visualization.mouseOut();
+    arcball.mouseOut();
   }.bind(this);
 
   /**
@@ -166,7 +187,7 @@ TiltChrome.Controller.MouseAndKeyboard = function() {
     e.preventDefault();
     e.stopPropagation();
 
-    this.arcball.mouseScroll(e.detail);
+    arcball.mouseScroll(e.detail);
   }.bind(this);
 
   /**
@@ -180,7 +201,7 @@ TiltChrome.Controller.MouseAndKeyboard = function() {
       return;
     }
 
-    this.arcball.keyDown(code);
+    arcball.keyDown(code);
   }.bind(this);
 
   /**
@@ -200,8 +221,39 @@ TiltChrome.Controller.MouseAndKeyboard = function() {
       }
     }
 
-    this.arcball.keyUp(code);
+    arcball.keyUp(code);
   }.bind(this);
+
+  /**
+   * Pauses the controller from handling events.
+   */
+  this.pause = function() {
+    paused = true;
+    arcball.cancel();
+  };
+
+  /**
+   * Resumes the controller to handle events.
+   */
+  this.unpause = function() {
+    paused = false;
+  };
+
+  /**
+   * Moves the camera forward or backward depending on the passed amount.
+   * @param {Number} amount: the amount of zooming to do
+   */
+  this.zoom = function(amount) {
+    arcball.zoom(amount);
+  };
+
+  /**
+   * Resets the rotation and translation to origin.
+   * @param {Number} factor: the reset interpolation factor between frames
+   */
+  this.reset = function(factor) {
+    arcball.reset(factor);
+  };
 
   /**
    * Delegate method, called when the controller needs to be resized.
@@ -210,7 +262,7 @@ TiltChrome.Controller.MouseAndKeyboard = function() {
    * @param height: the new height of the visualization
    */
   this.resize = function(width, height) {
-    this.arcball.resize(width, height);
+    arcball.resize(width, height);
   };
 
   /**
