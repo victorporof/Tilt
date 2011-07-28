@@ -290,7 +290,7 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
       vertices: new Tilt.VertexBuffer(vertices, 3),
       texCoord: new Tilt.VertexBuffer(texCoord, 2),
       indices: new Tilt.IndexBuffer(indices),
-      color: "#fff",
+      color: "#fffd",
       texalpha: 255,
       texture: texture,
       nodes: nodes
