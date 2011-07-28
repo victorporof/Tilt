@@ -251,7 +251,7 @@ TiltChrome.UI = function() {
       value: 100
     });
     alphaSlider = new Tilt.Slider(152, 326, 120, sliderHandlerSprite, {
-      value: 100
+      value: 90
     });
     textureSlider = new Tilt.Slider(152, 344, 120, sliderHandlerSprite, {
       value: 100
