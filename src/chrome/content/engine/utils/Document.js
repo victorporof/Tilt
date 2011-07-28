@@ -311,7 +311,7 @@ Tilt.Document = {
    * @return {String} the custom css text
    */
   getModifiedCss: function(style) {
-    var cssText = ["{"], n, v, t, i,
+    var cssText = [], n, v, t, i,
       defaults = '\
 background-attachment: scroll;\
 background-clip: border-box;\
@@ -506,10 +506,10 @@ text-rendering: auto;';
       t = n + ": " + v + ";";
 
       if (defaults.indexOf(t) === -1 && n !== "quotes") {
-        cssText.push("  " + t);
+        cssText.push(t);
       }
     }
 
-    return cssText.join("\n") + "\n}\n";
+    return cssText.join("\n") + "\n";
   }
 };
