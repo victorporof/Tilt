@@ -37,6 +37,7 @@ var EXPORTED_SYMBOLS = ["Tilt.Mesh"];
  *  @param {Tilt.VertexBuffer} normals: the normals buffer (m, n, p)
  *  @param {Tilt.IndexBuffer} indices: indices for the passed vertices buffer
  *  @param {String} color: the color to be used by the shader if required
+ *  @param {Number} texalpha: the texture transparency
  *  @param {Tilt.Texture} texture: optional texture to be used by the shader
  *  @param {Number} drawMode: WebGL enum, like tilt.TRIANGLES
  * @param {Function} draw: optional function to handle custom drawing
@@ -55,6 +56,14 @@ Tilt.Mesh = function(parameters, draw) {
     this.color = Tilt.Math.hex2rgba(this.color);
   } else if ("undefined" === typeof this.color) {
     this.color = [1, 1, 1, 1];
+  }
+
+  // the texture alpha should be a number between 0..1
+  if ("undefined" === typeof this.texalpha) {
+    this.texalpha = 1;
+  }
+  else if ("number" === typeof this.texalpha && this.texalpha > 1) {
+    this.texalpha /= 255;
   }
 
   // the draw mode should be valid, default to TRIANGLES if unspecified
@@ -76,6 +85,10 @@ Tilt.Mesh.prototype = {
    * Overwrite this function to handle custom drawing.
    */
   draw: function() {
+    if (this.hidden === true) {
+      return;
+    }
+
     // cache some properties for easy access
     var tilt = Tilt.$renderer,
       vertices = this.vertices,
@@ -83,12 +96,13 @@ Tilt.Mesh.prototype = {
       normals = this.normals,
       indices = this.indices,
       color = this.color,
-      texture = this.texture,
+      a = this.texalpha,
+      t = this.texture,
       drawMode = this.drawMode;
 
     // use the necessary shader
-    if (texture) {
-      tilt.useTextureShader(vertices, texCoord, color, texture);
+    if (t) {
+      tilt.useTextureShader(vertices, texCoord, color, a, t);
     } else {
       tilt.useColorShader(vertices, color);
     }
