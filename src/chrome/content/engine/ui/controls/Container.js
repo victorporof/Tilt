@@ -43,12 +43,12 @@ Tilt.Container = function(elements, properties) {
   elements = elements || [];
 
   /**
-   * A texture used as the pixel data for this object.
+   * The UI elements in this container.
    */
   this.elements = elements instanceof Array ? elements : [elements];
 
   /**
-   * The color of the full screen rectangle.
+   * The color of the full screen background rectangle.
    */
   this.background = properties.background || null;
 
