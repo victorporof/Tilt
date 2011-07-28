@@ -104,6 +104,8 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
     // set the transformations at initialization
     transforms.translation = [0, 0, 0];
     transforms.rotation = [0, 0, 0, 1];
+
+    tilt.strokeWeight(2);
   };
 
   /**
@@ -137,7 +139,6 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
 
       // draw the visualization mesh
       tilt.depthTest(true);
-      tilt.strokeWeight(2);
       mesh.draw();
       meshWireframe.draw();
 
@@ -195,8 +196,7 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
 
     // traverse the document
     Tilt.Document.traverse(function(node, depth) {
-      if (node.localName === "img" ||
-          node.localName === "a" ||
+      if (node.localName === "a" ||
           node.localName === "b" ||
           node.localName === "i" ||
           node.localName === "u") {
@@ -283,8 +283,6 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
           i + 8,  i + 9,  i + 9,  i + 10, i + 10, i + 11, i + 11, i + 8);
         wireframeIndices.push(
           i + 10, i + 9,  i + 9,  i + 6,  i + 6,  i + 5,  i + 5,  i + 10);
-        wireframeIndices.push(
-          i + 8,  i + 11, i + 11, i + 4,  i + 4,  i + 7,  i + 7,  i + 8);
       }
     });
 
@@ -293,6 +291,7 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
       texCoord: new Tilt.VertexBuffer(texCoord, 2),
       indices: new Tilt.IndexBuffer(indices),
       color: "#fff",
+      texalpha: 255,
       texture: texture,
       nodes: nodes
     });
@@ -386,6 +385,68 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
 
       quat4.set(quaternion, transforms.rotation);
       redraw = true;
+    }
+  };
+
+  /**
+   * Delegate method, setting the color for the visualization wireframe mesh.
+   * @param {Array} color: the color expressed as [r, g, b, a] between 0..1
+   */
+  this.setMeshWireframeColor = function(color) {
+    meshWireframe.color = color;
+  };
+
+  /**
+   * Delegate method, setting the alpha for the visualization wireframe mesh.
+   * @param {Number} alpha: the alpha expressed as number between 0..1
+   */
+  this.setMeshWireframeAlpha = function(alpha) {
+    meshWireframe.color[3] = alpha;
+  };
+
+  /**
+   * Delegate method, setting the color for the visualization mesh.
+   * @param {Array} color: the color expressed as [r, g, b, a] between 0..1
+   */
+  this.setMeshColor = function(color) {
+    mesh.color = color;
+  };
+
+  /**
+   * Delegate method, setting the color alpha for the visualization mesh.
+   * @param {Number} alpha: the alpha expressed as number between 0..1
+   */
+  this.setMeshAlpha = function(alpha) {
+    mesh.color[3] = alpha;
+  };
+
+  /**
+   * Delegate method, setting the texture alpha for the visualization mesh.
+   * @param {Number} alpha: the alpha expressed as number between 0..1
+   */
+  this.setMeshTextureAlpha = function(alpha) {
+    mesh.texalpha = alpha;
+  };
+
+  /**
+   * Sets the current draw mode for the mesh.
+   * @param {String} mode: either 'fill', 'stroke' or 'both'
+   */
+  this.setMeshDrawMode = function(mode) {
+    if (mode === "fill") {
+      mesh.hidden = false;
+      meshWireframe.hidden = true;
+      tilt.strokeWeight(0);
+    }
+    else if (mode === "stroke") {
+      mesh.hidden = true;
+      meshWireframe.hidden = false;
+      tilt.strokeWeight(1);
+    }
+    else if (mode === "both") {
+      mesh.hidden = false;
+      meshWireframe.hidden = false;
+      tilt.strokeWeight(2);
     }
   };
 
