@@ -473,20 +473,8 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
         .replace(/</g, "&lt;")
         .replace(/>/g, "&gt;")) + "\n",
 
-      // compute the css text from all the properties
-      css = (function() {
-        var style = intersection.node.style,
-          cssText = ["{"], n, v, i;
-
-        for (i = 0; i < style.length; i++) {
-          n = style[i];
-          v = style.getPropertyValue(n);
-
-          cssText.push("  " + n + ": " + v + ";");
-        }          
-
-        return cssText.join("\n") + "\n}\n";
-      }()),
+      // compute the custom css text from all the properties
+      css = Tilt.Document.getModifiedCss(intersection.node.style),
 
       // get the elements used by the popup
       label = document.getElementById("tilt-panel-label"),
