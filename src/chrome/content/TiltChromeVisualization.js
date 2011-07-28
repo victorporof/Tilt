@@ -97,7 +97,7 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
 
     // setup the visualization, browser event handlers and the controller
     setupController.call(this);
-    setupGUI.call(this);
+    setupUI.call(this);
     setupVisualization.call(this);
     setupBrowserEvents.call(this);
 
@@ -256,6 +256,7 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
         // save the inner html for each triangle
         nodes.push({
           innerHTML: node.innerHTML,
+          style: window.getComputedStyle(node),
           name: node.localName,
           className: node.className,
           id: node.id
@@ -331,7 +332,7 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
   /**
    * Setup the user interface, referencing this visualization.
    */
-  function setupGUI() {
+  function setupUI() {
     // set a reference in the user interface for this visualization
     ui.visualization = this;
     ui.controller = controller;
@@ -343,7 +344,8 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
   };
 
   /**
-   * Delegate method, sending a redraw signal.
+   * Redraws the visualization once.
+   * Call this from the controller or ui to update rendering.
    */
   this.redraw = function() {
     redraw = true;
@@ -388,43 +390,12 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
   };
 
   /**
-   * Delegate mouse down method, issued by the controller.
-   *
-   * @param {Number} x: the current horizontal coordinate
-   * @param {Number} y: the current vertical coordinate
-   * @param {Number} button: which mouse button was pressed
-   */
-  this.mouseDown = function(x, y, button) {
-    if ("function" === typeof ui.mouseDown) {
-      ui.mouseDown(x, y, button);
-    }
-    redraw = true;
-  };
-
-  /**
-   * Delegate mouse up method, issued by the controller.
-   *
-   * @param {Number} x: the current horizontal coordinate
-   * @param {Number} y: the current vertical coordinate
-   * @param {Number} button: which mouse button was released
-   */
-  this.mouseUp = function(x, y, button) {
-    if ("function" === typeof ui.mouseUp) {
-      ui.mouseUp(x, y, button);
-    }
-    redraw = true;
-  };
-
-  /**
    * Delegate click method, issued by the controller.
    *
    * @param {Number} x: the current horizontal coordinate
    * @param {Number} y: the current vertical coordinate
    */
   this.click = function(x, y) {
-    if ("function" === typeof ui.click) {
-      ui.click(x, y);
-    }
     if ("open" === TiltChrome.BrowserOverlay.panel.state) {
       TiltChrome.BrowserOverlay.panel.hidePopup();
     }
@@ -441,10 +412,6 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
    * @param {Number} y: the current vertical coordinate
    */
   this.doubleClick = function(x, y) {
-    if ("function" === typeof ui.doubleClick) {
-      ui.doubleClick(x, y);
-    }
-
     // create a ray following the mouse direction from the near clipping plane
     // to the far clipping plane, to check for intersections with the mesh
     var ray = Tilt.Math.createRay([x, y, 0], [x, y, 1],
@@ -494,15 +461,32 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
       // use only the first intersection (closest to the camera)
       var intersection = intersections[0],
         node = intersection.node,
-        html = Tilt.String.trim(
-          style_html(intersection.node.innerHTML, {
-            'indent_size': 2,
-            'indent_char': ' ',
-            'max_char': 78,
-            'brace_style': 'collapse'
-          })
-          .replace(/</g, "&lt;")
-          .replace(/>/g, "&gt;")),
+
+      // get and format the inner html text from the node
+      html = Tilt.String.trim(
+        style_html(intersection.node.innerHTML, {
+          'indent_size': 2,
+          'indent_char': ' ',
+          'max_char': 78,
+          'brace_style': 'collapse'
+        })
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")) + "\n",
+
+      // compute the css text from all the properties
+      css = (function() {
+        var style = intersection.node.style,
+          cssText = ["{"], n, v, i;
+
+        for (i = 0; i < style.length; i++) {
+          n = style[i];
+          v = style.getPropertyValue(n);
+
+          cssText.push("  " + n + ": " + v + ";");
+        }          
+
+        return cssText.join("\n") + "\n}\n";
+      }()),
 
       // get the elements used by the popup
       label = document.getElementById("tilt-panel-label"),
@@ -520,51 +504,11 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
         window.innerHeight - iframe.height - 77, false, false);
 
       // get the content document containing the html editor, and add the html
-      editor.innerHTML = html;
-      iframe.contentWindow.refreshEditor();
+      editor.innerHTML = css;
+      iframe.contentWindow.refreshEditor("css");
     }
 
     redraw = true;
-  };
-
-  /**
-   * Delegate mouse scroll method, issued by the controller.
-   * @param {Number} scroll: the mouse wheel direction and speed
-   */
-  this.mouseScroll = function(scroll) {
-    if ("function" === typeof ui.mouseScroll) {
-      ui.mouseScroll(scroll);
-    }
-  };
-
-  /**
-   * Delegate mouse move method, issued by the controller.
-   *
-   * @param {Number} x: the current horizontal coordinate
-   * @param {Number} y: the current vertical coordinate
-   */
-  this.mouseMove = function(x, y) {
-    if ("function" === typeof ui.mouseMove) {
-      ui.mouseMove(x, y);
-    }
-  };
-
-  /**
-   * Delegate mouse over method, issued by the controller.
-   */
-  this.mouseOver = function() {
-    if ("function" === typeof ui.mouseOver) {
-      ui.mouseOver(x, y);
-    }
-  };
-
-  /**
-   * Delegate mouse out method, issued by the controller.
-   */
-  this.mouseOut = function() {
-    if ("function" === typeof ui.mouseOut) {
-      ui.mouseOut(x, y);
-    }
   };
 
   /**
