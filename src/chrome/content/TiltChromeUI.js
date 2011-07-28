@@ -73,8 +73,7 @@ TiltChrome.UI = function() {
   /**
    * Middle-left control items.
    */
-  viewModeNormalButton = null,
-  viewModeWireframeButton = null,
+  viewModeButton = null,
   colorAdjustButton = null,
   colorAdjustPopup = null,
 
@@ -83,13 +82,26 @@ TiltChrome.UI = function() {
    */
   hueSlider = null,
   saturationSlider = null,
-  brightnessSlider = null;
+  brightnessSlider = null,
+  alphaSlider = null,
+  textureSlider = null,
+
+  /**
+   * Retain the position for the mouseDown event.
+   */
+  downX = 0, downY = 0;
 
   /**
    * Function called automatically by the visualization at the setup().
    * @param {HTMLCanvasElement} canvas: the canvas element
    */
   this.init = function(canvas) {
+    canvas.addEventListener("mousedown", mouseDown, false);
+    canvas.addEventListener("mouseup", mouseUp, false);
+    canvas.addEventListener("click", click, false);
+    canvas.addEventListener("dblclick", doubleClick, false);
+    canvas.addEventListener("mousemove", mouseMove, false);
+
     ui = new Tilt.UI();
 
     texture = new Tilt.Texture("chrome://tilt/skin/tilt-ui.png", {
@@ -173,48 +185,78 @@ TiltChrome.UI = function() {
       new Tilt.Sprite(texture, [0, 190, 42, 42]));
 
     resetButton.onclick = function(x, y) {
-      this.controller.arcball.reset(0.95);
+      this.controller.reset(0.95);
     }.bind(this);
 
     resetButton.ondblclick = function(x, y) {
-      this.controller.arcball.reset(0);
+      this.controller.reset(0);
     }.bind(this);
 
     zoomInButton = new Tilt.Button(100, 150,
       new Tilt.Sprite(texture, [0, 234, 42, 42]));
 
     zoomInButton.onclick = function(x, y) {
-      this.controller.arcball.zoom(200);
+      this.controller.zoom(200);
     }.bind(this);
 
     zoomOutButton = new Tilt.Button(20, 150,
       new Tilt.Sprite(texture, [0, 278, 42, 42]));
 
     zoomOutButton.onclick = function(x, y) {
-      this.controller.arcball.zoom(-200);
+      this.controller.zoom(-200);
     }.bind(this);
 
-    viewModeNormalButton = new Tilt.Button(50, 200,
-      new Tilt.Sprite(texture, [438, 0, 66, 66]));
+    var viewModeNormalSprite = new Tilt.Sprite(texture, [438, 67, 66, 66]);
+    var viewModeWireframeSprite = new Tilt.Sprite(texture, [438, 0, 66, 66]);
+    viewModeButton = new Tilt.Button(50, 200, viewModeWireframeSprite);
 
-    viewModeWireframeButton = new Tilt.Button(50, 200,
-      new Tilt.Sprite(texture, [438, 67, 66, 66]));
+    viewModeButton.onclick = function() {
+      if (viewModeButton.sprite === viewModeWireframeSprite) {
+        viewModeButton.sprite = viewModeNormalSprite;
+      }
+      else {
+        viewModeButton.sprite = viewModeWireframeSprite;
+      }
+    };
 
     colorAdjustButton = new Tilt.Button(50, 260,
       new Tilt.Sprite(texture, [505, 0, 66, 66]));
 
-    var colorAdjustPopupSprite = new Tilt.Sprite(texture, [572, 0, 231, 93], {
+    colorAdjustButton.onclick = function(x, y) {
+      colorAdjustPopup.hidden ^= true;
+    };
+
+    var colorAdjustPopupSprite = new Tilt.Sprite(texture, [572, 0, 231, 128],{
       x: 88,
       y: 258
     });
     colorAdjustPopup = new Tilt.Container([colorAdjustPopupSprite], {
-      hidden: false
+      hidden: true
     });
 
-    var sliderSprite = new Tilt.Sprite(texture, [574, 96, 29, 29]);
-    hueSlider = new Tilt.Slider(152, 271, 120, sliderSprite);
-    saturationSlider = new Tilt.Slider(152, 290, 120, sliderSprite);
-    brightnessSlider = new Tilt.Slider(152, 308, 120, sliderSprite);
+    var sliderHandlerSprite = new Tilt.Sprite(texture, [574, 131, 29, 29], {
+      padding: [8, 8, 8, 8]
+    });
+    hueSlider = new Tilt.Slider(152, 271, 120, sliderHandlerSprite, {
+      value: 50
+    });
+    saturationSlider = new Tilt.Slider(152, 290, 120, sliderHandlerSprite, {
+      value: 0
+    });
+    brightnessSlider = new Tilt.Slider(152, 308, 120, sliderHandlerSprite, {
+      value: 100
+    });
+    alphaSlider = new Tilt.Slider(152, 326, 120, sliderHandlerSprite, {
+      value: 100
+    });
+    textureSlider = new Tilt.Slider(152, 344, 120, sliderHandlerSprite, {
+      value: 100
+    });
+
+    var colorAdjustSliderElements = [
+      hueSlider, saturationSlider, brightnessSlider,
+      alphaSlider, textureSlider
+    ];
 
     var alwaysVisibleElements = [
       background, eyeButton, exitButton
@@ -222,13 +264,13 @@ TiltChrome.UI = function() {
 
     var hideableElements = [
       helpPopup, colorAdjustPopup,
-      hueSlider, saturationSlider, brightnessSlider,
       arcballSprite, resetButton, zoomInButton, zoomOutButton,
-      viewModeNormalButton, colorAdjustButton,
+      viewModeButton, colorAdjustButton,
       optionsButton, exportButton, helpButton
     ];
 
-    ui.push(alwaysVisibleElements, hideableElements);
+    ui.push([alwaysVisibleElements, hideableElements]);
+    colorAdjustPopup.push(colorAdjustSliderElements);
   };
 
   /**
@@ -240,56 +282,63 @@ TiltChrome.UI = function() {
   };
 
   /**
-   * Delegate mouse down method, handled by the controller.
-   *
-   * @param {Number} x: the current horizontal coordinate
-   * @param {Number} y: the current vertical coordinate
-   * @param {Number} button: which mouse button was pressed
+   * Called once after every time a mouse button is pressed.
    */
-  this.mouseDown = function(x, y, button) {
-    ui.mouseDown(x, y, button);
-  };
+  var mouseDown = function(e) {
+    downX = e.clientX - e.target.offsetLeft;
+    downY = e.clientY - e.target.offsetTop;
+
+    if (ui.mouseDown(downX, downY, e.which)) {
+      this.controller.pause();
+    }
+  }.bind(this);
 
   /**
-   * Delegate mouse up method, handled by the controller.
-   *
-   * @param {Number} x: the current horizontal coordinate
-   * @param {Number} y: the current vertical coordinate
-   * @param {Number} button: which mouse button was released
+   * Called every time a mouse button is released.
    */
-  this.mouseUp = function(x, y, button) {
-    ui.mouseUp(x, y, button);
-  };
+  var mouseUp = function(e) {
+    var upX = e.clientX - e.target.offsetLeft;
+    var upY = e.clientY - e.target.offsetTop;
+
+    if (ui.mouseUp(upX, upY, e.which)) {
+      this.controller.unpause();
+    }
+  }.bind(this);
 
   /**
-   * Delegate click method, handled by the controller.
-   *
-   * @param {Number} x: the current horizontal coordinate
-   * @param {Number} y: the current vertical coordinate
+   * Called every time a mouse button is clicked.
    */
-  this.click = function(x, y) {
-    ui.click(x, y);
-  };
+  var click = function(e) {
+    var clickX = e.clientX - e.target.offsetLeft;
+    var clickY = e.clientY - e.target.offsetTop;
+
+    if (Math.abs(downX - clickX) < 2 && Math.abs(downY - clickY) < 2) {
+      ui.click(clickX, clickY);
+    }
+  }.bind(this);
 
   /**
-   * Delegate double click method, handled by the controller.
-   *
-   * @param {Number} x: the current horizontal coordinate
-   * @param {Number} y: the current vertical coordinate
+   * Called every time a mouse button is double clicked.
    */
-  this.doubleClick = function(x, y) {
-    ui.doubleClick(x, y);
-  };
+  var doubleClick = function(e) {
+    var dblClickX = e.clientX - e.target.offsetLeft;
+    var dblClickY = e.clientY - e.target.offsetTop;
+
+    if (Math.abs(downX - dblClickX) < 2 && Math.abs(downY - dblClickY) < 2) {
+      ui.doubleClick(dblClickX, dblClickY);
+    }
+  }.bind(this);
 
   /**
-   * Delegate mouse move method, handled by the controller.
-   *
-   * @param {Number} x: the current horizontal coordinate
-   * @param {Number} y: the current vertical coordinate
+   * Called every time the mouse moves.
    */
-  this.mouseMove = function(x, y) {
-    ui.mouseMove(x, y);
-  };
+  var mouseMove = function(e) {
+    var moveX = e.clientX - e.target.offsetLeft;
+    var moveY = e.clientY - e.target.offsetTop;
+
+    ui.mouseMove(moveX, moveY);
+    this.visualization.redraw();
+  }.bind(this);
 
   /**
    * Delegate method, called when the user interface needs to be resized.
@@ -311,6 +360,12 @@ TiltChrome.UI = function() {
    * Destroys this object and sets all members to null.
    */
   this.destroy = function(canvas) {
+    canvas.removeEventListener("mousedown", mouseDown, false);
+    canvas.removeEventListener("mouseup", mouseUp, false);
+    canvas.removeEventListener("click", click, false);
+    canvas.removeEventListener("dblclick", doubleClick, false);
+    canvas.removeEventListener("mousemove", mouseMove, false);
+
     try {
       ui.destroy();
       ui = null;
