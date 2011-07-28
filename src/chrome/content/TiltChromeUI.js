@@ -115,8 +115,7 @@ TiltChrome.UI = function() {
 
     background = new Tilt.Sprite(texture, [0, 1024 - 256, 256, 256], {
       width: canvas.width,
-      height: canvas.height,
-      depthTest: true
+      height: canvas.height
     });
 
     var helpPopupSprite = new Tilt.Sprite(texture, [210, 180, 610, 510]);
@@ -263,7 +262,7 @@ TiltChrome.UI = function() {
     ];
 
     var alwaysVisibleElements = [
-      background, eyeButton, exitButton
+      eyeButton, exitButton
     ];
 
     var hideableElements = [
@@ -275,6 +274,13 @@ TiltChrome.UI = function() {
 
     ui.push([alwaysVisibleElements, hideableElements]);
     colorAdjustPopup.push(colorAdjustSliderElements);
+  };
+
+  /**
+   * Called automatically by the visualization at the beginning of draw().
+   */
+  this.background = function(frameDelta) {
+    background.draw();
   };
 
   /**

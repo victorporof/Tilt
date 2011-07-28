@@ -126,6 +126,7 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
 
       // clear the context and draw a background gradient
       tilt.clear(0, 0, 0, 1);
+      ui.background(tilt.frameDelta);
 
       // apply the preliminary transformations to the model view
       tilt.translate(tilt.width / 2, tilt.height / 2 - 50, -thickness * 30);
