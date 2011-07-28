@@ -61,15 +61,33 @@ Tilt.Container = function(elements, properties) {
 Tilt.Container.prototype = {
 
   /**
+   * Adds a UI element to the handler stack.
+   * @param {Array} elements: array of valid Tilt UI objects (ex: Tilt.Button)
+   * @param {Tilt.UI} ui: the ui to handle the child elements
+   */
+  push: function(elements, ui) {
+    if ("undefined" === typeof ui) {
+      ui = this.$ui;
+    }
+    ui.push(elements, this.elements);
+  },
+
+  /**
+   * Removes a UI element from the handler stack.
+   * @param {Array} elements: array of valid Tilt UI objects (ex: Tilt.Button)
+   * @param {Tilt.UI} ui: the ui to handle the child elements
+   */
+  remove: function(elements, ui) {
+    if ("undefined" === typeof ui) {
+      ui = this.$ui;
+    }
+    ui.remove(elements, this.elements);
+  },
+
+  /**
    * Updates this object's internal params.
    */
   update: function() {
-    var elements = this.elements,
-      i, len;
-
-    for (i = 0, len = elements.length; i < len; i++) {
-      elements[i].update();
-    }
   },
 
   /**
@@ -92,6 +110,7 @@ Tilt.Container.prototype = {
       element = elements[i];
 
       if (!element.hidden) {
+        element.update();
         element.draw(tilt);
       }
     }
