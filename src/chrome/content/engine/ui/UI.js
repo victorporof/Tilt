@@ -133,6 +133,7 @@ Tilt.UI.prototype = {
     tilt.origin();
     tilt.blendMode("alpha");
     tilt.depthTest(false);
+    tilt.textureAlpha(255);
 
     for (i = 0, len = elements.length; i < len; i++) {
       element = elements[i];
