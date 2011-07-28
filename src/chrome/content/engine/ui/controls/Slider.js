@@ -37,6 +37,7 @@ var EXPORTED_SYMBOLS = ["Tilt.Slider"];
  * @param {Function} onclick: optional, function to be called when clicked
  * @param {Object} properties: additional properties for this object
  *  @param {Boolean} hidden: true if this object should be hidden
+ *  @param {Number} value: number ranging from 0..100
  */
 Tilt.Slider = function(x, y, width, sprite, properties) {
 
@@ -64,7 +65,7 @@ Tilt.Slider = function(x, y, width, sprite, properties) {
   /**
    * The slider value (also defining the handler position).
    */
-  this.value = 0;
+  this.value = properties.value || 0;
 
   /**
    * Variable specifying if this object shouldn't be drawn.
@@ -77,7 +78,7 @@ Tilt.Slider = function(x, y, width, sprite, properties) {
   this.$bounds = [this.x, this.y, this.sprite.width, this.sprite.height];
 
   /**
-   * 
+   * Handling the mouse down event.
    */
   this.onmousedown = function() {
     this.$mousePressed = true;
@@ -92,25 +93,26 @@ Tilt.Slider.prototype = {
   update: function() {
     var sprite = this.sprite,
       bounds = this.$bounds,
+      padding = sprite.padding,
       ui = this.$ui,
       mx = ui.$mouseX - sprite.width / 2;
 
-    if (ui.$mousePressed) {
-      if (this.$mousePressed) {
+    if (this.$mousePressed) {
+      if (ui.$mousePressed) {
         this.value = Tilt.Math.map(mx, this.x, this.x + this.width, 0, 100);
       }
-    }
-    else {
-      this.$mousePressed = false;
+      else {
+        this.$mousePressed = false;
+      }
     }
 
     sprite.x = Tilt.Math.map(this.value, 0, 100, this.x, this.x + this.width);
     sprite.y = this.y;
 
-    bounds[0] = sprite.x;
-    bounds[1] = sprite.y;
-    bounds[2] = sprite.width;
-    bounds[3] = sprite.height;
+    bounds[0] = sprite.x + padding[0];
+    bounds[1] = sprite.y + padding[1];
+    bounds[2] = sprite.width - padding[2];
+    bounds[3] = sprite.height - padding[3];
   },
 
   /**

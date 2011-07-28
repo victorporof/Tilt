@@ -78,13 +78,14 @@ Tilt.Button.prototype = {
   update: function() {
     var sprite = this.sprite,
       bounds = this.$bounds,
+      padding = sprite.padding || [0, 0, 0, 0],
       x = this.x,
       y = this.y;
 
-    bounds[0] = x;
-    bounds[1] = y;
-    bounds[2] = sprite.width;
-    bounds[3] = sprite.height;
+    bounds[0] = x + padding[0];
+    bounds[1] = y + padding[1];
+    bounds[2] = sprite.width - padding[2];
+    bounds[3] = sprite.height - padding[3];
 
     sprite.x = x;
     sprite.y = y;

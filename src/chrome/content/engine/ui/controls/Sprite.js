@@ -40,6 +40,7 @@ var EXPORTED_SYMBOLS = ["Tilt.Sprite"];
  *  @param {Number} y: the y position of the object
  *  @param {Number} width: the width of the object
  *  @param {Number} height: the height of the object
+ *  @param {Array} padding: bounds padding for the object
  */
 Tilt.Sprite = function(texture, region, properties) {
 
@@ -75,6 +76,11 @@ Tilt.Sprite = function(texture, region, properties) {
   this.depthTest = properties.depthTest || false;
 
   /**
+   * Bounds padding for this object.
+   */
+  this.padding = properties.padding || [0, 0, 0, 0];
+
+  /**
    * The bounds of this object (used for clicking and intersections).
    */
   this.$bounds = [this.x, this.y, this.width, this.height];
@@ -98,12 +104,13 @@ Tilt.Sprite.prototype = {
    * Updates this object's internal params.
    */
   update: function() {
-    var bounds = this.$bounds;
+    var bounds = this.$bounds,
+      padding = this.padding;
 
-    bounds[0] = this.x;
-    bounds[1] = this.y;
-    bounds[2] = this.width;
-    bounds[3] = this.height;
+    bounds[0] = this.x + padding[0];
+    bounds[1] = this.y + padding[1];
+    bounds[2] = this.width - padding[2];
+    bounds[3] = this.height - padding[3];
   },
 
   /**
@@ -131,6 +138,8 @@ Tilt.Sprite.prototype = {
         (reg[0]         ) / tex.width, (reg[1] + reg[3]) / tex.height,
         (reg[0] + reg[2]) / tex.width, (reg[1] + reg[3]) / tex.height], 2);
     }
+
+    var bounds = this.$bounds;
 
     if (this.depthTest) {
       tilt.depthTest(true);
