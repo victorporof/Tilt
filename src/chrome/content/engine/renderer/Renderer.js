@@ -196,13 +196,7 @@ Tilt.Renderer = function(canvas, failCallback, successCallback) {
   this.perspective();
 
   // set the default tint, fill, stroke and other visual properties
-  this.tint("#fff");
-  this.fill("#fff");
-  this.stroke("#000");
-  this.strokeWeight(1);
-  this.textureAlpha(255);
-  this.blendMode("alpha");
-  this.depthTest(true);
+  this.defaults();
 };
 
 Tilt.Renderer.prototype = {
@@ -284,6 +278,7 @@ Tilt.Renderer.prototype = {
 
     mat4.perspective(fov, aspect, znear, zfar, this.projMatrix, true);
     mat4.translate(this.projMatrix, [-x, -y, -z]);
+    mat4.identity(this.mvMatrix);
   },
 
   /**
@@ -293,6 +288,7 @@ Tilt.Renderer.prototype = {
     var clip = 1000000;
     mat4.ortho(0, this.width, this.height, 0, -clip, clip, this.projMatrix);
     mat4.translate(this.projMatrix, [0, 0, -clip + 1]);
+    mat4.identity(this.mvMatrix);
   },
 
   /**
@@ -510,6 +506,22 @@ Tilt.Renderer.prototype = {
     } else {
       gl.disable(gl.DEPTH_TEST);
     }
+  },
+
+  /**
+   * Resets the drawing style to default.
+   *
+   * @param {Boolean} depthTest: optional, override the default depth testing
+   * @param {String} blendMode: optional, override the default blend mode
+   */
+  defaults: function(depthTest, blendMode) {
+    this.tint("#fff");
+    this.fill("#fff");
+    this.stroke("#000");
+    this.strokeWeight(1);
+    this.textureAlpha(255);
+    this.depthTest(depthTest || true);
+    this.blendMode(blendMode || "alpha");
   },
 
   /**
@@ -819,7 +831,6 @@ Tilt.Renderer.prototype = {
     window.requestAnimFrame(draw);
 
     // reset the model view and projection matrices
-    this.origin();
     this.perspective();
 
     // calculate the frame delta and frame rate using the current time
