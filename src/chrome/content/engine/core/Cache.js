@@ -26,7 +26,14 @@
 "use strict";
 
 var Tilt = Tilt || {};
-var EXPORTED_SYMBOLS = ["Tilt.activeShader", "Tilt.enabledAttributes"];
+var EXPORTED_SYMBOLS = [
+  "Tilt.$gl",
+  "Tilt.$renderer",
+  "Tilt.$activeShader",
+  "Tilt.$enabledAttributes",
+  "Tilt.$loadedTextures",
+  "Tilt.clearCache",
+  "Tilt.destroyObject"];
 
 /* All cached variables begin with the $ sign, for easy spotting
  * ------------------------------------------------------------------------ */
@@ -85,4 +92,4 @@ Tilt.destroyObject = function(scope) {
       delete scope[i];
     }
   }
-}
+};
