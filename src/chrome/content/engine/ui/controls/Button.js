@@ -52,7 +52,7 @@ Tilt.Button = function(x, y, sprite, onclick, properties) {
   /**
    * A sprite used as a background for this object.
    */
-  this.sprite = sprite || { width: 0, height: 0 };
+  this.sprite = sprite || { width: 10, height: 10 };
 
   /**
    * Variable specifying if this object shouldn't be drawn.
