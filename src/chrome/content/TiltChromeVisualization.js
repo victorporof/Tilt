@@ -104,8 +104,6 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
     // set the transformations at initialization
     transforms.translation = [0, 0, 0];
     transforms.rotation = [0, 0, 0, 1];
-
-    tilt.strokeWeight(2);
   };
 
   /**
@@ -140,6 +138,7 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
 
       // draw the visualization mesh
       tilt.depthTest(true);
+      tilt.strokeWeight(2);
       mesh.draw();
       meshWireframe.draw();
 
@@ -197,7 +196,10 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
 
     // traverse the document
     Tilt.Document.traverse(function(node, depth) {
-      if (node.localName === "a" ||
+      if (node.localName === "img" ||
+          node.localName === "span" ||
+          node.localName === "option" ||
+          node.localName === "a" ||
           node.localName === "b" ||
           node.localName === "i" ||
           node.localName === "u") {
