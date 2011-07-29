@@ -30,6 +30,9 @@ var EXPORTED_SYMBOLS = ["Tilt.UI"];
 
 /**
  * UI constructor.
+ * This is a handler for all the UI elements. Any widgets need to be pushed
+ * in this object to be properly updated and drawn. Achieve this using the 
+ * push() and remove() functions from the prototype.
  */
 Tilt.UI = function() {
 
@@ -42,7 +45,8 @@ Tilt.UI = function() {
 Tilt.UI.prototype = {
 
   /**
-   * Adds a UI element to the handler stack.
+   * Adds UI elements to the handler stack.
+   *
    * @param {Array} elements: array of valid Tilt UI objects (ex: Tilt.Button)
    * @param {Array} container: optional, the container array for the objects
    */
@@ -59,7 +63,7 @@ Tilt.UI.prototype = {
         element = elements[i];
 
         if (element instanceof Array) {
-          this.push(element);
+          this.push(element, container);
         }
         else {
           element.$ui = this;
@@ -75,7 +79,8 @@ Tilt.UI.prototype = {
   },
 
   /**
-   * Removes a UI element from the handler stack.
+   * Removes UI elements from the handler stack.
+   *
    * @param {Array} elements: array of valid Tilt UI objects (ex: Tilt.Button)
    * @param {Array} container: optional, the container array for the objects
    */
@@ -92,7 +97,7 @@ Tilt.UI.prototype = {
         element = elements[i];
 
         if (element instanceof Array) {
-          this.remove(element);
+          this.remove(element, container);
         }
         else {
           if ((index = this.elements.indexOf(element)) !== -1) {             
@@ -121,7 +126,7 @@ Tilt.UI.prototype = {
   },
 
   /**
-   * Draws all the handled elements.
+   * Draws all the stacked elements.
    * @param {Number} frameDelta: the delta time elapsed between frames
    */
   draw: function(frameDelta) {
@@ -130,10 +135,8 @@ Tilt.UI.prototype = {
       element, i, len;
 
     tilt.ortho();
-    tilt.origin();
-    tilt.blendMode("alpha");
+    tilt.defaults();
     tilt.depthTest(false);
-    tilt.textureAlpha(255);
 
     for (i = 0, len = elements.length; i < len; i++) {
       element = elements[i];
@@ -155,7 +158,7 @@ Tilt.UI.prototype = {
    */
   mouseDown: function(x, y, b) {
     this.$mousePressed = true;
-    this.ui$handleEvent(x, y, this.element$handleMouseEvent, "mousedown");
+    this.$handleEvent(x, y, this.$mouseEvent, "mousedown");
 
     return this.$mousePressedOver;
   },
@@ -166,18 +169,11 @@ Tilt.UI.prototype = {
    * @param {Number} x: the current horizontal coordinate of the mouse
    * @param {Number} y: the current vertical coordinate of the mouse
    * @param {Number} b: which mouse button was released
-   * @return {Boolean} true if the mouse was pressed over a handled element
    */
   mouseUp: function(x, y, b) {
     this.$mousePressed = false;
-    this.ui$handleEvent(x, y, this.element$handleMouseEvent, "mouseup");
-
-    try {
-      return this.$mousePressedOver;
-    }
-    finally {
-      this.$mousePressedOver = false;
-    }
+    this.$mousePressedOver = false;
+    this.$handleEvent(x, y, this.$mouseEvent, "mouseup");
   },
 
   /**
@@ -187,7 +183,7 @@ Tilt.UI.prototype = {
    * @param {Number} y: the current vertical coordinate of the mouse
    */
   click: function(x, y) {
-    this.ui$handleEvent(x, y, this.element$handleMouseEvent, "click");
+    this.$handleEvent(x, y, this.$mouseEvent, "click");
   },
 
   /**
@@ -197,7 +193,7 @@ Tilt.UI.prototype = {
    * @param {Number} y: the current vertical coordinate of the mouse
    */
   doubleClick: function(x, y) {
-    this.ui$handleEvent(x, y, this.element$handleMouseEvent, "dblclick");
+    this.$handleEvent(x, y, this.$mouseEvent, "dblclick");
   },
 
   /**
@@ -219,7 +215,7 @@ Tilt.UI.prototype = {
    * @param {Number} y: the current vertical coordinate of the mouse
    * @param {String} e: the name of the event function
    */
-  ui$handleEvent: function(x, y, handle, e) {
+  $handleEvent: function(x, y, handle, e) {
     var elements = this.elements,
       element, subelements, i, j, len, len2;
 
@@ -251,7 +247,7 @@ Tilt.UI.prototype = {
    * @param {Object} element: the UI element to be checked
    * @param {String} e: the name of the event function
    */
-  element$handleMouseEvent: function(x, y, element, e) {
+  $mouseEvent: function(x, y, element, e) {
     if ("undefined" === typeof element) {
       return;
     }
