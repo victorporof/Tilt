@@ -212,14 +212,38 @@ TiltChrome.UI = function() {
     viewModeButton.onclick = function() {
       if (viewModeButton.sprite === viewModeWireframeSprite) {
         viewModeButton.sprite = viewModeNormalSprite;
-        this.visualization.setMeshWireframeColor([1, 1, 1, 0.5]);
-        this.visualization.setMeshDrawMode("stroke");
+        hueSlider.value = 50;
+        saturationSlider.value = 25;
+        brightnessSlider.value = 100;
+        textureSlider.value = 100;
+        alphaSlider.value = 3;
+
+        this.visualization.setMeshWireframeColor([1, 1, 1, 0.7]);
       }
       else {
         viewModeButton.sprite = viewModeWireframeSprite;
+        hueSlider.value = 50;
+        saturationSlider.value = 0;
+        brightnessSlider.value = 100;
+        textureSlider.value = 100;
+        alphaSlider.value = 100;
+
         this.visualization.setMeshWireframeColor([0, 0, 0, 0.25]);
-        this.visualization.setMeshDrawMode("both");
       }
+
+      var rgba = Tilt.Math.hsv2rgb(
+        hueSlider.value / 100,
+        saturationSlider.value / 100,
+        brightnessSlider.value / 100);
+
+      rgba[0] /= 255;
+      rgba[1] /= 255;
+      rgba[2] /= 255;
+      rgba[3] = alphaSlider.value / 100;
+
+      this.visualization.setMeshColor(rgba);
+      this.visualization.setMeshTextureAlpha(textureSlider.value / 100);
+      this.visualization.redraw();
     }.bind(this);
 
     colorAdjustButton = new Tilt.Button(50, 260,
@@ -323,9 +347,8 @@ TiltChrome.UI = function() {
     var upX = e.clientX - e.target.offsetLeft;
     var upY = e.clientY - e.target.offsetTop;
 
-    if (ui.mouseUp(upX, upY, e.which)) {
-      this.controller.unpause();
-    }
+    ui.mouseUp(upX, upY, e.which);
+    this.controller.unpause();
   }.bind(this);
 
   /**
