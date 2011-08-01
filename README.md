@@ -19,6 +19,10 @@ In the bin folder you will find the latest [Tilt.xpi](https://github.com/victorp
 ### Help
 If you have any questions, ping anyone on IRC in `#tilt` on [irc.mozilla.org](irc://irc.mozilla.org)
 
+### License
+Tilt is licensed as Mozilla Public License Version 1.1, like any other Mozilla
+product. See [mozilla.org/MPL](http://www.mozilla.org/MPL/) for more information.
+
 ## How to build
 Building is done using the [build script](https://github.com/victorporof/Tilt/blob/master/src/build). There are two parts of the project which can be used: the engine and the extension itself. To build everything and also minify the sources, run the following `./build` command from a terminal:
 
