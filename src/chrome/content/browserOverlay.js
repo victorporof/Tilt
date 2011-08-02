@@ -137,7 +137,7 @@ TiltChrome.BrowserOverlay = {
       }
 
       Tilt.Profiler.log();
-      Tilt.Profiler.reset();
+      Tilt.Profiler.clear();
     }
 
     // finishing the cleanup may take some time, so set a small timeout
