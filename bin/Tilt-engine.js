@@ -1,28 +1,35 @@
-/*
- * Arcball.js - Easy to use arcball controller for Tilt
- * version 0.1
+/***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
- * Copyright (c) 2011 Victor Porof
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
  *
- * This software is provided "as-is", without any express or implied
- * warranty. In no event will the authors be held liable for any damages
- * arising from the use of this software.
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
  *
- * Permission is granted to anyone to use this software for any purpose,
- * including commercial applications, and to alter it and redistribute it
- * freely, subject to the following restrictions:
+ * The Original Code is Tilt: A WebGL-based 3D visualization of a webpage.
  *
- *    1. The origin of this software must not be misrepresented; you must not
- *    claim that you wrote the original software. If you use this software
- *    in a product, an acknowledgment in the product documentation would be
- *    appreciated but is not required.
+ * The Initial Developer of the Original Code is Victor Porof.
+ * Portions created by the Initial Developer are Copyright (C) 2011
+ * the Initial Developer. All Rights Reserved.
  *
- *    2. Altered source versions must be plainly marked as such, and must not
- *    be misrepresented as being the original software.
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the LGPL or the GPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
  *
- *    3. This notice may not be removed or altered from any source
- *    distribution.
- */
+ ***** END LICENSE BLOCK *****/
 "use strict";
 
 var Tilt = Tilt || {};
@@ -49,6 +56,9 @@ Tilt.Arcball = function(width, height, radius) {
   this.$mouseMove = [0, 0];
   this.$mouseLerp = [0, 0];
 
+  /**
+   * Other mouse flags: current pressed mouse button and the scroll amount.
+   */
   this.$mouseButton = -1;
   this.$scrollValue = 0;
 
@@ -73,7 +83,7 @@ Tilt.Arcball = function(width, height, radius) {
   this.$lastRot = quat4.create([0, 0, 0, 1]);
   this.$deltaRot = quat4.create([0, 0, 0, 1]);
   this.$currentRot = quat4.create([0, 0, 0, 1]);
-  
+
   /**
    * The current camera translation coordinates.
    */
@@ -158,7 +168,7 @@ Tilt.Arcball.prototype = {
       this.$rotating = true;
 
       // find the sphere coordinates of the mouse positions
-      this.pointToSphere(x, y, width, height, radius, endVec);        
+      this.pointToSphere(x, y, width, height, radius, endVec);
 
       // compute the vector perpendicular to the start & end vectors
       vec3.cross(startVec, endVec, pVec);
@@ -246,14 +256,16 @@ Tilt.Arcball.prototype = {
   },
 
   /**
-   * Function handling the mousePressed event.
+   * Function handling the mouseDown event.
    * Call this when the mouse was pressed.
    *
    * @param {Number} x: the current horizontal coordinate of the mouse
    * @param {Number} y: the current vertical coordinate of the mouse
    * @param {Number} button: which mouse button was pressed
    */
-  mousePressed: function(x, y, button) {
+  mouseDown: function(x, y, button) {
+    this.$clearInterval();
+
     this.$mousePress[0] = x;
     this.$mousePress[1] = y;
     this.$mouseButton = button;
@@ -268,26 +280,27 @@ Tilt.Arcball.prototype = {
   },
 
   /**
-   * Function handling the mouseReleased event.
+   * Function handling the mouseUp event.
    * Call this when a mouse button was released.
    *
    * @param {Number} x: the current horizontal coordinate of the mouse
    * @param {Number} y: the current vertical coordinate of the mouse
+   * @param {Number} button: which mouse button was released
    */
-  mouseReleased: function(x, y) {
+  mouseUp: function(x, y, button) {
     this.$mouseRelease[0] = x;
     this.$mouseRelease[1] = y;
     this.$mouseButton = -1;
   },
 
   /**
-   * Function handling the mouseMoved event.
+   * Function handling the mouseMove event.
    * Call this when the mouse was moved.
    *
    * @param {Number} x: the current horizontal coordinate of the mouse
    * @param {Number} y: the current vertical coordinate of the mouse
    */
-  mouseMoved: function(x, y) {
+  mouseMove: function(x, y) {
     if (this.$mouseButton !== -1) {
       this.$mouseMove[0] = x;
       this.$mouseMove[1] = y;
@@ -309,16 +322,18 @@ Tilt.Arcball.prototype = {
    * @param {Number} scroll: the mouse wheel direction and speed
    */
   mouseScroll: function(scroll) {
+    this.$clearInterval();
     this.$scrollValue -= scroll * 10;
   },
 
   /**
-   * Function handling the keyPressed event.
+   * Function handling the keyDown event.
    * Call this when the a key was pressed.
    *
    * @param {Number} code: the code corresponding to the key pressed
    */
-  keyPressed: function(code) {
+  keyDown: function(code) {
+    this.$clearInterval();
     this.$keyCode[code] = true;
 
     if (code === 17 || code === 224) {
@@ -327,12 +342,12 @@ Tilt.Arcball.prototype = {
   },
 
   /**
-   * Function handling the keyReleased event.
+   * Function handling the keyUp event.
    * Call this when the a key was released.
    *
    * @param {Number} code: the code corresponding to the key released
    */
-  keyReleased: function(code) {
+  keyUp: function(code) {
     this.$keyCode[code] = false;
 
     if (code === 17 || code === 224) {
@@ -393,23 +408,125 @@ Tilt.Arcball.prototype = {
   },
 
   /**
+   * Moves the camera forward or backward depending on the passed amount.
+   * @param {Number} amount: the amount of zooming to do
+   */
+  zoom: function(amount) {
+    this.$scrollValue += amount;
+  },
+
+  /**
+   * Cancels any current actions.
+   */
+  cancel: function() {
+    this.$clearInterval();
+
+    this.$save();
+    this.$mouseButton = -1;
+  },
+
+  /**
+   * Resets the rotation and translation to origin.
+   * @param {Number} factor: the reset interpolation factor between frames
+   */
+  reset: function(factor) {
+    var scrollValue = this.$scrollValue,
+      lastRot = this.$lastRot,
+      deltaRot = this.$deltaRot,
+      currentRot = this.$currentRot,
+      lastTrans = this.$lastTrans,
+      deltaTrans = this.$deltaTrans,
+      currentTrans = this.$currentTrans,
+      addKeyRot = this.$addKeyRot,
+      addKeyTrans = this.$addKeyTrans;
+
+    // if the interpolation is not specified, reset everything immediately
+    if (!factor) {
+      quat4.set([0, 0, 0, 1], lastRot);
+      quat4.set([0, 0, 0, 1], deltaRot);
+      quat4.set([0, 0, 0, 1], currentRot);
+      vec3.set([0, 0, 0], lastTrans);
+      vec3.set([0, 0, 0], deltaTrans);
+      vec3.set([0, 0, 0], currentTrans);
+
+      addKeyRot[0] = 0;
+      addKeyRot[1] = 0;
+      addKeyTrans[0] = 0;
+      addKeyTrans[1] = 0;
+    }
+    else {
+      // create an interval and smoothly reset all the values to identity
+      this.$setInterval(function() {
+        var inverse = quat4.inverse(lastRot);
+
+        // reset the rotation quaternion and translation vector
+        quat4.slerp(lastRot, inverse, 1 - factor);
+        quat4.slerp(deltaRot, inverse, 1 - factor);
+        quat4.slerp(currentRot, inverse, 1 - factor);
+        vec3.scale(lastTrans, factor);
+        vec3.scale(deltaTrans, factor);
+        vec3.scale(currentTrans, factor);
+
+        // reset any additional transforms by the keyboard or mouse
+        addKeyRot[0] *= factor;
+        addKeyRot[1] *= factor;
+        addKeyTrans[0] *= factor;
+        addKeyTrans[1] *= factor;
+        this.$scrollValue *= factor;
+
+        // clear the loop if the all values are very close to zero
+        if (vec3.length(lastRot) < 0.001 &&
+            vec3.length(deltaRot) < 0.001 &&
+            vec3.length(currentRot) < 0.001 &&
+            vec3.length(lastTrans) < 0.01 &&
+            vec3.length(deltaTrans) < 0.01 &&
+            vec3.length(currentTrans) < 0.01 &&
+            vec3.length([addKeyRot[0], addKeyRot[1], scrollValue]) < 0.01 &&
+            vec3.length([addKeyTrans[0], addKeyTrans[1], scrollValue]) < 0.01)
+        {
+          this.$clearInterval();
+        }
+      }.bind(this), 1000 / 60);
+    }
+  },
+
+  /**
+   * Creates a looping interval function.
+   */
+  $setInterval: function(func, time) {
+    if ("undefined" === typeof this.$currentInterval) {
+      this.$currentInterval = window.setInterval(func, time);
+    }
+  },
+
+  /**
+   * Stops the current interval function from looping.
+   */
+  $clearInterval: function() {
+    if ("undefined" !== typeof this.$currentInterval) {
+      window.clearInterval(this.$currentInterval);
+      delete this.$currentInterval;
+    }
+  },
+
+  /**
    * Saves the current arcball state, typically after mouse or resize events.
    */
   $save: function() {
-    var radius = this.$radius,
-      width = this.$width,
-      height = this.$height,
-      x = this.$mousePress[0],
-      y = this.$mousePress[1];
+    var x = this.$mousePress[0],
+      y = this.$mousePress[1],
+      mouseMove = this.$mouseMove,
+      mouseRelease = this.$mouseRelease,
+      mouseLerp = this.$mouseLerp;
 
-    this.$mouseMove[0] = x;
-    this.$mouseMove[1] = y;
-    this.$mouseRelease[0] = x;
-    this.$mouseRelease[1] = y;
-    this.$mouseLerp[0] = x;
-    this.$mouseLerp[1] = y;
+    mouseMove[0] = x;
+    mouseMove[1] = y;
+    mouseRelease[0] = x;
+    mouseRelease[1] = y;
+    mouseLerp[0] = x;
+    mouseLerp[1] = y;
   },
-
+  
   /**
    * Destroys this object and deletes all members.
    */
@@ -419,31 +536,38 @@ Tilt.Arcball.prototype = {
     }
   }
 };
-/*
- * IndexBuffer.js - A WebGL ELEMENT_ARRAY_BUFFER Uint16Array buffer
- * version 0.1
+/***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
- * Copyright (c) 2011 Victor Porof
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
  *
- * This software is provided "as-is", without any express or implied
- * warranty. In no event will the authors be held liable for any damages
- * arising from the use of this software.
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
  *
- * Permission is granted to anyone to use this software for any purpose,
- * including commercial applications, and to alter it and redistribute it
- * freely, subject to the following restrictions:
+ * The Original Code is Tilt: A WebGL-based 3D visualization of a webpage.
  *
- *    1. The origin of this software must not be misrepresented; you must not
- *    claim that you wrote the original software. If you use this software
- *    in a product, an acknowledgment in the product documentation would be
- *    appreciated but is not required.
+ * The Initial Developer of the Original Code is Victor Porof.
+ * Portions created by the Initial Developer are Copyright (C) 2011
+ * the Initial Developer. All Rights Reserved.
  *
- *    2. Altered source versions must be plainly marked as such, and must not
- *    be misrepresented as being the original software.
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the LGPL or the GPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
  *
- *    3. This notice may not be removed or altered from any source
- *    distribution.
- */
+ ***** END LICENSE BLOCK *****/
 "use strict";
 
 var Tilt = Tilt || {};
@@ -460,10 +584,13 @@ var EXPORTED_SYMBOLS = ["Tilt.VertexBuffer", "Tilt.IndexBuffer"];
  */
 Tilt.VertexBuffer = function(elementsArray, itemSize, numItems) {
 
+  // intercept this object using a profiler when building in debug mode
+  Tilt.Profiler.intercept("Tilt.VertexBuffer", this, null);  
+
   /**
    * The array buffer.
    */
-  this.ref = null;
+  this.$ref = null;
 
   /**
    * Variables defining the internal structure of the buffer.
@@ -481,9 +608,6 @@ Tilt.VertexBuffer = function(elementsArray, itemSize, numItems) {
   if ("undefined" !== typeof elementsArray) {
     this.initBuffer(elementsArray, itemSize, numItems);
   }
-
-  // cleanup
-  elementsArray = null;
 };
 
 Tilt.VertexBuffer.prototype = {
@@ -508,8 +632,8 @@ Tilt.VertexBuffer.prototype = {
       i, len;
 
     // create an array buffer and bind the elements as a Float32Array
-    this.ref = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, this.ref);
+    this.$ref = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, this.$ref);
     gl.bufferData(gl.ARRAY_BUFFER, array, gl.STATIC_DRAW);
 
     // remember some properties, useful when binding the buffer to a shader
@@ -546,10 +670,13 @@ Tilt.VertexBuffer.prototype = {
  */
 Tilt.IndexBuffer = function(elementsArray, numItems) {
 
+  // intercept this object using a profiler when building in debug mode
+  Tilt.Profiler.intercept("Tilt.IndexBuffer", this);  
+
   /**
    * The element array buffer.
    */
-  this.ref = null;
+  this.$ref = null;
 
   /**
    * This is an array-like object.
@@ -567,9 +694,6 @@ Tilt.IndexBuffer = function(elementsArray, numItems) {
   if ("undefined" !== typeof elementsArray) {
     this.initBuffer(elementsArray, numItems);
   }
-
-  // cleanup
-  elementsArray = null;
 };
 
 Tilt.IndexBuffer.prototype = {
@@ -594,8 +718,8 @@ Tilt.IndexBuffer.prototype = {
       i, len;
 
     // create an array buffer and bind the elements as a Uint16Array
-    this.ref = gl.createBuffer();
-    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.ref);
+    this.$ref = gl.createBuffer();
+    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.$ref);
     gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, array, gl.STATIC_DRAW);
 
     // remember some properties, useful when binding the buffer to a shader
@@ -622,35 +746,49 @@ Tilt.IndexBuffer.prototype = {
     }
   }
 };
-/*
- * Cache.js - The cached variables from the engine
- * version 0.1
+/***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
- * Copyright (c) 2011 Victor Porof
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
  *
- * This software is provided "as-is", without any express or implied
- * warranty. In no event will the authors be held liable for any damages
- * arising from the use of this software.
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
  *
- * Permission is granted to anyone to use this software for any purpose,
- * including commercial applications, and to alter it and redistribute it
- * freely, subject to the following restrictions:
+ * The Original Code is Tilt: A WebGL-based 3D visualization of a webpage.
  *
- *    1. The origin of this software must not be misrepresented; you must not
- *    claim that you wrote the original software. If you use this software
- *    in a product, an acknowledgment in the product documentation would be
- *    appreciated but is not required.
+ * The Initial Developer of the Original Code is Victor Porof.
+ * Portions created by the Initial Developer are Copyright (C) 2011
+ * the Initial Developer. All Rights Reserved.
  *
- *    2. Altered source versions must be plainly marked as such, and must not
- *    be misrepresented as being the original software.
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the LGPL or the GPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
  *
- *    3. This notice may not be removed or altered from any source
- *    distribution.
- */
+ ***** END LICENSE BLOCK *****/
 "use strict";
 
 var Tilt = Tilt || {};
-var EXPORTED_SYMBOLS = ["Tilt.activeShader", "Tilt.enabledAttributes"];
+var EXPORTED_SYMBOLS = [
+  "Tilt.$gl",
+  "Tilt.$renderer",
+  "Tilt.$activeShader",
+  "Tilt.$enabledAttributes",
+  "Tilt.$loadedTextures",
+  "Tilt.clearCache",
+  "Tilt.destroyObject"];
 
 /* All cached variables begin with the $ sign, for easy spotting
  * ------------------------------------------------------------------------ */
@@ -689,35 +827,270 @@ Tilt.clearCache = function() {
   Tilt.$activeShader = -1;
   Tilt.$enabledAttributes = -1;
   Tilt.$loadedTextures = {};
-  
+
   Tilt.GLSL.$count = 0;
   Tilt.TextureUtils.$count = 0;
 };
-/*
- * Program.js - A wrapper for a GLSL program
- * version 0.1
- *
- * Copyright (c) 2011 Victor Porof
- *
- * This software is provided "as-is", without any express or implied
- * warranty. In no event will the authors be held liable for any damages
- * arising from the use of this software.
- *
- * Permission is granted to anyone to use this software for any purpose,
- * including commercial applications, and to alter it and redistribute it
- * freely, subject to the following restrictions:
- *
- *    1. The origin of this software must not be misrepresented; you must not
- *    claim that you wrote the original software. If you use this software
- *    in a product, an acknowledgment in the product documentation would be
- *    appreciated but is not required.
- *
- *    2. Altered source versions must be plainly marked as such, and must not
- *    be misrepresented as being the original software.
- *
- *    3. This notice may not be removed or altered from any source
- *    distribution.
+
+/**
+ * Destroys an object and deletes all members.
  */
+Tilt.destroyObject = function(scope) {
+  for (var i in scope) {
+    try {
+      if ("function" === typeof scope[i].destroy) {
+        scope[i].destroy();
+      }
+    }
+    catch(e) {}
+    finally {
+      delete scope[i];
+    }
+  }
+};
+/***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is Tilt: A WebGL-based 3D visualization of a webpage.
+ *
+ * The Initial Developer of the Original Code is Victor Porof.
+ * Portions created by the Initial Developer are Copyright (C) 2011
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the LGPL or the GPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ ***** END LICENSE BLOCK *****/
+"use strict";
+
+var Tilt = Tilt || {};
+var EXPORTED_SYMBOLS = ["Tilt.Profiler"];
+
+/**
+ * Handy way of profiling functions in Tilt.
+ */
+Tilt.Profiler = {
+
+  /**
+   * Set this to true to enable profiling.
+   */
+  enabled: false,
+
+  /**
+   * Array containing information about all the intercepted functions.
+   */
+  functions: [],
+
+  /**
+   * Intercepts a function, issuing calls for appropriate methods before and
+   * after the execution of that function. The interception method can be
+   * overridden by specifying a custom duringCall function.
+   *
+   * Pass null instead of the function name to intercept all the functions
+   * from an object.
+   *
+   * @param {String} ns: optional, the namespace for the function
+   * @param {Object} object: the object containing the function
+   * @param {String} name: the name of the function
+   * @param {Function} beforeCall: optional, custom logic before the function
+   * @param {Function} afterCall: optional, custom logic after the function
+   * @param {Function} duringCall: optional, custom logic for interception
+   */
+  intercept: function(ns, object, name, beforeCall, afterCall, duringCall) {
+    if (!this.enabled) {
+      return;
+    }
+
+    // if the function name is falsy, intercept all the object functions
+    if (!name) {
+      for (var i in object) {
+        if ("function" === typeof object[i]) {
+          this.intercept(ns, object, i, beforeCall, afterCall, duringCall);
+        }
+      }
+      return;
+    }
+
+    // set the appropriate before, after and during call functions
+    if ("undefined" === typeof beforeCall) {
+      beforeCall = this.beforeCall.bind(this);
+    }
+    if ("undefined" === typeof afterCall) {
+      afterCall = this.afterCall.bind(this);
+    }
+    if ("undefined" === typeof duringCall) {
+      duringCall = this.duringCall.bind(this);
+    }
+
+    // get the function from the object
+    var f = object[name];
+
+    if ("function" === typeof f) {
+      var index = this.functions.length;
+
+      // save some information about this function in an array for profiling
+      this.functions[index] = {
+        name: ((ns + ".") || "") + name,
+        calls: 0,
+        averageTime: 0,
+        longestTime: 0,
+        totalTime: 0
+      };
+
+      // overwrite the function to handle before, after and during calls
+      object[name] = function() {
+        try {
+          beforeCall(index);
+          return duringCall(object, f, arguments);
+        }
+        finally {
+          afterCall(index);
+        }
+      };
+    }
+  },
+
+  /**
+   * Default beforeCall function.
+   * @param {Number} index: the index of the function in the profile array
+   */
+  beforeCall: function(index) {
+    this.functions[index].currentTime = new Date().getTime();
+  },
+
+  /**
+   * Default afterCall function.
+   * @param {Number} index: the index of the function in the profile array
+   */
+  afterCall: function(index) {
+    var f = this.functions[index],
+      beforeTime = f.currentTime,
+      afterTime = new Date().getTime(),
+      currentDuration = afterTime - beforeTime;
+
+    f.calls++;
+    f.longestTime = Math.max(f.longestTime, currentDuration);
+    f.averageTime = (f.longestTime + currentDuration) / 2;
+    f.totalTime += currentDuration;
+  },
+
+  /**
+   * Default duringCall function.
+   *
+   * @param {Object} object: the object to be used as "this" for the function
+   * @param {Function} method: the function called
+   * @param {Number} args: arguments for the called function
+   */
+  duringCall: function(object, method, args) {
+    if (args.length === 0) {
+      return eval("arguments[1].call(object);");
+    }
+
+    for (var i = 0, len = args.length, $ = ""; i < len; i++) {
+      $ += "arguments[2][" + i + "]" + ((i !== len - 1) ? "," : "");
+    }
+    return eval("arguments[1].call(arguments[0], " + $ + ");");
+  },
+
+  /**
+   * Logs information about the currently profiled functions.
+   */
+  log: function() {
+    var functions = this.functions.slice(0), f, f2, i, j, len;
+
+    functions.sort(function(a, b) {
+      return a.totalTime < b.totalTime ? 1 : -1;
+    });
+
+    for (i = 0; i < functions.length; i++) {
+      f = functions[i];
+
+      for (j = i + 1; j < functions.length; j++) {
+        f2 = functions[j];
+
+        if (f.name === f2.name) {
+          f.calls += f2.calls;
+          f.longestTime = Math.max(f.longestTime, f2.longestTime);
+          f.averageTime = (f.averageTime + f2.averageTime) / 2;
+          f.totalTime += f2.totalTime;
+
+          functions.splice(j, 1);
+          j--;
+        }
+      }
+
+      // only log information about a function if it was called at least once
+      if (f.calls === 0) {
+        continue;
+      }
+
+      Tilt.Console.log(
+        "function " + f.name + "\n" +
+        "calls    " + f.calls + "\n" +
+        "average  " + f.averageTime + "ms\n" +
+        "longest  " + f.longestTime + "ms\n" +
+        "total    " + f.totalTime + "ms");
+    }
+  },
+
+  /**
+   * Clears the profiled functions array.
+   */
+  clear: function() {
+    this.functions = [];
+  }
+};
+/***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is Tilt: A WebGL-based 3D visualization of a webpage.
+ *
+ * The Initial Developer of the Original Code is Victor Porof.
+ * Portions created by the Initial Developer are Copyright (C) 2011
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the LGPL or the GPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ ***** END LICENSE BLOCK *****/
 "use strict";
 
 var Tilt = Tilt || {};
@@ -732,6 +1105,9 @@ var EXPORTED_SYMBOLS = ["Tilt.Program"];
  * @return {Tilt.Program} the newly created object
  */
 Tilt.Program = function(vertShaderSrc, fragShaderSrc) {
+
+  // intercept this object using a profiler when building in debug mode
+  Tilt.Profiler.intercept("Tilt.Program", this);  
 
   /**
    * A reference to the actual GLSL program.
@@ -863,7 +1239,7 @@ Tilt.Program.prototype = {
       attr = this.$attributes[attribute],
       size = buffer.itemSize;
 
-    gl.bindBuffer(gl.ARRAY_BUFFER, buffer.ref);
+    gl.bindBuffer(gl.ARRAY_BUFFER, buffer.$ref);
     gl.vertexAttribPointer(attr, size, gl.FLOAT, false, 0, 0);
   },
 
@@ -946,47 +1322,53 @@ Tilt.Program.prototype = {
   },
 
   /**
+   * Clears any bound uniforms from the cache.
+   */
+  clearCache: function() {
+    this.$cache = {};
+  },
+
+  /**
    * Destroys this object and deletes all members.
    */
   destroy: function() {
     for (var i in this) {
-      try {
-        if ("function" === typeof this[i].destroy) {
-          this[i].destroy();
-        }
-      }
-      catch(e) {}
-      finally {
-        delete this[i];
-      }
+      delete this[i];
     }
   }
 };
-/*
- * ProgramUtils.js - Utility functions for handling GLSL shaders and programs
- * version 0.1
+/***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
- * Copyright (c) 2011 Victor Porof
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
  *
- * This software is provided "as-is", without any express or implied
- * warranty. In no event will the authors be held liable for any damages
- * arising from the use of this software.
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
  *
- * Permission is granted to anyone to use this software for any purpose,
- * including commercial applications, and to alter it and redistribute it
- * freely, subject to the following restrictions:
+ * The Original Code is Tilt: A WebGL-based 3D visualization of a webpage.
  *
- *    1. The origin of this software must not be misrepresented; you must not
- *    claim that you wrote the original software. If you use this software
- *    in a product, an acknowledgment in the product documentation would be
- *    appreciated but is not required.
+ * The Initial Developer of the Original Code is Victor Porof.
+ * Portions created by the Initial Developer are Copyright (C) 2011
+ * the Initial Developer. All Rights Reserved.
  *
- *    2. Altered source versions must be plainly marked as such, and must not
- *    be misrepresented as being the original software.
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the LGPL or the GPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
  *
- *    3. This notice may not be removed or altered from any source
- *    distribution.
- */
+ ***** END LICENSE BLOCK *****/
 "use strict";
 
 var Tilt = Tilt || {};
@@ -1202,31 +1584,38 @@ Tilt.GLSL = {
    */
   $count: 0
 };
-/*
- * Texture.js - A WebGL texture wrapper
- * version 0.1
+/***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
- * Copyright (c) 2011 Victor Porof
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
  *
- * This software is provided "as-is", without any express or implied
- * warranty. In no event will the authors be held liable for any damages
- * arising from the use of this software.
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
  *
- * Permission is granted to anyone to use this software for any purpose,
- * including commercial applications, and to alter it and redistribute it
- * freely, subject to the following restrictions:
+ * The Original Code is Tilt: A WebGL-based 3D visualization of a webpage.
  *
- *    1. The origin of this software must not be misrepresented; you must not
- *    claim that you wrote the original software. If you use this software
- *    in a product, an acknowledgment in the product documentation would be
- *    appreciated but is not required.
+ * The Initial Developer of the Original Code is Victor Porof.
+ * Portions created by the Initial Developer are Copyright (C) 2011
+ * the Initial Developer. All Rights Reserved.
  *
- *    2. Altered source versions must be plainly marked as such, and must not
- *    be misrepresented as being the original software.
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the LGPL or the GPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
  *
- *    3. This notice may not be removed or altered from any source
- *    distribution.
- */
+ ***** END LICENSE BLOCK *****/
 "use strict";
 
 var Tilt = Tilt || {};
@@ -1251,6 +1640,9 @@ var EXPORTED_SYMBOLS = ["Tilt.Texture"];
  * @return {Tilt.Texture} the newly created object
  */
 Tilt.Texture = function(image, parameters, readyCallback) {
+
+  // intercept this object using a profiler when building in debug mode
+  Tilt.Profiler.intercept("Tilt.Texture", this);  
 
   /**
    * A reference to the WebGL texture object.
@@ -1353,43 +1745,42 @@ Tilt.Texture.prototype = {
    */
   destroy: function() {
     for (var i in this) {
-      try {
-        if ("function" === typeof this[i].destroy) {
-          this[i].destroy();
-        }
-      }
-      catch(e) {}
-      finally {
-        delete this[i];
-      }
+      delete this[i];
     }
   }
 };
-/*
- * TextureUtils.js - Utility functions for creating and manipulating textures
- * version 0.1
+/***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
- * Copyright (c) 2011 Victor Porof
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
  *
- * This software is provided "as-is", without any express or implied
- * warranty. In no event will the authors be held liable for any damages
- * arising from the use of this software.
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
  *
- * Permission is granted to anyone to use this software for any purpose,
- * including commercial applications, and to alter it and redistribute it
- * freely, subject to the following restrictions:
+ * The Original Code is Tilt: A WebGL-based 3D visualization of a webpage.
  *
- *    1. The origin of this software must not be misrepresented; you must not
- *    claim that you wrote the original software. If you use this software
- *    in a product, an acknowledgment in the product documentation would be
- *    appreciated but is not required.
+ * The Initial Developer of the Original Code is Victor Porof.
+ * Portions created by the Initial Developer are Copyright (C) 2011
+ * the Initial Developer. All Rights Reserved.
  *
- *    2. Altered source versions must be plainly marked as such, and must not
- *    be misrepresented as being the original software.
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the LGPL or the GPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
  *
- *    3. This notice may not be removed or altered from any source
- *    distribution.
- */
+ ***** END LICENSE BLOCK *****/
 "use strict";
 
 var Tilt = Tilt || {};
@@ -1599,591 +1990,6 @@ Tilt.TextureUtils = {
    * The total number of shaders created.
    */
   $count: 0
-};
-/*
- * Button.js - A simple button
- * version 0.1
- *
- * Copyright (c) 2011 Victor Porof
- *
- * This software is provided 'as-is', without any express or implied
- * warranty. In no event will the authors be held liable for any damages
- * arising from the use of this software.
- *
- * Permission is granted to anyone to use this software for any purpose,
- * including commercial applications, and to alter it and redistribute it
- * freely, subject to the following restrictions:
- *
- *    1. The origin of this software must not be misrepresented; you must not
- *    claim that you wrote the original software. If you use this software
- *    in a product, an acknowledgment in the product documentation would be
- *    appreciated but is not required.
- *
- *    2. Altered source versions must be plainly marked as such, and must not
- *    be misrepresented as being the original software.
- *
- *    3. This notice may not be removed or altered from any source
- *    distribution.
- */
-"use strict";
-
-var Tilt = Tilt || {};
-var EXPORTED_SYMBOLS = ["Tilt.Button"];
-
-/**
- * Button constructor.
- *
- * @param {Number} x: the x position of the object
- * @param {Number} y: the y position of the object
- * @param {Tilt.Sprite} sprite: the sprite to be drawn as background
- * @param {Function} onclick: optional, function to be called when clicked
- * @param {Object} properties: additional properties for this object
- */
-Tilt.Button = function(x, y, sprite, onclick, properties) {
-
-  // make sure the properties parameter is a valid object
-  properties = properties || {};
-
-  /**
-   * The draw coordinates of this object.
-   */
-  this.x = x || 0;
-  this.y = y || 0;
-
-  /**
-   * A sprite used as a background for this object.
-   */
-  this.sprite = sprite || { width: 0, height: 0 };
-
-  /**
-   * Variable specifying if this object shouldn't be drawn.
-   */
-  this.hidden = properties.hidden || false;
-
-  /**
-   * The bounds of this object (used for clicking and intersections).
-   */
-  this.$bounds = [this.x, this.y, this.sprite.width, this.sprite.height];
-
-  // if the onclick closure is specified in the constructor, save it here
-  if ("function" === typeof onclick) {
-    this.onclick = onclick;
-  }
-};
-
-Tilt.Button.prototype = {
-
-  /**
-   * Updates this object's internal params.
-   */
-  update: function() {
-    var sprite = this.sprite,
-      bounds = this.$bounds,
-      x = this.x,
-      y = this.y;
-
-    bounds[0] = x;
-    bounds[1] = y;
-    bounds[2] = sprite.width;
-    bounds[3] = sprite.height;
-
-    sprite.x = x;
-    sprite.y = y;
-  },
-
-  /**
-   * Draws this object using the specified internal params.
-   * @param {Tilt.Renderer} tilt: optional, a reference to a Tilt.Renderer
-   */
-  draw: function(tilt) {
-    tilt = tilt || Tilt.$renderer;
-
-    if ("undefined" !== typeof this.sprite.texture) {
-      this.sprite.draw(tilt);
-    }
-  },
-
-  /**
-   * Destroys this object and deletes all members.
-   */
-  destroy: function(canvas) {
-    for (var i in this) {
-      try {
-        if ("function" === typeof this[i].destroy) {
-          this[i].destroy();
-        }
-      }
-      catch(e) {}
-      finally {
-        delete this[i];
-      }
-    }
-  }
-};
-/*
- * Container.js - A container holding various GUI elements
- * version 0.1
- *
- * Copyright (c) 2011 Victor Porof
- *
- * This software is provided 'as-is', without any express or implied
- * warranty. In no event will the authors be held liable for any damages
- * arising from the use of this software.
- *
- * Permission is granted to anyone to use this software for any purpose,
- * including commercial applications, and to alter it and redistribute it
- * freely, subject to the following restrictions:
- *
- *    1. The origin of this software must not be misrepresented; you must not
- *    claim that you wrote the original software. If you use this software
- *    in a product, an acknowledgment in the product documentation would be
- *    appreciated but is not required.
- *
- *    2. Altered source versions must be plainly marked as such, and must not
- *    be misrepresented as being the original software.
- *
- *    3. This notice may not be removed or altered from any source
- *    distribution.
- */
-"use strict";
-
-var Tilt = Tilt || {};
-var EXPORTED_SYMBOLS = ["Tilt.Container"];
-
-/**
- * Container constructor.
- *
- * @param {Array} elements: array of GUI elements added to this container
- * @param {Object} properties: additional properties for this object
- */
-Tilt.Container = function(elements, properties) {
-
-  // make sure the properties parameter is a valid object
-  properties = properties || {};
-  elements = elements || [];
-
-  /**
-   * A texture used as the pixel data for this object.
-   */
-  this.elements = elements instanceof Array ? elements : [elements];
-
-  /**
-   * The color of the full screen rectangle.
-   */
-  this.background = properties.background || null;
-
-  /**
-   * Variable specifying if this object shouldn't be drawn.
-   */
-  this.hidden = properties.hidden || false;
-};
-
-Tilt.Container.prototype = {
-
-  /**
-   * Updates this object's internal params.
-   */
-  update: function() {
-    var elements = this.elements,
-      i, len;
-
-    for (i = 0, len = elements.length; i < len; i++) {
-      elements[i].update();
-    }
-  },
-
-  /**
-   * Draws this object using the specified internal params.
-   * @param {Tilt.Renderer} tilt: optional, a reference to a Tilt.Renderer
-   */
-  draw: function(tilt) {
-    tilt = tilt || Tilt.$renderer;
-
-    if (this.background !== null) {
-      tilt.fill(this.background);
-      tilt.noStroke();
-      tilt.rect(0, 0, tilt.width, tilt.height);
-    }
-
-    var elements = this.elements,
-      element, i, len;
-
-    for (i = 0, len = elements.length; i < len; i++) {
-      element = elements[i];
-
-      if (!element.hidden) {
-        element.draw(tilt);
-      }
-    }
-  },
-
-  /**
-   * Destroys this object and deletes all members.
-   */
-  destroy: function() {
-    for (var e in this.elements) {
-      try {
-        if ("function" === typeof this.elements[e].destroy) {
-          this.elements[e].destroy();
-        }
-      }
-      catch(e) {}
-      finally {
-        delete this.elements[e];
-      }
-    }
-
-    for (var i in this) {
-      try {
-        if ("function" === typeof this[i].destroy) {
-          this[i].destroy();
-        }
-      }
-      catch(e) {}
-      finally {
-        delete this[i];
-      }
-    }
-  }
-};
-/*
- * Sprite.js - A handy wrapper for a texture
- * version 0.1
- *
- * Copyright (c) 2011 Victor Porof
- *
- * This software is provided 'as-is', without any express or implied
- * warranty. In no event will the authors be held liable for any damages
- * arising from the use of this software.
- *
- * Permission is granted to anyone to use this software for any purpose,
- * including commercial applications, and to alter it and redistribute it
- * freely, subject to the following restrictions:
- *
- *    1. The origin of this software must not be misrepresented; you must not
- *    claim that you wrote the original software. If you use this software
- *    in a product, an acknowledgment in the product documentation would be
- *    appreciated but is not required.
- *
- *    2. Altered source versions must be plainly marked as such, and must not
- *    be misrepresented as being the original software.
- *
- *    3. This notice may not be removed or altered from any source
- *    distribution.
- */
-"use strict";
-
-var Tilt = Tilt || {};
-var EXPORTED_SYMBOLS = ["Tilt.Sprite"];
-
-/**
- * Sprite constructor.
- *
- * @param {Tilt.Texture} texture: the texture to be used
- * @param {Array} region: the sub-texture coordinates as [x, y, width, height]
- * @param {Object} properties: additional properties for this object
- */
-Tilt.Sprite = function(texture, region, properties) {
-
-  // make sure the properties parameter is a valid object
-  properties = properties || {};
-
-  /**
-   * A texture used as the pixel data for this object.
-   */
-  this.texture = texture;
-
-  /**
-   * The sub-texture coordinates array.
-   */
-  this.region = region || [0, 0, texture.width, texture.height];
-
-  /**
-   * The draw coordinates of this object.
-   */
-  this.x = properties.x || 0;
-  this.y = properties.y || 0;
-  this.width = properties.width || this.region[2];
-  this.height = properties.height || this.region[3];
-
-  /**
-   * Variable specifying if this object shouldn't be drawn.
-   */
-  this.hidden = properties.hidden || false;
-
-  /**
-   * Sets if depth testing should be enabled or not for this object.
-   */
-  this.depthTest = properties.depthTest || false;
-
-  /**
-   * The bounds of this object (used for clicking and intersections).
-   */
-  this.$bounds = [this.x, this.y, this.width, this.height];
-
-  /**
-   * Buffer of 2-component texture coordinates (u, v) for the sprite.
-   */
-  this.$texCoord = null;
-};
-
-Tilt.Sprite.prototype = {
-
-  /**
-   * Clears the generated texture coords, which will be regenerated at draw.
-   */
-  update$texCoord: function() {
-    this.$texCoord = null;
-  },
-
-  /**
-   * Updates this object's internal params.
-   */
-  update: function() {
-    var bounds = this.$bounds;
-
-    bounds[0] = this.x;
-    bounds[1] = this.y;
-    bounds[2] = this.width;
-    bounds[3] = this.height;
-  },
-
-  /**
-   * Draws this object using the specified internal params.
-   * @param {Tilt.Renderer} tilt: optional, a reference to a Tilt.Renderer
-   */
-  draw: function(tilt) {
-    tilt = tilt || Tilt.$renderer;
-
-    // cache these variables for easy access
-    var reg = this.region,
-      tex = this.texture,
-      x = this.x,
-      y = this.y,
-      width = this.width,
-      height = this.height;
-
-    // initialize the texture coordinates buffer if it was null
-    if (this.$texCoord === null && this.texture.loaded) {
-
-      // create the texture coordinates representing the sub-texture
-      this.$texCoord = new Tilt.VertexBuffer([
-        (reg[0]         ) / tex.width, (reg[1]         ) / tex.height,
-        (reg[0] + reg[2]) / tex.width, (reg[1]         ) / tex.height,
-        (reg[0]         ) / tex.width, (reg[1] + reg[3]) / tex.height,
-        (reg[0] + reg[2]) / tex.width, (reg[1] + reg[3]) / tex.height], 2);
-    }
-
-    if (this.depthTest) {
-      tilt.depthTest(true);
-      tilt.image(tex, x, y, width, height, this.$texCoord);
-      tilt.depthTest(false);
-    }
-    else {
-      tilt.image(tex, x, y, width, height, this.$texCoord);
-    }
-  },
-
-  /**
-   * Destroys this object and deletes all members.
-   */
-  destroy: function() {
-    for (var i in this) {
-      try {
-        if ("function" === typeof this[i].destroy) {
-          this[i].destroy();
-        }
-      }
-      catch(e) {}
-      finally {
-        delete this[i];
-      }
-    }
-  }
-};
-/*
- * GUI.js - Handler for all the GUI elements
- * version 0.1
- *
- * Copyright (c) 2011 Victor Porof
- *
- * This software is provided 'as-is', without any express or implied
- * warranty. In no event will the authors be held liable for any damages
- * arising from the use of this software.
- *
- * Permission is granted to anyone to use this software for any purpose,
- * including commercial applications, and to alter it and redistribute it
- * freely, subject to the following restrictions:
- *
- *    1. The origin of this software must not be misrepresented; you must not
- *    claim that you wrote the original software. If you use this software
- *    in a product, an acknowledgment in the product documentation would be
- *    appreciated but is not required.
- *
- *    2. Altered source versions must be plainly marked as such, and must not
- *    be misrepresented as being the original software.
- *
- *    3. This notice may not be removed or altered from any source
- *    distribution.
- */
-"use strict";
-
-var Tilt = Tilt || {};
-var EXPORTED_SYMBOLS = ["Tilt.GUI"];
-
-/**
- * GUI constructor.
- */
-Tilt.GUI = function() {
-
-  /**
-   * All the GUI elements will be added to this list for proper handling.
-   */
-  this.elements = [];
-};
-
-Tilt.GUI.prototype = {
-
-  /**
-   * Adds a GUI element to the handler stack.
-   * @param {Object} a valid Tilt GUI object (ex: Tilt.Button)
-   */
-  push: function() {
-    for (var i = 0, len = arguments.length; i < len; i++) {
-      this.elements.push(arguments[i]);
-    }
-  },
-
-  /**
-   * Removes a GUI element from the handler stack.
-   * @param {Object} a valid Tilt GUI object (ex: Tilt.Button)
-   */
-  remove: function() {
-    for (var i = 0, len = arguments.length, index = -1; i < len; i++) {
-      if ((index = this.elements.indexOf(arguments[i])) !== -1) {
-        this.elements.splice(index, 1);
-      }
-    }
-  },
-
-  /**
-   * Draws all the GUI handled elements.
-   */
-  draw: function() {
-    var tilt = Tilt.$renderer,
-      elements = this.elements,
-      element, i, len;
-
-    tilt.ortho();
-    tilt.origin();
-    tilt.blendMode("alpha");
-    tilt.depthTest(false);
-
-    for (i = 0, len = elements.length; i < len; i++) {
-      element = elements[i];
-      element.update();
-
-      if (!element.hidden) {
-        element.draw(tilt);
-      }
-    }
-  },
-
-  /**
-   * Delegate click method.
-   *
-   * @param {Number} x: the current horizontal coordinate of the mouse
-   * @param {Number} y: the current vertical coordinate of the mouse
-   */
-  click: function(x, y) {
-    var elements = this.elements,
-      element, subelements, i, j, len, len2;
-
-    for (i = 0, len = elements.length; i < len; i++) {
-      element = elements[i];
-
-      if (element instanceof Tilt.Container) {
-        // a container can have one or more elements, verify each one if it is
-        // valid to receive the click event 
-        subelements = element.elements;
-
-        for (j = 0, len2 = subelements.length; j < len2; j++) {
-          this.element$onClick(x, y, subelements[j]);
-        }
-      }
-      else {
-        // normally check if the element is valid to receive a click event
-        this.element$onClick(x, y, element);
-      }
-    }
-  },
-
-  /**
-   * Delegate double click method.
-   *
-   * @param {Number} x: the current horizontal coordinate of the mouse
-   * @param {Number} y: the current vertical coordinate of the mouse
-   */
-  doubleClick: function(x, y) {
-    // TODO: implementation
-  },
-
-  /**
-   * Checks if a GUI element is valid to receive a click event. If this is the 
-   * case, then the onclick function is called when available.
-   *
-   * @param {Number} x: the current horizontal coordinate of the mouse
-   * @param {Number} y: the current vertical coordinate of the mouse
-   * @param {Object} element: the GUI element to be checked
-   */
-  element$onClick: function(x, y, element) {
-    if ("undefined" === typeof element) {
-      return;
-    }
-
-    var bounds = element.$bounds || [-1, -1, -1, -1],
-      boundsX = bounds[0],
-      boundsY = bounds[1],
-      boundsWidth = bounds[2],
-      boundsHeight = bounds[3];
-
-    if (x > boundsX && x < boundsX + boundsWidth &&
-        y > boundsY && y < boundsY + boundsHeight) {
-
-      if ("function" === typeof element.onclick) {
-        element.onclick(x, y);
-      }
-    }
-  },
-
-  /**
-   * Destroys this object and deletes all members.
-   */
-  destroy: function() {
-    for (var e in this.elements) {
-      try {
-        if ("function" === typeof this.elements[e].destroy) {
-          this.elements[e].destroy();
-        }
-      }
-      catch(e) {}
-      finally {
-        delete this.elements[e];
-      }
-    }
-
-    for (var i in this) {
-      try {
-        if ("function" === typeof this[i].destroy) {
-          this[i].destroy();
-        }
-      }
-      catch(e) {}
-      finally {
-        delete this[i];
-      }
-    }
-  }
 };
 /*
 
@@ -6133,31 +5939,38 @@ if (!JSON) {
         };
     }
 }());
-/*
- * Cube.js - A simple cube primitive geometry
- * version 0.1
+/***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
- * Copyright (c) 2011 Victor Porof
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
  *
- * This software is provided "as-is", without any express or implied
- * warranty. In no event will the authors be held liable for any damages
- * arising from the use of this software.
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
  *
- * Permission is granted to anyone to use this software for any purpose,
- * including commercial applications, and to alter it and redistribute it
- * freely, subject to the following restrictions:
+ * The Original Code is Tilt: A WebGL-based 3D visualization of a webpage.
  *
- *    1. The origin of this software must not be misrepresented; you must not
- *    claim that you wrote the original software. If you use this software
- *    in a product, an acknowledgment in the product documentation would be
- *    appreciated but is not required.
+ * The Initial Developer of the Original Code is Victor Porof.
+ * Portions created by the Initial Developer are Copyright (C) 2011
+ * the Initial Developer. All Rights Reserved.
  *
- *    2. Altered source versions must be plainly marked as such, and must not
- *    be misrepresented as being the original software.
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the LGPL or the GPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
  *
- *    3. This notice may not be removed or altered from any source
- *    distribution.
- */
+ ***** END LICENSE BLOCK *****/
 "use strict";
 
 var Tilt = Tilt || {};
@@ -6171,6 +5984,10 @@ var EXPORTED_SYMBOLS = ["Tilt.Cube"];
  * @param {Number} depth: the depth of the cube
  */
 Tilt.Cube = function(width, height, depth) {
+
+  // intercept this object using a profiler when building in debug mode
+  Tilt.Profiler.intercept("Tilt.Cube", this);  
+
   // make sure the width, height and depth are valid number values
   width = width || 1;
   height = height || 1;
@@ -6235,44 +6052,41 @@ Tilt.Cube.prototype = {
    * Destroys this object and deletes all members.
    */
   destroy: function() {
-    for (var i in this) {
-      try {
-        if ("function" === typeof this[i].destroy) {
-          this[i].destroy();
-        }
-      }
-      catch(e) {}
-      finally {
-        delete this[i];
-      }
-    }
+    Tilt.destroyObject(this);
   }
 };
-/*
- * CubeWireframe.js - A simple cube primitive wireframe
- * version 0.1
+/***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
- * Copyright (c) 2011 Victor Porof
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
  *
- * This software is provided "as-is", without any express or implied
- * warranty. In no event will the authors be held liable for any damages
- * arising from the use of this software.
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
  *
- * Permission is granted to anyone to use this software for any purpose,
- * including commercial applications, and to alter it and redistribute it
- * freely, subject to the following restrictions:
+ * The Original Code is Tilt: A WebGL-based 3D visualization of a webpage.
  *
- *    1. The origin of this software must not be misrepresented; you must not
- *    claim that you wrote the original software. If you use this software
- *    in a product, an acknowledgment in the product documentation would be
- *    appreciated but is not required.
+ * The Initial Developer of the Original Code is Victor Porof.
+ * Portions created by the Initial Developer are Copyright (C) 2011
+ * the Initial Developer. All Rights Reserved.
  *
- *    2. Altered source versions must be plainly marked as such, and must not
- *    be misrepresented as being the original software.
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the LGPL or the GPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
  *
- *    3. This notice may not be removed or altered from any source
- *    distribution.
- */
+ ***** END LICENSE BLOCK *****/
 "use strict";
 
 var Tilt = Tilt || {};
@@ -6286,6 +6100,10 @@ var EXPORTED_SYMBOLS = ["Tilt.CubeWireframe"];
  * @param {number} depth: the depth of the cube
  */
 Tilt.CubeWireframe = function(width, height, depth) {
+
+  // intercept this object using a profiler when building in debug mode
+  Tilt.Profiler.intercept("Tilt.CubeWireframe", this);  
+
   // make sure the width, height and depth are valid number values
   width = width || 1;
   height = height || 1;
@@ -6321,44 +6139,41 @@ Tilt.CubeWireframe.prototype = {
    * Destroys this object and deletes all members.
    */
   destroy: function() {
-    for (var i in this) {
-      try {
-        if ("function" === typeof this[i].destroy) {
-          this[i].destroy();
-        }
-      }
-      catch(e) {}
-      finally {
-        delete this[i];
-      }
-    }
+    Tilt.destroyObject(this);
   }
 };
-/*
- * Cube.js - A simple rectangle primitive geometry
- * version 0.1
+/***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
- * Copyright (c) 2011 Victor Porof
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
  *
- * This software is provided "as-is", without any express or implied
- * warranty. In no event will the authors be held liable for any damages
- * arising from the use of this software.
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
  *
- * Permission is granted to anyone to use this software for any purpose,
- * including commercial applications, and to alter it and redistribute it
- * freely, subject to the following restrictions:
+ * The Original Code is Tilt: A WebGL-based 3D visualization of a webpage.
  *
- *    1. The origin of this software must not be misrepresented; you must not
- *    claim that you wrote the original software. If you use this software
- *    in a product, an acknowledgment in the product documentation would be
- *    appreciated but is not required.
+ * The Initial Developer of the Original Code is Victor Porof.
+ * Portions created by the Initial Developer are Copyright (C) 2011
+ * the Initial Developer. All Rights Reserved.
  *
- *    2. Altered source versions must be plainly marked as such, and must not
- *    be misrepresented as being the original software.
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the LGPL or the GPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
  *
- *    3. This notice may not be removed or altered from any source
- *    distribution.
- */
+ ***** END LICENSE BLOCK *****/
 "use strict";
 
 var Tilt = Tilt || {};
@@ -6368,6 +6183,9 @@ var EXPORTED_SYMBOLS = ["Tilt.Rectangle"];
  * Tilt.Rectangle constructor.
  */
 Tilt.Rectangle = function(width, height, depth) {
+
+  // intercept this object using a profiler when building in debug mode
+  Tilt.Profiler.intercept("Tilt.Rectangle", this);  
 
   /**
    * Buffer of 2-component vertices (x, y) as the corners of a rectangle.
@@ -6386,44 +6204,41 @@ Tilt.Rectangle.prototype = {
    * Destroys this object and deletes all members.
    */
   destroy: function() {
-    for (var i in this) {
-      try {
-        if ("function" === typeof this[i].destroy) {
-          this[i].destroy();
-        }
-      }
-      catch(e) {}
-      finally {
-        delete this[i];
-      }
-    }
+    Tilt.destroyObject(this);
   }
 };
-/*
- * Cube.js - A simple rectangle primitive wireframe
- * version 0.1
+/***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
- * Copyright (c) 2011 Victor Porof
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
  *
- * This software is provided "as-is", without any express or implied
- * warranty. In no event will the authors be held liable for any damages
- * arising from the use of this software.
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
  *
- * Permission is granted to anyone to use this software for any purpose,
- * including commercial applications, and to alter it and redistribute it
- * freely, subject to the following restrictions:
+ * The Original Code is Tilt: A WebGL-based 3D visualization of a webpage.
  *
- *    1. The origin of this software must not be misrepresented; you must not
- *    claim that you wrote the original software. If you use this software
- *    in a product, an acknowledgment in the product documentation would be
- *    appreciated but is not required.
+ * The Initial Developer of the Original Code is Victor Porof.
+ * Portions created by the Initial Developer are Copyright (C) 2011
+ * the Initial Developer. All Rights Reserved.
  *
- *    2. Altered source versions must be plainly marked as such, and must not
- *    be misrepresented as being the original software.
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the LGPL or the GPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
  *
- *    3. This notice may not be removed or altered from any source
- *    distribution.
- */
+ ***** END LICENSE BLOCK *****/
 "use strict";
 
 var Tilt = Tilt || {};
@@ -6433,6 +6248,9 @@ var EXPORTED_SYMBOLS = ["Tilt.RectangleWireframe"];
  * Tilt.RectangleWireframe constructor.
  */
 Tilt.RectangleWireframe = function() {
+
+  // intercept this object using a profiler when building in debug mode
+  Tilt.Profiler.intercept("Tilt.RectangleWireframe", this);  
 
   /**
    * Buffer of 2-component vertices (x, y) as the outline of a rectangle.
@@ -6446,44 +6264,41 @@ Tilt.RectangleWireframe.prototype = {
    * Destroys this object and deletes all members.
    */
   destroy: function() {
-    for (var i in this) {
-      try {
-        if ("function" === typeof this[i].destroy) {
-          this[i].destroy();
-        }
-      }
-      catch(e) {}
-      finally {
-        delete this[i];
-      }
-    }
+    Tilt.destroyObject(this);
   }
 };
-/*
- * Mesh.js - An object representing a drawable mesh
- * version 0.1
+/***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
- * Copyright (c) 2011 Victor Porof
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
  *
- * This software is provided "as-is", without any express or implied
- * warranty. In no event will the authors be held liable for any damages
- * arising from the use of this software.
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
  *
- * Permission is granted to anyone to use this software for any purpose,
- * including commercial applications, and to alter it and redistribute it
- * freely, subject to the following restrictions:
+ * The Original Code is Tilt: A WebGL-based 3D visualization of a webpage.
  *
- *    1. The origin of this software must not be misrepresented; you must not
- *    claim that you wrote the original software. If you use this software
- *    in a product, an acknowledgment in the product documentation would be
- *    appreciated but is not required.
+ * The Initial Developer of the Original Code is Victor Porof.
+ * Portions created by the Initial Developer are Copyright (C) 2011
+ * the Initial Developer. All Rights Reserved.
  *
- *    2. Altered source versions must be plainly marked as such, and must not
- *    be misrepresented as being the original software.
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the LGPL or the GPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
  *
- *    3. This notice may not be removed or altered from any source
- *    distribution.
- */
+ ***** END LICENSE BLOCK *****/
 "use strict";
 
 var Tilt = Tilt || {};
@@ -6498,11 +6313,15 @@ var EXPORTED_SYMBOLS = ["Tilt.Mesh"];
  *  @param {Tilt.VertexBuffer} normals: the normals buffer (m, n, p)
  *  @param {Tilt.IndexBuffer} indices: indices for the passed vertices buffer
  *  @param {String} color: the color to be used by the shader if required
+ *  @param {Number} texalpha: the texture transparency
  *  @param {Tilt.Texture} texture: optional texture to be used by the shader
  *  @param {Number} drawMode: WebGL enum, like tilt.TRIANGLES
  * @param {Function} draw: optional function to handle custom drawing
  */
 Tilt.Mesh = function(parameters, draw) {
+
+  // intercept this object using a profiler when building in debug mode
+  Tilt.Profiler.intercept("Tilt.Mesh", this);  
 
   /**
    * Retain each parameters for easy access.
@@ -6516,6 +6335,14 @@ Tilt.Mesh = function(parameters, draw) {
     this.color = Tilt.Math.hex2rgba(this.color);
   } else if ("undefined" === typeof this.color) {
     this.color = [1, 1, 1, 1];
+  }
+
+  // the texture alpha should be a number between 0..1
+  if ("undefined" === typeof this.texalpha) {
+    this.texalpha = 1;
+  }
+  else if ("number" === typeof this.texalpha && this.texalpha > 1) {
+    this.texalpha /= 255;
   }
 
   // the draw mode should be valid, default to TRIANGLES if unspecified
@@ -6537,6 +6364,10 @@ Tilt.Mesh.prototype = {
    * Overwrite this function to handle custom drawing.
    */
   draw: function() {
+    if (this.hidden === true) {
+      return;
+    }
+
     // cache some properties for easy access
     var tilt = Tilt.$renderer,
       vertices = this.vertices,
@@ -6544,12 +6375,13 @@ Tilt.Mesh.prototype = {
       normals = this.normals,
       indices = this.indices,
       color = this.color,
-      texture = this.texture,
+      a = this.texalpha,
+      t = this.texture,
       drawMode = this.drawMode;
 
     // use the necessary shader
-    if (texture) {
-      tilt.useTextureShader(vertices, texCoord, color, texture);
+    if (t) {
+      tilt.useTextureShader(vertices, texCoord, color, a, t);
     } else {
       tilt.useColorShader(vertices, color);
     }
@@ -6571,44 +6403,41 @@ Tilt.Mesh.prototype = {
    * Destroys this object and deletes all members.
    */
   destroy: function() {
-    for (var i in this) {
-      try {
-        if ("function" === typeof this[i].destroy) {
-          this[i].destroy();
-        }
-      }
-      catch(e) {}
-      finally {
-        delete this[i];
-      }
-    }
+    Tilt.destroyObject(this);
   }
 };
-/*
- * Renderer.js - Helper drawing functions for WebGL
- * version 0.1
+/***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
- * Copyright (c) 2011 Victor Porof
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
  *
- * This software is provided "as-is", without any express or implied
- * warranty. In no event will the authors be held liable for any damages
- * arising from the use of this software.
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
  *
- * Permission is granted to anyone to use this software for any purpose,
- * including commercial applications, and to alter it and redistribute it
- * freely, subject to the following restrictions:
+ * The Original Code is Tilt: A WebGL-based 3D visualization of a webpage.
  *
- *    1. The origin of this software must not be misrepresented; you must not
- *    claim that you wrote the original software. If you use this software
- *    in a product, an acknowledgment in the product documentation would be
- *    appreciated but is not required.
+ * The Initial Developer of the Original Code is Victor Porof.
+ * Portions created by the Initial Developer are Copyright (C) 2011
+ * the Initial Developer. All Rights Reserved.
  *
- *    2. Altered source versions must be plainly marked as such, and must not
- *    be misrepresented as being the original software.
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the LGPL or the GPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
  *
- *    3. This notice may not be removed or altered from any source
- *    distribution.
- */
+ ***** END LICENSE BLOCK *****/
 "use strict";
 
 var Tilt = Tilt || {};
@@ -6623,6 +6452,9 @@ var EXPORTED_SYMBOLS = ["Tilt.Renderer"];
  * @return {Tilt.Renderer} the newly created object
  */
 Tilt.Renderer = function(canvas, failCallback, successCallback) {
+
+  // intercept this object using a profiler when building in debug mode
+  Tilt.Profiler.intercept("Tilt.Renderer", this);  
 
   /**
    * The WebGL context obtained from the canvas element, used for drawing.
@@ -6649,7 +6481,7 @@ Tilt.Renderer = function(canvas, failCallback, successCallback) {
     this.DEPTH_BUFFER_BIT = this.gl.DEPTH_BUFFER_BIT;
     this.STENCIL_BUFFER_BIT = this.gl.STENCIL_BUFFER_BIT;
 
-    this.MAX_TEXTURE_SIZE = 
+    this.MAX_TEXTURE_SIZE =
       this.gl.getParameter(this.gl.MAX_TEXTURE_SIZE);
 
     this.MAX_TEXTURE_IMAGE_UNITS =
@@ -6718,6 +6550,11 @@ Tilt.Renderer = function(canvas, failCallback, successCallback) {
   this.$strokeWeightValue = 1;
 
   /**
+   * The transparency of a sampled texture.
+   */
+  this.$textureAlphaValue = 1;
+
+  /**
    * A shader useful for drawing vertices with only a color component.
    */
   var color$vs = Tilt.Shaders.Color.vs;
@@ -6777,12 +6614,7 @@ Tilt.Renderer = function(canvas, failCallback, successCallback) {
   this.perspective();
 
   // set the default tint, fill, stroke and other visual properties
-  this.tint("#fff");
-  this.fill("#fff");
-  this.stroke("#000");
-  this.strokeWeight(1);
-  this.blendMode("alpha");
-  this.depthTest(false);
+  this.defaults();
 };
 
 Tilt.Renderer.prototype = {
@@ -6813,7 +6645,7 @@ Tilt.Renderer.prototype = {
       b *= 255;
       a *= 255;
       this.canvas.setAttribute("style",
-        "background: rgba(" + r + ", " + g + ", " + b + ", " + a + "); " + 
+        "background: rgba(" + r + ", " + g + ", " + b + ", " + a + "); " +
         "width: 100%; height: 100%;");
     }
 
@@ -6864,6 +6696,7 @@ Tilt.Renderer.prototype = {
 
     mat4.perspective(fov, aspect, znear, zfar, this.projMatrix, true);
     mat4.translate(this.projMatrix, [-x, -y, -z]);
+    mat4.identity(this.mvMatrix);
   },
 
   /**
@@ -6873,6 +6706,7 @@ Tilt.Renderer.prototype = {
     var clip = 1000000;
     mat4.ortho(0, this.width, this.height, 0, -clip, clip, this.projMatrix);
     mat4.translate(this.projMatrix, [0, 0, -clip + 1]);
+    mat4.identity(this.mvMatrix);
   },
 
   /**
@@ -7047,6 +6881,16 @@ Tilt.Renderer.prototype = {
   },
 
   /**
+   * Sets the current texture transparency.
+   * @param {Number} weight: the transparency, between 0 and 255
+   */
+  textureAlpha: function(value) {
+    if (this.$textureAlphaValue !== value / 255) {
+      this.$textureAlphaValue = value / 255;
+    }
+  },
+
+  /**
    * Sets blending, either "alpha" or "add" (additive blending).
    * Anything else disables blending.
    *
@@ -7083,19 +6927,35 @@ Tilt.Renderer.prototype = {
   },
 
   /**
+   * Resets the drawing style to default.
+   *
+   * @param {Boolean} depthTest: optional, override the default depth testing
+   * @param {String} blendMode: optional, override the default blend mode
+   */
+  defaults: function(depthTest, blendMode) {
+    this.tint("#fff");
+    this.fill("#fff");
+    this.stroke("#000");
+    this.strokeWeight(1);
+    this.textureAlpha(255);
+    this.depthTest(depthTest || true);
+    this.blendMode(blendMode || "alpha");
+  },
+
+  /**
    * Helper function to set active the color shader with required params.
    *
    * @param {Tilt.VertexBuffer} verticesBuffer: a buffer of vertices positions
    * @param {Array} color: the color used, as [r, g, b, a] with 0..1 range
    */
-  useColorShader: function(verticesBuffer, color) {
+  useColorShader: function(vertices, color) {
     var program = this.colorShader;
 
     // use this program
     program.use();
 
     // bind the attributes and uniforms as necessary
-    program.bindVertexBuffer("vertexPosition", verticesBuffer);
+    program.bindVertexBuffer("vertexPosition", vertices);
     program.bindUniformMatrix("mvMatrix", this.mvMatrix);
     program.bindUniformMatrix("projMatrix", this.projMatrix);
     program.bindUniformVec4("color", color);
@@ -7107,20 +6967,22 @@ Tilt.Renderer.prototype = {
    * @param {Tilt.VertexBuffer} verticesBuffer: a buffer of vertices positions
    * @param {Tilt.VertexBuffer} texCoordBuffer: a buffer of texture coords
    * @param {Array} color: the color used, as [r, g, b, a] with 0..1 range
+   * @param {Number} texalpha: the texture transparency
    * @param {Tilt.Texture} texture: the texture to be applied
    */
-  useTextureShader: function(verticesBuffer, texCoordBuffer, color, texture) {
+  useTextureShader: function(vertices, texCoord, color, texalpha, texture) {
     var program = this.textureShader;
 
     // use this program
     program.use();
 
     // bind the attributes and uniforms as necessary
-    program.bindVertexBuffer("vertexPosition", verticesBuffer);
-    program.bindVertexBuffer("vertexTexCoord", texCoordBuffer);
+    program.bindVertexBuffer("vertexPosition", vertices);
+    program.bindVertexBuffer("vertexTexCoord", texCoord);
     program.bindUniformMatrix("mvMatrix", this.mvMatrix);
     program.bindUniformMatrix("projMatrix", this.projMatrix);
     program.bindUniformVec4("color", color);
+    program.bindUniformFloat("texalpha", texalpha);
     program.bindTexture("sampler", texture);
   },
 
@@ -7224,17 +7086,23 @@ Tilt.Renderer.prototype = {
   /**
    * Draws an image using the specified parameters.
    *
-   * @param {Tilt.Texture} t: the texture to be used
+   * @param {Tilt.Texture} texture: the texture to be used
    * @param {Number} x: the x position of the object
    * @param {Number} y: the y position of the object
    * @param {Number} width: the width of the object
    * @param {Number} height: the height of the object
    * @param {Tilt.VertexBuffer} texCoord: optional, custom texture coordinates
    */
-  image: function(t, x, y, width, height, texCoord) {
+  image: function(texture, x, y, width, height, texCoord) {
+    if (!texture.loaded) {
+      return;
+    }
+
     var rectangle = this.$rectangle,
       tint = this.$tintColor,
       stroke = this.$strokeColor,
+      a = this.$textureAlphaValue,
+      t = texture,
       texCoordBuffer = texCoord || rectangle.texCoord;
 
     // if the width and height are not specified, we use the embedded
@@ -7259,7 +7127,7 @@ Tilt.Renderer.prototype = {
       this.scale(width, height, 1);
 
       // use the necessary shader and draw the vertices
-      this.useTextureShader(rectangle.vertices, texCoordBuffer, tint, t);
+      this.useTextureShader(rectangle.vertices, texCoordBuffer, tint, a, t);
       this.drawVertices(this.TRIANGLE_STRIP, rectangle.vertices.numItems);
 
       this.popMatrix();
@@ -7279,7 +7147,9 @@ Tilt.Renderer.prototype = {
       wireframe = this.$cubeWireframe,
       tint = this.$tintColor,
       fill = this.$fillColor,
-      stroke = this.$strokeColor;
+      stroke = this.$strokeColor,
+      a = this.$textureAlphaValue,
+      t = texture;
 
     // in memory, the box is represented as a simple perfect 1x1 cube, so
     // some transformations are applied to achieve the desired shape
@@ -7293,11 +7163,11 @@ Tilt.Renderer.prototype = {
       this.drawIndexedVertices(this.LINES, wireframe.indices);
     }
 
-    if (texture) {
+    if (t) {
       // draw the box only if the tint alpha channel is not transparent
       if (tint[3]) {
         // use the necessary shader and draw the vertices
-        this.useTextureShader(cube.vertices, cube.texCoord, tint, texture);
+        this.useTextureShader(cube.vertices, cube.texCoord, tint, a, t);
         this.drawIndexedVertices(this.TRIANGLES, cube.indices);
       }
     } else {
@@ -7332,7 +7202,7 @@ Tilt.Renderer.prototype = {
   drawIndexedVertices: function(drawMode, indicesBuffer) {
     var gl = this.gl;
 
-    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indicesBuffer.ref);
+    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indicesBuffer.$ref);
     gl.drawElements(drawMode, indicesBuffer.numItems, gl.UNSIGNED_SHORT, 0);
   },
 
@@ -7379,7 +7249,6 @@ Tilt.Renderer.prototype = {
     window.requestAnimFrame(draw);
 
     // reset the model view and projection matrices
-    this.origin();
     this.perspective();
 
     // calculate the frame delta and frame rate using the current time
@@ -7394,6 +7263,10 @@ Tilt.Renderer.prototype = {
     // increment the elapsed time and total frame count
     this.elapsedTime += this.frameDelta;
     this.frameCount++;
+
+    // clear the cache associated with the shaders
+    // this.colorShader.clearCache();
+    // this.textureShader.clearCache();
   },
 
   /**
@@ -7401,45 +7274,41 @@ Tilt.Renderer.prototype = {
    */
   destroy: function() {
     Tilt.clearCache();
-
-    for (var i in this) {
-      try {
-        if ("function" === typeof this[i].destroy) {
-          this[i].destroy();
-        }
-      }
-      catch(e) {}
-      finally {
-        delete this[i];
-      }
-    }
+    Tilt.destroyObject(this);
   }
 };
-/*
- * RequestAnimFrame.js - Provides requestAnimationFrame in a cross browser way
- * version 0.1
+/***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
- * Copyright (c) 2011 Victor Porof
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
  *
- * This software is provided "as-is", without any express or implied
- * warranty. In no event will the authors be held liable for any damages
- * arising from the use of this software.
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
  *
- * Permission is granted to anyone to use this software for any purpose,
- * including commercial applications, and to alter it and redistribute it
- * freely, subject to the following restrictions:
+ * The Original Code is Tilt: A WebGL-based 3D visualization of a webpage.
  *
- *    1. The origin of this software must not be misrepresented; you must not
- *    claim that you wrote the original software. If you use this software
- *    in a product, an acknowledgment in the product documentation would be
- *    appreciated but is not required.
+ * The Initial Developer of the Original Code is Victor Porof.
+ * Portions created by the Initial Developer are Copyright (C) 2011
+ * the Initial Developer. All Rights Reserved.
  *
- *    2. Altered source versions must be plainly marked as such, and must not
- *    be misrepresented as being the original software.
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the LGPL or the GPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
  *
- *    3. This notice may not be removed or altered from any source
- *    distribution.
- */
+ ***** END LICENSE BLOCK *****/
 window.requestAnimFrame = (function() {
   return window.requestAnimationFrame ||
          window.webkitRequestAnimationFrame ||
@@ -7449,31 +7318,38 @@ window.requestAnimFrame = (function() {
          function(callback, element) {
            window.setTimeout(callback, 1000 / 60);
          };
-})();/* 
- * Shaders.js - Various simple shaders used internally by Tilt
- * version 0.1
+})();/***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
- * Copyright (c) 2011 Victor Porof
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
  *
- * This software is provided 'as-is', without any express or implied
- * warranty. In no event will the authors be held liable for any damages
- * arising from the use of this software.
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
  *
- * Permission is granted to anyone to use this software for any purpose,
- * including commercial applications, and to alter it and redistribute it
- * freely, subject to the following restrictions:
+ * The Original Code is Tilt: A WebGL-based 3D visualization of a webpage.
  *
- *    1. The origin of this software must not be misrepresented; you must not
- *    claim that you wrote the original software. If you use this software
- *    in a product, an acknowledgment in the product documentation would be
- *    appreciated but is not required.
+ * The Initial Developer of the Original Code is Victor Porof.
+ * Portions created by the Initial Developer are Copyright (C) 2011
+ * the Initial Developer. All Rights Reserved.
  *
- *    2. Altered source versions must be plainly marked as such, and must not
- *    be misrepresented as being the original software.
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the LGPL or the GPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
  *
- *    3. This notice may not be removed or altered from any source
- *    distribution.
- */
+ ***** END LICENSE BLOCK *****/
 "use strict";
 
 var Tilt = Tilt || {};
@@ -7559,41 +7435,920 @@ Tilt.Shaders.Texture = {
 "#endif",
 
 "uniform vec4 color;",
+"uniform float texalpha;",
 "uniform sampler2D sampler;",
 
 "varying vec2 texCoord;",
 
 "void main(void) {",
 "  vec4 tex = texture2D(sampler, vec2(texCoord.s, texCoord.t));",
-"  gl_FragColor = color * tex;",
+"  gl_FragColor = color * tex * texalpha + color * (1.0 - texalpha);",
 "}"
 ].join("\n")
 };
-/*
- * Console.js - Various console helper functions for Tilt
- * version 0.1
+/***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
- * Copyright (c) 2011 Victor Porof
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
  *
- * This software is provided 'as-is', without any express or implied
- * warranty. In no event will the authors be held liable for any damages
- * arising from the use of this software.
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
  *
- * Permission is granted to anyone to use this software for any purpose,
- * including commercial applications, and to alter it and redistribute it
- * freely, subject to the following restrictions:
+ * The Original Code is Tilt: A WebGL-based 3D visualization of a webpage.
  *
- *    1. The origin of this software must not be misrepresented; you must not
- *    claim that you wrote the original software. If you use this software
- *    in a product, an acknowledgment in the product documentation would be
- *    appreciated but is not required.
+ * The Initial Developer of the Original Code is Victor Porof.
+ * Portions created by the Initial Developer are Copyright (C) 2011
+ * the Initial Developer. All Rights Reserved.
  *
- *    2. Altered source versions must be plainly marked as such, and must not
- *    be misrepresented as being the original software.
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the LGPL or the GPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
  *
- *    3. This notice may not be removed or altered from any source
- *    distribution.
+ ***** END LICENSE BLOCK *****/
+"use strict";
+
+var Tilt = Tilt || {};
+var EXPORTED_SYMBOLS = ["Tilt.Button"];
+
+/**
+ * Button constructor.
+ *
+ * @param {Number} x: the x position of the object
+ * @param {Number} y: the y position of the object
+ * @param {Tilt.Sprite} sprite: the sprite to be drawn as background
+ * @param {Function} onclick: optional, function to be called when clicked
+ * @param {Object} properties: additional properties for this object
+ *  @param {Boolean} hidden: true if this object should be hidden
  */
+Tilt.Button = function(x, y, sprite, onclick, properties) {
+
+  // intercept this object using a profiler when building in debug mode
+  Tilt.Profiler.intercept("Tilt.Button", this);  
+
+  // make sure the properties parameter is a valid object
+  properties = properties || {};
+
+  /**
+   * The draw coordinates of this object.
+   */
+  this.x = x || 0;
+  this.y = y || 0;
+
+  /**
+   * A sprite used as a background for this object.
+   */
+  this.sprite = sprite || { width: 10, height: 10 };
+
+  /**
+   * Variable specifying if this object shouldn't be drawn.
+   */
+  this.hidden = properties.hidden || false;
+
+  /**
+   * The bounds of this object (used for clicking and intersections).
+   */
+  this.$bounds = [this.x, this.y, this.sprite.width, this.sprite.height];
+
+  // if the onclick closure is specified in the constructor, save it here
+  if ("function" === typeof onclick) {
+    this.onclick = onclick;
+  }
+};
+
+Tilt.Button.prototype = {
+
+  /**
+   * Updates this object's internal params.
+   */
+  update: function() {
+    var sprite = this.sprite,
+      bounds = this.$bounds,
+      padding = sprite.padding || [0, 0, 0, 0],
+      x = this.x,
+      y = this.y;
+
+    bounds[0] = x + padding[0];
+    bounds[1] = y + padding[1];
+    bounds[2] = sprite.width - padding[2];
+    bounds[3] = sprite.height - padding[3];
+
+    sprite.x = x;
+    sprite.y = y;
+  },
+
+  /**
+   * Draws this object using the specified internal params.
+   * @param {Tilt.Renderer} tilt: optional, a reference to a Tilt.Renderer
+   */
+  draw: function(tilt) {
+    tilt = tilt || Tilt.$renderer;
+
+    if ("undefined" !== typeof this.sprite.texture) {
+      this.sprite.draw(tilt);
+    }
+  },
+
+  /**
+   * Destroys this object and deletes all members.
+   */
+  destroy: function() {
+    Tilt.destroyObject(this);
+  }
+};
+/***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is Tilt: A WebGL-based 3D visualization of a webpage.
+ *
+ * The Initial Developer of the Original Code is Victor Porof.
+ * Portions created by the Initial Developer are Copyright (C) 2011
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the LGPL or the GPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ ***** END LICENSE BLOCK *****/
+"use strict";
+
+var Tilt = Tilt || {};
+var EXPORTED_SYMBOLS = ["Tilt.Container"];
+
+/**
+ * Container constructor.
+ *
+ * @param {Array} elements: array of GUI elements added to this container
+ * @param {Object} properties: additional properties for this object
+ *  @param {Boolean} hidden: true if this object should be hidden
+ *  @param {String} background: color to fill the screen
+ */
+Tilt.Container = function(elements, properties) {
+
+  // intercept this object using a profiler when building in debug mode
+  Tilt.Profiler.intercept("Tilt.Container", this);
+
+  // make sure the properties parameter is a valid object
+  properties = properties || {};
+  elements = elements || [];
+
+  /**
+   * The UI elements in this container.
+   */
+  this.elements = elements instanceof Array ? elements : [elements];
+
+  /**
+   * The color of the full screen background rectangle.
+   */
+  this.background = properties.background || null;
+
+  /**
+   * Variable specifying if this object shouldn't be drawn.
+   */
+  this.hidden = properties.hidden || false;
+};
+
+Tilt.Container.prototype = {
+
+  /**
+   * Adds a UI element to the handler stack.
+   * @param {Array} elements: array of valid Tilt UI objects (ex: Tilt.Button)
+   * @param {Tilt.UI} ui: the ui to handle the child elements
+   */
+  push: function(elements, ui) {
+    if ("undefined" === typeof ui) {
+      ui = this.$ui;
+    }
+    ui.push(elements, this.elements);
+  },
+
+  /**
+   * Removes a UI element from the handler stack.
+   * @param {Array} elements: array of valid Tilt UI objects (ex: Tilt.Button)
+   * @param {Tilt.UI} ui: the ui to handle the child elements
+   */
+  remove: function(elements, ui) {
+    if ("undefined" === typeof ui) {
+      ui = this.$ui;
+    }
+    ui.remove(elements, this.elements);
+  },
+
+  /**
+   * Updates this object's internal params.
+   */
+  update: function() {
+  },
+
+  /**
+   * Draws this object using the specified internal params.
+   * @param {Tilt.Renderer} tilt: optional, a reference to a Tilt.Renderer
+   */
+  draw: function(tilt) {
+    tilt = tilt || Tilt.$renderer;
+
+    if (this.background !== null) {
+      tilt.fill(this.background);
+      tilt.noStroke();
+      tilt.rect(0, 0, tilt.width, tilt.height);
+    }
+
+    var elements = this.elements,
+      element, i, len;
+
+    for (i = 0, len = elements.length; i < len; i++) {
+      element = elements[i];
+
+      if (!element.hidden) {
+        element.update();
+        element.draw(tilt);
+      }
+    }
+  },
+
+  /**
+   * Destroys this object and deletes all members.
+   */
+  destroy: function() {
+    for (var i in this.elements) {
+      Tilt.destroyObject(elements[i]);
+    }
+
+    Tilt.destroyObject(this);
+  }
+};
+/***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is Tilt: A WebGL-based 3D visualization of a webpage.
+ *
+ * The Initial Developer of the Original Code is Victor Porof.
+ * Portions created by the Initial Developer are Copyright (C) 2011
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the LGPL or the GPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ ***** END LICENSE BLOCK *****/
+"use strict";
+
+var Tilt = Tilt || {};
+var EXPORTED_SYMBOLS = ["Tilt.Slider"];
+
+/**
+ * Slider constructor.
+ *
+ * @param {Number} x: the x position of the object
+ * @param {Number} y: the y position of the object
+ * @param {Tilt.Sprite} sprite: the sprite to be drawn for the handler
+ * @param {Function} onclick: optional, function to be called when clicked
+ * @param {Object} properties: additional properties for this object
+ *  @param {Boolean} hidden: true if this object should be hidden
+ *  @param {Number} value: number ranging from 0..100
+ */
+Tilt.Slider = function(x, y, width, sprite, properties) {
+
+  // intercept this object using a profiler when building in debug mode
+  Tilt.Profiler.intercept("Tilt.Slider", this);
+
+  // make sure the properties parameter is a valid object
+  properties = properties || {};
+
+  /**
+   * The draw coordinates of this object.
+   */
+  this.x = x || 0;
+  this.y = y || 0;
+
+  /**
+   * The slider size (area in which the handler is moved).
+   */
+  this.width = width || 100;
+
+  /**
+   * A sprite used as a background for this object.
+   */
+  this.sprite = sprite || { width: 0, height: 0 };
+  this.sprite.x = this.x;
+  this.sprite.y = this.y;
+
+  /**
+   * The slider value (also defining the handler position).
+   */
+  this.value = properties.value || 0;
+
+  /**
+   * Variable specifying if this object shouldn't be drawn.
+   */
+  this.hidden = properties.hidden || false;
+
+  /**
+   * The bounds of this object (used for clicking and intersections).
+   */
+  this.$bounds = [this.x, this.y, this.sprite.width, this.sprite.height];
+
+  /**
+   * Handling the mouse down event.
+   */
+  this.onmousedown = function() {
+    this.$mousePressed = true;
+  };
+};
+
+Tilt.Slider.prototype = {
+
+  /**
+   * Updates this object's internal params.
+   */
+  update: function() {
+    var sprite = this.sprite,
+      bounds = this.$bounds,
+      padding = sprite.padding,
+      ui = this.$ui,
+      mx = ui.$mouseX - sprite.width / 2;
+
+    if (this.$mousePressed) {
+      if (ui.$mousePressed) {
+        this.value = Tilt.Math.map(mx, this.x, this.x + this.width, 0, 100);
+      }
+      else {
+        this.$mousePressed = false;
+      }
+    }
+
+    sprite.x = Tilt.Math.map(this.value, 0, 100, this.x, this.x + this.width);
+    sprite.y = this.y;
+
+    bounds[0] = sprite.x + padding[0];
+    bounds[1] = sprite.y + padding[1];
+    bounds[2] = sprite.width - padding[2];
+    bounds[3] = sprite.height - padding[3];
+  },
+
+  /**
+   * Draws this object using the specified internal params.
+   * @param {Tilt.Renderer} tilt: optional, a reference to a Tilt.Renderer
+   */
+  draw: function(tilt) {
+    tilt = tilt || Tilt.$renderer;
+
+    if ("undefined" !== typeof this.sprite.texture) {
+      this.sprite.draw(tilt);
+    }
+  },
+
+  /**
+   * Destroys this object and deletes all members.
+   */
+  destroy: function() {
+    Tilt.destroyObject(this);
+  }
+};
+/***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is Tilt: A WebGL-based 3D visualization of a webpage.
+ *
+ * The Initial Developer of the Original Code is Victor Porof.
+ * Portions created by the Initial Developer are Copyright (C) 2011
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the LGPL or the GPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ ***** END LICENSE BLOCK *****/
+"use strict";
+
+var Tilt = Tilt || {};
+var EXPORTED_SYMBOLS = ["Tilt.Sprite"];
+
+/**
+ * Sprite constructor.
+ *
+ * @param {Tilt.Texture} texture: the texture to be used
+ * @param {Array} region: the sub-texture coordinates as [x, y, width, height]
+ * @param {Object} properties: additional properties for this object
+ *  @param {Boolean} hidden: true if this object should be hidden
+ *  @param {Boolean} depthTest: true to use depth testing
+ *  @param {Number} x: the x position of the object
+ *  @param {Number} y: the y position of the object
+ *  @param {Number} width: the width of the object
+ *  @param {Number} height: the height of the object
+ *  @param {Array} padding: bounds padding for the object
+ */
+Tilt.Sprite = function(texture, region, properties) {
+
+  // intercept this object using a profiler when building in debug mode
+  Tilt.Profiler.intercept("Tilt.Sprite", this);
+
+  // make sure the properties parameter is a valid object
+  properties = properties || {};
+
+  /**
+   * A texture used as the pixel data for this object.
+   */
+  this.texture = texture;
+
+  /**
+   * The sub-texture coordinates array.
+   */
+  this.region = region || [0, 0, texture.width, texture.height];
+
+  /**
+   * The draw coordinates of this object.
+   */
+  this.x = properties.x || 0;
+  this.y = properties.y || 0;
+  this.width = properties.width || this.region[2];
+  this.height = properties.height || this.region[3];
+
+  /**
+   * Variable specifying if this object shouldn't be drawn.
+   */
+  this.hidden = properties.hidden || false;
+
+  /**
+   * Sets if depth testing should be enabled or not for this object.
+   */
+  this.depthTest = properties.depthTest || false;
+
+  /**
+   * Bounds padding for this object.
+   */
+  this.padding = properties.padding || [0, 0, 0, 0];
+
+  /**
+   * The bounds of this object (used for clicking and intersections).
+   */
+  this.$bounds = [this.x, this.y, this.width, this.height];
+
+  /**
+   * Buffer of 2-component texture coordinates (u, v) for the sprite.
+   */
+  this.$texCoord = null;
+};
+
+Tilt.Sprite.prototype = {
+
+  /**
+   * Clears the generated texture coords, which will be regenerated at draw.
+   */
+  update$texCoord: function() {
+    this.$texCoord = null;
+  },
+
+  /**
+   * Updates this object's internal params.
+   */
+  update: function() {
+    var bounds = this.$bounds,
+      padding = this.padding;
+
+    bounds[0] = this.x + padding[0];
+    bounds[1] = this.y + padding[1];
+    bounds[2] = this.width - padding[2];
+    bounds[3] = this.height - padding[3];
+  },
+
+  /**
+   * Draws this object using the specified internal params.
+   * @param {Tilt.Renderer} tilt: optional, a reference to a Tilt.Renderer
+   */
+  draw: function(tilt) {
+    tilt = tilt || Tilt.$renderer;
+
+    // cache these variables for easy access
+    var reg = this.region,
+      tex = this.texture,
+      x = this.x,
+      y = this.y,
+      width = this.width,
+      height = this.height;
+
+    // initialize the texture coordinates buffer if it was null
+    if (this.$texCoord === null && this.texture.loaded) {
+
+      // create the texture coordinates representing the sub-texture
+      this.$texCoord = new Tilt.VertexBuffer([
+        (reg[0]         ) / tex.width, (reg[1]         ) / tex.height,
+        (reg[0] + reg[2]) / tex.width, (reg[1]         ) / tex.height,
+        (reg[0]         ) / tex.width, (reg[1] + reg[3]) / tex.height,
+        (reg[0] + reg[2]) / tex.width, (reg[1] + reg[3]) / tex.height], 2);
+    }
+
+    var bounds = this.$bounds;
+
+    if (this.depthTest) {
+      tilt.depthTest(true);
+      tilt.image(tex, x, y, width, height, this.$texCoord);
+      tilt.depthTest(false);
+    }
+    else {
+      tilt.image(tex, x, y, width, height, this.$texCoord);
+    }
+  },
+
+  /**
+   * Destroys this object and deletes all members.
+   */
+  destroy: function() {
+    Tilt.destroyObject(this);
+  }
+};
+/***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is Tilt: A WebGL-based 3D visualization of a webpage.
+ *
+ * The Initial Developer of the Original Code is Victor Porof.
+ * Portions created by the Initial Developer are Copyright (C) 2011
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the LGPL or the GPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ ***** END LICENSE BLOCK *****/
+"use strict";
+
+var Tilt = Tilt || {};
+var EXPORTED_SYMBOLS = ["Tilt.UI"];
+
+/**
+ * UI constructor.
+ * This is a handler for all the UI elements. Any widgets need to be pushed
+ * in this object to be properly updated and drawn. Achieve this using the 
+ * push() and remove() functions from the prototype.
+ */
+Tilt.UI = function() {
+
+  // intercept this object using a profiler when building in debug mode
+  Tilt.Profiler.intercept("Tilt.UI", this);  
+
+  /**
+   * All the UI elements will be added to this list for proper handling.
+   */
+  this.elements = [];
+};
+
+Tilt.UI.prototype = {
+
+  /**
+   * Adds UI elements to the handler stack.
+   *
+   * @param {Array} elements: array of valid Tilt UI objects (ex: Tilt.Button)
+   * @param {Array} container: optional, the container array for the objects
+   */
+  push: function(elements, container) {
+    var i, len, element;
+
+    if ("undefined" === typeof container) {
+      container = this.elements;
+    }
+    if (elements instanceof Array) {
+      for (i = 0, len = elements.length; i < len; i++) {
+
+        // get the current element from the array
+        element = elements[i];
+
+        if (element instanceof Array) {
+          this.push(element, container);
+        }
+        else {
+          element.$ui = this;
+          container.push(element);
+        }
+      }
+    }
+    else {
+      element = elements;
+      element.$ui = this;
+      container.push(element);
+    }
+  },
+
+  /**
+   * Removes UI elements from the handler stack.
+   *
+   * @param {Array} elements: array of valid Tilt UI objects (ex: Tilt.Button)
+   * @param {Array} container: optional, the container array for the objects
+   */
+  remove: function(elements, container) {
+    var i, len, element, index;
+
+    if ("undefined" === typeof container) {
+      container = this.elements;
+    }
+    if (elements instanceof Array) {
+      for (i = 0, len = elements.length, index = -1; i < len; i++) {
+
+        // get the current element from the array
+        element = elements[i];
+
+        if (element instanceof Array) {
+          this.remove(element, container);
+        }
+        else {
+          if ((index = this.elements.indexOf(element)) !== -1) {             
+            element.$ui = null;
+            container.splice(index, 1);
+
+            if (element.elements instanceof Array) {
+              this.remove(element.elements);
+            }
+          }
+        }
+      }
+    }
+    else {
+      element = elements;
+
+      if ((index = this.elements.indexOf(element)) !== -1) {             
+        element.$ui = null;
+        container.splice(index, 1);
+
+        if (element.elements instanceof Array) {
+          this.remove(element.elements);
+        }
+      }
+    }
+  },
+
+  /**
+   * Draws all the stacked elements.
+   * @param {Number} frameDelta: the delta time elapsed between frames
+   */
+  draw: function(frameDelta) {
+    var tilt = Tilt.$renderer,
+      elements = this.elements,
+      element, i, len;
+
+    tilt.ortho();
+    tilt.defaults();
+    tilt.depthTest(false);
+
+    for (i = 0, len = elements.length; i < len; i++) {
+      element = elements[i];
+
+      if (!element.hidden) {
+        element.update();
+        element.draw(tilt);
+      }
+    }
+  },
+
+  /**
+   * Delegate mouse down method.
+   *
+   * @param {Number} x: the current horizontal coordinate of the mouse
+   * @param {Number} y: the current vertical coordinate of the mouse
+   * @param {Number} b: which mouse button was pressed
+   * @return {Boolean} true if the mouse is over a handled element
+   */
+  mouseDown: function(x, y, b) {
+    this.$mousePressed = true;
+    this.$handleEvent(x, y, this.$mouseEvent, "mousedown");
+
+    return this.$mousePressedOver;
+  },
+
+  /**
+   * Delegate mouse up method.
+   *
+   * @param {Number} x: the current horizontal coordinate of the mouse
+   * @param {Number} y: the current vertical coordinate of the mouse
+   * @param {Number} b: which mouse button was released
+   */
+  mouseUp: function(x, y, b) {
+    this.$mousePressed = false;
+    this.$mousePressedOver = false;
+    this.$handleEvent(x, y, this.$mouseEvent, "mouseup");
+  },
+
+  /**
+   * Delegate click method.
+   *
+   * @param {Number} x: the current horizontal coordinate of the mouse
+   * @param {Number} y: the current vertical coordinate of the mouse
+   */
+  click: function(x, y) {
+    this.$handleEvent(x, y, this.$mouseEvent, "click");
+  },
+
+  /**
+   * Delegate double click method.
+   *
+   * @param {Number} x: the current horizontal coordinate of the mouse
+   * @param {Number} y: the current vertical coordinate of the mouse
+   */
+  doubleClick: function(x, y) {
+    this.$handleEvent(x, y, this.$mouseEvent, "dblclick");
+  },
+
+  /**
+   * Delegate mouse move method.
+   *
+   * @param {Number} x: the current horizontal coordinate of the mouse
+   * @param {Number} y: the current vertical coordinate of the mouse
+   */
+  mouseMove: function(x, y) {
+    this.$mouseX = x;
+    this.$mouseY = y;
+  },
+
+  /**
+   * Follows all the elements handled by this object and checks if the element
+   * is valid to receive a custom event, in which case the event is fired.
+   *
+   * @param {Number} x: the current horizontal coordinate of the mouse
+   * @param {Number} y: the current vertical coordinate of the mouse
+   * @param {String} e: the name of the event function
+   */
+  $handleEvent: function(x, y, handle, e) {
+    var elements = this.elements,
+      element, subelements, i, j, len, len2;
+
+    for (i = 0, len = elements.length; i < len; i++) {
+      element = elements[i];
+
+      // a container can have one or more elements, verify each one if it is
+      // valid to receive the click event
+      if (element instanceof Tilt.Container) {
+        subelements = element.elements;
+
+        for (j = 0, len2 = subelements.length; j < len2; j++) {
+          handle.call(this, x, y, subelements[j], "on" + e);
+        }
+      }
+      else {
+        // normally check if the element is valid to receive a click event
+        handle.call(this, x, y, element, "on" + e);
+      }
+    }
+  },
+
+  /**
+   * Checks if a UI element is valid to receive an event. If this is the case
+   * then the event function is called when available.
+   *
+   * @param {Number} x: the current horizontal coordinate of the mouse
+   * @param {Number} y: the current vertical coordinate of the mouse
+   * @param {Object} element: the UI element to be checked
+   * @param {String} e: the name of the event function
+   */
+  $mouseEvent: function(x, y, element, e) {
+    if ("undefined" === typeof element) {
+      return;
+    }
+    if ("function" !== typeof element[e]) {
+      return;
+    }
+
+    var bounds = element.$bounds || [-1, -1, -1, -1],
+      boundsX = bounds[0],
+      boundsY = bounds[1],
+      boundsWidth = bounds[2],
+      boundsHeight = bounds[3];
+
+    if (x > boundsX && x < boundsX + boundsWidth &&
+        y > boundsY && y < boundsY + boundsHeight) {
+
+      if (e === "onmousedown") {
+        this.$mousePressedOver = true;
+      }
+      element[e](x, y);
+    }
+  },
+
+  /**
+   * Destroys this object and deletes all members.
+   */
+  destroy: function() {
+    for (var i in this.elements) {
+      Tilt.destroyObject(this.elements[i]);
+    }
+
+    Tilt.destroyObject(this);
+  }
+};
+/***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is Tilt: A WebGL-based 3D visualization of a webpage.
+ *
+ * The Initial Developer of the Original Code is Victor Porof.
+ * Portions created by the Initial Developer are Copyright (C) 2011
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the LGPL or the GPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ ***** END LICENSE BLOCK *****/
 "use strict";
 
 var Tilt = Tilt || {};
@@ -7784,31 +8539,38 @@ Tilt.StringBundle = {
     }
   }
 };
-/*
- * Document.js - Various helper functions for manipulating the DOM
- * version 0.1
+/***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
- * Copyright (c) 2011 Victor Porof
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
  *
- * This software is provided 'as-is', without any express or implied
- * warranty. In no event will the authors be held liable for any damages
- * arising from the use of this software.
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
  *
- * Permission is granted to anyone to use this software for any purpose,
- * including commercial applications, and to alter it and redistribute it
- * freely, subject to the following restrictions:
+ * The Original Code is Tilt: A WebGL-based 3D visualization of a webpage.
  *
- *    1. The origin of this software must not be misrepresented; you must not
- *    claim that you wrote the original software. If you use this software
- *    in a product, an acknowledgment in the product documentation would be
- *    appreciated but is not required.
+ * The Initial Developer of the Original Code is Victor Porof.
+ * Portions created by the Initial Developer are Copyright (C) 2011
+ * the Initial Developer. All Rights Reserved.
  *
- *    2. Altered source versions must be plainly marked as such, and must not
- *    be misrepresented as being the original software.
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the LGPL or the GPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
  *
- *    3. This notice may not be removed or altered from any source
- *    distribution.
- */
+ ***** END LICENSE BLOCK *****/
 "use strict";
 
 var Tilt = Tilt || {};
@@ -8088,33 +8850,249 @@ Tilt.Document = {
     finally {
       node = null;
     }
+  },
+
+  /**
+   * Returns the modified css values from a computed style
+   *
+   * @param {CSSComputedStyle} style: the style to analyze
+   * @return {String} the custom css text
+   */
+  getModifiedCss: function(style) {
+    var cssText = [], n, v, t, i,
+      defaults = '\
+background-attachment: scroll;\
+background-clip: border-box;\
+background-color: transparent;\
+background-image: none;\
+background-origin: padding-box;\
+background-position: 0% 0%;\
+background-repeat: repeat;\
+background-size: auto auto;\
+border-bottom-color: rgb(0, 0, 0);\
+border-bottom-left-radius: 0px;\
+border-bottom-right-radius: 0px;\
+border-bottom-style: none;\
+border-bottom-width: 0px;\
+border-collapse: separate;\
+border-left-color: rgb(0, 0, 0);\
+border-left-style: none;\
+border-left-width: 0px;\
+border-right-color: rgb(0, 0, 0);\
+border-right-style: none;\
+border-right-width: 0px;\
+border-spacing: 0px 0px;\
+border-top-color: rgb(0, 0, 0);\
+border-top-left-radius: 0px;\
+border-top-right-radius: 0px;\
+border-top-style: none;\
+border-top-width: 0px;\
+bottom: auto;\
+box-shadow: none;\
+caption-side: top;\
+clear: none;\
+clip: auto;\
+color: rgb(0, 0, 0);\
+content: none;\
+counter-increment: none;\
+counter-reset: none;\
+cursor: auto;\
+direction: ltr;\
+display: block;\
+empty-cells: -moz-show-background;\
+float: none;\
+font-family: serif;\
+font-size: 16px;\
+font-size-adjust: none;\
+font-stretch: normal;\
+font-style: normal;\
+font-variant: normal;\
+font-weight: 400;\
+height: 0px;\
+ime-mode: auto;\
+left: auto;\
+letter-spacing: normal;\
+line-height: 19.2px;\
+list-style-image: none;\
+list-style-position: outside;\
+list-style-type: disc;\
+margin-bottom: 8px;\
+margin-left: 8px;\
+margin-right: 8px;\
+margin-top: 8px;\
+marker-offset: auto;\
+max-height: none;\
+max-width: none;\
+min-height: 0px;\
+min-width: 0px;\
+opacity: 1;\
+outline-color: rgb(0, 0, 0);\
+outline-offset: 0px;\
+outline-style: none;\
+outline-width: 0px;\
+overflow: visible;\
+overflow-x: visible;\
+overflow-y: visible;\
+padding-bottom: 0px;\
+padding-left: 0px;\
+padding-right: 0px;\
+padding-top: 0px;\
+page-break-after: auto;\
+page-break-before: auto;\
+pointer-events: auto;\
+position: static;\
+quotes: "“" "”" "‘" "’";\
+resize: none;\
+right: auto;\
+table-layout: auto;\
+text-align: start;\
+text-decoration: none;\
+text-indent: 0px;\
+text-overflow: clip;\
+text-shadow: none;\
+text-transform: none;\
+top: auto;\
+unicode-bidi: embed;\
+vertical-align: baseline;\
+visibility: visible;\
+white-space: normal;\
+width: 1157px;\
+word-spacing: 0px;\
+word-wrap: normal;\
+z-index: auto;\
+-moz-animation-delay: 0s;\
+-moz-animation-direction: normal;\
+-moz-animation-duration: 0s;\
+-moz-animation-fill-mode: none;\
+-moz-animation-iteration-count: 1;\
+-moz-animation-name: none;\
+-moz-animation-play-state: running;\
+-moz-animation-timing-function: cubic-bezier(0.25, 0.1, 0.25, 1);\
+-moz-appearance: none;\
+-moz-background-inline-policy: continuous;\
+-moz-binding: none;\
+-moz-border-bottom-colors: none;\
+-moz-border-image: none;\
+-moz-border-left-colors: none;\
+-moz-border-right-colors: none;\
+-moz-border-top-colors: none;\
+-moz-box-align: stretch;\
+-moz-box-direction: normal;\
+-moz-box-flex: 0;\
+-moz-box-ordinal-group: 1;\
+-moz-box-orient: horizontal;\
+-moz-box-pack: start;\
+-moz-box-sizing: content-box;\
+-moz-column-count: auto;\
+-moz-column-gap: 16px;\
+-moz-column-rule-color: rgb(0, 0, 0);\
+-moz-column-rule-style: none;\
+-moz-column-rule-width: 0px;\
+-moz-column-width: auto;\
+-moz-float-edge: content-box;\
+-moz-font-feature-settings: normal;\
+-moz-font-language-override: normal;\
+-moz-force-broken-image-icon: 0;\
+-moz-hyphens: manual;\
+-moz-image-region: auto;\
+-moz-orient: horizontal;\
+-moz-outline-radius-bottomleft: 0px;\
+-moz-outline-radius-bottomright: 0px;\
+-moz-outline-radius-topleft: 0px;\
+-moz-outline-radius-topright: 0px;\
+-moz-stack-sizing: stretch-to-fit;\
+-moz-tab-size: 8;\
+-moz-text-blink: none;\
+-moz-text-decoration-color: rgb(0, 0, 0);\
+-moz-text-decoration-line: none;\
+-moz-text-decoration-style: solid;\
+-moz-transform: none;\
+-moz-transform-origin: 50% 50%;\
+-moz-transition-delay: 0s;\
+-moz-transition-duration: 0s;\
+-moz-transition-property: all;\
+-moz-transition-timing-function: cubic-bezier(0.25, 0.1, 0.25, 1);\
+-moz-user-focus: none;\
+-moz-user-input: auto;\
+-moz-user-modify: read-only;\
+-moz-user-select: auto;\
+-moz-window-shadow: default;\
+clip-path: none;\
+clip-rule: nonzero;\
+color-interpolation: srgb;\
+color-interpolation-filters: linearrgb;\
+dominant-baseline: auto;\
+fill: rgb(0, 0, 0);\
+fill-opacity: 1;\
+fill-rule: nonzero;\
+filter: none;\
+flood-color: rgb(0, 0, 0);\
+flood-opacity: 1;\
+image-rendering: auto;\
+lighting-color: rgb(255, 255, 255);\
+marker-end: none;\
+marker-mid: none;\
+marker-start: none;\
+mask: none;\
+shape-rendering: auto;\
+stop-color: rgb(0, 0, 0);\
+stop-opacity: 1;\
+stroke: none;\
+stroke-dasharray: none;\
+stroke-dashoffset: 0px;\
+stroke-linecap: butt;\
+stroke-linejoin: miter;\
+stroke-miterlimit: 4;\
+stroke-opacity: 1;\
+stroke-width: 1px;\
+text-anchor: start;\
+text-rendering: auto;';
+
+    for (i = 0; i < style.length; i++) {
+      n = style[i];
+      v = style.getPropertyValue(n);
+      t = n + ": " + v + ";";
+
+      if (defaults.indexOf(t) === -1 && n !== "quotes") {
+        cssText.push(t);
+      }
+    }
+
+    return cssText.join("\n") + "\n";
   }
 };
-/*
- * Math.js - Various math helper functions
- * version 0.1
+/***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
- * Copyright (c) 2011 Victor Porof
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
  *
- * This software is provided 'as-is', without any express or implied
- * warranty. In no event will the authors be held liable for any damages
- * arising from the use of this software.
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
  *
- * Permission is granted to anyone to use this software for any purpose,
- * including commercial applications, and to alter it and redistribute it
- * freely, subject to the following restrictions:
+ * The Original Code is Tilt: A WebGL-based 3D visualization of a webpage.
  *
- *    1. The origin of this software must not be misrepresented; you must not
- *    claim that you wrote the original software. If you use this software
- *    in a product, an acknowledgment in the product documentation would be
- *    appreciated but is not required.
+ * The Initial Developer of the Original Code is Victor Porof.
+ * Portions created by the Initial Developer are Copyright (C) 2011
+ * the Initial Developer. All Rights Reserved.
  *
- *    2. Altered source versions must be plainly marked as such, and must not
- *    be misrepresented as being the original software.
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the LGPL or the GPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
  *
- *    3. This notice may not be removed or altered from any source
- *    distribution.
- */
+ ***** END LICENSE BLOCK *****/
 "use strict";
 
 var Tilt = Tilt || {};
@@ -8143,6 +9121,20 @@ Tilt.Math = {
    */
   degrees: function(radians) {
     return radians * 180 / Math.PI;
+  },
+
+  /**
+   * Re-maps a number from one range to another.
+   *
+   * @param {Number} value: the number to map
+   * @param {Number} low1: the normal lower bound of the number
+   * @param {Number} high1: the normal upper bound of the number
+   * @param {Number} low2: the new lower bound of the number
+   * @param {Number} high2: the new upper bound of the number
+   */
+  map: function(value, low1, high1, low2, high2) {
+    value = this.clamp(value, low1, high1);
+    return low2 + (high2 - low2) * ((value - low1) / (high1 - low1));	
   },
 
   /**
@@ -8395,6 +9387,148 @@ Tilt.Math = {
   },
 
   /**
+   * Converts an RGB color value to HSL. Conversion formula
+   * adapted from http://en.wikipedia.org/wiki/HSL_color_space.
+   * Assumes r, g, and b are contained in the set [0, 255] and
+   * returns h, s, and l in the set [0, 1].
+   *
+   * @param {Number} r: the red color value
+   * @param {Number} g: the green color value
+   * @param {Number} b: the blue color value
+   * @return {Array} the HSL representation
+   */
+  rgb2hsl: function(r, g, b) {
+    r /= 255;
+    g /= 255;
+    b /= 255;
+
+    var max = Math.max(r, g, b),
+      min = Math.min(r, g, b),
+      h, s, l = (max + min) / 2;
+
+    if (max === min) {
+      h = s = 0; // achromatic
+    } else {
+      var d = max - min;
+      s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+
+      switch (max) {
+        case r: h = (g - b) / d + (g < b ? 6 : 0); break;
+        case g: h = (b - r) / d + 2; break;
+        case b: h = (r - g) / d + 4; break;
+      }
+      h /= 6;
+    }
+
+    return [h, s, l];
+  },
+
+  /**
+   * Converts an HSL color value to RGB. Conversion formula
+   * adapted from http://en.wikipedia.org/wiki/HSL_color_space.
+   * Assumes h, s, and l are contained in the set [0, 1] and
+   * returns r, g, and b in the set [0, 255].
+   *
+   * @param {Number} h: the hue
+   * @param {Number} s: the saturation
+   * @param {Number} l: the lightness
+   * @return {Array} the RGB representation
+   */
+  hsl2rgb: function(h, s, l) {
+    function hue2rgb(p, q, t) {
+      if (t < 0) t += 1;
+      if (t > 1) t -= 1;
+      if (t < 1 / 6) return p + (q - p) * 6 * t;
+      if (t < 1 / 2) return q;
+      if (t < 2 / 3) return p + (q - p) * (2 / 3 - t) * 6;
+      return p;
+    }
+
+    var r, g, b;
+
+    if (s === 0) {
+      r = g = b = l; // achromatic
+    } else {
+      var q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+      var p = 2 * l - q;
+
+      r = hue2rgb(p, q, h + 1 / 3);
+      g = hue2rgb(p, q, h);
+      b = hue2rgb(p, q, h - 1 / 3);
+    }
+
+    return [r * 255, g * 255, b * 255];
+  },
+
+  /**
+   * Converts an RGB color value to HSV. Conversion formula
+   * adapted from http://en.wikipedia.org/wiki/HSV_color_space.
+   * Assumes r, g, and b are contained in the set [0, 255] and
+   * returns h, s, and v in the set [0, 1].
+   *
+   * @param {Number} r: the red color value
+   * @param {Number} g: the green color value
+   * @param {Number} b: the blue color value
+   * @return {Array} the HSV representation
+   */
+  rgb2hsv: function(r, g, b) {
+    r = r / 255;
+    g = g / 255;
+    b = b / 255;
+
+    var max = Math.max(r, g, b),
+      min = Math.min(r, g, b),
+      h, s, v = max;
+
+    var d = max - min;
+    s = max === 0 ? 0 : d / max;
+
+    if (max === min) {
+      h = 0; // achromatic
+    } else {
+      switch(max) {
+        case r: h = (g - b) / d + (g < b ? 6 : 0); break;
+        case g: h = (b - r) / d + 2; break;
+        case b: h = (r - g) / d + 4; break;
+      }
+      h /= 6;
+    }
+
+    return [h, s, v];
+  },
+
+  /**
+   * Converts an HSV color value to RGB. Conversion formula
+   * adapted from http://en.wikipedia.org/wiki/HSV_color_space.
+   * Assumes h, s, and v are contained in the set [0, 1] and
+   * returns r, g, and b in the set [0, 255].
+   *
+   * @param {Number} h: the hue
+   * @param {Number} s: the saturation
+   * @param {Number} v: the value
+   * @return {Array} the RGB representation
+   */
+  hsv2rgb: function(h, s, v) {
+    var r, g, b,
+      i = Math.floor(h * 6),
+      f = h * 6 - i,
+      p = v * (1 - s),
+      q = v * (1 - f * s),
+      t = v * (1 - (1 - f) * s);
+
+    switch (i % 6) {
+      case 0: r = v; g = t; b = p; break;
+      case 1: r = q; g = v; b = p; break;
+      case 2: r = p; g = v; b = t; break;
+      case 3: r = p; g = q; b = v; break;
+      case 4: r = t; g = p; b = v; break;
+      case 5: r = v; g = p; b = q; break;
+    }
+
+    return [r * 255, g * 255, b * 255];
+  },
+
+  /**
    * Converts a hex color to rgba.
    *
    * @param {String} a color expressed in hex, or using rgb() or rgba()
@@ -8456,31 +9590,38 @@ Tilt.Math = {
     return [r, g, b, a];
   }
 };
-/*
- * String.js - Various string helper functions
- * version 0.1
+/***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
- * Copyright (c) 2011 Victor Porof
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
  *
- * This software is provided 'as-is', without any express or implied
- * warranty. In no event will the authors be held liable for any damages
- * arising from the use of this software.
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
  *
- * Permission is granted to anyone to use this software for any purpose,
- * including commercial applications, and to alter it and redistribute it
- * freely, subject to the following restrictions:
+ * The Original Code is Tilt: A WebGL-based 3D visualization of a webpage.
  *
- *    1. The origin of this software must not be misrepresented; you must not
- *    claim that you wrote the original software. If you use this software
- *    in a product, an acknowledgment in the product documentation would be
- *    appreciated but is not required.
+ * The Initial Developer of the Original Code is Victor Porof.
+ * Portions created by the Initial Developer are Copyright (C) 2011
+ * the Initial Developer. All Rights Reserved.
  *
- *    2. Altered source versions must be plainly marked as such, and must not
- *    be misrepresented as being the original software.
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the LGPL or the GPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
  *
- *    3. This notice may not be removed or altered from any source
- *    distribution.
- */
+ ***** END LICENSE BLOCK *****/
 "use strict";
 
 var Tilt = Tilt || {};
@@ -8521,31 +9662,38 @@ Tilt.String = {
     return str.replace(/\s+$/, "");
   }
 };
-/*
- * WebGL.js - Various WebGL shims and extensions
- * version 0.1
+/***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
- * Copyright (c) 2011 Victor Porof
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
  *
- * This software is provided "as-is", without any express or implied
- * warranty. In no event will the authors be held liable for any damages
- * arising from the use of this software.
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
  *
- * Permission is granted to anyone to use this software for any purpose,
- * including commercial applications, and to alter it and redistribute it
- * freely, subject to the following restrictions:
+ * The Original Code is Tilt: A WebGL-based 3D visualization of a webpage.
  *
- *    1. The origin of this software must not be misrepresented; you must not
- *    claim that you wrote the original software. If you use this software
- *    in a product, an acknowledgment in the product documentation would be
- *    appreciated but is not required.
+ * The Initial Developer of the Original Code is Victor Porof.
+ * Portions created by the Initial Developer are Copyright (C) 2011
+ * the Initial Developer. All Rights Reserved.
  *
- *    2. Altered source versions must be plainly marked as such, and must not
- *    be misrepresented as being the original software.
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the LGPL or the GPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
  *
- *    3. This notice may not be removed or altered from any source
- *    distribution.
- */
+ ***** END LICENSE BLOCK *****/
 "use strict";
 
 var Tilt = Tilt || {};
@@ -8603,31 +9751,38 @@ Tilt.Extensions.WebGL = {
     }
   }
 };
-/*
- * Xhr.js - Various helper functions for XMLHttpRequest
- * version 0.1
+/***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
- * Copyright (c) 2011 Victor Porof
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
  *
- * This software is provided 'as-is', without any express or implied
- * warranty. In no event will the authors be held liable for any damages
- * arising from the use of this software.
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
  *
- * Permission is granted to anyone to use this software for any purpose,
- * including commercial applications, and to alter it and redistribute it
- * freely, subject to the following restrictions:
+ * The Original Code is Tilt: A WebGL-based 3D visualization of a webpage.
  *
- *    1. The origin of this software must not be misrepresented; you must not
- *    claim that you wrote the original software. If you use this software
- *    in a product, an acknowledgment in the product documentation would be
- *    appreciated but is not required.
+ * The Initial Developer of the Original Code is Victor Porof.
+ * Portions created by the Initial Developer are Copyright (C) 2011
+ * the Initial Developer. All Rights Reserved.
  *
- *    2. Altered source versions must be plainly marked as such, and must not
- *    be misrepresented as being the original software.
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the LGPL or the GPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
  *
- *    3. This notice may not be removed or altered from any source
- *    distribution.
- */
+ ***** END LICENSE BLOCK *****/
 "use strict";
 
 var Tilt = Tilt || {};
