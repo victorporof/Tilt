@@ -43,7 +43,7 @@ Tilt.Profiler = {
   /**
    * Set this to true to enable profiling.
    */
-  enabled: true,
+  enabled: false,
 
   /**
    * Array containing information about all the intercepted functions.
@@ -152,7 +152,7 @@ Tilt.Profiler = {
    */
   duringCall: function(object, method, args) {
     if (args.length === 0) {
-      return eval("arguments[1].call(arguments[0]);");
+      return eval("arguments[1].call(object);");
     }
 
     for (var i = 0, len = args.length, $ = ""; i < len; i++) {
@@ -193,11 +193,6 @@ Tilt.Profiler = {
         continue;
       }
 
-      if ("undefined" !== typeof f2 && f2.name === f.name) {
-        f2.calls += f.calls;
-        continue;
-      }
-
       Tilt.Console.log(
         "function " + f.name + "\n" +
         "calls    " + f.calls + "\n" +
@@ -210,7 +205,7 @@ Tilt.Profiler = {
   /**
    * Clears the profiled functions array.
    */
-  reset: function() {
+  clear: function() {
     this.functions = [];
   }
 };
