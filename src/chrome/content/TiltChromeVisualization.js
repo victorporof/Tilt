@@ -203,8 +203,7 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
 
     // traverse the document
     Tilt.Document.traverse(function(node, depth) {
-      if (node.localName === "img" ||
-          node.localName === "span" ||
+      if (node.localName === "span" ||
           node.localName === "option" ||
           node.localName === "a" ||
           node.localName === "b" ||
@@ -563,8 +562,8 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
         window.innerHeight - iframe.height - 77, false, false);
 
       // get the content document containing the html editor, and add the html
-      editor.innerHTML = css;
-      iframe.contentWindow.refreshEditor("css");
+      editor.innerHTML = html;
+      iframe.contentWindow.refreshEditor("html");
     }
 
     redraw = true;
