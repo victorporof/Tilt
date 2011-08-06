@@ -76,12 +76,18 @@ Tilt.UI.prototype = {
           this.push(element, container);
         }
         else {
+          if ("undefined" === typeof element || element === null) {
+            continue;
+          }
           element.$ui = this;
           container.push(element);
         }
       }
     }
     else {
+      if ("undefined" === typeof elements || elements === null) {
+        return;
+      }
       element = elements;
       element.$ui = this;
       container.push(element);
@@ -110,6 +116,9 @@ Tilt.UI.prototype = {
           this.remove(element, container);
         }
         else {
+          if ("undefined" === typeof element || element === null) {
+            continue;
+          }
           if ((index = this.elements.indexOf(element)) !== -1) {             
             element.$ui = null;
             container.splice(index, 1);
@@ -122,6 +131,9 @@ Tilt.UI.prototype = {
       }
     }
     else {
+      if ("undefined" === typeof elements || elements === null) {
+        return;
+      }
       element = elements;
 
       if ((index = this.elements.indexOf(element)) !== -1) {             
@@ -142,7 +154,9 @@ Tilt.UI.prototype = {
   draw: function(frameDelta) {
     var tilt = Tilt.$renderer,
       elements = this.elements,
-      element, i, len;
+      element, bounds,
+      w = window.content.innerWidth,
+      h = window.content.innerHeight, i, len;
 
     tilt.ortho();
     tilt.defaults();
@@ -150,8 +164,9 @@ Tilt.UI.prototype = {
 
     for (i = 0, len = elements.length; i < len; i++) {
       element = elements[i];
+      bounds = element.$bounds || [0, 0, w, h];
 
-      if (!element.hidden) {
+      if (!element.hidden && bounds[0] < w && bounds[1] < h) {
         element.update();
         element.draw(tilt);
       }
