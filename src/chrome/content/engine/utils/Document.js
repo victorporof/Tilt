@@ -157,7 +157,7 @@ Tilt.Document = {
    * If the dom parameter is omitted, then the current content.document will
    * be used. The nodeCallback function will have the current node and depth
    * passed as parameters, and the readyCallback function will have the
-   * maximum depth passed as parameter.
+   * maximum depth and total nodes passed as parameters.
    *
    * @param {Function} nodeCallback: the function to call for each node
    * @param {Function} readyCallback: called when no more nodes are found
@@ -165,7 +165,8 @@ Tilt.Document = {
    */
   traverse: function(nodeCallback, readyCallback, dom) {
     // used to calculate the maximum depth of a dom node
-    var maxDepth = 0;
+    var maxDepth = 0,
+      totalNodes = 0;
 
     // used internally for recursively traversing a document object model
     function recursive(nodeCallback, dom, depth) {
@@ -177,10 +178,11 @@ Tilt.Document = {
         if (depth > maxDepth) {
           maxDepth = depth;
         }
+        totalNodes++;
 
         // run the node callback function for each node, pass the depth, and
         // also continue the recursion with all the children
-        nodeCallback(child, depth);
+        nodeCallback(child, depth, totalNodes);
         recursive(nodeCallback, child, depth + 1);
       }
     }
@@ -192,7 +194,7 @@ Tilt.Document = {
 
       // once we recursively traversed all the dom nodes, run a callback
       if ("function" === typeof readyCallback) {
-        readyCallback(maxDepth);
+        readyCallback(maxDepth, totalNodes);
       }
     }
     finally {
