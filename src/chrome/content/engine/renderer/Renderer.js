@@ -591,18 +591,18 @@ Tilt.Renderer.prototype = {
       fill = this.$fillColor,
       stroke = this.$strokeColor;
 
-    // draw the outline only if the stroke alpha channel is not transparent
-    if (stroke[3]) {
-      // use the necessary shader and draw the vertices
-      this.useColorShader(vertices, stroke);
-      this.drawVertices(this.LINE_LOOP, vertices.numItems);
-    }
-
     // draw the triangle only if the fill alpha channel is not transparent
     if (fill[3]) {
       // use the necessary shader and draw the vertices
       this.useColorShader(vertices, fill);
       this.drawVertices(this.TRIANGLE_STRIP, vertices.numItems);
+    }
+
+    // draw the outline only if the stroke alpha channel is not transparent
+    if (stroke[3]) {
+      // use the necessary shader and draw the vertices
+      this.useColorShader(vertices, stroke);
+      this.drawVertices(this.LINE_LOOP, vertices.numItems);
     }
   },
 
@@ -645,18 +645,18 @@ Tilt.Renderer.prototype = {
     this.translate(x, y, 0);
     this.scale(width, height, 1);
 
-    // draw the outline only if the stroke alpha channel is not transparent
-    if (stroke[3]) {
-      // use the necessary shader and draw the vertices
-      this.useColorShader(wireframe.vertices, stroke);
-      this.drawVertices(this.LINE_STRIP, wireframe.vertices.numItems);
-    }
-
     // draw the rectangle only if the fill alpha channel is not transparent
     if (fill[3]) {
       // use the necessary shader and draw the vertices
       this.useColorShader(rectangle.vertices, fill);
       this.drawVertices(this.TRIANGLE_STRIP, rectangle.vertices.numItems);
+    }
+
+    // draw the outline only if the stroke alpha channel is not transparent
+    if (stroke[3]) {
+      // use the necessary shader and draw the vertices
+      this.useColorShader(wireframe.vertices, stroke);
+      this.drawVertices(this.LINE_LOOP, wireframe.vertices.numItems);
     }
 
     this.popMatrix();
@@ -748,13 +748,6 @@ Tilt.Renderer.prototype = {
     this.pushMatrix();
     this.scale(width, height, depth);
 
-    // draw the outline only if the stroke alpha channel is not transparent
-    if (stroke[3]) {
-      // use the necessary shader and draw the vertices
-      this.useColorShader(wireframe.vertices, stroke);
-      this.drawIndexedVertices(this.LINES, wireframe.indices);
-    }
-
     if (t) {
       // draw the box only if the tint alpha channel is not transparent
       if (tint[3]) {
@@ -769,6 +762,13 @@ Tilt.Renderer.prototype = {
         this.useColorShader(cube.vertices, fill);
         this.drawIndexedVertices(this.TRIANGLES, cube.indices);
       }
+    }
+
+    // draw the outline only if the stroke alpha channel is not transparent
+    if (stroke[3]) {
+      // use the necessary shader and draw the vertices
+      this.useColorShader(wireframe.vertices, stroke);
+      this.drawIndexedVertices(this.LINES, wireframe.indices);
     }
 
     this.popMatrix();
