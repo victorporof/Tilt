@@ -46,7 +46,7 @@ Tilt.RectangleWireframe = function() {
   /**
    * Buffer of 2-component vertices (x, y) as the outline of a rectangle.
    */
-  this.vertices = new Tilt.VertexBuffer([0, 0, 1, 0, 1, 1, 0, 1, 0, 0], 2);
+  this.vertices = new Tilt.VertexBuffer([0, 0, 1, 0, 1, 1, 0, 1], 2);
 };
 
 Tilt.RectangleWireframe.prototype = {
