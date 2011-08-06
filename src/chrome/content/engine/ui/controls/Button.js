@@ -108,8 +108,29 @@ Tilt.Button.prototype = {
   draw: function(tilt) {
     tilt = tilt || Tilt.$renderer;
 
-    if ("undefined" !== typeof this.sprite.texture) {
-      this.sprite.draw(tilt);
+    var sprite = this.sprite;
+
+    if ("undefined" !== typeof sprite.texture) {
+      sprite.draw(tilt);
+    }
+    else if ("undefined" !== typeof sprite.color &&
+             "undefined" !== typeof sprite.stroke) {
+
+      tilt.fill(sprite.color);
+      tilt.stroke(sprite.stroke);
+      tilt.rect(sprite.x, sprite.y, sprite.width, sprite.height);
+
+      var $tint = tilt.$tintColor,
+        $stroke = tilt.$strokeColor;
+
+      $tint[0] = 1;
+      $tint[1] = 1;
+      $tint[2] = 1;
+      $tint[3] = 1;
+      $stroke[0] = 0;
+      $stroke[1] = 0;
+      $stroke[2] = 0;
+      $stroke[3] = 1;
     }
   },
 
