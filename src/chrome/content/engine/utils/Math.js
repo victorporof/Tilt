@@ -473,12 +473,12 @@ Tilt.Math = {
    * with ranges from 0..1
    */
   hex2rgba: function(color) {
-    if ("undefined" !== typeof this[color]) {
-      return this[color];
-    }
-
     var rgba, r, g, b, a, cr, cg, cb, ca,
       hex = color.charAt(0) === "#" ? color.substring(1) : color;
+
+    if ("undefined" !== typeof Tilt[hex]) {
+      return this[hex];
+    }
 
     // e.g. "f00"
     if (hex.length === 3) {
@@ -503,7 +503,7 @@ Tilt.Math = {
       rgba[2] /= 255;
       rgba[3] /= 255;
 
-      this[color] = rgba;
+      this[hex] = rgba;
       return rgba;
     }
     // e.g. "rgb(255, 0, 0)"
@@ -514,7 +514,7 @@ Tilt.Math = {
       rgba[2] /= 255;
       rgba[3] = 1;
 
-      this[color] = rgba;
+      this[hex] = rgba;
       return rgba;
     }
 
@@ -523,7 +523,7 @@ Tilt.Math = {
     b = parseInt(hex.substring(4, 6), 16) / 255;
     a = hex.length === 6 ? 1 : parseInt(hex.substring(6, 8), 16) / 255;
 
-    this[color] = [r, g, b, a];
-    return [r, g, b, a];
+    this[hex] = rgba = [r, g, b, a];
+    return rgba;
   }
 };
