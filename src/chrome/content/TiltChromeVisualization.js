@@ -202,8 +202,15 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
       nodes = [];
 
     // traverse the document
-    Tilt.Document.traverse(function(node, depth) {
-      if (node.localName === "span" ||
+    Tilt.Document.traverse(function(node, depth, index) {
+      // call the node callback in the ui
+      if ("function" === typeof ui.nodeCallback) {
+        ui.nodeCallback(node, depth, index);
+      }
+
+      if (node.nodeType === 3 ||
+          node.nodeType === 10 ||
+          node.localName === "span" ||
           node.localName === "option" ||
           node.localName === "a" ||
           node.localName === "b" ||
@@ -266,7 +273,7 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
         nodes.push({
           innerHTML: node.innerHTML,
           style: window.getComputedStyle(node),
-          name: node.localName,
+          localName: node.localName,
           className: node.className,
           id: node.id
         });
@@ -552,7 +559,7 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
       editor = iframe.contentDocument.getElementById("editor");
 
       // set the title label of the popup panel
-      label.value = " <" + node.name +
+      label.value = " <" + node.localName +
         (node.className ? " class=\"" + node.className + "\"" : "") +
         (node.id ? " id=\"" + node.id + "\"" : "") + ">";
 
