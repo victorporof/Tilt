@@ -94,6 +94,12 @@ TiltChrome.UI = function() {
   textureSlider = null,
 
   /**
+   * Arrays holding groups of objects.
+   */
+  alwaysVisibleElements = [],
+  hideableElements = [],
+
+  /**
    * Retain the position for the mouseDown event.
    */
   downX = 0, downY = 0;
@@ -223,7 +229,7 @@ TiltChrome.UI = function() {
         saturationSlider.value = 25;
         brightnessSlider.value = 100;
         textureSlider.value = 100;
-        alphaSlider.value = 3;
+        alphaSlider.value = 4;
 
         this.visualization.setMeshWireframeColor([1, 1, 1, 0.7]);
       }
@@ -287,28 +293,24 @@ TiltChrome.UI = function() {
       value: 100
     });
 
-    var colorAdjustSliderElements = [
-      hueSlider, saturationSlider, brightnessSlider,
-      alphaSlider, textureSlider
-    ];
+    alwaysVisibleElements.push(
+      eyeButton, exitButton);
 
-    var alwaysVisibleElements = [
-      eyeButton, exitButton
-    ];
-
-    var hideableElements = [
+    hideableElements.push(
       helpPopup, colorAdjustPopup,
       arcballSprite, resetButton, zoomInButton, zoomOutButton,
       viewModeButton, colorAdjustButton,
-      optionsButton, exportButton, helpButton
-    ];
+      optionsButton, exportButton, helpButton);
 
     ui.push([alwaysVisibleElements, hideableElements]);
-    colorAdjustPopup.push(colorAdjustSliderElements);
+    colorAdjustPopup.push(
+      [hueSlider, saturationSlider, brightnessSlider,
+      alphaSlider, textureSlider]);
   };
 
   /**
    * Called automatically by the visualization at the beginning of draw().
+   * @param {Number} frameDelta: the delta time elapsed between frames
    */
   this.background = function(frameDelta) {
     background.draw();
@@ -333,6 +335,143 @@ TiltChrome.UI = function() {
 
     this.visualization.setMeshColor(rgba);
     this.visualization.setMeshTextureAlpha(textureSlider.value / 100);
+  };
+
+  /**
+   * Function called for each node in the dom tree
+   * 
+   * @param {HTMLNode} node: the dom node
+   * @param {Number} depth: the node depth in the dom tree
+   * @param {Number} index: the index of the node in the dom tree
+   */
+  this.nodeCallback = function(node, depth, index) {
+    if ("undefined" === typeof this.stripNo) {
+      this.stripNo = 0;
+    }
+    if ("undefined" === typeof node.localName || node.localName === null) {
+      return;
+    }
+
+    var stripNo = this.stripNo++,
+      x = 20 + depth * 8,
+      y = 340 + stripNo * 10,
+      height = 6,
+      stripButton, stripIdButton, stripClassButton;
+
+    // the general strip button, created in all cases
+    var cx = x + node.localName.length * 10 + 3;
+    var idx = cx + (node.className.length || 2) * 3 + 3;
+
+    stripButton = new Tilt.Button(x, y, {
+      width: node.localName.length * 10,
+      height: height,
+      stroke: "#fff2"
+    });
+
+    if (node.className) {
+      stripClassButton = new Tilt.Button(cx, y, {
+        width: (node.className.length || 2) * 3,
+        height: height,
+        stroke: stripButton.sprite.stroke
+      });
+    }
+
+    if (node.id) {
+      stripIdButton = new Tilt.Button(idx, y, {
+        width: (node.id.length || 2) * 3,
+        height: height,
+        stroke: stripButton.sprite.stroke
+      });
+    }
+
+    if (node.localName === "html") {
+      stripButton.sprite.color = "#fff";
+    }
+    else if (node.localName === "head") {
+      stripButton.sprite.color = "#E667AF";
+    }
+    else if (node.localName === "title") {
+      stripButton.sprite.color = "#CD0074";
+    }
+    else if (node.localName === "meta") {
+      stripButton.sprite.color = "#BF7130";
+    }
+    else if (node.localName === "script") {
+      stripButton.sprite.color = "#A64B00";
+    }
+    else if (node.localName === "style") {
+      stripButton.sprite.color = "#FF9640";
+    }
+    else if (node.localName === "link") {
+      stripButton.sprite.color = "#FFB273";
+    }
+    else if (node.localName === "body") {
+      stripButton.sprite.color = "#E667AF";
+    }
+    else if (node.localName === "h1") {
+      stripButton.sprite.color = "#ff0d";
+    }
+    else if (node.localName === "h2") {
+      stripButton.sprite.color = "#ee0d";
+    }
+    else if (node.localName === "h3") {
+      stripButton.sprite.color = "#dd0d";
+    }
+    else if (node.localName === "h4") {
+      stripButton.sprite.color = "#cc0d";
+    }
+    else if (node.localName === "h5") {
+      stripButton.sprite.color = "#bb0d";
+    }
+    else if (node.localName === "h6") {
+      stripButton.sprite.color = "#aa0d";
+    }
+    else if (node.localName === "table") {
+      stripButton.sprite.color = "#FF0700";
+    }
+    else if (node.localName === "tbody") {
+      stripButton.sprite.color = "#FF070088";
+    }
+    else if (node.localName === "tr") {
+      stripButton.sprite.color = "#FF4540";
+    }
+    else if (node.localName === "td") {
+      stripButton.sprite.color = "#FF7673";
+    }
+    else if (node.localName === "div") {
+      stripButton.sprite.color = "#5DC8CD";
+    }
+    else if (node.localName === "span") {
+      stripButton.sprite.color = "#67E46F";
+    }
+    else if (node.localName === "p") {
+      stripButton.sprite.color = "#888";
+    }
+    else if (node.localName === "a") {
+      stripButton.sprite.color = "#123EAB";
+    }
+    else if (node.localName === "img") {
+      stripButton.sprite.color = "#FFB473";
+    }
+    else {
+      stripButton.sprite.color = "#444";
+    }
+
+    if (stripClassButton) {
+      stripClassButton.sprite.color =
+        node.className ? stripButton.sprite.color : "#0002";
+    }
+    if (stripIdButton) {
+      stripIdButton.sprite.color =
+        node.id ? stripButton.sprite.color : "#0002";
+    }
+
+    stripButton.onclick = function() {
+      alert(depth);
+    };
+
+    hideableElements.push(stripButton, stripIdButton, stripClassButton);
+    ui.push([stripButton, stripIdButton, stripClassButton]);
   };
 
   /**
