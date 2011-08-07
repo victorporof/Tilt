@@ -194,7 +194,7 @@ Tilt.Program.prototype = {
       m1 = m[4] + m[5] + m[6],
       m2 = m[8] + m[9] + m[10],
       m3 = m[12] + m[13] + m[14],
-      hit = m0 + m1 + m2 + m3;
+      hit = m0 * m1 * m2 * m3;
 
     // check the cache to see if this uniform wasn't already set
     if (cache[uniform] !== hit) {
