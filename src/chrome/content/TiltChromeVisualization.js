@@ -134,7 +134,8 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
       ui.background(tilt.frameDelta);
 
       // apply the preliminary transformations to the model view
-      tilt.translate(tilt.width / 2, tilt.height / 2 - 50, -thickness * 30);
+      tilt.translate(tilt.width / 2 + 50,
+                     tilt.height / 2 - 50, -thickness * 30);
 
       // calculate the camera matrix using the rotation and translation
       tilt.translate(transforms.translation[0],
