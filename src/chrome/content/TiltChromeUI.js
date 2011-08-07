@@ -360,7 +360,7 @@ TiltChrome.UI = function() {
 
     // the general strip button, created in all cases
     var cx = x + node.localName.length * 10 + 3;
-    var idx = cx + (node.className.length || 2) * 3 + 3;
+    var idx = cx + (node.className.length || 3) * 3 + 3;
 
     stripButton = new Tilt.Button(x, y, {
       width: node.localName.length * 10,
@@ -370,7 +370,7 @@ TiltChrome.UI = function() {
 
     if (node.className) {
       stripClassButton = new Tilt.Button(cx, y, {
-        width: (node.className.length || 2) * 3,
+        width: (node.className.length || 3) * 3,
         height: height,
         stroke: stripButton.sprite.stroke
       });
@@ -378,7 +378,7 @@ TiltChrome.UI = function() {
 
     if (node.id) {
       stripIdButton = new Tilt.Button(idx, y, {
-        width: (node.id.length || 2) * 3,
+        width: (node.id.length || 3) * 3,
         height: height,
         stroke: stripButton.sprite.stroke
       });
