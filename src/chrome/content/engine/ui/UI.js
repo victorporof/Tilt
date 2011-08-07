@@ -61,7 +61,7 @@ Tilt.UI.prototype = {
    * @param {Array} container: optional, the container array for the objects
    */
   push: function(elements, container) {
-    var i, len, element;
+    var i, len, element, index;
 
     if ("undefined" === typeof container) {
       container = this.elements;
@@ -79,18 +79,23 @@ Tilt.UI.prototype = {
           if ("undefined" === typeof element || element === null) {
             continue;
           }
-          element.$ui = this;
-          container.push(element);
+          if ((index = container.indexOf(element)) === -1) {             
+            element.$ui = this;
+            container.push(element);
+          }
         }
       }
     }
     else {
-      if ("undefined" === typeof elements || elements === null) {
+      element = elements;
+
+      if ("undefined" === typeof element || element === null) {
         return;
       }
-      element = elements;
-      element.$ui = this;
-      container.push(element);
+      if ((index = container.indexOf(element)) === -1) {             
+        element.$ui = this;
+        container.push(element);
+      }
     }
   },
 
@@ -102,6 +107,11 @@ Tilt.UI.prototype = {
    */
   remove: function(elements, container) {
     var i, len, element, index;
+
+    if ("undefined" === typeof elements) {
+      this.elements = [];
+      return;
+    }
 
     if ("undefined" === typeof container) {
       container = this.elements;
@@ -131,11 +141,11 @@ Tilt.UI.prototype = {
       }
     }
     else {
-      if ("undefined" === typeof elements || elements === null) {
-        return;
-      }
       element = elements;
 
+      if ("undefined" === typeof element || element === null) {
+        return;
+      }
       if ((index = this.elements.indexOf(element)) !== -1) {             
         element.$ui = null;
         container.splice(index, 1);
