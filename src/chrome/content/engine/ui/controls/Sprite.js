@@ -41,10 +41,8 @@ var EXPORTED_SYMBOLS = ["Tilt.Sprite"];
  * @param {Tilt.Texture} texture: the texture to be used
  * @param {Array} region: the sub-texture coordinates as [x, y, width, height]
  * @param {Object} properties: additional properties for this object
- *  @param {Boolean} hidden: true if this object should be hidden
  *  @param {Boolean} depthTest: true to use depth testing
- *  @param {String} color: texture tinting expressed in hex or rgb() or rgba()
- *  @param {String} stroke: texture stroke expressed in hex or rgb() or rgba()
+ *  @param {String} tint: texture tinting expressed in hex or rgb() or rgba()
  *  @param {Number} x: the x position of the object
  *  @param {Number} y: the y position of the object
  *  @param {Number} width: the width of the object
@@ -78,24 +76,14 @@ Tilt.Sprite = function(texture, region, properties) {
   this.height = properties.height || this.region[3];
 
   /**
-   * Variable specifying if this object shouldn't be drawn.
-   */
-  this.hidden = properties.hidden || false;
-
-  /**
    * Sets if depth testing should be enabled or not for this object.
    */
   this.depthTest = properties.depthTest || false;
 
   /**
-   * Tint or fill color for this object.
+   * Tint color for this object.
    */
-  this.color = properties.color || null;
-
-  /**
-   * Stroke color for this object.
-   */
-  this.stroke = properties.stroke || null;
+  this.tint = properties.tint || null;
 
   /**
    * Bounds padding for this object.
@@ -149,8 +137,8 @@ Tilt.Sprite.prototype = {
       y = this.y,
       width = this.width,
       height = this.height,
-      color = this.color,
-      stroke = this.stroke;
+      depthTest = this.depthTest,
+      tint = this.tint;
 
     // initialize the texture coordinates buffer if it was null
     if (this.$texCoord === null && this.texture.loaded) {
@@ -165,13 +153,10 @@ Tilt.Sprite.prototype = {
 
     var bounds = this.$bounds;
 
-    if (color) {
-      tilt.tint(color);
+    if (tint) {
+      tilt.tint(tint);
     }
-    if (stroke) {
-      tilt.tint(stroke);
-    }
-    if (this.depthTest) {
+    if (depthTest) {
       tilt.depthTest(true);
       tilt.image(tex, x, y, width, height, this.$texCoord);
       tilt.depthTest(false);
@@ -179,19 +164,12 @@ Tilt.Sprite.prototype = {
     else {
       tilt.image(tex, x, y, width, height, this.$texCoord);
     }
-    if (color) {
+    if (tint) {
       var $tint = tilt.$tintColor;
       $tint[0] = 1;
       $tint[1] = 1;
       $tint[2] = 1;
       $tint[3] = 1;
-    }
-    if (stroke) {
-      var $stroke = tilt.$strokeColor;
-      $stroke[0] = 0;
-      $stroke[1] = 0;
-      $stroke[2] = 0;
-      $stroke[3] = 1;
     }
   },
 
