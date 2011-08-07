@@ -33,7 +33,7 @@
         editor.setTheme("ace/theme/dawn");
         editor.renderer.setHScrollBarAlwaysVisible(false);
 
-        if (type === "css") {
+        if (type === "css" || type === "attributes") {
           var CSSMode = require("ace/mode/scss").Mode;
           editor.getSession().setMode(new CSSMode());
         }
