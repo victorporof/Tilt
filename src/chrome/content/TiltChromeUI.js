@@ -344,7 +344,7 @@ TiltChrome.UI = function() {
    * @param {Number} depth: the node depth in the dom tree
    * @param {Number} index: the index of the node in the dom tree
    */
-  this.nodeCallback = function(node, depth, index) {
+  this.domVisualizationNodeCallback = function(node, depth, index) {
     if ("undefined" === typeof this.stripNo) {
       this.stripNo = 0;
     }
@@ -353,7 +353,7 @@ TiltChrome.UI = function() {
     }
 
     var stripNo = this.stripNo++,
-      x = 20 + depth * 8,
+      x = 25 + depth * 8,
       y = 340 + stripNo * 10,
       height = 6,
       stripButton, stripIdButton, stripClassButton;
@@ -470,8 +470,18 @@ TiltChrome.UI = function() {
       alert(depth);
     };
 
-    hideableElements.push(stripButton, stripIdButton, stripClassButton);
-    ui.push([stripButton, stripIdButton, stripClassButton]);
+    hideableElements.unshift(stripButton, stripIdButton, stripClassButton);
+  };
+
+  /**
+   * Function called when the dom tree was successfully traversed.
+   *
+   * @param {Number} maxDepth: the maximum depth of the dom tree
+   * @param {Number} totalNodes: the total nodes in the dom tree
+   */
+  this.domVisualizationReadyCallback = function(maxDepth, totalNodes) {
+    ui.remove(hideableElements);
+    ui.push(hideableElements);
   };
 
   /**
