@@ -205,8 +205,8 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
     // traverse the document
     Tilt.Document.traverse(function(node, depth, index) {
       // call the node callback in the ui
-      if ("function" === typeof ui.nodeCallback) {
-        ui.nodeCallback(node, depth, index);
+      if ("function" === typeof ui.domVisualizationNodeCallback) {
+        ui.domVisualizationNodeCallback(node, depth, index);
       }
 
       if (node.nodeType === 3 ||
@@ -300,6 +300,11 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
           i + 8,  i + 9,  i + 9,  i + 10, i + 10, i + 11, i + 11, i + 8);
         wireframeIndices.push(
           i + 10, i + 9,  i + 9,  i + 6,  i + 6,  i + 5,  i + 5,  i + 10);
+      }
+    }, function(maxDepth, totalNodes) {
+      // call the ready callback in the ui
+      if ("undefined" !== ui.domVisualizationReadyCallback) {
+        ui.domVisualizationReadyCallback(maxDepth, totalNodes);
       }
     });
 
