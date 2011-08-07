@@ -46,12 +46,12 @@ var EXPORTED_SYMBOLS = ["TiltChrome.Visualization"];
 TiltChrome.Visualization = function(canvas, controller, ui) {
 
   /**
-   * Create the Tilt object, containing useful functions for easy drawing
+   * Create the renderer, containing useful functions for easy drawing.
    */
   var tilt = new Tilt.Renderer(canvas, function failCallback() {
     TiltChrome.BrowserOverlay.destroy(true, true);
     TiltChrome.BrowserOverlay.href = null;
-    Tilt.Console.alert("Tilt", Tilt.StringBundle.get("initWebGL.error"));
+    Tilt.Console.alert("Firefox", Tilt.StringBundle.get("initWebGL.error"));
 
     gBrowser.selectedTab =
       gBrowser.addTab("http://get.webgl.org/troubleshooting/");
@@ -274,6 +274,7 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
         nodes.push({
           innerHTML: node.innerHTML,
           style: window.getComputedStyle(node),
+          attributes: node.attributes,
           localName: node.localName,
           className: node.className,
           id: node.id
@@ -479,10 +480,6 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
    * @param {Number} y: the current vertical coordinate
    */
   this.click = function(x, y) {
-    if ("open" === TiltChrome.BrowserOverlay.panel.state) {
-      TiltChrome.BrowserOverlay.panel.hidePopup();
-    }
-
     // set the focus back to the window content if it was somewhere else
     window.content.focus();
     redraw = true;
@@ -558,6 +555,7 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
 
       // compute the custom css text from all the properties
       css = Tilt.Document.getModifiedCss(intersection.node.style),
+      att = Tilt.Document.getModifiedAttributes(intersection.node.attributes),
 
       // get the elements used by the popup
       label = document.getElementById("tilt-panel-label"),
@@ -565,7 +563,7 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
       editor = iframe.contentDocument.getElementById("editor");
 
       // set the title label of the popup panel
-      label.value = " <" + node.localName +
+      label.value = "<" + node.localName +
         (node.className ? " class=\"" + node.className + "\"" : "") +
         (node.id ? " id=\"" + node.id + "\"" : "") + ">";
 
@@ -575,11 +573,61 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
         window.innerHeight - iframe.height - 77, false, false);
 
       // get the content document containing the html editor, and add the html
-      editor.innerHTML = html;
-      iframe.contentWindow.refreshEditor("html");
+      editor.html = html;
+      editor.css = css;
+      editor.att = att;
+
+      if (editor.editorType === "attributes") {
+        editor.innerHTML = att;
+        iframe.contentWindow.refreshEditor("attributes");
+      }
+      else if (editor.editorType === "css") {
+        editor.innerHTML = css;
+        iframe.contentWindow.refreshEditor("css");
+      }
+      else {
+        editor.innerHTML = html;
+        iframe.contentWindow.refreshEditor("html");
+      }
     }
 
     redraw = true;
+  };
+
+  /**
+   * Show the inner html contents of a dom node in the editor if open.
+   */
+  this.showHtmlInEditor = function() {
+    var iframe = document.getElementById("tilt-panel-iframe"),
+      editor = iframe.contentDocument.getElementById("editor");
+
+    editor.innerHTML = editor.html;
+    editor.editorType = "html";
+    iframe.contentWindow.refreshEditor("html");
+  };
+
+  /**
+   * Show the computed css contents of a dom node in the editor if open.
+   */
+  this.showCssInEditor = function() {
+    var iframe = document.getElementById("tilt-panel-iframe"),
+      editor = iframe.contentDocument.getElementById("editor");
+
+    editor.innerHTML = editor.css;
+    editor.editorType = "css";
+    iframe.contentWindow.refreshEditor("css");
+  };
+
+  /**
+   * Show the attributes for a dom node in the editor if open.
+   */
+  this.showAttributesInEditor = function() {
+    var iframe = document.getElementById("tilt-panel-iframe"),
+      editor = iframe.contentDocument.getElementById("editor");
+
+    editor.innerHTML = editor.att;
+    editor.editorType = "attributes";
+    iframe.contentWindow.refreshEditor("attributes");
   };
 
   /**
@@ -619,6 +667,7 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
   function gMouseOver() {
     redraw = true;
 
+    // happens after the browser window is resized
     if (canvas.width !== tilt.width || canvas.height !== tilt.height) {
       canvas.width = tilt.width;
       canvas.height = tilt.height;
@@ -626,7 +675,7 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
       tilt.gl.viewport(0, 0, canvas.width, canvas.height);
       draw();
     }
-  }
+  };
 
   /**
    * Destroys this object and sets all members to null.
