@@ -45,6 +45,7 @@ var EXPORTED_SYMBOLS = ["Tilt.Slider"];
  * @param {Object} properties: additional properties for this object
  *  @param {Boolean} hidden: true if this object should be hidden
  *  @param {Number} value: number ranging from 0..100
+ *  @param {Boolean} direction: 0 for horizontal, 1 for vertical
  */
 Tilt.Slider = function(x, y, width, sprite, properties) {
 
@@ -78,6 +79,11 @@ Tilt.Slider = function(x, y, width, sprite, properties) {
   this.value = properties.value || 0;
 
   /**
+   * The slider direction (0 for horizontal, 1 for vertical).
+   */
+  this.direction = properties.direction || 0;
+
+  /**
    * Variable specifying if this object shouldn't be drawn.
    */
   this.hidden = properties.hidden || false;
@@ -103,21 +109,38 @@ Tilt.Slider.prototype = {
   update: function() {
     var sprite = this.sprite,
       bounds = this.$bounds,
+      direction = this.direction,
       padding = sprite.padding,
       ui = this.$ui,
-      mx = ui.$mouseX - sprite.width / 2;
+      x = this.x,
+      y = this.y,
+      width = this.width,
+      height = this.height,
+      v = direction === 0 ? ui.$mouseX - sprite.width / 2 :
+                            ui.$mouseY - sprite.height / 2;
 
     if (this.$mousePressed) {
       if (ui.$mousePressed) {
-        this.value = Tilt.Math.map(mx, this.x, this.x + this.width, 0, 100);
+        if (direction === 0) {
+          this.value = Tilt.Math.map(v, x, x + width, 0, 100);
+        }
+        else {
+          this.value = Tilt.Math.map(v, y, y + height, 0, 100);
+        }
       }
       else {
         this.$mousePressed = false;
       }
     }
 
-    sprite.x = Tilt.Math.map(this.value, 0, 100, this.x, this.x + this.width);
-    sprite.y = this.y;
+    if (direction === 0) {
+      sprite.x = Tilt.Math.map(this.value, 0, 100, x, x + width);
+      sprite.y = this.y;
+    }
+    else {
+      sprite.x = this.x;
+      sprite.y = Tilt.Math.map(this.value, 0, 100, y, y + height);
+    }
 
     bounds[0] = sprite.x + padding[0];
     bounds[1] = sprite.y + padding[1];
