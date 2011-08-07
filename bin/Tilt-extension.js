@@ -938,6 +938,7 @@ var EXPORTED_SYMBOLS = [
   "Tilt.$activeShader",
   "Tilt.$enabledAttributes",
   "Tilt.$loadedTextures",
+  "Tilt.$ui",
   "Tilt.clearCache",
   "Tilt.destroyObject"];
 
@@ -970,6 +971,11 @@ Tilt.$enabledAttributes = -1;
 Tilt.$loadedTextures = {};
 
 /**
+ * The current UI handler.
+ */
+Tilt.$ui = null;
+
+/**
  * Clears the cache and sets all the variables to default.
  */
 Tilt.clearCache = function() {
@@ -978,6 +984,7 @@ Tilt.clearCache = function() {
   Tilt.$activeShader = -1;
   Tilt.$enabledAttributes = -1;
   Tilt.$loadedTextures = {};
+  Tilt.$ui = null;
 
   Tilt.GLSL.$count = 0;
   Tilt.TextureUtils.$count = 0;
@@ -1406,7 +1413,7 @@ Tilt.Program.prototype = {
       m1 = m[4] + m[5] + m[6],
       m2 = m[8] + m[9] + m[10],
       m3 = m[12] + m[13] + m[14],
-      hit = m0 + m1 + m2 + m3;
+      hit = m0 * m1 * m2 * m3;
 
     // check the cache to see if this uniform wasn't already set
     if (cache[uniform] !== hit) {
@@ -6406,7 +6413,7 @@ Tilt.RectangleWireframe = function() {
   /**
    * Buffer of 2-component vertices (x, y) as the outline of a rectangle.
    */
-  this.vertices = new Tilt.VertexBuffer([0, 0, 1, 0, 1, 1, 0, 1, 0, 0], 2);
+  this.vertices = new Tilt.VertexBuffer([0, 0, 1, 0, 1, 1, 0, 1], 2);
 };
 
 Tilt.RectangleWireframe.prototype = {
@@ -7150,18 +7157,18 @@ Tilt.Renderer.prototype = {
       fill = this.$fillColor,
       stroke = this.$strokeColor;
 
-    // draw the outline only if the stroke alpha channel is not transparent
-    if (stroke[3]) {
-      // use the necessary shader and draw the vertices
-      this.useColorShader(vertices, stroke);
-      this.drawVertices(this.LINE_LOOP, vertices.numItems);
-    }
-
     // draw the triangle only if the fill alpha channel is not transparent
     if (fill[3]) {
       // use the necessary shader and draw the vertices
       this.useColorShader(vertices, fill);
       this.drawVertices(this.TRIANGLE_STRIP, vertices.numItems);
+    }
+
+    // draw the outline only if the stroke alpha channel is not transparent
+    if (stroke[3]) {
+      // use the necessary shader and draw the vertices
+      this.useColorShader(vertices, stroke);
+      this.drawVertices(this.LINE_LOOP, vertices.numItems);
     }
   },
 
@@ -7204,18 +7211,18 @@ Tilt.Renderer.prototype = {
     this.translate(x, y, 0);
     this.scale(width, height, 1);
 
-    // draw the outline only if the stroke alpha channel is not transparent
-    if (stroke[3]) {
-      // use the necessary shader and draw the vertices
-      this.useColorShader(wireframe.vertices, stroke);
-      this.drawVertices(this.LINE_STRIP, wireframe.vertices.numItems);
-    }
-
     // draw the rectangle only if the fill alpha channel is not transparent
     if (fill[3]) {
       // use the necessary shader and draw the vertices
       this.useColorShader(rectangle.vertices, fill);
       this.drawVertices(this.TRIANGLE_STRIP, rectangle.vertices.numItems);
+    }
+
+    // draw the outline only if the stroke alpha channel is not transparent
+    if (stroke[3]) {
+      // use the necessary shader and draw the vertices
+      this.useColorShader(wireframe.vertices, stroke);
+      this.drawVertices(this.LINE_LOOP, wireframe.vertices.numItems);
     }
 
     this.popMatrix();
@@ -7307,13 +7314,6 @@ Tilt.Renderer.prototype = {
     this.pushMatrix();
     this.scale(width, height, depth);
 
-    // draw the outline only if the stroke alpha channel is not transparent
-    if (stroke[3]) {
-      // use the necessary shader and draw the vertices
-      this.useColorShader(wireframe.vertices, stroke);
-      this.drawIndexedVertices(this.LINES, wireframe.indices);
-    }
-
     if (t) {
       // draw the box only if the tint alpha channel is not transparent
       if (tint[3]) {
@@ -7328,6 +7328,13 @@ Tilt.Renderer.prototype = {
         this.useColorShader(cube.vertices, fill);
         this.drawIndexedVertices(this.TRIANGLES, cube.indices);
       }
+    }
+
+    // draw the outline only if the stroke alpha channel is not transparent
+    if (stroke[3]) {
+      // use the necessary shader and draw the vertices
+      this.useColorShader(wireframe.vertices, stroke);
+      this.drawIndexedVertices(this.LINES, wireframe.indices);
     }
 
     this.popMatrix();
@@ -7642,7 +7649,6 @@ var EXPORTED_SYMBOLS = ["Tilt.Button"];
  * @param {Tilt.Sprite} sprite: the sprite to be drawn as background
  * @param {Function} onclick: optional, function to be called when clicked
  * @param {Object} properties: additional properties for this object
- *  @param {Boolean} hidden: true if this object should be hidden
  */
 Tilt.Button = function(x, y, sprite, onclick, properties) {
 
@@ -7706,9 +7712,29 @@ Tilt.Button.prototype = {
    */
   draw: function(tilt) {
     tilt = tilt || Tilt.$renderer;
+    var sprite = this.sprite;
 
-    if ("undefined" !== typeof this.sprite.texture) {
-      this.sprite.draw(tilt);
+    if ("undefined" !== typeof sprite.texture) {
+      sprite.draw(tilt);
+    }
+    else if ("undefined" !== typeof sprite.fill &&
+             "undefined" !== typeof sprite.stroke) {
+
+      tilt.fill(sprite.fill);
+      tilt.stroke(sprite.stroke);
+      tilt.rect(sprite.x, sprite.y, sprite.width, sprite.height);
+
+      var $fill = tilt.$fillColor,
+        $stroke = tilt.$strokeColor;
+
+      $fill[0] = 1;
+      $fill[1] = 1;
+      $fill[2] = 1;
+      $fill[3] = 1;
+      $stroke[0] = 0;
+      $stroke[1] = 0;
+      $stroke[2] = 0;
+      $stroke[3] = 1;
     }
   },
 
@@ -7774,6 +7800,18 @@ Tilt.Container = function(elements, properties) {
   elements = elements || [];
 
   /**
+   * The draw coordinates of this object.
+   */
+  this.x = properties.x || 0;
+  this.y = properties.y || 0;
+
+  /**
+   * The inner dimensions of this object.
+   */
+  this.width = properties.width || 0;
+  this.height = properties.height || 0;
+
+  /**
    * The UI elements in this container.
    */
   this.elements = elements instanceof Array ? elements : [elements];
@@ -7798,7 +7836,7 @@ Tilt.Container.prototype = {
    */
   push: function(elements, ui) {
     if ("undefined" === typeof ui) {
-      ui = this.$ui;
+      ui = Tilt.$ui;
     }
     ui.push(elements, this.elements);
   },
@@ -7810,7 +7848,7 @@ Tilt.Container.prototype = {
    */
   remove: function(elements, ui) {
     if ("undefined" === typeof ui) {
-      ui = this.$ui;
+      ui = Tilt.$ui;
     }
     ui.remove(elements, this.elements);
   },
@@ -7826,24 +7864,21 @@ Tilt.Container.prototype = {
    * @param {Tilt.Renderer} tilt: optional, a reference to a Tilt.Renderer
    */
   draw: function(tilt) {
-    tilt = tilt || Tilt.$renderer;
+    if (!this.hidden) {
+      tilt = tilt || Tilt.$renderer;
 
-    if (this.background !== null) {
-      tilt.fill(this.background);
-      tilt.noStroke();
-      tilt.rect(0, 0, tilt.width, tilt.height);
-    }
+      var x = this.x || 0,
+        y = this.y || 0,
+        width = this.width || tilt.width,
+        height = this.height || tilt.height;
 
-    var elements = this.elements,
-      element, i, len;
-
-    for (i = 0, len = elements.length; i < len; i++) {
-      element = elements[i];
-
-      if (!element.hidden) {
-        element.update();
-        element.draw(tilt);
+      if (this.background !== null) {
+        tilt.fill(this.background);
+        tilt.noStroke();
+        tilt.rect(x, y, width, height);
       }
+
+      Tilt.$ui.draw(0, false, this.elements, x, y, width, height);
     }
   },
 
@@ -7852,7 +7887,149 @@ Tilt.Container.prototype = {
    */
   destroy: function() {
     for (var i in this.elements) {
-      Tilt.destroyObject(elements[i]);
+      Tilt.destroyObject(this.elements[i]);
+    }
+
+    Tilt.destroyObject(this);
+  }
+};
+/***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is Tilt: A WebGL-based 3D visualization of a webpage.
+ *
+ * The Initial Developer of the Original Code is Victor Porof.
+ * Portions created by the Initial Developer are Copyright (C) 2011
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the LGPL or the GPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ ***** END LICENSE BLOCK *****/
+"use strict";
+
+var Tilt = Tilt || {};
+var EXPORTED_SYMBOLS = ["Tilt.Scrollview"];
+
+/**
+ * Scrollview constructor.
+ *
+ * @param {Tilt.Sprite} handle: the sprite texturing the scroll handle
+ * @param {Array} elements: array of GUI elements added to this container
+ * @param {Object} properties: additional properties for this object
+ *  @param {Boolean} hidden: true if this object should be hidden
+ *  @param {String} background: color to fill the container
+ *  @param {Number} x: the x position of the object
+ *  @param {Number} y: the y position of the object
+ *  @param {Number} width: the width of the object
+ *  @param {Number} height: the height of the object
+ */
+Tilt.Scrollview = function(handle, elements, properties) {
+
+  // intercept this object using a profiler when building in debug mode
+  Tilt.Profiler.intercept("Tilt.Scrollview", this);
+
+  // make sure the properties parameter is a valid object
+  properties = properties || {};
+  elements = elements || [];
+
+  /**
+   * The container holding the UI elements.
+   */
+  this.$container = new Tilt.Container(elements, properties);
+
+  /**
+   * Sliders controlling the elements scroll.
+   */
+  var x = this.$container.x,
+    y = this.$container.y,
+    s = this.$container.height - handle.height;
+
+  this.$sliderY = new Tilt.Slider(x, y, s, handle, {
+    direction: 1
+  });
+  this.$pslideX = 0;
+  this.$pslideY = 0;
+
+  // push the scroll view elements to the ui handler
+  Tilt.$ui.push(this.$container);
+  Tilt.$ui.push(this.$sliderY);
+};
+
+Tilt.Scrollview.prototype = {
+
+  /**
+   * Adds a UI element to the handler stack.
+   * @param {Array} elements: array of valid Tilt UI objects (ex: Tilt.Button)
+   * @param {Tilt.UI} ui: the ui to handle the child elements
+   */
+  push: function(elements, ui) {
+    this.$container.push(elements, ui);
+  },
+
+  /**
+   * Removes a UI element from the handler stack.
+   * @param {Array} elements: array of valid Tilt UI objects (ex: Tilt.Button)
+   * @param {Tilt.UI} ui: the ui to handle the child elements
+   */
+  remove: function(elements, ui) {
+    this.$container.remove(elements, ui);
+  },
+
+  /**
+   * Updates this object's internal params.
+   */
+  update: function() {
+    var container = this.$container,
+      elements = container.elements,
+      element, i, len,
+      sliderY = this.$sliderY,
+      pslideY = this.$pslideY,
+      slideY = Tilt.Math.map(sliderY.value, 0, 100, 0, container.height);
+
+    for (i = 0, len = elements.length; i < len; i++) {
+      element = elements[i];
+      element.y -= (slideY - pslideY) * 5;
+    }
+
+    this.$pslideX = slideY;
+    this.$pslideY = slideY;
+  },
+
+  /**
+   * Draws this object using the specified internal params.
+   * @param {Tilt.Renderer} tilt: optional, a reference to a Tilt.Renderer
+   */
+  draw: function(tilt) {
+    this.$container.update();
+    this.$container.draw(tilt);
+  },
+
+  /**
+   * Destroys this object and deletes all members.
+   */
+  destroy: function() {
+    for (var i in this.elements) {
+      Tilt.destroyObject(this.elements[i]);
     }
 
     Tilt.destroyObject(this);
@@ -7900,13 +8077,14 @@ var EXPORTED_SYMBOLS = ["Tilt.Slider"];
  *
  * @param {Number} x: the x position of the object
  * @param {Number} y: the y position of the object
+ * @param {Number} size: the slider size
  * @param {Tilt.Sprite} sprite: the sprite to be drawn for the handler
  * @param {Function} onclick: optional, function to be called when clicked
  * @param {Object} properties: additional properties for this object
- *  @param {Boolean} hidden: true if this object should be hidden
  *  @param {Number} value: number ranging from 0..100
+ *  @param {Boolean} direction: 0 for horizontal, 1 for vertical
  */
-Tilt.Slider = function(x, y, width, sprite, properties) {
+Tilt.Slider = function(x, y, size, sprite, properties) {
 
   // intercept this object using a profiler when building in debug mode
   Tilt.Profiler.intercept("Tilt.Slider", this);
@@ -7923,7 +8101,7 @@ Tilt.Slider = function(x, y, width, sprite, properties) {
   /**
    * The slider size (area in which the handler is moved).
    */
-  this.width = width || 100;
+  this.size = size || 100;
 
   /**
    * A sprite used as a background for this object.
@@ -7938,9 +8116,9 @@ Tilt.Slider = function(x, y, width, sprite, properties) {
   this.value = properties.value || 0;
 
   /**
-   * Variable specifying if this object shouldn't be drawn.
+   * The slider direction (0 for horizontal, 1 for vertical).
    */
-  this.hidden = properties.hidden || false;
+  this.direction = properties.direction || 0;
 
   /**
    * The bounds of this object (used for clicking and intersections).
@@ -7963,21 +8141,37 @@ Tilt.Slider.prototype = {
   update: function() {
     var sprite = this.sprite,
       bounds = this.$bounds,
+      direction = this.direction,
       padding = sprite.padding,
-      ui = this.$ui,
-      mx = ui.$mouseX - sprite.width / 2;
+      ui = Tilt.$ui,
+      x = this.x,
+      y = this.y,
+      size = this.size,
+      v = direction === 0 ? ui.$mouseX - sprite.width / 2 :
+                            ui.$mouseY - sprite.height / 2;
 
     if (this.$mousePressed) {
       if (ui.$mousePressed) {
-        this.value = Tilt.Math.map(mx, this.x, this.x + this.width, 0, 100);
+        if (direction === 0) {
+          this.value = Tilt.Math.map(v, x, x + size, 0, 100);
+        }
+        else {
+          this.value = Tilt.Math.map(v, y, y + size, 0, 100);
+        }
       }
       else {
         this.$mousePressed = false;
       }
     }
 
-    sprite.x = Tilt.Math.map(this.value, 0, 100, this.x, this.x + this.width);
-    sprite.y = this.y;
+    if (direction === 0) {
+      sprite.x = Tilt.Math.map(this.value, 0, 100, x, x + size);
+      sprite.y = this.y;
+    }
+    else {
+      sprite.x = this.x;
+      sprite.y = Tilt.Math.map(this.value, 0, 100, y, y + size);
+    }
 
     bounds[0] = sprite.x + padding[0];
     bounds[1] = sprite.y + padding[1];
@@ -8047,8 +8241,8 @@ var EXPORTED_SYMBOLS = ["Tilt.Sprite"];
  * @param {Tilt.Texture} texture: the texture to be used
  * @param {Array} region: the sub-texture coordinates as [x, y, width, height]
  * @param {Object} properties: additional properties for this object
- *  @param {Boolean} hidden: true if this object should be hidden
  *  @param {Boolean} depthTest: true to use depth testing
+ *  @param {String} tint: texture tinting expressed in hex or rgb() or rgba()
  *  @param {Number} x: the x position of the object
  *  @param {Number} y: the y position of the object
  *  @param {Number} width: the width of the object
@@ -8082,14 +8276,14 @@ Tilt.Sprite = function(texture, region, properties) {
   this.height = properties.height || this.region[3];
 
   /**
-   * Variable specifying if this object shouldn't be drawn.
-   */
-  this.hidden = properties.hidden || false;
-
-  /**
    * Sets if depth testing should be enabled or not for this object.
    */
   this.depthTest = properties.depthTest || false;
+
+  /**
+   * Tint color for this object.
+   */
+  this.tint = properties.tint || null;
 
   /**
    * Bounds padding for this object.
@@ -8142,7 +8336,9 @@ Tilt.Sprite.prototype = {
       x = this.x,
       y = this.y,
       width = this.width,
-      height = this.height;
+      height = this.height,
+      depthTest = this.depthTest,
+      tint = this.tint;
 
     // initialize the texture coordinates buffer if it was null
     if (this.$texCoord === null && this.texture.loaded) {
@@ -8157,13 +8353,23 @@ Tilt.Sprite.prototype = {
 
     var bounds = this.$bounds;
 
-    if (this.depthTest) {
+    if (tint) {
+      tilt.tint(tint);
+    }
+    if (depthTest) {
       tilt.depthTest(true);
       tilt.image(tex, x, y, width, height, this.$texCoord);
       tilt.depthTest(false);
     }
     else {
       tilt.image(tex, x, y, width, height, this.$texCoord);
+    }
+    if (tint) {
+      var $tint = tilt.$tintColor;
+      $tint[0] = 1;
+      $tint[1] = 1;
+      $tint[2] = 1;
+      $tint[3] = 1;
     }
   },
 
@@ -8218,9 +8424,10 @@ var EXPORTED_SYMBOLS = ["Tilt.UI"];
  * push() and remove() functions from the prototype.
  */
 Tilt.UI = function() {
+  Tilt.$ui = this;
 
   // intercept this object using a profiler when building in debug mode
-  Tilt.Profiler.intercept("Tilt.UI", this);  
+  Tilt.Profiler.intercept("Tilt.UI", this);
 
   /**
    * All the UI elements will be added to this list for proper handling.
@@ -8231,105 +8438,51 @@ Tilt.UI = function() {
 Tilt.UI.prototype = {
 
   /**
-   * Adds UI elements to the handler stack.
-   *
-   * @param {Array} elements: array of valid Tilt UI objects (ex: Tilt.Button)
-   * @param {Array} container: optional, the container array for the objects
-   */
-  push: function(elements, container) {
-    var i, len, element;
-
-    if ("undefined" === typeof container) {
-      container = this.elements;
-    }
-    if (elements instanceof Array) {
-      for (i = 0, len = elements.length; i < len; i++) {
-
-        // get the current element from the array
-        element = elements[i];
-
-        if (element instanceof Array) {
-          this.push(element, container);
-        }
-        else {
-          element.$ui = this;
-          container.push(element);
-        }
-      }
-    }
-    else {
-      element = elements;
-      element.$ui = this;
-      container.push(element);
-    }
-  },
-
-  /**
-   * Removes UI elements from the handler stack.
-   *
-   * @param {Array} elements: array of valid Tilt UI objects (ex: Tilt.Button)
-   * @param {Array} container: optional, the container array for the objects
-   */
-  remove: function(elements, container) {
-    var i, len, element, index;
-
-    if ("undefined" === typeof container) {
-      container = this.elements;
-    }
-    if (elements instanceof Array) {
-      for (i = 0, len = elements.length, index = -1; i < len; i++) {
-
-        // get the current element from the array
-        element = elements[i];
-
-        if (element instanceof Array) {
-          this.remove(element, container);
-        }
-        else {
-          if ((index = this.elements.indexOf(element)) !== -1) {             
-            element.$ui = null;
-            container.splice(index, 1);
-
-            if (element.elements instanceof Array) {
-              this.remove(element.elements);
-            }
-          }
-        }
-      }
-    }
-    else {
-      element = elements;
-
-      if ((index = this.elements.indexOf(element)) !== -1) {             
-        element.$ui = null;
-        container.splice(index, 1);
-
-        if (element.elements instanceof Array) {
-          this.remove(element.elements);
-        }
-      }
-    }
-  },
-
-  /**
    * Draws all the stacked elements.
+   *
    * @param {Number} frameDelta: the delta time elapsed between frames
+   * @param {Boolean} reset: true if the default view style should be forced
+   * @param {Array} container: optional, the container array for the objects
    */
-  draw: function(frameDelta) {
+  draw: function(frameDelta, reset, container, left, top, right, bottom) {
     var tilt = Tilt.$renderer,
-      elements = this.elements,
-      element, i, len;
+      elements = container || this.elements,
+      element, bounds,
+      x = left || 0,
+      y = top || 0,
+      w = right || window.content.innerWidth,
+      h = bottom || window.content.innerHeight, i, len;
 
-    tilt.ortho();
-    tilt.defaults();
-    tilt.depthTest(false);
+    if (reset) {
+      tilt.ortho();
+      tilt.defaults();
+      tilt.depthTest(false);
+    }
 
     for (i = 0, len = elements.length; i < len; i++) {
       element = elements[i];
+      bounds = element.$bounds || [1, 1, 1, 1];
 
       if (!element.hidden) {
         element.update();
-        element.draw(tilt);
+
+        var r1x1 = bounds[0] + 1,
+          r1y1 = bounds[1] + 1,
+          r1x2 = bounds[0] + bounds[2] - 1,
+          r1y2 = bounds[1] + bounds[3] - 1,
+          r2x1 = x,
+          r2y1 = y,
+          r2x2 = x + w,
+          r2y2 = y + h,
+
+          overlap = r1x1 > r2x1 &&
+                    r1x2 < r2x2 &&
+                    r1y1 > r2y1 &&
+                    r1y2 < r2y2;
+
+        if (overlap) {
+          element.draw(tilt);
+        }
       }
     }
   },
@@ -8454,6 +8607,101 @@ Tilt.UI.prototype = {
         this.$mousePressedOver = true;
       }
       element[e](x, y);
+    }
+  },
+
+  /**
+   * Adds UI elements to the handler stack.
+   *
+   * @param {Array} elements: array of valid Tilt UI objects (ex: Tilt.Button)
+   * @param {Array} container: optional, the container array for the objects
+   */
+  push: function(elements, container) {
+    var i, len, element, index;
+
+    if ("undefined" === typeof container) {
+      container = this.elements;
+    }
+    if (elements instanceof Array) {
+      for (i = 0, len = elements.length; i < len; i++) {
+
+        element = elements[i];
+        if (element instanceof Array) {
+          this.push(element, container);
+        }
+        else {
+          if ("undefined" === typeof element || element === null) {
+            continue;
+          }
+          if ((index = container.indexOf(element)) === -1) {
+            container.push(element);
+          }
+        }
+      }
+    }
+    else {
+      element = elements;
+
+      if ("undefined" === typeof element || element === null) {
+        return;
+      }
+      if ((index = container.indexOf(element)) === -1) {
+        container.push(element);
+      }
+    }
+  },
+
+  /**
+   * Removes UI elements from the handler stack.
+   *
+   * @param {Array} elements: array of valid Tilt UI objects (ex: Tilt.Button)
+   * @param {Array} container: optional, the container array for the objects
+   */
+  remove: function(elements, container) {
+    var i, len, element, index;
+
+    if ("undefined" === typeof elements) {
+      this.elements = [];
+      return;
+    }
+
+    if ("undefined" === typeof container) {
+      container = this.elements;
+    }
+    if (elements instanceof Array) {
+      for (i = 0, len = elements.length, index = -1; i < len; i++) {
+
+        element = elements[i];
+        if (element instanceof Array) {
+          this.remove(element, container);
+        }
+        else {
+          if ("undefined" === typeof element || element === null) {
+            continue;
+          }
+          if ((index = this.elements.indexOf(element)) !== -1) {
+            container.splice(index, 1);
+
+            if (element.elements instanceof Array) {
+              this.remove(element.elements);
+            }
+          }
+        }
+      }
+    }
+    else {
+      element = elements;
+
+      if ("undefined" === typeof element || element === null) {
+        return;
+      }
+      if ((index = this.elements.indexOf(element)) !== -1) {
+        container.splice(index, 1);
+
+        if (element.elements instanceof Array) {
+          this.remove(element.elements);
+        }
+      }
     }
   },
 
@@ -8849,7 +9097,7 @@ Tilt.Document = {
    * If the dom parameter is omitted, then the current content.document will
    * be used. The nodeCallback function will have the current node and depth
    * passed as parameters, and the readyCallback function will have the
-   * maximum depth passed as parameter.
+   * maximum depth and total nodes passed as parameters.
    *
    * @param {Function} nodeCallback: the function to call for each node
    * @param {Function} readyCallback: called when no more nodes are found
@@ -8857,7 +9105,8 @@ Tilt.Document = {
    */
   traverse: function(nodeCallback, readyCallback, dom) {
     // used to calculate the maximum depth of a dom node
-    var maxDepth = 0;
+    var maxDepth = 0,
+      totalNodes = 0;
 
     // used internally for recursively traversing a document object model
     function recursive(nodeCallback, dom, depth) {
@@ -8869,10 +9118,11 @@ Tilt.Document = {
         if (depth > maxDepth) {
           maxDepth = depth;
         }
+        totalNodes++;
 
         // run the node callback function for each node, pass the depth, and
         // also continue the recursion with all the children
-        nodeCallback(child, depth);
+        nodeCallback(child, depth, totalNodes);
         recursive(nodeCallback, child, depth + 1);
       }
     }
@@ -8884,7 +9134,7 @@ Tilt.Document = {
 
       // once we recursively traversed all the dom nodes, run a callback
       if ("function" === typeof readyCallback) {
-        readyCallback(maxDepth);
+        readyCallback(maxDepth, totalNodes);
       }
     }
     finally {
@@ -9004,7 +9254,23 @@ Tilt.Document = {
   },
 
   /**
-   * Returns the modified css values from a computed style
+   * Returns the modified attributes from a dom node.
+   *
+   * @param {NamedNodeMap} attributes: attributes to be analyzed
+   * @return {String} the custom attributes text
+   */
+  getModifiedAttributes: function(attributes) {
+    var attText = [], i, len;
+
+    for (i = 0, len = attributes.length; i < len; i++) {
+      attText.push(attributes[i].name + " = \"" + attributes[i].value + "\"");
+    }
+
+    return attText.join("\n") + "\n";
+  },
+
+  /**
+   * Returns the modified css values from a computed style.
    *
    * @param {CSSComputedStyle} style: the style to analyze
    * @return {String} the custom css text
@@ -9687,12 +9953,12 @@ Tilt.Math = {
    * with ranges from 0..1
    */
   hex2rgba: function(color) {
-    if ("undefined" !== typeof this[color]) {
-      return this[color];
-    }
-
     var rgba, r, g, b, a, cr, cg, cb, ca,
       hex = color.charAt(0) === "#" ? color.substring(1) : color;
+
+    if ("undefined" !== typeof Tilt[hex]) {
+      return this[hex];
+    }
 
     // e.g. "f00"
     if (hex.length === 3) {
@@ -9717,7 +9983,7 @@ Tilt.Math = {
       rgba[2] /= 255;
       rgba[3] /= 255;
 
-      this[color] = rgba;
+      this[hex] = rgba;
       return rgba;
     }
     // e.g. "rgb(255, 0, 0)"
@@ -9728,7 +9994,7 @@ Tilt.Math = {
       rgba[2] /= 255;
       rgba[3] = 1;
 
-      this[color] = rgba;
+      this[hex] = rgba;
       return rgba;
     }
 
@@ -9737,8 +10003,8 @@ Tilt.Math = {
     b = parseInt(hex.substring(4, 6), 16) / 255;
     a = hex.length === 6 ? 1 : parseInt(hex.substring(6, 8), 16) / 255;
 
-    this[color] = [r, g, b, a];
-    return [r, g, b, a];
+    this[hex] = rgba = [r, g, b, a];
+    return rgba;
   }
 };
 /***** BEGIN LICENSE BLOCK *****
@@ -10375,6 +10641,9 @@ TiltChrome.UI = function() {
   exportButton = null,
   helpButton = null,
   exitButton = null,
+  cssButton = null,
+  htmlButton = null,
+  attributesButton = null,
 
   /**
    * Top-left control items.
@@ -10391,6 +10660,7 @@ TiltChrome.UI = function() {
   viewModeButton = null,
   colorAdjustButton = null,
   colorAdjustPopup = null,
+  domScrollview = null,
 
   /**
    * Sliders.
@@ -10400,6 +10670,12 @@ TiltChrome.UI = function() {
   brightnessSlider = null,
   alphaSlider = null,
   textureSlider = null,
+
+  /**
+   * Arrays holding groups of objects.
+   */
+  alwaysVisibleElements = [],
+  hideableElements = [],
 
   /**
    * Retain the position for the mouseDown event.
@@ -10439,14 +10715,35 @@ TiltChrome.UI = function() {
       hidden: true
     });
 
-    optionsButton = new Tilt.Button(canvas.width - 290, 0,
-      new Tilt.Sprite(texture, [942, 0, 77, 38]));
+    attributesButton = new Tilt.Button(canvas.width - 464, 0,
+      new Tilt.Sprite(texture, [935, 240, 83, 38]), null, { hidden: true });
 
-    exportButton = new Tilt.Button(canvas.width - 220, 0,
-      new Tilt.Sprite(texture, [942, 40, 70, 38]));
+    attributesButton.onclick = function() {
+      this.visualization.showAttributesInEditor();
+    }.bind(this);
+
+    htmlButton = new Tilt.Button(canvas.width - 377, 0,
+      new Tilt.Sprite(texture, [935, 200, 48, 38]), null, { hidden: true });
+
+    htmlButton.onclick = function() {
+      this.visualization.showHtmlInEditor();
+    }.bind(this);
+
+    cssButton = new Tilt.Button(canvas.width - 325, 0,
+      new Tilt.Sprite(texture, [935, 160, 36, 38]), null, { hidden: true });
+
+    cssButton.onclick = function() {
+      this.visualization.showCssInEditor();
+    }.bind(this);
+
+    optionsButton = new Tilt.Button(canvas.width - 285, 0,
+      new Tilt.Sprite(texture, [935, 0, 66, 38]));
+
+    exportButton = new Tilt.Button(canvas.width - 215, 0,
+      new Tilt.Sprite(texture, [935, 40, 61, 38]));
 
     helpButton = new Tilt.Button(canvas.width - 150, 0,
-      new Tilt.Sprite(texture, [942, 80, 55, 38]));
+      new Tilt.Sprite(texture, [935, 80, 46, 38]));
 
     helpButton.onclick = function(x, y) {
       var helpX = canvas.width / 2 - 305,
@@ -10471,7 +10768,7 @@ TiltChrome.UI = function() {
     }.bind(this);
 
     exitButton = new Tilt.Button(canvas.width - 50, 0,
-      new Tilt.Sprite(texture, [942, 120, 50, 38]));
+      new Tilt.Sprite(texture, [935, 120, 42, 38]));
 
     exitButton.onclick = function(x, y) {
       TiltChrome.BrowserOverlay.destroy(true, true);
@@ -10531,7 +10828,7 @@ TiltChrome.UI = function() {
         saturationSlider.value = 25;
         brightnessSlider.value = 100;
         textureSlider.value = 100;
-        alphaSlider.value = 3;
+        alphaSlider.value = 4;
 
         this.visualization.setMeshWireframeColor([1, 1, 1, 0.7]);
       }
@@ -10576,47 +10873,63 @@ TiltChrome.UI = function() {
       hidden: true
     });
 
-    var sliderHandlerSprite = new Tilt.Sprite(texture, [574, 131, 29, 29], {
+    var handlerSprite = new Tilt.Sprite(texture, [574, 131, 29, 29], {
       padding: [8, 8, 8, 8]
     });
-    hueSlider = new Tilt.Slider(152, 271, 120, sliderHandlerSprite, {
+    hueSlider = new Tilt.Slider(152, 271, 120, handlerSprite, {
       value: 50
     });
-    saturationSlider = new Tilt.Slider(152, 290, 120, sliderHandlerSprite, {
+    saturationSlider = new Tilt.Slider(152, 290, 120, handlerSprite, {
       value: 0
     });
-    brightnessSlider = new Tilt.Slider(152, 308, 120, sliderHandlerSprite, {
+    brightnessSlider = new Tilt.Slider(152, 308, 120, handlerSprite, {
       value: 100
     });
-    alphaSlider = new Tilt.Slider(152, 326, 120, sliderHandlerSprite, {
+    alphaSlider = new Tilt.Slider(152, 326, 120, handlerSprite, {
       value: 90
     });
-    textureSlider = new Tilt.Slider(152, 344, 120, sliderHandlerSprite, {
+    textureSlider = new Tilt.Slider(152, 344, 120, handlerSprite, {
       value: 100
     });
 
-    var colorAdjustSliderElements = [
-      hueSlider, saturationSlider, brightnessSlider,
-      alphaSlider, textureSlider
-    ];
+    domScrollview = new Tilt.Scrollview(handlerSprite, null, {
+      x: -2,
+      y: 328,
+      width: 200,
+      height: canvas.height - 328
+    });
 
-    var alwaysVisibleElements = [
-      eyeButton, exitButton
-    ];
-
-    var hideableElements = [
+    alwaysVisibleElements.push(eyeButton, exitButton);
+    hideableElements.push(
+      domScrollview,
       helpPopup, colorAdjustPopup,
       arcballSprite, resetButton, zoomInButton, zoomOutButton,
       viewModeButton, colorAdjustButton,
-      optionsButton, exportButton, helpButton
-    ];
+      htmlButton, cssButton, attributesButton,
+      optionsButton, exportButton, helpButton);
 
     ui.push([alwaysVisibleElements, hideableElements]);
-    colorAdjustPopup.push(colorAdjustSliderElements);
+    colorAdjustPopup.push(
+      [hueSlider, saturationSlider, brightnessSlider,
+      alphaSlider, textureSlider]);
+
+    var panel = TiltChrome.BrowserOverlay.panel;
+    panel.addEventListener("popupshown", function popupshown() {
+      htmlButton.hidden = false;
+      cssButton.hidden = false;
+      attributesButton.hidden = false;      
+    }, false);
+
+    panel.addEventListener("popuphidden", function popuphidden() {
+      htmlButton.hidden = true;
+      cssButton.hidden = true;
+      attributesButton.hidden = true;      
+    }, false);
   };
 
   /**
    * Called automatically by the visualization at the beginning of draw().
+   * @param {Number} frameDelta: the delta time elapsed between frames
    */
   this.background = function(frameDelta) {
     background.draw();
@@ -10627,7 +10940,7 @@ TiltChrome.UI = function() {
    * @param {Number} frameDelta: the delta time elapsed between frames
    */
   this.draw = function(frameDelta) {
-    ui.draw(frameDelta);
+    ui.draw(frameDelta, true);
 
     var rgba = Tilt.Math.hsv2rgb(
       hueSlider.value / 100,
@@ -10641,6 +10954,153 @@ TiltChrome.UI = function() {
 
     this.visualization.setMeshColor(rgba);
     this.visualization.setMeshTextureAlpha(textureSlider.value / 100);
+  };
+
+  /**
+   * Function called for each node in the dom tree
+   * 
+   * @param {HTMLNode} node: the dom node
+   * @param {Number} depth: the node depth in the dom tree
+   * @param {Number} index: the index of the node in the dom tree
+   */
+  this.domVisualizationNodeCallback = function(node, depth, index) {
+    if ("undefined" === typeof this.stripNo) {
+      this.stripNo = 0;
+    }
+    if ("undefined" === typeof node.localName || node.localName === null) {
+      return;
+    }
+
+    var stripNo = this.stripNo++,
+      x = 25 + depth * 8,
+      y = 340 + stripNo * 10,
+      height = 6,
+      stripButton, stripIdButton, stripClassButton;
+
+    // the general strip button, created in all cases
+    var cx = x + node.localName.length * 10 + 3;
+    var idx = cx + (node.className.length || 3) * 3 + 3;
+
+    stripButton = new Tilt.Button(x, y, {
+      width: node.localName.length * 10,
+      height: height,
+      stroke: "#fff2"
+    });
+
+    if (node.className) {
+      stripClassButton = new Tilt.Button(cx, y, {
+        width: (node.className.length || 3) * 3,
+        height: height,
+        stroke: stripButton.sprite.stroke
+      });
+    }
+
+    if (node.id) {
+      stripIdButton = new Tilt.Button(idx, y, {
+        width: (node.id.length || 3) * 3,
+        height: height,
+        stroke: stripButton.sprite.stroke
+      });
+    }
+
+    if (node.localName === "html") {
+      stripButton.sprite.fill = "#fff";
+    }
+    else if (node.localName === "head") {
+      stripButton.sprite.fill = "#E667AF";
+    }
+    else if (node.localName === "title") {
+      stripButton.sprite.fill = "#CD0074";
+    }
+    else if (node.localName === "meta") {
+      stripButton.sprite.fill = "#BF7130";
+    }
+    else if (node.localName === "script") {
+      stripButton.sprite.fill = "#A64B00";
+    }
+    else if (node.localName === "style") {
+      stripButton.sprite.fill = "#FF9640";
+    }
+    else if (node.localName === "link") {
+      stripButton.sprite.fill = "#FFB273";
+    }
+    else if (node.localName === "body") {
+      stripButton.sprite.fill = "#E667AF";
+    }
+    else if (node.localName === "h1") {
+      stripButton.sprite.fill = "#ff0d";
+    }
+    else if (node.localName === "h2") {
+      stripButton.sprite.fill = "#ee0d";
+    }
+    else if (node.localName === "h3") {
+      stripButton.sprite.fill = "#dd0d";
+    }
+    else if (node.localName === "h4") {
+      stripButton.sprite.fill = "#cc0d";
+    }
+    else if (node.localName === "h5") {
+      stripButton.sprite.fill = "#bb0d";
+    }
+    else if (node.localName === "h6") {
+      stripButton.sprite.fill = "#aa0d";
+    }
+    else if (node.localName === "table") {
+      stripButton.sprite.fill = "#FF0700";
+    }
+    else if (node.localName === "tbody") {
+      stripButton.sprite.fill = "#FF070088";
+    }
+    else if (node.localName === "tr") {
+      stripButton.sprite.fill = "#FF4540";
+    }
+    else if (node.localName === "td") {
+      stripButton.sprite.fill = "#FF7673";
+    }
+    else if (node.localName === "div") {
+      stripButton.sprite.fill = "#5DC8CD";
+    }
+    else if (node.localName === "span") {
+      stripButton.sprite.fill = "#67E46F";
+    }
+    else if (node.localName === "p") {
+      stripButton.sprite.fill = "#888";
+    }
+    else if (node.localName === "a") {
+      stripButton.sprite.fill = "#123EAB";
+    }
+    else if (node.localName === "img") {
+      stripButton.sprite.fill = "#FFB473";
+    }
+    else {
+      stripButton.sprite.fill = "#444";
+    }
+
+    if (stripClassButton) {
+      stripClassButton.sprite.color =
+        node.className ? stripButton.sprite.color : "#0002";
+    }
+    if (stripIdButton) {
+      stripIdButton.sprite.color =
+        node.id ? stripButton.sprite.color : "#0002";
+    }
+
+    stripButton.onclick = function() {
+      alert(depth);
+    };
+
+    domScrollview.push([stripButton, stripIdButton, stripClassButton]);
+  };
+
+  /**
+   * Function called when the dom tree was successfully traversed.
+   *
+   * @param {Number} maxDepth: the maximum depth of the dom tree
+   * @param {Number} totalNodes: the total nodes in the dom tree
+   */
+  this.domVisualizationReadyCallback = function(maxDepth, totalNodes) {
+    // ui.remove(hideableElements);
+    // ui.push(hideableElements);
   };
 
   /**
@@ -10807,12 +11267,12 @@ var EXPORTED_SYMBOLS = ["TiltChrome.Visualization"];
 TiltChrome.Visualization = function(canvas, controller, ui) {
 
   /**
-   * Create the Tilt object, containing useful functions for easy drawing
+   * Create the renderer, containing useful functions for easy drawing.
    */
   var tilt = new Tilt.Renderer(canvas, function failCallback() {
     TiltChrome.BrowserOverlay.destroy(true, true);
     TiltChrome.BrowserOverlay.href = null;
-    Tilt.Console.alert("Tilt", Tilt.StringBundle.get("initWebGL.error"));
+    Tilt.Console.alert("Firefox", Tilt.StringBundle.get("initWebGL.error"));
 
     gBrowser.selectedTab =
       gBrowser.addTab("http://get.webgl.org/troubleshooting/");
@@ -10895,7 +11355,8 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
       ui.background(tilt.frameDelta);
 
       // apply the preliminary transformations to the model view
-      tilt.translate(tilt.width / 2, tilt.height / 2 - 50, -thickness * 30);
+      tilt.translate(tilt.width / 2 + 50,
+                     tilt.height / 2 - 50, -thickness * 30);
 
       // calculate the camera matrix using the rotation and translation
       tilt.translate(transforms.translation[0],
@@ -10963,8 +11424,15 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
       nodes = [];
 
     // traverse the document
-    Tilt.Document.traverse(function(node, depth) {
-      if (node.localName === "span" ||
+    Tilt.Document.traverse(function(node, depth, index) {
+      // call the node callback in the ui
+      if ("function" === typeof ui.domVisualizationNodeCallback) {
+        ui.domVisualizationNodeCallback(node, depth, index);
+      }
+
+      if (node.nodeType === 3 ||
+          node.nodeType === 10 ||
+          node.localName === "span" ||
           node.localName === "option" ||
           node.localName === "a" ||
           node.localName === "b" ||
@@ -11027,7 +11495,8 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
         nodes.push({
           innerHTML: node.innerHTML,
           style: window.getComputedStyle(node),
-          name: node.localName,
+          attributes: node.attributes,
+          localName: node.localName,
           className: node.className,
           id: node.id
         });
@@ -11053,6 +11522,11 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
           i + 8,  i + 9,  i + 9,  i + 10, i + 10, i + 11, i + 11, i + 8);
         wireframeIndices.push(
           i + 10, i + 9,  i + 9,  i + 6,  i + 6,  i + 5,  i + 5,  i + 10);
+      }
+    }, function(maxDepth, totalNodes) {
+      // call the ready callback in the ui
+      if ("undefined" !== ui.domVisualizationReadyCallback) {
+        ui.domVisualizationReadyCallback(maxDepth, totalNodes);
       }
     });
 
@@ -11227,10 +11701,6 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
    * @param {Number} y: the current vertical coordinate
    */
   this.click = function(x, y) {
-    if ("open" === TiltChrome.BrowserOverlay.panel.state) {
-      TiltChrome.BrowserOverlay.panel.hidePopup();
-    }
-
     // set the focus back to the window content if it was somewhere else
     window.content.focus();
     redraw = true;
@@ -11306,6 +11776,7 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
 
       // compute the custom css text from all the properties
       css = Tilt.Document.getModifiedCss(intersection.node.style),
+      att = Tilt.Document.getModifiedAttributes(intersection.node.attributes),
 
       // get the elements used by the popup
       label = document.getElementById("tilt-panel-label"),
@@ -11313,7 +11784,7 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
       editor = iframe.contentDocument.getElementById("editor");
 
       // set the title label of the popup panel
-      label.value = " <" + node.name +
+      label.value = "<" + node.localName +
         (node.className ? " class=\"" + node.className + "\"" : "") +
         (node.id ? " id=\"" + node.id + "\"" : "") + ">";
 
@@ -11323,11 +11794,61 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
         window.innerHeight - iframe.height - 77, false, false);
 
       // get the content document containing the html editor, and add the html
-      editor.innerHTML = html;
-      iframe.contentWindow.refreshEditor("html");
+      editor.html = html;
+      editor.css = css;
+      editor.att = att;
+
+      if (editor.editorType === "attributes") {
+        editor.innerHTML = att;
+        iframe.contentWindow.refreshEditor("attributes");
+      }
+      else if (editor.editorType === "css") {
+        editor.innerHTML = css;
+        iframe.contentWindow.refreshEditor("css");
+      }
+      else {
+        editor.innerHTML = html;
+        iframe.contentWindow.refreshEditor("html");
+      }
     }
 
     redraw = true;
+  };
+
+  /**
+   * Show the inner html contents of a dom node in the editor if open.
+   */
+  this.showHtmlInEditor = function() {
+    var iframe = document.getElementById("tilt-panel-iframe"),
+      editor = iframe.contentDocument.getElementById("editor");
+
+    editor.innerHTML = editor.html;
+    editor.editorType = "html";
+    iframe.contentWindow.refreshEditor("html");
+  };
+
+  /**
+   * Show the computed css contents of a dom node in the editor if open.
+   */
+  this.showCssInEditor = function() {
+    var iframe = document.getElementById("tilt-panel-iframe"),
+      editor = iframe.contentDocument.getElementById("editor");
+
+    editor.innerHTML = editor.css;
+    editor.editorType = "css";
+    iframe.contentWindow.refreshEditor("css");
+  };
+
+  /**
+   * Show the attributes for a dom node in the editor if open.
+   */
+  this.showAttributesInEditor = function() {
+    var iframe = document.getElementById("tilt-panel-iframe"),
+      editor = iframe.contentDocument.getElementById("editor");
+
+    editor.innerHTML = editor.att;
+    editor.editorType = "attributes";
+    iframe.contentWindow.refreshEditor("attributes");
   };
 
   /**
@@ -11367,6 +11888,7 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
   function gMouseOver() {
     redraw = true;
 
+    // happens after the browser window is resized
     if (canvas.width !== tilt.width || canvas.height !== tilt.height) {
       canvas.width = tilt.width;
       canvas.height = tilt.height;
@@ -11374,7 +11896,7 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
       tilt.gl.viewport(0, 0, canvas.width, canvas.height);
       draw();
     }
-  }
+  };
 
   /**
    * Destroys this object and sets all members to null.
