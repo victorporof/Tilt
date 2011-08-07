@@ -43,7 +43,6 @@ var EXPORTED_SYMBOLS = ["Tilt.Button"];
  * @param {Tilt.Sprite} sprite: the sprite to be drawn as background
  * @param {Function} onclick: optional, function to be called when clicked
  * @param {Object} properties: additional properties for this object
- *  @param {Boolean} hidden: true if this object should be hidden
  */
 Tilt.Button = function(x, y, sprite, onclick, properties) {
 
@@ -107,26 +106,25 @@ Tilt.Button.prototype = {
    */
   draw: function(tilt) {
     tilt = tilt || Tilt.$renderer;
-
     var sprite = this.sprite;
 
     if ("undefined" !== typeof sprite.texture) {
       sprite.draw(tilt);
     }
-    else if ("undefined" !== typeof sprite.color &&
+    else if ("undefined" !== typeof sprite.fill &&
              "undefined" !== typeof sprite.stroke) {
 
-      tilt.fill(sprite.color);
+      tilt.fill(sprite.fill);
       tilt.stroke(sprite.stroke);
       tilt.rect(sprite.x, sprite.y, sprite.width, sprite.height);
 
-      var $tint = tilt.$tintColor,
+      var $fill = tilt.$fillColor,
         $stroke = tilt.$strokeColor;
 
-      $tint[0] = 1;
-      $tint[1] = 1;
-      $tint[2] = 1;
-      $tint[3] = 1;
+      $fill[0] = 1;
+      $fill[1] = 1;
+      $fill[2] = 1;
+      $fill[3] = 1;
       $stroke[0] = 0;
       $stroke[1] = 0;
       $stroke[2] = 0;

@@ -33,54 +33,54 @@
 "use strict";
 
 var Tilt = Tilt || {};
-var EXPORTED_SYMBOLS = ["Tilt.Container"];
+var EXPORTED_SYMBOLS = ["Tilt.Scrollview"];
 
 /**
- * Container constructor.
+ * Scrollview constructor.
  *
+ * @param {Tilt.Sprite} handle: the sprite texturing the scroll handle
  * @param {Array} elements: array of GUI elements added to this container
  * @param {Object} properties: additional properties for this object
  *  @param {Boolean} hidden: true if this object should be hidden
- *  @param {String} background: color to fill the screen
+ *  @param {String} background: color to fill the container
+ *  @param {Number} x: the x position of the object
+ *  @param {Number} y: the y position of the object
+ *  @param {Number} width: the width of the object
+ *  @param {Number} height: the height of the object
  */
-Tilt.Container = function(elements, properties) {
+Tilt.Scrollview = function(handle, elements, properties) {
 
   // intercept this object using a profiler when building in debug mode
-  Tilt.Profiler.intercept("Tilt.Container", this);
+  Tilt.Profiler.intercept("Tilt.Scrollview", this);
 
   // make sure the properties parameter is a valid object
   properties = properties || {};
   elements = elements || [];
 
   /**
-   * The draw coordinates of this object.
+   * The container holding the UI elements.
    */
-  this.x = properties.x || 0;
-  this.y = properties.y || 0;
+  this.$container = new Tilt.Container(elements, properties);
 
   /**
-   * The inner dimensions of this object.
+   * Sliders controlling the elements scroll.
    */
-  this.width = properties.width || 0;
-  this.height = properties.height || 0;
+  var x = this.$container.x,
+    y = this.$container.y,
+    s = this.$container.height - handle.height;
 
-  /**
-   * The UI elements in this container.
-   */
-  this.elements = elements instanceof Array ? elements : [elements];
+  this.$sliderY = new Tilt.Slider(x, y, s, handle, {
+    direction: 1
+  });
+  this.$pslideX = 0;
+  this.$pslideY = 0;
 
-  /**
-   * The color of the full screen background rectangle.
-   */
-  this.background = properties.background || null;
-
-  /**
-   * Variable specifying if this object shouldn't be drawn.
-   */
-  this.hidden = properties.hidden || false;
+  // push the scroll view elements to the ui handler
+  Tilt.$ui.push(this.$container);
+  Tilt.$ui.push(this.$sliderY);
 };
 
-Tilt.Container.prototype = {
+Tilt.Scrollview.prototype = {
 
   /**
    * Adds a UI element to the handler stack.
@@ -88,10 +88,7 @@ Tilt.Container.prototype = {
    * @param {Tilt.UI} ui: the ui to handle the child elements
    */
   push: function(elements, ui) {
-    if ("undefined" === typeof ui) {
-      ui = Tilt.$ui;
-    }
-    ui.push(elements, this.elements);
+    this.$container.push(elements, ui);
   },
 
   /**
@@ -100,16 +97,27 @@ Tilt.Container.prototype = {
    * @param {Tilt.UI} ui: the ui to handle the child elements
    */
   remove: function(elements, ui) {
-    if ("undefined" === typeof ui) {
-      ui = Tilt.$ui;
-    }
-    ui.remove(elements, this.elements);
+    this.$container.remove(elements, ui);
   },
 
   /**
    * Updates this object's internal params.
    */
   update: function() {
+    var container = this.$container,
+      elements = container.elements,
+      element, i, len,
+      sliderY = this.$sliderY,
+      pslideY = this.$pslideY,
+      slideY = Tilt.Math.map(sliderY.value, 0, 100, 0, container.height);
+
+    for (i = 0, len = elements.length; i < len; i++) {
+      element = elements[i];
+      element.y -= (slideY - pslideY) * 5;
+    }
+
+    this.$pslideX = slideY;
+    this.$pslideY = slideY;
   },
 
   /**
@@ -117,22 +125,8 @@ Tilt.Container.prototype = {
    * @param {Tilt.Renderer} tilt: optional, a reference to a Tilt.Renderer
    */
   draw: function(tilt) {
-    if (!this.hidden) {
-      tilt = tilt || Tilt.$renderer;
-
-      var x = this.x || 0,
-        y = this.y || 0,
-        width = this.width || tilt.width,
-        height = this.height || tilt.height;
-
-      if (this.background !== null) {
-        tilt.fill(this.background);
-        tilt.noStroke();
-        tilt.rect(x, y, width, height);
-      }
-
-      Tilt.$ui.draw(0, false, this.elements, x, y, width, height);
-    }
+    this.$container.update();
+    this.$container.draw(tilt);
   },
 
   /**

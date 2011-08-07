@@ -42,9 +42,10 @@ var EXPORTED_SYMBOLS = ["Tilt.UI"];
  * push() and remove() functions from the prototype.
  */
 Tilt.UI = function() {
+  Tilt.$ui = this;
 
   // intercept this object using a profiler when building in debug mode
-  Tilt.Profiler.intercept("Tilt.UI", this);  
+  Tilt.Profiler.intercept("Tilt.UI", this);
 
   /**
    * All the UI elements will be added to this list for proper handling.
@@ -55,130 +56,51 @@ Tilt.UI = function() {
 Tilt.UI.prototype = {
 
   /**
-   * Adds UI elements to the handler stack.
-   *
-   * @param {Array} elements: array of valid Tilt UI objects (ex: Tilt.Button)
-   * @param {Array} container: optional, the container array for the objects
-   */
-  push: function(elements, container) {
-    var i, len, element, index;
-
-    if ("undefined" === typeof container) {
-      container = this.elements;
-    }
-    if (elements instanceof Array) {
-      for (i = 0, len = elements.length; i < len; i++) {
-
-        // get the current element from the array
-        element = elements[i];
-
-        if (element instanceof Array) {
-          this.push(element, container);
-        }
-        else {
-          if ("undefined" === typeof element || element === null) {
-            continue;
-          }
-          if ((index = container.indexOf(element)) === -1) {             
-            element.$ui = this;
-            container.push(element);
-          }
-        }
-      }
-    }
-    else {
-      element = elements;
-
-      if ("undefined" === typeof element || element === null) {
-        return;
-      }
-      if ((index = container.indexOf(element)) === -1) {             
-        element.$ui = this;
-        container.push(element);
-      }
-    }
-  },
-
-  /**
-   * Removes UI elements from the handler stack.
-   *
-   * @param {Array} elements: array of valid Tilt UI objects (ex: Tilt.Button)
-   * @param {Array} container: optional, the container array for the objects
-   */
-  remove: function(elements, container) {
-    var i, len, element, index;
-
-    if ("undefined" === typeof elements) {
-      this.elements = [];
-      return;
-    }
-
-    if ("undefined" === typeof container) {
-      container = this.elements;
-    }
-    if (elements instanceof Array) {
-      for (i = 0, len = elements.length, index = -1; i < len; i++) {
-
-        // get the current element from the array
-        element = elements[i];
-
-        if (element instanceof Array) {
-          this.remove(element, container);
-        }
-        else {
-          if ("undefined" === typeof element || element === null) {
-            continue;
-          }
-          if ((index = this.elements.indexOf(element)) !== -1) {             
-            element.$ui = null;
-            container.splice(index, 1);
-
-            if (element.elements instanceof Array) {
-              this.remove(element.elements);
-            }
-          }
-        }
-      }
-    }
-    else {
-      element = elements;
-
-      if ("undefined" === typeof element || element === null) {
-        return;
-      }
-      if ((index = this.elements.indexOf(element)) !== -1) {             
-        element.$ui = null;
-        container.splice(index, 1);
-
-        if (element.elements instanceof Array) {
-          this.remove(element.elements);
-        }
-      }
-    }
-  },
-
-  /**
    * Draws all the stacked elements.
+   *
    * @param {Number} frameDelta: the delta time elapsed between frames
+   * @param {Boolean} reset: true if the default view style should be forced
+   * @param {Array} container: optional, the container array for the objects
    */
-  draw: function(frameDelta) {
+  draw: function(frameDelta, reset, container, left, top, right, bottom) {
     var tilt = Tilt.$renderer,
-      elements = this.elements,
+      elements = container || this.elements,
       element, bounds,
-      w = window.content.innerWidth,
-      h = window.content.innerHeight, i, len;
+      x = left || 0,
+      y = top || 0,
+      w = right || window.content.innerWidth,
+      h = bottom || window.content.innerHeight, i, len;
 
-    tilt.ortho();
-    tilt.defaults();
-    tilt.depthTest(false);
+    if (reset) {
+      tilt.ortho();
+      tilt.defaults();
+      tilt.depthTest(false);
+    }
 
     for (i = 0, len = elements.length; i < len; i++) {
       element = elements[i];
-      bounds = element.$bounds || [0, 0, w, h];
+      bounds = element.$bounds || [1, 1, 1, 1];
 
-      if (!element.hidden && bounds[0] < w && bounds[1] < h) {
+      if (!element.hidden) {
         element.update();
-        element.draw(tilt);
+
+        var r1x1 = bounds[0] + 1,
+          r1y1 = bounds[1] + 1,
+          r1x2 = bounds[0] + bounds[2] - 1,
+          r1y2 = bounds[1] + bounds[3] - 1,
+          r2x1 = x,
+          r2y1 = y,
+          r2x2 = x + w,
+          r2y2 = y + h,
+
+          overlap = r1x1 > r2x1 &&
+                    r1x2 < r2x2 &&
+                    r1y1 > r2y1 &&
+                    r1y2 < r2y2;
+
+        if (overlap) {
+          element.draw(tilt);
+        }
       }
     }
   },
@@ -303,6 +225,101 @@ Tilt.UI.prototype = {
         this.$mousePressedOver = true;
       }
       element[e](x, y);
+    }
+  },
+
+  /**
+   * Adds UI elements to the handler stack.
+   *
+   * @param {Array} elements: array of valid Tilt UI objects (ex: Tilt.Button)
+   * @param {Array} container: optional, the container array for the objects
+   */
+  push: function(elements, container) {
+    var i, len, element, index;
+
+    if ("undefined" === typeof container) {
+      container = this.elements;
+    }
+    if (elements instanceof Array) {
+      for (i = 0, len = elements.length; i < len; i++) {
+
+        element = elements[i];
+        if (element instanceof Array) {
+          this.push(element, container);
+        }
+        else {
+          if ("undefined" === typeof element || element === null) {
+            continue;
+          }
+          if ((index = container.indexOf(element)) === -1) {
+            container.push(element);
+          }
+        }
+      }
+    }
+    else {
+      element = elements;
+
+      if ("undefined" === typeof element || element === null) {
+        return;
+      }
+      if ((index = container.indexOf(element)) === -1) {
+        container.push(element);
+      }
+    }
+  },
+
+  /**
+   * Removes UI elements from the handler stack.
+   *
+   * @param {Array} elements: array of valid Tilt UI objects (ex: Tilt.Button)
+   * @param {Array} container: optional, the container array for the objects
+   */
+  remove: function(elements, container) {
+    var i, len, element, index;
+
+    if ("undefined" === typeof elements) {
+      this.elements = [];
+      return;
+    }
+
+    if ("undefined" === typeof container) {
+      container = this.elements;
+    }
+    if (elements instanceof Array) {
+      for (i = 0, len = elements.length, index = -1; i < len; i++) {
+
+        element = elements[i];
+        if (element instanceof Array) {
+          this.remove(element, container);
+        }
+        else {
+          if ("undefined" === typeof element || element === null) {
+            continue;
+          }
+          if ((index = this.elements.indexOf(element)) !== -1) {
+            container.splice(index, 1);
+
+            if (element.elements instanceof Array) {
+              this.remove(element.elements);
+            }
+          }
+        }
+      }
+    }
+    else {
+      element = elements;
+
+      if ("undefined" === typeof element || element === null) {
+        return;
+      }
+      if ((index = this.elements.indexOf(element)) !== -1) {
+        container.splice(index, 1);
+
+        if (element.elements instanceof Array) {
+          this.remove(element.elements);
+        }
+      }
     }
   },
 
