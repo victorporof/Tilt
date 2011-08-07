@@ -67,6 +67,9 @@ TiltChrome.UI = function() {
   exportButton = null,
   helpButton = null,
   exitButton = null,
+  cssButton = null,
+  htmlButton = null,
+  attributesButton = null,
 
   /**
    * Top-left control items.
@@ -83,6 +86,7 @@ TiltChrome.UI = function() {
   viewModeButton = null,
   colorAdjustButton = null,
   colorAdjustPopup = null,
+  domScrollview = null,
 
   /**
    * Sliders.
@@ -137,14 +141,35 @@ TiltChrome.UI = function() {
       hidden: true
     });
 
-    optionsButton = new Tilt.Button(canvas.width - 290, 0,
-      new Tilt.Sprite(texture, [942, 0, 77, 38]));
+    attributesButton = new Tilt.Button(canvas.width - 464, 0,
+      new Tilt.Sprite(texture, [935, 240, 83, 38]), null, { hidden: true });
 
-    exportButton = new Tilt.Button(canvas.width - 220, 0,
-      new Tilt.Sprite(texture, [942, 40, 70, 38]));
+    attributesButton.onclick = function() {
+      this.visualization.showAttributesInEditor();
+    }.bind(this);
+
+    htmlButton = new Tilt.Button(canvas.width - 377, 0,
+      new Tilt.Sprite(texture, [935, 200, 48, 38]), null, { hidden: true });
+
+    htmlButton.onclick = function() {
+      this.visualization.showHtmlInEditor();
+    }.bind(this);
+
+    cssButton = new Tilt.Button(canvas.width - 325, 0,
+      new Tilt.Sprite(texture, [935, 160, 36, 38]), null, { hidden: true });
+
+    cssButton.onclick = function() {
+      this.visualization.showCssInEditor();
+    }.bind(this);
+
+    optionsButton = new Tilt.Button(canvas.width - 285, 0,
+      new Tilt.Sprite(texture, [935, 0, 66, 38]));
+
+    exportButton = new Tilt.Button(canvas.width - 215, 0,
+      new Tilt.Sprite(texture, [935, 40, 61, 38]));
 
     helpButton = new Tilt.Button(canvas.width - 150, 0,
-      new Tilt.Sprite(texture, [942, 80, 55, 38]));
+      new Tilt.Sprite(texture, [935, 80, 46, 38]));
 
     helpButton.onclick = function(x, y) {
       var helpX = canvas.width / 2 - 305,
@@ -169,7 +194,7 @@ TiltChrome.UI = function() {
     }.bind(this);
 
     exitButton = new Tilt.Button(canvas.width - 50, 0,
-      new Tilt.Sprite(texture, [942, 120, 50, 38]));
+      new Tilt.Sprite(texture, [935, 120, 42, 38]));
 
     exitButton.onclick = function(x, y) {
       TiltChrome.BrowserOverlay.destroy(true, true);
@@ -274,38 +299,58 @@ TiltChrome.UI = function() {
       hidden: true
     });
 
-    var sliderHandlerSprite = new Tilt.Sprite(texture, [574, 131, 29, 29], {
+    var handlerSprite = new Tilt.Sprite(texture, [574, 131, 29, 29], {
       padding: [8, 8, 8, 8]
     });
-    hueSlider = new Tilt.Slider(152, 271, 120, sliderHandlerSprite, {
+    hueSlider = new Tilt.Slider(152, 271, 120, handlerSprite, {
       value: 50
     });
-    saturationSlider = new Tilt.Slider(152, 290, 120, sliderHandlerSprite, {
+    saturationSlider = new Tilt.Slider(152, 290, 120, handlerSprite, {
       value: 0
     });
-    brightnessSlider = new Tilt.Slider(152, 308, 120, sliderHandlerSprite, {
+    brightnessSlider = new Tilt.Slider(152, 308, 120, handlerSprite, {
       value: 100
     });
-    alphaSlider = new Tilt.Slider(152, 326, 120, sliderHandlerSprite, {
+    alphaSlider = new Tilt.Slider(152, 326, 120, handlerSprite, {
       value: 90
     });
-    textureSlider = new Tilt.Slider(152, 344, 120, sliderHandlerSprite, {
+    textureSlider = new Tilt.Slider(152, 344, 120, handlerSprite, {
       value: 100
     });
 
-    alwaysVisibleElements.push(
-      eyeButton, exitButton);
+    domScrollview = new Tilt.Scrollview(handlerSprite, null, {
+      x: -2,
+      y: 328,
+      width: 200,
+      height: canvas.height - 328
+    });
 
+    alwaysVisibleElements.push(eyeButton, exitButton);
     hideableElements.push(
+      domScrollview,
       helpPopup, colorAdjustPopup,
       arcballSprite, resetButton, zoomInButton, zoomOutButton,
       viewModeButton, colorAdjustButton,
+      htmlButton, cssButton, attributesButton,
       optionsButton, exportButton, helpButton);
 
     ui.push([alwaysVisibleElements, hideableElements]);
     colorAdjustPopup.push(
       [hueSlider, saturationSlider, brightnessSlider,
       alphaSlider, textureSlider]);
+
+    var panel = TiltChrome.BrowserOverlay.panel;
+    panel.addEventListener("popupshown", function popupshown() {
+      htmlButton.hidden = false;
+      cssButton.hidden = false;
+      attributesButton.hidden = false;      
+    }, false);
+
+    panel.addEventListener("popuphidden", function popuphidden() {
+      htmlButton.hidden = true;
+      cssButton.hidden = true;
+      attributesButton.hidden = true;      
+    }, false);
   };
 
   /**
@@ -321,7 +366,7 @@ TiltChrome.UI = function() {
    * @param {Number} frameDelta: the delta time elapsed between frames
    */
   this.draw = function(frameDelta) {
-    ui.draw(frameDelta);
+    ui.draw(frameDelta, true);
 
     var rgba = Tilt.Math.hsv2rgb(
       hueSlider.value / 100,
@@ -385,76 +430,76 @@ TiltChrome.UI = function() {
     }
 
     if (node.localName === "html") {
-      stripButton.sprite.color = "#fff";
+      stripButton.sprite.fill = "#fff";
     }
     else if (node.localName === "head") {
-      stripButton.sprite.color = "#E667AF";
+      stripButton.sprite.fill = "#E667AF";
     }
     else if (node.localName === "title") {
-      stripButton.sprite.color = "#CD0074";
+      stripButton.sprite.fill = "#CD0074";
     }
     else if (node.localName === "meta") {
-      stripButton.sprite.color = "#BF7130";
+      stripButton.sprite.fill = "#BF7130";
     }
     else if (node.localName === "script") {
-      stripButton.sprite.color = "#A64B00";
+      stripButton.sprite.fill = "#A64B00";
     }
     else if (node.localName === "style") {
-      stripButton.sprite.color = "#FF9640";
+      stripButton.sprite.fill = "#FF9640";
     }
     else if (node.localName === "link") {
-      stripButton.sprite.color = "#FFB273";
+      stripButton.sprite.fill = "#FFB273";
     }
     else if (node.localName === "body") {
-      stripButton.sprite.color = "#E667AF";
+      stripButton.sprite.fill = "#E667AF";
     }
     else if (node.localName === "h1") {
-      stripButton.sprite.color = "#ff0d";
+      stripButton.sprite.fill = "#ff0d";
     }
     else if (node.localName === "h2") {
-      stripButton.sprite.color = "#ee0d";
+      stripButton.sprite.fill = "#ee0d";
     }
     else if (node.localName === "h3") {
-      stripButton.sprite.color = "#dd0d";
+      stripButton.sprite.fill = "#dd0d";
     }
     else if (node.localName === "h4") {
-      stripButton.sprite.color = "#cc0d";
+      stripButton.sprite.fill = "#cc0d";
     }
     else if (node.localName === "h5") {
-      stripButton.sprite.color = "#bb0d";
+      stripButton.sprite.fill = "#bb0d";
     }
     else if (node.localName === "h6") {
-      stripButton.sprite.color = "#aa0d";
+      stripButton.sprite.fill = "#aa0d";
     }
     else if (node.localName === "table") {
-      stripButton.sprite.color = "#FF0700";
+      stripButton.sprite.fill = "#FF0700";
     }
     else if (node.localName === "tbody") {
-      stripButton.sprite.color = "#FF070088";
+      stripButton.sprite.fill = "#FF070088";
     }
     else if (node.localName === "tr") {
-      stripButton.sprite.color = "#FF4540";
+      stripButton.sprite.fill = "#FF4540";
     }
     else if (node.localName === "td") {
-      stripButton.sprite.color = "#FF7673";
+      stripButton.sprite.fill = "#FF7673";
     }
     else if (node.localName === "div") {
-      stripButton.sprite.color = "#5DC8CD";
+      stripButton.sprite.fill = "#5DC8CD";
     }
     else if (node.localName === "span") {
-      stripButton.sprite.color = "#67E46F";
+      stripButton.sprite.fill = "#67E46F";
     }
     else if (node.localName === "p") {
-      stripButton.sprite.color = "#888";
+      stripButton.sprite.fill = "#888";
     }
     else if (node.localName === "a") {
-      stripButton.sprite.color = "#123EAB";
+      stripButton.sprite.fill = "#123EAB";
     }
     else if (node.localName === "img") {
-      stripButton.sprite.color = "#FFB473";
+      stripButton.sprite.fill = "#FFB473";
     }
     else {
-      stripButton.sprite.color = "#444";
+      stripButton.sprite.fill = "#444";
     }
 
     if (stripClassButton) {
@@ -470,7 +515,7 @@ TiltChrome.UI = function() {
       alert(depth);
     };
 
-    hideableElements.unshift(stripButton, stripIdButton, stripClassButton);
+    domScrollview.push([stripButton, stripIdButton, stripClassButton]);
   };
 
   /**
@@ -480,8 +525,8 @@ TiltChrome.UI = function() {
    * @param {Number} totalNodes: the total nodes in the dom tree
    */
   this.domVisualizationReadyCallback = function(maxDepth, totalNodes) {
-    ui.remove(hideableElements);
-    ui.push(hideableElements);
+    // ui.remove(hideableElements);
+    // ui.push(hideableElements);
   };
 
   /**
