@@ -314,7 +314,23 @@ Tilt.Document = {
   },
 
   /**
-   * Returns the modified css values from a computed style
+   * Returns the modified attributes from a dom node.
+   *
+   * @param {NamedNodeMap} attributes: attributes to be analyzed
+   * @return {String} the custom attributes text
+   */
+  getModifiedAttributes: function(attributes) {
+    var attText = [], i, len;
+
+    for (i = 0, len = attributes.length; i < len; i++) {
+      attText.push(attributes[i].name + " = \"" + attributes[i].value + "\"");
+    }
+
+    return attText.join("\n") + "\n";
+  },
+
+  /**
+   * Returns the modified css values from a computed style.
    *
    * @param {CSSComputedStyle} style: the style to analyze
    * @return {String} the custom css text
