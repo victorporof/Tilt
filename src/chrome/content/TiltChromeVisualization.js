@@ -40,7 +40,7 @@ var EXPORTED_SYMBOLS = ["TiltChrome.Visualization"];
  *
  * @param {HTMLCanvasElement} canvas: the canvas element used for rendering
  * @param {TiltChrome.Controller} controller: the controller handling events
- * @param {TiltChrome.GUI} ui: the visualization user interface
+ * @param {TiltChrome.UI} ui: the visualization user interface
  * @return {TiltChrome.Visualization} the newly created object
  */
 TiltChrome.Visualization = function(canvas, controller, ui) {
@@ -131,7 +131,7 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
 
       // clear the context and draw a background gradient
       tilt.clear(0, 0, 0, 1);
-      ui.background(tilt.frameDelta);
+      ui ? ui.background(tilt.frameDelta) : 0;
 
       // apply the preliminary transformations to the model view
       tilt.translate(tilt.width / 2 + 50,
@@ -150,11 +150,12 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
       mesh.draw();
       meshWireframe.draw();
 
-      ui.draw(tilt.frameDelta);
+      // draw the ui on top of the visualization
+      ui ? ui.draw(tilt.frameDelta) : 0;
     }
 
     // when rendering is finished, call a loop function in the controller
-    if ("function" === typeof controller.loop) {
+    if (controller && "function" === typeof controller.loop) {
       controller.loop(tilt.frameDelta);
     }
 
@@ -177,10 +178,10 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
         canvas.width = tilt.width;
         canvas.height = tilt.height;
 
-        if ("function" === typeof controller.resize) {
+        if (controller && "function" === typeof controller.resize) {
           controller.resize(tilt.width, tilt.height);
         }
-        if ("function" === typeof ui.resize) {
+        if (ui && "function" === typeof ui.resize) {
           ui.resize(tilt.width, tilt.height);
         }
 
@@ -205,7 +206,7 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
     // traverse the document
     Tilt.Document.traverse(function(node, depth, index) {
       // call the node callback in the ui
-      if ("function" === typeof ui.domVisualizationNodeCallback) {
+      if (ui && "function" === typeof ui.domVisualizationNodeCallback) {
         ui.domVisualizationNodeCallback(node, depth, index);
       }
 
@@ -304,7 +305,7 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
       }
     }, function(maxDepth, totalNodes) {
       // call the ready callback in the ui
-      if ("undefined" !== ui.domVisualizationReadyCallback) {
+      if (ui && "undefined" !== ui.domVisualizationReadyCallback) {
         ui.domVisualizationReadyCallback(maxDepth, totalNodes);
       }
     });
@@ -331,17 +332,23 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
    * Handle some browser events, when the tabs are selected or closed.
    */
   function setupBrowserEvents() {
+    var tabContainer = gBrowser.tabContainer;
+
     // when the tab is closed or the url changes, destroy visualization
-    gBrowser.tabContainer.addEventListener("TabClose", gClose, 0);
-    gBrowser.tabContainer.addEventListener("TabAttrModified", gClose, 0);
-    gBrowser.contentWindow.addEventListener("resize", gResize, 0);
-    gBrowser.addEventListener("mouseover", gMouseOver, 0);
+    tabContainer.addEventListener("TabClose", gClose, false);
+    tabContainer.addEventListener("TabAttrModified", gClose, false);
+    gBrowser.contentWindow.addEventListener("resize", gResize, false);
+    gBrowser.addEventListener("mouseover", gMouseOver, false);
   };
 
   /**
    * Setup the controller, referencing this visualization.
    */
   function setupController() {
+    if ("undefined" === typeof controller) {
+      return;
+    }
+
     // set a reference in the controller for this visualization
     controller.visualization = this;
 
@@ -355,6 +362,10 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
    * Setup the user interface, referencing this visualization.
    */
   function setupUI() {
+    if ("undefined" === typeof ui) {
+      return;
+    }
+
     // set a reference in the user interface for this visualization
     ui.visualization = this;
     ui.controller = controller;
@@ -579,7 +590,7 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
 
       if (editor.editorType === "attributes") {
         editor.innerHTML = att;
-        iframe.contentWindow.refreshEditor("attributes");
+        iframe.contentWindow.refreshEditor("css");
       }
       else if (editor.editorType === "css") {
         editor.innerHTML = css;
@@ -648,10 +659,10 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
     tilt.height = window.content.innerHeight;
     redraw = true;
 
-    if ("function" === typeof controller.resize) {
+    if (controller && "function" === typeof controller.resize) {
       controller.resize(tilt.width, tilt.height);
     }
-    if ("function" === typeof ui.resize) {
+    if (ui && "function" === typeof ui.resize) {
       ui.resize(tilt.width, tilt.height);
     }
 
@@ -681,44 +692,54 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
    * Destroys this object and sets all members to null.
    */
   this.destroy = function() {
-    gBrowser.tabContainer.removeEventListener("TabClose", gClose, 0);
-    gBrowser.tabContainer.removeEventListener("TabAttrModified", gClose, 0);
-    gBrowser.contentWindow.removeEventListener("resize", gResize, 0);
-    gBrowser.removeEventListener("mouseover", gMouseOver, 0);
+    var tabContainer = gBrowser.tabContainer;
+    tabContainer.removeEventListener("TabClose", gClose, false);
+    tabContainer.removeEventListener("TabAttrModified", gClose, false);
+    gBrowser.contentWindow.removeEventListener("resize", gResize, false);
+    gBrowser.removeEventListener("mouseover", gMouseOver, false);
 
-    try {
-      tilt.destroy();
-      tilt = null;
+    gClose = null;
+    gResize = null;
+    gMouseOver = null;
 
+    if (controller && "function" === typeof controller.destroy) {
       controller.destroy(canvas);
       controller = null;
+    }
 
+    if (ui && "function" === typeof ui.destroy) {
       ui.destroy(canvas);
       ui = null;
-
-      background.destroy();
-      background = null;
-
-      texture.destroy();
-      texture = null;
-
-      mesh.destroy();
-      mesh = null;
-
-      meshWireframe.destroy();
-      meshWireframe = null;
-
-      delete transforms.rotation;
-      delete transforms.translation;
-      transforms = null;
     }
-    catch (e) {}
+
+    texture.destroy();
+    texture = null;
+
+    mesh.destroy();
+    mesh = null;
+
+    meshWireframe.destroy();
+    meshWireframe = null;
+
+    tilt.destroy();
+    tilt = null;
+
+    delete transforms.rotation;
+    delete transforms.translation;
+    transforms = null;
+
+    setup = null;
+    draw = null;
+    setupVisualization = null;
+    setupBrowserEvents = null;
+    setupController = null;
+    setupUI = null;
 
     Tilt.destroyObject(this);
   };
 
   // intercept this object using a profiler when building in debug mode
-  Tilt.Profiler.intercept("TiltChrome.Visualization", this);  
+  Tilt.Profiler.intercept("TiltChrome.Visualization", this);
 
   // run the setup and draw functions
   setup.call(this);
