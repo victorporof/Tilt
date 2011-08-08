@@ -56,7 +56,7 @@ var EXPORTED_SYMBOLS = ["Tilt.Texture"];
 Tilt.Texture = function(image, parameters, readyCallback) {
 
   // intercept this object using a profiler when building in debug mode
-  Tilt.Profiler.intercept("Tilt.Texture", this);  
+  Tilt.Profiler.intercept("Tilt.Texture", this);
 
   /**
    * A reference to the WebGL texture object.
@@ -158,6 +158,8 @@ Tilt.Texture.prototype = {
    * Destroys this object and deletes all members.
    */
   destroy: function() {
+    Tilt.$gl.deleteTexture(this.$ref);
+
     for (var i in this) {
       delete this[i];
     }
