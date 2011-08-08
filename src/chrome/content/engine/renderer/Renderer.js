@@ -46,7 +46,7 @@ var EXPORTED_SYMBOLS = ["Tilt.Renderer"];
 Tilt.Renderer = function(canvas, failCallback, successCallback) {
 
   // intercept this object using a profiler when building in debug mode
-  Tilt.Profiler.intercept("Tilt.Renderer", this);  
+  Tilt.Profiler.intercept("Tilt.Renderer", this);
 
   /**
    * The WebGL context obtained from the canvas element, used for drawing.
@@ -86,6 +86,7 @@ Tilt.Renderer = function(canvas, failCallback, successCallback) {
   } else {
     // if unsuccessful, log the error and run a fail callback if available
     Tilt.Console.log(Tilt.StringBundle.get("initWebGL.error"));
+
     if ("function" === typeof failCallback) {
       failCallback();
       return;
@@ -236,9 +237,9 @@ Tilt.Renderer.prototype = {
       g *= 255;
       b *= 255;
       a *= 255;
-      this.canvas.setAttribute("style",
-        "background: rgba(" + r + ", " + g + ", " + b + ", " + a + "); " +
-        "width: 100%; height: 100%;");
+      this.canvas.setAttribute("style", [
+        "background: rgba(", r, ", ", g, ", ", b, ", ", a, "); ",
+        "width: 100%; height: 100%;"].join(""));
     }
 
     // clear the color and depth buffers
