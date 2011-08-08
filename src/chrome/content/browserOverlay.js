@@ -66,7 +66,7 @@ TiltChrome.BrowserOverlay = {
    */
   initialize: function(event) {
     // first, close the visualization and clean up any mess if there was any
-    this.destroy();
+    this.destroy(true);
 
     // if this was the page we just visualized, leave the visualization closed
     if (this.href === window.content.location.href) {
@@ -96,19 +96,17 @@ TiltChrome.BrowserOverlay = {
 
       // construct the visualization using the canvas
       this.visualization =
-        new TiltChrome.Visualization(this.canvas,
-        new TiltChrome.Controller.MouseAndKeyboard(),
-        new TiltChrome.UI());
+        new TiltChrome.Visualization(this.canvas);
     }
   },
 
   /**
    * Destroys this object, removes the iframe and sets all members to null.
    *
-   * @param {Boolean} timeout: pass true to do the heavy lifting in a timeout
    * @param {Boolean} gc: pass true to do a garbage collection when finished
+   * @param {Boolean} timeout: pass true to do the heavy lifting in a timeout
    */
-  destroy: function(timeout, gc) {
+  destroy: function(gc, timeout) {
     Tilt.Document.currentContentDocument = null;
     Tilt.Document.currentParentNode = null;
 
@@ -128,6 +126,10 @@ TiltChrome.BrowserOverlay = {
         this.visualization.destroy();
         this.visualization = null;
       }
+
+      Tilt.Profiler.log();
+      Tilt.Profiler.clear();
+
       if (gc) {
         window.setTimeout(function() {
           window.QueryInterface(Ci.nsIInterfaceRequestor)
@@ -135,9 +137,6 @@ TiltChrome.BrowserOverlay = {
             .garbageCollect();
         }, 100);
       }
-
-      Tilt.Profiler.log();
-      Tilt.Profiler.clear();
     }
 
     // finishing the cleanup may take some time, so set a small timeout
