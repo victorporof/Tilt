@@ -302,5 +302,5 @@ TiltChrome.Controller.MouseAndKeyboard = function() {
 
   // intercept this object using a profiler when building in debug mode
   Tilt.Profiler.intercept(
-    "TiltChrome.Controller.MouseAndKeyboard", this);  
+    "TiltChrome.Controller.MouseAndKeyboard", this);
 };

@@ -123,29 +123,29 @@ Tilt.Arcball.prototype = {
     var radius = this.$radius,
       width = this.$width,
       height = this.$height,
-      //
+
       mousePress = this.$mousePress,
       mouseRelease = this.$mouseRelease,
       mouseMove = this.$mouseMove,
       mouseLerp = this.$mouseLerp,
       mouseButton = this.$mouseButton,
       scrollValue = this.$scrollValue,
-      //
+
       keyCode = this.$keyCode,
       keyCoded = this.$keyCoded,
-      //
+
       startVec = this.$startVec,
       endVec = this.$endVec,
       pVec = this.$pVec,
-      //
+
       lastRot = this.$lastRot,
       deltaRot = this.$deltaRot,
       currentRot = this.$currentRot,
-      //
+
       lastTrans = this.$lastTrans,
       deltaTrans = this.$deltaTrans,
       currentTrans = this.$currentTrans,
-      //
+
       addKeyRot = this.$addKeyRot,
       addKeyTrans = this.$addKeyTrans;
 
@@ -192,8 +192,7 @@ Tilt.Arcball.prototype = {
 
       // calculate the current rotation based on the mouse click events
       quat4.multiply(lastRot, deltaRot, currentRot);
-    }
-    else {
+    } else {
       quat4.set(currentRot, lastRot);
     }
 
@@ -204,8 +203,7 @@ Tilt.Arcball.prototype = {
 
       currentTrans[0] = lastTrans[0] + deltaTrans[0];
       currentTrans[1] = lastTrans[1] + deltaTrans[1];
-    }
-    else {
+    } else {
       lastTrans[0] = currentTrans[0];
       lastTrans[1] = currentTrans[1];
     }
@@ -453,8 +451,7 @@ Tilt.Arcball.prototype = {
       addKeyRot[1] = 0;
       addKeyTrans[0] = 0;
       addKeyTrans[1] = 0;
-    }
-    else {
+    } else {
       // create an interval and smoothly reset all the values to identity
       this.$setInterval(function() {
         var inverse = quat4.inverse(lastRot);
@@ -526,7 +523,7 @@ Tilt.Arcball.prototype = {
     mouseLerp[0] = x;
     mouseLerp[1] = y;
   },
-  
+
   /**
    * Destroys this object and deletes all members.
    */

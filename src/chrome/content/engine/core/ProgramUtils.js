@@ -81,7 +81,7 @@ Tilt.GLSL = {
       shader = gl.createShader(gl.FRAGMENT_SHADER);
     } else {
       Tilt.Console.error(
-      Tilt.StringBundle.format("compileShader.type.error"), [shaderSource]);
+        Tilt.StringBundle.format("compileShader.type.error"), [shaderSource]);
 
       return null;
     }
@@ -98,7 +98,7 @@ Tilt.GLSL = {
       status = gl.getShaderInfoLog(shader);
 
       Tilt.Console.error(
-      Tilt.StringBundle.format("compileShader.compile.error"), [status]);
+        Tilt.StringBundle.format("compileShader.compile.error"), [status]);
 
       return null;
     }
@@ -130,7 +130,7 @@ Tilt.GLSL = {
       status = gl.getProgramInfoLog(program);
 
       Tilt.Console.error(
-      Tilt.StringBundle.format("linkProgram.error", [status]));
+        Tilt.StringBundle.format("linkProgram.error", [status]));
 
       return null;
     }
@@ -188,9 +188,8 @@ Tilt.GLSL = {
       // try to get a shader attribute
       if ((io = this.shaderAttribute(program, variable)) >= 0) {
         return io;
-      }
-      // if unavailable, search for a shader uniform
-      else {
+      } else {
+        // if unavailable, search for a shader uniform
         return this.shaderUniform(program, variable);
       }
     }

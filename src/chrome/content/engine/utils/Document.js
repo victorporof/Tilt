@@ -73,6 +73,7 @@ Tilt.Document = {
       node = this.currentParentNode,
       canvas;
 
+    // this should never happen, but just in case
     if ("undefined" === typeof doc || doc === null ||
         "undefined" === typeof node || node === null) {
 
@@ -111,9 +112,9 @@ Tilt.Document = {
     var width = window.innerWidth,
       height = window.innerHeight,
       canvas = this.initCanvas(width, height, true);
-    
+
     this.currentParentNode.setAttribute("style",
-      "background:#000; margin: 0px; padding: 0px; overflow: hidden;");
+      "background: #000; margin: 0px; padding: 0px; overflow: hidden;");
 
     try {
       return canvas;

@@ -42,13 +42,13 @@ Tilt.Console = {
 
   /**
    * Shows a modal alert message popup.
-   * 
+   *
    * @param {String} title: the title of the popup
    * @param {String} message: the message to be logged
    */
-  alert: function(title, message) {  
+  alert: function(title, message) {
     var prompt;
-  
+
     if ("undefined" === typeof message) {
       message = "undefined";
     }
@@ -115,10 +115,15 @@ Tilt.Console = {
    * to be listed in a single place. Hopefully, they will all be listed in
    * nsIScriptError.idl eventually.
    */
-  error: function(message, sourceName, sourceLine,
-                  lineNumber, columnNumber, flags, category) {
-
-    var consoleService, scriptError;
+  error: function() {
+    var message = parameters[0],
+      sourceName = parameters[1],
+      sourceLine = parameters[2],
+      lineNumber = parameters[3],
+      columnNumber = parameters[4],
+      flags = parameters[5],
+      category = parameters[6],
+      consoleService, scriptError;
 
     if ("undefined" === typeof message) {
       message = "undefined";
@@ -171,12 +176,12 @@ Tilt.StringBundle = {
     }
 
     var elem = document.getElementById(this.bundle);
+
     try {
       if (elem) {
         // return the equivalent string from the bundle
         return elem.getString(string);
-      }
-      else {
+      } else {
         // this should never happen when inside a chrome environment
         return string;
       }
@@ -205,12 +210,12 @@ Tilt.StringBundle = {
     }
 
     var elem = document.getElementById(this.bundle);
+
     try {
       if (elem) {
         // return the equivalent formatted string from the bundle
         return elem.getFormattedString(string, args);
-      }
-      else {
+      } else {
         // this should never happen when inside a chrome environment
         return [string, args].join(" ");
       }
