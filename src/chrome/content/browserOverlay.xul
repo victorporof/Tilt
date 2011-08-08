@@ -28,7 +28,7 @@
       oncommand="TiltChrome.BrowserOverlay.initialize(event);"/>
   </keyset>
 
-  <menupopup id="menu_ToolsPopup">
+  <!-- <menupopup id="menu_ToolsPopup">
     <menuitem class="menu-iconic"
       id="tilt-menu"
       key="tilt-menu-key"
@@ -36,6 +36,28 @@
       accesskey="&tilt.menu.accesskey;"
       insertafter="devToolsSeparator"
       oncommand="TiltChrome.BrowserOverlay.initialize(event);">
+    </menuitem>
+  </menupopup> -->
+
+  <menupopup id="menuWebDeveloperPopup">
+    <menuitem class="menu-iconic"
+              id="tilt-menu"
+              key="tilt-menu-key"
+              label="&tilt.menu.label;"
+              accesskey="&tilt.menu.accesskey;"
+              insertbefore="devToolsEndSeparator"
+              oncommand="TiltChrome.BrowserOverlay.initialize(event);">
+    </menuitem>
+  </menupopup>
+
+  <menupopup id="appmenu_webDeveloper">
+    <menuitem class="menu-iconic"
+              id="tilt-menu"
+              key="tilt-menu-key"
+              label="&tilt.menu.label;"
+              accesskey="&tilt.menu.accesskey;"
+              insertbefore="appmenu_devToolsEndSeparator"
+              oncommand="TiltChrome.BrowserOverlay.initialize(event);">
     </menuitem>
   </menupopup>
 
@@ -54,14 +76,4 @@
       </vbox>
     </panel>
   </window>
-
-  <!-- <menupopup id="menuWebDeveloperPopup">
-    <menuitem class="menu-iconic"
-              id="tilt-menu"
-              label="&tilt.menu.label;"
-              accesskey="&tilt.menu.accesskey;"
-              key="tilt-menu-key"
-              oncommand="TiltChrome.BrowserOverlay.initialize(event);">
-    </menuitem>
-  </menupopup> -->
 </overlay>
