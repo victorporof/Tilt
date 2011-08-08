@@ -47,7 +47,7 @@ var EXPORTED_SYMBOLS = ["Tilt.VertexBuffer", "Tilt.IndexBuffer"];
 Tilt.VertexBuffer = function(elementsArray, itemSize, numItems) {
 
   // intercept this object using a profiler when building in debug mode
-  Tilt.Profiler.intercept("Tilt.VertexBuffer", this, null);  
+  Tilt.Profiler.intercept("Tilt.VertexBuffer", this, null);
 
   /**
    * The array buffer.
@@ -117,6 +117,8 @@ Tilt.VertexBuffer.prototype = {
    * Destroys this object and sets all members to null.
    */
   destroy: function() {
+    Tilt.$gl.deleteBuffer(this.$ref);
+
     for (var i in this) {
       delete this[i];
     }
@@ -133,7 +135,7 @@ Tilt.VertexBuffer.prototype = {
 Tilt.IndexBuffer = function(elementsArray, numItems) {
 
   // intercept this object using a profiler when building in debug mode
-  Tilt.Profiler.intercept("Tilt.IndexBuffer", this);  
+  Tilt.Profiler.intercept("Tilt.IndexBuffer", this);
 
   /**
    * The element array buffer.
@@ -203,6 +205,8 @@ Tilt.IndexBuffer.prototype = {
    * Destroys this object and deletes all members.
    */
   destroy: function() {
+    Tilt.$gl.deleteBuffer(this.$ref);
+
     for (var i in this) {
       delete this[i];
     }
