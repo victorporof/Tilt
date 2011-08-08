@@ -71,7 +71,7 @@ Tilt.Math = {
    */
   map: function(value, low1, high1, low2, high2) {
     value = this.clamp(value, low1, high1);
-    return low2 + (high2 - low2) * ((value - low1) / (high1 - low1));	
+    return low2 + (high2 - low2) * ((value - low1) / (high1 - low1));
   },
 
   /**
@@ -281,18 +281,17 @@ Tilt.Math = {
     b = +vec3.dot(n, dir);
 
     if (Math.abs(b) < 0.0001) { // ray is parallel to triangle plane
-      if (a == 0) {             // ray lies in triangle plane
-        return 2;
-      }
-      else {
-        return 0;               // ray disjoint from plane
+      if (a == 0) {
+        return 2; // ray lies in triangle plane
+      } else {
+        return 0; // ray disjoint from plane
       }
     }
 
     // get intersect point of ray with triangle plane
     r = a / b;
-    if (r < 0) {                // ray goes away from triangle
-      return 0;                 // => no intersect
+    if (r < 0) { // ray goes away from triangle
+      return 0;  // no intersection
     }
 
     // intersect point of ray and plane
@@ -311,16 +310,33 @@ Tilt.Math = {
 
     // get and test parametric coords
     s = (uv * wv - vv * wu) / D;
-    if (s < 0 || s > 1) {       // intersection is outside the triangle
-      return 0;
+    if (s < 0 || s > 1) {
+      return 0; // intersection is outside the triangle
     }
 
     t = (uv * wu - uu * wv) / D;
-    if (t < 0 || (s + t) > 1) { // intersection is outside the triangle
-      return 0;
+    if (t < 0 || (s + t) > 1) {
+      return 0; // intersection is outside the triangle
     }
 
-    return 1;                   // intersection is inside the triangle
+    return 1; // intersection is inside the triangle
+  },
+
+  /**
+   * Converts hue to rgb.
+   *
+   * @param {Number} p: the first argument
+   * @param {Number} q: the second argument
+   * @param {Number} t: the third argument
+   */
+  hue2rgb: function(p, q, t) {
+    if (t < 0) t += 1;
+    if (t > 1) t -= 1;
+    if (t < 1 / 6) return p + (q - p) * 6 * t;
+    if (t < 1 / 2) return q;
+    if (t < 2 / 3) return p + (q - p) * (2 / 3 - t) * 6;
+
+    return p;
   },
 
   /**
@@ -372,15 +388,6 @@ Tilt.Math = {
    * @return {Array} the RGB representation
    */
   hsl2rgb: function(h, s, l) {
-    function hue2rgb(p, q, t) {
-      if (t < 0) t += 1;
-      if (t > 1) t -= 1;
-      if (t < 1 / 6) return p + (q - p) * 6 * t;
-      if (t < 1 / 2) return q;
-      if (t < 2 / 3) return p + (q - p) * (2 / 3 - t) * 6;
-      return p;
-    }
-
     var r, g, b;
 
     if (s === 0) {
@@ -389,9 +396,9 @@ Tilt.Math = {
       var q = l < 0.5 ? l * (1 + s) : l + s - l * s;
       var p = 2 * l - q;
 
-      r = hue2rgb(p, q, h + 1 / 3);
-      g = hue2rgb(p, q, h);
-      b = hue2rgb(p, q, h - 1 / 3);
+      r = this.hue2rgb(p, q, h + 1 / 3);
+      g = this.hue2rgb(p, q, h);
+      b = this.hue2rgb(p, q, h - 1 / 3);
     }
 
     return [r * 255, g * 255, b * 255];
@@ -476,7 +483,7 @@ Tilt.Math = {
     var rgba, r, g, b, a, cr, cg, cb, ca,
       hex = color.charAt(0) === "#" ? color.substring(1) : color;
 
-    if ("undefined" !== typeof Tilt[hex]) {
+    if ("undefined" !== typeof this[hex]) {
       return this[hex];
     }
 
