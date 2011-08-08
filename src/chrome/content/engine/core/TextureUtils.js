@@ -58,7 +58,7 @@ Tilt.TextureUtils = {
 
     // make sure the image is power of two before binding to a texture
     var gl = Tilt.$gl,
-      pot = Tilt.TextureUtils.resizeImageToPowerOfTwo(image, parameters),
+      pott = Tilt.TextureUtils.resizeImageToPowerOfTwo(image, parameters),
       width = image.width,
       height = image.height,
 
@@ -67,7 +67,7 @@ Tilt.TextureUtils = {
 
     // attach the image data to the newly create texture
     gl.bindTexture(gl.TEXTURE_2D, texture);
-    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, pot);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, pott);
 
     // remember the width and the height
     texture.width = width;
@@ -87,7 +87,7 @@ Tilt.TextureUtils = {
 
     // cleanup
     gl = null;
-    pot = null;
+    pott = null;
     image = null;
     parameters = null;
 
@@ -151,10 +151,6 @@ Tilt.TextureUtils = {
     if (parameters.mipmap) {
       gl.generateMipmap(gl.TEXTURE_2D);
     }
-
-    // cleanup
-    gl = null;
-    parameters = null;
   },
 
   /**
@@ -176,16 +172,10 @@ Tilt.TextureUtils = {
 
     // first check if the image is not already power of two
     if (isPowerOfTwoWidth && isPowerOfTwoHeight && isChromePath === -1) {
-      try {
-        return image;
-      }
-      finally {
-        image = null;
-        parameters = null;
-      }
+      return image;
     }
 
-    // make sure the parameters is an object
+    // make sure the parameters argument is an object
     parameters = parameters || {};
 
     // calculate the power of two dimensions for the npot image
@@ -216,15 +206,7 @@ Tilt.TextureUtils = {
       context.strokeRect(0, 0, canvas.width, canvas.height);
     }
 
-    try {
-      return canvas;
-    }
-    finally {
-      image = null;
-      canvas = null;
-      context = null;
-      parameters = null;
-    }
+    return canvas;
   },
 
   /**
