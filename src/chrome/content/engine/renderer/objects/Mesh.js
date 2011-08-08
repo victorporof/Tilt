@@ -52,7 +52,7 @@ var EXPORTED_SYMBOLS = ["Tilt.Mesh"];
 Tilt.Mesh = function(parameters, draw) {
 
   // intercept this object using a profiler when building in debug mode
-  Tilt.Profiler.intercept("Tilt.Mesh", this);  
+  Tilt.Profiler.intercept("Tilt.Mesh", this);
 
   /**
    * Retain each parameters for easy access.
@@ -69,11 +69,12 @@ Tilt.Mesh = function(parameters, draw) {
   }
 
   // the texture alpha should be a number between 0..1
-  if ("undefined" === typeof this.texalpha) {
-    this.texalpha = 1;
-  }
-  else if ("number" === typeof this.texalpha && this.texalpha > 1) {
+  if ("number" === typeof this.texalpha && this.texalpha > 1) {
     this.texalpha /= 255;
+  } else if ("number" === typeof this.texalpha && this.texalpha < 0) {
+    this.texalpha = 0;
+  } else if ("undefined" === typeof this.texalpha) {
+    this.texalpha = 1;
   }
 
   // the draw mode should be valid, default to TRIANGLES if unspecified
