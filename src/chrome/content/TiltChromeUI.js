@@ -613,11 +613,14 @@ TiltChrome.UI = function() {
     canvas.removeEventListener("dblclick", doubleClick, false);
     canvas.removeEventListener("mousemove", mouseMove, false);
 
-    try {
-      ui.destroy();
-      ui = null;
-    }
-    catch(e) {}
+    mouseDown = null;
+    mouseUp = null;
+    click = null;
+    doubleClick = null;
+    mouseMove = null;
+
+    ui.destroy();
+    ui = null;
 
     texture = null;
     background = null;
