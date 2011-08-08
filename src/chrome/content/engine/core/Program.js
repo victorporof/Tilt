@@ -46,7 +46,7 @@ var EXPORTED_SYMBOLS = ["Tilt.Program"];
 Tilt.Program = function(vertShaderSrc, fragShaderSrc) {
 
   // intercept this object using a profiler when building in debug mode
-  Tilt.Profiler.intercept("Tilt.Program", this);  
+  Tilt.Profiler.intercept("Tilt.Program", this);
 
   /**
    * A reference to the actual GLSL program.
@@ -119,20 +119,17 @@ Tilt.Program.prototype = {
       vertShaderURL = vertShaderURL + ".vs";
     }
 
-    // remember who we are
-    var self = this;
-
     // request the shader sources asynchronously
     Tilt.Xhr.requests([vertShaderURL, fragShaderURL], function(xhr) {
       // we obtain the sources for both the fragment and vertex shader, so
       // continue initialization as usual
-      self.initProgram(xhr[0].responseText, xhr[1].responseText);
+      this.initProgram(xhr[0].responseText, xhr[1].responseText);
       xhr = null;
 
       if ("function" === typeof readyCallback) {
         readyCallback();
       }
-    });
+    }.bind(this));
   },
 
   /**
@@ -271,6 +268,8 @@ Tilt.Program.prototype = {
    * Destroys this object and deletes all members.
    */
   destroy: function() {
+    Tilt.$gl.deleteShader(this.$ref);
+
     for (var i in this) {
       delete this[i];
     }
