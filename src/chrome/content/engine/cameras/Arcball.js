@@ -39,7 +39,7 @@ var EXPORTED_SYMBOLS = ["Tilt.Arcball"];
  * Arcball constructor.
  * This is a general purpose 3D rotation controller described by Ken Shoemake
  * in the Graphics Interface ’92 Proceedings. It features good behavior
- * easy implementation, cheap execution. TODO: optional axis constrain.
+ * easy implementation, cheap execution.
  *
  * @param {Number} width: the width of canvas
  * @param {Number} height: the height of canvas
@@ -66,7 +66,6 @@ Tilt.Arcball = function(width, height, radius) {
    * Array retaining the current pressed key codes.
    */
   this.$keyCode = [];
-  this.$keyCoded = false;
 
   /**
    * The vectors representing the mouse coordinates mapped on the arcball
@@ -108,13 +107,15 @@ Tilt.Arcball.prototype = {
    * and the zoom amount. These values will be returned as "rotation" & "zoom"
    * properties inside an object.
    *
-   * @param {Number} frameDelta: optional, pass deltas for smooth animations
+   * @param {Number} frameDelta: optional, pass deltas for smoother animations
    * @return {Object} the rotation quaternion and the zoom amount
    */
   loop: function(frameDelta) {
+    // if the frame delta wasn't specified, default to a small smoothstep
     if ("undefined" === typeof frameDelta) {
       frameDelta = 0.25;
-    } else {
+    }
+    else {
       // this should be in the (0..1) interval
       frameDelta = Tilt.Math.clamp(frameDelta / 100, 0.01, 0.99);
     }
@@ -132,7 +133,6 @@ Tilt.Arcball.prototype = {
       scrollValue = this.$scrollValue,
 
       keyCode = this.$keyCode,
-      keyCoded = this.$keyCoded,
 
       startVec = this.$startVec,
       endVec = this.$endVec,
@@ -157,6 +157,9 @@ Tilt.Arcball.prototype = {
     var x = mouseLerp[0],
       y = mouseLerp[1];
 
+    // the smoothed arcball rotation may not be finished when the mouse is
+    // pressed again, so cancel the rotation if other events occur or the 
+    // animation finishes
     if (mouseButton === 3 || x === mouseRelease[0] && y === mouseRelease[1]) {
       this.$rotating = false;
     }
@@ -182,7 +185,8 @@ Tilt.Arcball.prototype = {
         // in the quaternion values, w is cosine (theta / 2),
         // where theta is the rotation angle
         deltaRot[3] = -vec3.dot(startVec, endVec);
-      } else {
+      }
+      else {
         // return an identity rotation quaternion
         deltaRot[0] = 0;
         deltaRot[1] = 0;
@@ -192,18 +196,24 @@ Tilt.Arcball.prototype = {
 
       // calculate the current rotation based on the mouse click events
       quat4.multiply(lastRot, deltaRot, currentRot);
-    } else {
+    }
+    else {
+      // save the current quaternion to stack rotations
       quat4.set(currentRot, lastRot);
     }
 
     // right mouse button handles panning
     if (mouseButton === 3) {
+      // calculate a delta translation between the new and old mouse position
+      // and save it to the current translation
       deltaTrans[0] = mouseMove[0] - mousePress[0];
       deltaTrans[1] = mouseMove[1] - mousePress[1];
 
       currentTrans[0] = lastTrans[0] + deltaTrans[0];
       currentTrans[1] = lastTrans[1] + deltaTrans[1];
-    } else {
+    }
+    else {
+      // save the current panning to stack translations
       lastTrans[0] = currentTrans[0];
       lastTrans[1] = currentTrans[1];
     }
@@ -262,8 +272,10 @@ Tilt.Arcball.prototype = {
    * @param {Number} button: which mouse button was pressed
    */
   mouseDown: function(x, y, button) {
+    // clear any interval resetting or manipulating the arcball if set
     this.$clearInterval();
 
+    // save the mouse down state and prepare for rotations or translations
     this.$mousePress[0] = x;
     this.$mousePress[1] = y;
     this.$mouseButton = button;
@@ -272,7 +284,8 @@ Tilt.Arcball.prototype = {
     var radius = this.$radius,
       width = this.$width,
       height = this.$height;
-
+    
+    // find the sphere coordinates of the mouse positions
     this.pointToSphere(x, y, width, height, radius, this.$startVec);
     quat4.set(this.$currentRot, this.$lastRot);
   },
@@ -286,6 +299,7 @@ Tilt.Arcball.prototype = {
    * @param {Number} button: which mouse button was released
    */
   mouseUp: function(x, y, button) {
+    // save the mouse up state and prepare for rotations or translations
     this.$mouseRelease[0] = x;
     this.$mouseRelease[1] = y;
     this.$mouseButton = -1;
@@ -299,6 +313,8 @@ Tilt.Arcball.prototype = {
    * @param {Number} y: the current vertical coordinate of the mouse
    */
   mouseMove: function(x, y) {
+    // save the mouse move state and prepare for rotations or translations
+    // only if the mouse is pressed
     if (this.$mouseButton !== -1) {
       this.$mouseMove[0] = x;
       this.$mouseMove[1] = y;
@@ -310,6 +326,7 @@ Tilt.Arcball.prototype = {
    * Call this when the mouse leaves the context bounds.
    */
   mouseOut: function() {
+    // if the mouse leaves the parent bounds, stop the animation
     this.$mouseButton = -1;
   },
 
@@ -320,7 +337,10 @@ Tilt.Arcball.prototype = {
    * @param {Number} scroll: the mouse wheel direction and speed
    */
   mouseScroll: function(scroll) {
+    // clear any interval resetting or manipulating the arcball if set
     this.$clearInterval();
+
+    // save the mouse scroll state and prepare for translations
     this.$scrollValue -= scroll * 10;
   },
 
@@ -331,12 +351,11 @@ Tilt.Arcball.prototype = {
    * @param {Number} code: the code corresponding to the key pressed
    */
   keyDown: function(code) {
+    // clear any interval resetting or manipulating the arcball if set
     this.$clearInterval();
-    this.$keyCode[code] = true;
 
-    if (code === 17 || code === 224) {
-      this.$keyCoded = true;
-    }
+    // save the key code in a vector to handle the event later
+    this.$keyCode[code] = true;
   },
 
   /**
@@ -346,11 +365,8 @@ Tilt.Arcball.prototype = {
    * @param {Number} code: the code corresponding to the key released
    */
   keyUp: function(code) {
+    // reset the key code in the vector
     this.$keyCode[code] = false;
-
-    if (code === 17 || code === 224) {
-      this.$keyCoded = false;
-    }
   },
 
   /**
@@ -381,7 +397,8 @@ Tilt.Arcball.prototype = {
       sphereVec[0] = x * normal;
       sphereVec[1] = y * normal;
       sphereVec[2] = 0;
-    } else {
+    }
+    else {
       // set the vector to a point mapped inside the sphere
       sphereVec[0] = x;
       sphereVec[1] = y;
@@ -418,7 +435,6 @@ Tilt.Arcball.prototype = {
    */
   cancel: function() {
     this.$clearInterval();
-
     this.$save();
     this.$mouseButton = -1;
   },
@@ -451,7 +467,8 @@ Tilt.Arcball.prototype = {
       addKeyRot[1] = 0;
       addKeyTrans[0] = 0;
       addKeyTrans[1] = 0;
-    } else {
+    }
+    else {
       // create an interval and smoothly reset all the values to identity
       this.$setInterval(function() {
         var inverse = quat4.inverse(lastRot);
