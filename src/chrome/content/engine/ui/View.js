@@ -58,7 +58,7 @@ Tilt.View = function(properties) {
   this.hidden = properties.hidden || false;
 
   /**
-   * Variable specifying if this object shouldn't be drawn.
+   * Variable specifying if this object shouldn't be responsive to events.
    */
   this.disabled = properties.disabled || false;
 
