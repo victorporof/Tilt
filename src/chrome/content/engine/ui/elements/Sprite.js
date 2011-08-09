@@ -63,6 +63,11 @@ Tilt.Sprite = function(texture, region, properties) {
   this.hidden = properties.hidden || false;
 
   /**
+   * Variable specifying if this object shouldn't be responsive to events.
+   */
+  this.disabled = properties.disabled || false;
+
+  /**
    * A texture used as the pixel data for this object.
    */
   this.$texture = texture;
@@ -131,15 +136,20 @@ Tilt.Sprite.prototype = {
 
   /**
    * Updates this object's internal params.
+   *
+   * @param {Number} frameDelta: the delta time elapsed between frames
+   * @param {Tilt.Renderer} tilt: optional, a reference to a Tilt.Renderer
    */
-  update: function() {
+  update: function(frameDelta, tilt) {
   },
 
   /**
    * Draws this object using the specified internal params.
+   *
+   * @param {Number} frameDelta: the delta time elapsed between frames
    * @param {Tilt.Renderer} tilt: optional, a reference to a Tilt.Renderer
    */
-  draw: function(tilt) {
+  draw: function(frameDelta, tilt) {
     tilt = tilt || Tilt.$renderer;
 
     var reg = this.$region,
