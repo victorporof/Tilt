@@ -55,7 +55,7 @@ Tilt.VertexBuffer = function(elementsArray, itemSize, numItems) {
   this.$ref = null;
 
   /**
-   * Array of Float32 components contained in the buffer.
+   * Array of number components contained in the buffer.
    */
   this.components = null;
 
@@ -69,6 +69,9 @@ Tilt.VertexBuffer = function(elementsArray, itemSize, numItems) {
   if ("undefined" !== typeof elementsArray) {
     this.initBuffer(elementsArray, itemSize, numItems);
   }
+
+  // cleanup
+  elementsArray = null;
 };
 
 Tilt.VertexBuffer.prototype = {
@@ -134,7 +137,7 @@ Tilt.IndexBuffer = function(elementsArray, numItems) {
   this.$ref = null;
 
   /**
-   * Array of Float32 components contained in the buffer.
+   * Array of number components contained in the buffer.
    */
   this.components = null;
 
@@ -148,6 +151,9 @@ Tilt.IndexBuffer = function(elementsArray, numItems) {
   if ("undefined" !== typeof elementsArray) {
     this.initBuffer(elementsArray, numItems);
   }
+
+  // cleanup
+  elementsArray = null;
 };
 
 Tilt.IndexBuffer.prototype = {
