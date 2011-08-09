@@ -115,13 +115,8 @@ Tilt.Console = {
    * to be listed in a single place. Hopefully, they will all be listed in
    * nsIScriptError.idl eventually.
    */
-  error: function() {
-    var message = parameters[0],
-      sourceName = parameters[1],
-      sourceLine = parameters[2],
-      lineNumber = parameters[3],
-      columnNumber = parameters[4],
-      flags = parameters[5],
+  error: function(message, sourceName, sourceLine, lineNumber, columnNumber) {
+    var flags = parameters[5],
       category = parameters[6],
       consoleService, scriptError;
 
