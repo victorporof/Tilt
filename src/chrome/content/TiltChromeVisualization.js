@@ -352,6 +352,7 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
 
     // set a reference in the user interface for this visualization
     ui.visualization = this;
+    ui.controller = controller;
 
     // call the init function on the user interface if available
     if ("function" === typeof ui.init) {
@@ -507,7 +508,6 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
       editor.html = html;
       editor.css = css;
       editor.attr = attr;
-      editor.editorType = "css";
 
       if (editor.editorType === "attr") {
         editor.innerHTML = attr;
