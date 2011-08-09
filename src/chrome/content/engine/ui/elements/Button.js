@@ -41,6 +41,7 @@ var EXPORTED_SYMBOLS = ["Tilt.Button"];
  * @param {Tilt.Sprite} sprite: the sprite to be drawn as background
  * @param {Object} properties: additional properties for this object
  *  @param {Boolean} hidden: specifies if this object shouldn't be drawn
+ *  @param {Boolean} disabled: specifies if this shouldn't receive events
  *  @param {Number} x: the x position of the object
  *  @param {Number} y: the y position of the object
  *  @param {Number} width: the width of the object
@@ -58,6 +59,11 @@ Tilt.Button = function(sprite, properties) {
    * Variable specifying if this object shouldn't be drawn.
    */
   this.hidden = properties.hidden || false;
+
+  /**
+   * Variable specifying if this object shouldn't be responsive to events.
+   */
+  this.disabled = properties.disabled || false;
 
   /**
    * A sprite used as a background for this object.
@@ -116,15 +122,20 @@ Tilt.Button.prototype = {
 
   /**
    * Updates this object's internal params.
+   *
+   * @param {Number} frameDelta: the delta time elapsed between frames
+   * @param {Tilt.Renderer} tilt: optional, a reference to a Tilt.Renderer
    */
-  update: function() {
+  update: function(frameDelta, tilt) {
   },
 
   /**
    * Draws this object using the specified internal params.
+   *
+   * @param {Number} frameDelta: the delta time elapsed between frames
    * @param {Tilt.Renderer} tilt: optional, a reference to a Tilt.Renderer
    */
-  draw: function(tilt) {
+  draw: function(frameDelta, tilt) {
     tilt = tilt || Tilt.$renderer;
 
     if ("undefined" !== typeof this.$sprite.$texture) {
