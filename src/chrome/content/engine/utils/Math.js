@@ -70,7 +70,6 @@ Tilt.Math = {
    * @param {Number} high2: the new upper bound of the number
    */
   map: function(value, low1, high1, low2, high2) {
-    value = this.clamp(value, low1, high1);
     return low2 + (high2 - low2) * ((value - low1) / (high1 - low1));
   },
 
