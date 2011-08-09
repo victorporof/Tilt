@@ -89,6 +89,7 @@ Tilt.TextureUtils = {
     // cleanup
     gl = null;
     pott = null;
+    prev = null;
     image = null;
     parameters = null;
 
@@ -119,32 +120,38 @@ Tilt.TextureUtils = {
     // set the minification filter
     if ("nearest" === parameters.minFilter) {
       gl.texParameteri(gl.TEXTURE_2D, minFilter, gl.NEAREST);
-    } else if ("linear" === parameters.minFilter && parameters.mipmap) {
+    }
+    else if ("linear" === parameters.minFilter && parameters.mipmap) {
       gl.texParameteri(gl.TEXTURE_2D, minFilter, gl.LINEAR_MIPMAP_LINEAR);
-    } else {
+    }
+    else {
       gl.texParameteri(gl.TEXTURE_2D, minFilter, gl.LINEAR);
     }
 
     // set the magnification filter
     if ("nearest" === parameters.magFilter) {
       gl.texParameteri(gl.TEXTURE_2D, magFilter, gl.NEAREST);
-    } else if ("linear" === parameters.magFilter && parameters.mipmap) {
+    }
+    else if ("linear" === parameters.magFilter && parameters.mipmap) {
       gl.texParameteri(gl.TEXTURE_2D, magFilter, gl.LINEAR_MIPMAP_LINEAR);
-    } else {
+    }
+    else {
       gl.texParameteri(gl.TEXTURE_2D, magFilter, gl.LINEAR);
     }
 
     // set the wrapping on the x-axis for the texture
     if ("repeat" === parameters.wrapS) {
       gl.texParameteri(gl.TEXTURE_2D, wrapS, gl.REPEAT);
-    } else {
+    }
+    else {
       gl.texParameteri(gl.TEXTURE_2D, wrapS, gl.CLAMP_TO_EDGE);
     }
 
     // set the wrapping on the y-axis for the texture
     if ("repeat" === parameters.wrapT) {
       gl.texParameteri(gl.TEXTURE_2D, wrapT, gl.REPEAT);
-    } else {
+    }
+    else {
       gl.texParameteri(gl.TEXTURE_2D, wrapT, gl.CLAMP_TO_EDGE);
     }
 
@@ -207,7 +214,16 @@ Tilt.TextureUtils = {
       context.strokeRect(0, 0, canvas.width, canvas.height);
     }
 
-    return canvas;
+    try {
+      return canvas;
+    }
+    finally {
+      // cleanup
+      image = null;
+      parameters = null;
+      canvas = null;
+      context = null;
+    }
   },
 
   /**
