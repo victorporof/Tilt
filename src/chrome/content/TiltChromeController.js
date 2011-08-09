@@ -42,14 +42,14 @@ TiltChrome.Controller = {};
 TiltChrome.Controller.MouseAndKeyboard = function() {
 
   /**
-   * Arcball used to control the visualization using the mouse.
+   * Cache the top level UI handling events.
    */
-  var arcball = null,
+  var ui = Tilt.UI,
 
   /**
-   * Variable specifying if the controller should be paused.
+   * Arcball used to control the visualization using the mouse.
    */
-  paused = false,
+  arcball = null,
 
   /**
    * Retain the position for the mouseDown event.
@@ -92,10 +92,6 @@ TiltChrome.Controller.MouseAndKeyboard = function() {
    * Called once after every time a mouse button is pressed.
    */
   var mouseDown = function(e) {
-    if (paused) {
-      return;
-    }
-
     e.preventDefault();
     e.stopPropagation();
 
@@ -103,60 +99,58 @@ TiltChrome.Controller.MouseAndKeyboard = function() {
     downY = e.clientY - e.target.offsetTop;
 
     arcball.mouseDown(downX, downY, e.which);
-  }.bind(this);
+    ui.mouseDown(downX, downY, e.which);
+  };
 
   /**
    * Called every time a mouse button is released.
    */
   var mouseUp = function(e) {
-    if (paused) {
-      return;
-    }
-
     e.preventDefault();
     e.stopPropagation();
 
     var upX = e.clientX - e.target.offsetLeft;
     var upY = e.clientY - e.target.offsetTop;
+    var button = e.which;
 
-    arcball.mouseUp(upX, upY, e.which);
-  }.bind(this);
+    arcball.mouseUp(upX, upY, button);
+    ui.mouseUp(upX, upY, button);
+  };
 
   /**
    * Called every time a mouse button is clicked.
    */
   var click = function(e) {
-    if (paused) {
-      return;
-    }
-
     e.preventDefault();
     e.stopPropagation();
 
     var clickX = e.clientX - e.target.offsetLeft;
     var clickY = e.clientY - e.target.offsetTop;
+    var button = e.which;
 
-    if (Math.abs(downX - clickX) < 2 && Math.abs(downY - clickY) < 2) {
-      this.visualization.click(clickX, clickY);
+    if (Math.abs(downX - clickX) < 2 && 
+        Math.abs(downY - clickY) < 2) {
+
+      ui.click(clickX, clickY, button);
     }
-  }.bind(this);
+  };
 
   /**
    * Called every time a mouse button is double clicked.
    */
   var doubleClick = function(e) {
-    if (paused) {
-      return;
-    }
-
     e.preventDefault();
     e.stopPropagation();
 
     var dblClickX = e.clientX - e.target.offsetLeft;
     var dblClickY = e.clientY - e.target.offsetTop;
+    var button = e.which;
 
-    if (Math.abs(downX - dblClickX) < 2 && Math.abs(downY - dblClickY) < 2) {
-      this.visualization.doubleClick(dblClickX, dblClickY);
+    if (Math.abs(downX - dblClickX) < 2 && 
+        Math.abs(downY - dblClickY) < 2) {
+
+      this.visualization.performMeshPick(dblClickX, dblClickY, button);
+      ui.doubleClick(upX, upY, button);
     }
   }.bind(this);
 
@@ -164,10 +158,6 @@ TiltChrome.Controller.MouseAndKeyboard = function() {
    * Called every time the mouse moves.
    */
   var mouseMove = function(e) {
-    if (paused) {
-      return;
-    }
-
     e.preventDefault();
     e.stopPropagation();
 
@@ -175,7 +165,8 @@ TiltChrome.Controller.MouseAndKeyboard = function() {
     var moveY = e.clientY - e.target.offsetTop;
 
     arcball.mouseMove(moveX, moveY);
-  }.bind(this);
+    ui.mouseMove(moveX, moveY);
+  };
 
   /**
    * Called when the the mouse leaves the visualization bounds.
@@ -185,7 +176,7 @@ TiltChrome.Controller.MouseAndKeyboard = function() {
     e.stopPropagation();
 
     arcball.mouseOut();
-  }.bind(this);
+  };
 
   /**
    * Called when the the mouse wheel is used.
@@ -195,7 +186,8 @@ TiltChrome.Controller.MouseAndKeyboard = function() {
     e.stopPropagation();
 
     arcball.mouseScroll(e.detail);
-  }.bind(this);
+    ui.mouseScroll(e.detail);
+  };
 
   /**
    * Called when a key is pressed.
@@ -209,7 +201,8 @@ TiltChrome.Controller.MouseAndKeyboard = function() {
     }
 
     arcball.keyDown(code);
-  }.bind(this);
+    ui.keyDown(code);
+  };
 
   /**
    * Called when a key is released.
@@ -229,21 +222,14 @@ TiltChrome.Controller.MouseAndKeyboard = function() {
     }
 
     arcball.keyUp(code);
-  }.bind(this);
-
-  /**
-   * Pauses the controller from handling events.
-   */
-  this.pause = function() {
-    paused = true;
-    arcball.cancel();
+    ui.keyUp(code);
   };
 
   /**
-   * Resumes the controller to handle events.
+   * Stops the controller from handling the current stacked events.
    */
-  this.unpause = function() {
-    paused = false;
+  this.stop = function() {
+    arcball.cancel();
   };
 
   /**
@@ -277,25 +263,48 @@ TiltChrome.Controller.MouseAndKeyboard = function() {
    * @param {HTMLCanvasElement} canvas: the canvas dom element
    */
   this.destroy = function(canvas) {
-    canvas.removeEventListener("mousedown", mouseDown, false);
-    canvas.removeEventListener("mouseup", mouseUp, false);
-    canvas.removeEventListener("click", click, false);
-    canvas.removeEventListener("dblclick", doubleClick, false);
-    canvas.removeEventListener("mousemove", mouseMove, false);
-    canvas.removeEventListener("mouseout", mouseOut, false);
-    canvas.removeEventListener("DOMMouseScroll", mouseScroll, false);
-    window.removeEventListener("keydown", keyDown, false);
-    window.removeEventListener("keyup", keyUp, false);
+    this.visualization = null;
 
-    mouseDown = null;
-    mouseUp = null;
-    click = null;
-    doubleClick = null;
-    mouseMove = null;
-    mouseOut = null;
-    mouseScroll = null;
-    keyDown = null;
-    keyUp = null;
+    if (mouseDown !== null) {
+      canvas.removeEventListener("mousedown", mouseDown, false);
+      mouseDown = null;
+    }
+    if (mouseUp !== null) {
+      canvas.removeEventListener("mouseup", mouseUp, false);
+      mouseUp = null;
+    }
+    if (click !== null) {
+      canvas.removeEventListener("click", click, false);
+      click = null;
+    }
+    if (doubleClick !== null) {
+      canvas.removeEventListener("dblclick", doubleClick, false);
+      doubleClick = null;
+    }
+    if (mouseMove !== null) {
+      canvas.removeEventListener("mousemove", mouseMove, false);
+      mouseMove = null;
+    }
+    if (mouseOut !== null) {
+      canvas.removeEventListener("mouseout", mouseOut, false);
+      mouseOut = null;
+    }
+    if (mouseScroll !== null) {
+      canvas.removeEventListener("DOMMouseScroll", mouseScroll, false);
+      mouseScroll = null;
+    }
+    if (keyDown !== null) {
+      window.removeEventListener("keydown", keyDown, false);
+      keyDown = null;
+    }
+    if (keyUp !== null) {
+      window.removeEventListener("keyup", keyUp, false);
+      keyUp = null;
+    }
+    if (arcball !== null) {
+      arcball.destroy();
+      arcball = null;
+    }
 
     Tilt.destroyObject(this);
   };
