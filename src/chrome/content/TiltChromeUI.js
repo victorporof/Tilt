@@ -95,6 +95,15 @@ TiltChrome.UI.Default = function() {
   colorAdjustButton = null,
 
   /**
+   * Sliders.
+   */
+  hueSlider = null,
+  saturationSlider = null,
+  brightnessSlider = null,
+  alphaSlider = null,
+  textureSlider = null,
+
+  /**
    * Arrays holding groups of objects.
    */
   alwaysVisibleElements = [],
@@ -130,7 +139,8 @@ TiltChrome.UI.Default = function() {
     background = new Tilt.Sprite(t, [0, 1024 - 256, 256, 256], {
       width: canvas.width,
       height: canvas.height,
-      depthTest: true
+      depthTest: true,
+      disabled: true
     });
 
     helpSprite = new Tilt.Sprite(t, [210, 180, 610, 510]);
@@ -206,6 +216,16 @@ TiltChrome.UI.Default = function() {
     colorAdjustButton = new Tilt.Button(new Tilt.Sprite(t, [505, 0, 66, 66]),{
       x: 50,
       y: 260
+    });
+
+    var handlerSprite = new Tilt.Sprite(texture, [574, 131, 29, 29], {
+      padding: [8, 8, 8, 8]
+    });
+    hueSlider = new Tilt.Slider(handlerSprite, {
+      x: 152,
+      y: 271,
+      size: 120,
+      value: 50
     });
 
     exitButton.onclick = function() {
