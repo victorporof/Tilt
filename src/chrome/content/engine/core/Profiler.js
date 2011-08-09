@@ -73,6 +73,7 @@ Tilt.Profiler = {
     // if the function name is falsy, intercept all the object functions
     if (!name) {
       for (var i in object) {
+        // if an object member is a function, automatically intercept it
         if ("function" === typeof object[i]) {
           this.intercept(ns, object, i, beforeCall, afterCall, duringCall);
         }
@@ -92,9 +93,9 @@ Tilt.Profiler = {
     }
 
     // get the function from the object
-    var f = object[name];
+    var method = object[name];
 
-    if ("function" === typeof f) {
+    if ("function" === typeof method) {
       var index = this.functions.length;
 
       // save some information about this function in an array for profiling
@@ -108,9 +109,12 @@ Tilt.Profiler = {
 
       // overwrite the function to handle before, after and during calls
       object[name] = function() {
+        // a tricky issue can appear when an overwritten function needs to 
+        // return a value; in this case, the afterCall still needs to be 
+        // executed after the function returns
         try {
           beforeCall(index);
-          return duringCall(object, f, arguments);
+          return duringCall(object, method, arguments);
         }
         finally {
           afterCall(index);
@@ -152,9 +156,13 @@ Tilt.Profiler = {
    */
   duringCall: function(object, method, args) {
     if (args.length === 0) {
-      return eval("arguments[1].call(arguments[0]);");
+      return method.call(object);
     }
 
+    // since most of the times the overwritten function has one or more 
+    // arguments, simply passing the arguments property inside the function 
+    // isn’t enough; we need to construct the parameters directly, separated 
+    // by commas, just like a normal call would be executed
     for (var i = 0, len = args.length, $ = ""; i < len; i++) {
       $ += "arguments[2][" + i + "]" + ((i !== len - 1) ? "," : "");
     }
@@ -165,15 +173,27 @@ Tilt.Profiler = {
    * Logs information about the currently profiled functions.
    */
   log: function() {
-    var functions = this.functions.slice(0), f, f2, i, j, len;
+    var functions = this.functions.slice(0), // duplicate the functions array
+      f, f2, i, j, len;
 
+    // once everything is finished, logging can be done by sorting all the 
+    // recorded function calls, timing and other information by a key
+
+    // with Tilt, the most useful data was received when sorting by the total 
+    // time necessary for a function to be executed
     functions.sort(function(a, b) {
       return a.totalTime < b.totalTime ? 1 : -1;
     });
 
+    // browse through each intercepted function information
     for (i = 0; i < functions.length; i++) {
       f = functions[i];
 
+      // because some functions inside objects can be duplicated when creating 
+      // object via var foo = new MyObject(), that is, when they are declared 
+      // inside the constructor function and not the object prototype, we need 
+      // to check for duplicates and recalculate the number of calls, longest 
+      // time, total time, average time for these situations.
       for (j = i + 1; j < functions.length; j++) {
         f2 = functions[j];
 
@@ -203,9 +223,9 @@ Tilt.Profiler = {
   },
 
   /**
-   * Clears the profiled functions array.
+   * Resets the profiled functions array.
    */
-  clear: function() {
+  reset: function() {
     this.functions = [];
   }
 };
