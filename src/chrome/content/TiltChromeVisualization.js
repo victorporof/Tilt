@@ -111,6 +111,14 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
     // set the transformations at initialization
     transforms.translation = [0, 0, 0];
     transforms.rotation = [0, 0, 0, 1];
+
+    // this is because of some weird behavior on Windows, if the visualization
+    // has been started from the application menu, the width and height gets
+    // messed up, so we need to update almost immediately after it starts
+    window.setTimeout(function() {
+      gResize();
+      gMouseOver();
+    }.bind(this), 100); 
   };
 
   /**
@@ -131,7 +139,6 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
 
       // clear the context and draw a background gradient
       tilt.clear(0, 0, 0, 1);
-      ui ? ui.background(tilt.frameDelta) : 0;
 
       // apply the preliminary transformations to the model view
       tilt.translate(tilt.width / 2 + 50,
@@ -166,29 +173,6 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
         .getInterface(Ci.nsIDOMWindowUtils)
         .garbageCollect();
     }
-
-    // this is because of some weird behavior on Windows, if the visualization
-    // has been started from the application menu, the width and height gets
-    // messed up, so we need to update almost immediately after it starts
-    if (tilt.frameCount === 10) {
-      tilt.width = window.content.innerWidth;
-      tilt.height = window.content.innerHeight;
-
-      if (canvas.width !== tilt.width || canvas.height !== tilt.height) {
-        canvas.width = tilt.width;
-        canvas.height = tilt.height;
-
-        if (controller && "function" === typeof controller.resize) {
-          controller.resize(tilt.width, tilt.height);
-        }
-        if (ui && "function" === typeof ui.resize) {
-          ui.resize(tilt.width, tilt.height);
-        }
-
-        tilt.gl.viewport(0, 0, canvas.width, canvas.height);
-        redraw = true;
-      }
-    }
   };
 
   /**
@@ -206,8 +190,8 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
     // traverse the document
     Tilt.Document.traverse(function(node, depth, index) {
       // call the node callback in the ui
-      if (ui && "function" === typeof ui.domVisualizationNodeCallback) {
-        ui.domVisualizationNodeCallback(node, depth, index);
+      if (ui && "function" === typeof ui.domVisualizationMeshNodeCallback) {
+        ui.domVisualizationMeshNodeCallback(node, depth, index);
       }
 
       if (node.nodeType === 3 ||
@@ -305,8 +289,8 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
       }
     }, function(maxDepth, totalNodes) {
       // call the ready callback in the ui
-      if (ui && "undefined" !== ui.domVisualizationReadyCallback) {
-        ui.domVisualizationReadyCallback(maxDepth, totalNodes);
+      if (ui && "undefined" !== ui.domVisualizationMeshReadyCallback) {
+        ui.domVisualizationMeshReadyCallback(maxDepth, totalNodes);
       }
     });
 
@@ -368,7 +352,6 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
 
     // set a reference in the user interface for this visualization
     ui.visualization = this;
-    ui.controller = controller;
 
     // call the init function on the user interface if available
     if ("function" === typeof ui.init) {
@@ -377,11 +360,204 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
   };
 
   /**
+   * Event method called when the tab container of the current browser closes.
+   */
+  function gClose(e) {
+    if (TiltChrome.BrowserOverlay.href !== window.content.location.href) {
+      TiltChrome.BrowserOverlay.href = null;
+      TiltChrome.BrowserOverlay.destroy(true, true);
+    }
+  };
+
+  /**
+   * Event method called when the content of the current browser is resized.
+   */
+  function gResize(e) {
+    tilt.width = window.content.innerWidth;
+    tilt.height = window.content.innerHeight;
+    redraw = true;
+
+    if (controller && "function" === typeof controller.resize) {
+      controller.resize(tilt.width, tilt.height);
+    }
+    if (ui && "function" === typeof ui.resize) {
+      ui.resize(tilt.width, tilt.height);
+    }
+
+    // hide the panel with the html editor (to avoid wrong positioning)
+    if ("open" === TiltChrome.BrowserOverlay.panel.state) {
+      TiltChrome.BrowserOverlay.panel.hidePopup();
+    }
+  };
+
+  /**
+   * Event method called when the mouse comes over the current browser.
+   */
+  function gMouseOver() {
+    redraw = true;
+
+    // happens after the browser window is resized
+    if (canvas.width !== tilt.width || canvas.height !== tilt.height) {
+      canvas.width = tilt.width;
+      canvas.height = tilt.height;
+
+      tilt.gl.viewport(0, 0, canvas.width, canvas.height);
+      draw();
+    }
+  };
+
+  /**
    * Redraws the visualization once.
    * Call this from the controller or ui to update rendering.
    */
-  this.redraw = function() {
+  this.performRedraw = function() {
     redraw = true;
+  };
+
+  /**
+   * Picks a stacked dom node at the x and y screen coordinates.
+   *
+   * @param {Number} x: the current horizontal coordinate
+   * @param {Number} y: the current vertical coordinate
+   */
+  this.performMeshPick = function(x, y) {
+    // create a ray following the mouse direction from the near clipping plane
+    // to the far clipping plane, to check for intersections with the mesh
+    var ray = Tilt.Math.createRay([x, y, 0], [x, y, 1],
+                                  [0, 0, tilt.width, tilt.height],
+                                  mesh.mvMatrix,
+                                  mesh.projMatrix),
+      point = vec3.create(),
+      intersections = [],
+      indices = mesh.indices.components,
+      vertices = mesh.vertices.components,
+      i, len, v0, v1, v2;
+
+    for (i = 0, len = indices.length; i < len; i += 3) {
+      v0 = [vertices[indices[i    ] * 3    ],
+            vertices[indices[i    ] * 3 + 1],
+            vertices[indices[i    ] * 3 + 2]];
+
+      v1 = [vertices[indices[i + 1] * 3    ],
+            vertices[indices[i + 1] * 3 + 1],
+            vertices[indices[i + 1] * 3 + 2]];
+
+      v2 = [vertices[indices[i + 2] * 3    ],
+            vertices[indices[i + 2] * 3 + 1],
+            vertices[indices[i + 2] * 3 + 2]];
+
+      // for each triangle in the mesh, check to see if the mouse ray
+      // intersects the triangle
+      if (Tilt.Math.intersectRayTriangle(v0, v1, v2, ray, point) > 0) {
+        // save the intersection, along with the node information
+        intersections.push({
+          location: vec3.create(point),
+          node: mesh.nodes[Math.floor(i / 30)]
+        });
+      }
+    }
+
+    // if there were any intersections, sort them by the distance towards the
+    // camera, and show a panel with the node information
+    if (intersections.length > 0) {
+      intersections.sort(function(a, b) {
+        if (a.location[2] < b.location[2]) {
+          return 1;
+        }
+        else {
+          return -1;
+        }
+      });
+
+      // use only the first intersection (closest to the camera)
+      var intersection = intersections[0],
+        node = intersection.node,
+
+      // get and format the inner html text from the node
+      html = Tilt.String.trim(
+        style_html(intersection.node.innerHTML, {
+          'indent_size': 2,
+          'indent_char': ' ',
+          'max_char': 78,
+          'brace_style': 'collapse'
+        })
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")) + "\n",
+
+      // compute the custom css text from all the properties
+      css = Tilt.Document.getModifiedCss(intersection.node.style),
+      attr = Tilt.Document.getAttributesString(intersection.node.attributes),
+
+      // get the elements used by the popup
+      label = document.getElementById("tilt-panel-label"),
+      iframe = document.getElementById("tilt-panel-iframe"),
+      editor = iframe.contentDocument.getElementById("editor");
+
+      // set the title label of the popup panel
+      label.value = "<" + node.localName +
+        (node.className ? " class=\"" + node.className + "\"" : "") +
+        (node.id ? " id=\"" + node.id + "\"" : "") + ">";
+
+      // show the popup panel containing the html editor iframe
+      TiltChrome.BrowserOverlay.panel.openPopup(null, "overlap",
+        window.innerWidth - iframe.width - 21,
+        window.innerHeight - iframe.height - 77, false, false);
+
+      // get the content document containing the html editor, and add the html
+      editor.html = html;
+      editor.css = css;
+      editor.attr = attr;
+      editor.editorType = "css";
+
+      if (editor.editorType === "attr") {
+        editor.innerHTML = attr;
+        iframe.contentWindow.refreshEditor("css");
+      }
+      else if (editor.editorType === "css") {
+        editor.innerHTML = css;
+        iframe.contentWindow.refreshEditor("css");
+      }
+      else {
+        editor.innerHTML = html;
+        iframe.contentWindow.refreshEditor("html");
+      }
+    }
+  };
+
+  /**
+   * Show the inner html contents of a dom node in the editor if open.
+   */
+  this.setHtmlEditor = function() {
+    var iframe = document.getElementById("tilt-panel-iframe"),
+      editor = iframe.contentDocument.getElementById("editor");
+
+    editor.innerHTML = editor.html;
+    editor.editorType = "html";
+    iframe.contentWindow.refreshEditor("html");
+  };
+
+  /**
+   * Show the computed css contents of a dom node in the editor if open.
+   */
+  this.setCssEditor = function() {
+    var iframe = document.getElementById("tilt-panel-iframe"),
+      editor = iframe.contentDocument.getElementById("editor");
+
+    editor.innerHTML = editor.css;
+    editor.editorType = "css";
+    iframe.contentWindow.refreshEditor("css");
+  };
+
+  /**
+   * Show the attributes for a dom node in the editor if open.
+   */
+  this.setAttributesEditor = function() {
+    var iframe = document.getElementById("tilt-panel-iframe"),
+      editor = iframe.contentDocument.getElementById("editor");
+
+    editor.innerHTML = editor.attr;
+    editor.editorType = "attr";
+    iframe.contentWindow.refreshEditor("css");
   };
 
   /**
@@ -470,221 +646,14 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
     if (mode === "fill") {
       mesh.hidden = false;
       meshWireframe.hidden = true;
-      tilt.strokeWeight(0);
     }
     else if (mode === "stroke") {
       mesh.hidden = true;
       meshWireframe.hidden = false;
-      tilt.strokeWeight(1);
     }
     else if (mode === "both") {
       mesh.hidden = false;
       meshWireframe.hidden = false;
-      tilt.strokeWeight(2);
-    }
-  };
-
-  /**
-   * Delegate click method, issued by the controller.
-   *
-   * @param {Number} x: the current horizontal coordinate
-   * @param {Number} y: the current vertical coordinate
-   */
-  this.click = function(x, y) {
-    // set the focus back to the window content if it was somewhere else
-    window.content.focus();
-    redraw = true;
-  };
-
-  /**
-   * Delegate double click method, issued by the controller.
-   *
-   * @param {Number} x: the current horizontal coordinate
-   * @param {Number} y: the current vertical coordinate
-   */
-  this.doubleClick = function(x, y) {
-    // create a ray following the mouse direction from the near clipping plane
-    // to the far clipping plane, to check for intersections with the mesh
-    var ray = Tilt.Math.createRay([x, y, 0], [x, y, 1],
-                                  [0, 0, tilt.width, tilt.height],
-                                  mesh.mvMatrix,
-                                  mesh.projMatrix),
-      point = vec3.create(),
-      intersections = [],
-      i, len, v0, v1, v2;
-
-    for (i = 0, len = mesh.indices.length; i < len; i += 3) {
-      v0 = [mesh.vertices[mesh.indices[i    ] * 3    ],
-            mesh.vertices[mesh.indices[i    ] * 3 + 1],
-            mesh.vertices[mesh.indices[i    ] * 3 + 2]];
-
-      v1 = [mesh.vertices[mesh.indices[i + 1] * 3    ],
-            mesh.vertices[mesh.indices[i + 1] * 3 + 1],
-            mesh.vertices[mesh.indices[i + 1] * 3 + 2]];
-
-      v2 = [mesh.vertices[mesh.indices[i + 2] * 3    ],
-            mesh.vertices[mesh.indices[i + 2] * 3 + 1],
-            mesh.vertices[mesh.indices[i + 2] * 3 + 2]];
-
-      // for each triangle in the mesh, check to see if the mouse ray
-      // intersects the triangle
-      if (Tilt.Math.intersectRayTriangle(v0, v1, v2, ray, point) > 0) {
-        // save the intersection, along with the node information
-        intersections.push({
-          location: vec3.create(point),
-          node: mesh.nodes[Math.floor(i / 30)]
-        });
-      }
-    }
-
-    // if there were any intersections, sort them by the distance towards the
-    // camera, and show a panel with the node information
-    if (intersections.length > 0) {
-      intersections.sort(function(a, b) {
-        if (a.location[2] < b.location[2]) {
-          return 1;
-        }
-        else {
-          return -1;
-        }
-      });
-
-      // use only the first intersection (closest to the camera)
-      var intersection = intersections[0],
-        node = intersection.node,
-
-      // get and format the inner html text from the node
-      html = Tilt.String.trim(
-        style_html(intersection.node.innerHTML, {
-          'indent_size': 2,
-          'indent_char': ' ',
-          'max_char': 78,
-          'brace_style': 'collapse'
-        })
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;")) + "\n",
-
-      // compute the custom css text from all the properties
-      css = Tilt.Document.getModifiedCss(intersection.node.style),
-      att = Tilt.Document.getModifiedAttributes(intersection.node.attributes),
-
-      // get the elements used by the popup
-      label = document.getElementById("tilt-panel-label"),
-      iframe = document.getElementById("tilt-panel-iframe"),
-      editor = iframe.contentDocument.getElementById("editor");
-
-      // set the title label of the popup panel
-      label.value = "<" + node.localName +
-        (node.className ? " class=\"" + node.className + "\"" : "") +
-        (node.id ? " id=\"" + node.id + "\"" : "") + ">";
-
-      // show the popup panel containing the html editor iframe
-      TiltChrome.BrowserOverlay.panel.openPopup(null, "overlap",
-        window.innerWidth - iframe.width - 21,
-        window.innerHeight - iframe.height - 77, false, false);
-
-      // get the content document containing the html editor, and add the html
-      editor.html = html;
-      editor.css = css;
-      editor.att = att;
-
-      if (editor.editorType === "attributes") {
-        editor.innerHTML = att;
-        iframe.contentWindow.refreshEditor("css");
-      }
-      else if (editor.editorType === "css") {
-        editor.innerHTML = css;
-        iframe.contentWindow.refreshEditor("css");
-      }
-      else {
-        editor.innerHTML = html;
-        iframe.contentWindow.refreshEditor("html");
-      }
-    }
-
-    redraw = true;
-  };
-
-  /**
-   * Show the inner html contents of a dom node in the editor if open.
-   */
-  this.showHtmlInEditor = function() {
-    var iframe = document.getElementById("tilt-panel-iframe"),
-      editor = iframe.contentDocument.getElementById("editor");
-
-    editor.innerHTML = editor.html;
-    editor.editorType = "html";
-    iframe.contentWindow.refreshEditor("html");
-  };
-
-  /**
-   * Show the computed css contents of a dom node in the editor if open.
-   */
-  this.showCssInEditor = function() {
-    var iframe = document.getElementById("tilt-panel-iframe"),
-      editor = iframe.contentDocument.getElementById("editor");
-
-    editor.innerHTML = editor.css;
-    editor.editorType = "css";
-    iframe.contentWindow.refreshEditor("css");
-  };
-
-  /**
-   * Show the attributes for a dom node in the editor if open.
-   */
-  this.showAttributesInEditor = function() {
-    var iframe = document.getElementById("tilt-panel-iframe"),
-      editor = iframe.contentDocument.getElementById("editor");
-
-    editor.innerHTML = editor.att;
-    editor.editorType = "attributes";
-    iframe.contentWindow.refreshEditor("attributes");
-  };
-
-  /**
-   * Event method called when the tab container of the current browser closes.
-   */
-  function gClose(e) {
-    if (TiltChrome.BrowserOverlay.href !== window.content.location.href) {
-      TiltChrome.BrowserOverlay.href = null;
-      TiltChrome.BrowserOverlay.destroy(true, true);
-    }
-  };
-
-  /**
-   * Event method called when the content of the current browser is resized.
-   */
-  function gResize(e) {
-    tilt.width = window.content.innerWidth;
-    tilt.height = window.content.innerHeight;
-    redraw = true;
-
-    if (controller && "function" === typeof controller.resize) {
-      controller.resize(tilt.width, tilt.height);
-    }
-    if (ui && "function" === typeof ui.resize) {
-      ui.resize(tilt.width, tilt.height);
-    }
-
-    // hide the panel with the html editor (to avoid wrong positioning)
-    if ("open" === TiltChrome.BrowserOverlay.panel.state) {
-      TiltChrome.BrowserOverlay.panel.hidePopup();
-    }
-  };
-
-  /**
-   * Event method called when the mouse comes over the current browser.
-   */
-  function gMouseOver() {
-    redraw = true;
-
-    // happens after the browser window is resized
-    if (canvas.width !== tilt.width || canvas.height !== tilt.height) {
-      canvas.width = tilt.width;
-      canvas.height = tilt.height;
-
-      tilt.gl.viewport(0, 0, canvas.width, canvas.height);
-      draw();
     }
   };
 
@@ -693,41 +662,51 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
    */
   this.destroy = function() {
     var tabContainer = gBrowser.tabContainer;
-    tabContainer.removeEventListener("TabClose", gClose, false);
-    tabContainer.removeEventListener("TabAttrModified", gClose, false);
-    gBrowser.contentWindow.removeEventListener("resize", gResize, false);
-    gBrowser.removeEventListener("mouseover", gMouseOver, false);
 
-    gClose = null;
-    gResize = null;
-    gMouseOver = null;
-
-    if (controller && "function" === typeof controller.destroy) {
+    if (gClose !== null) {
+      tabContainer.removeEventListener("TabClose", gClose, false);
+      tabContainer.removeEventListener("TabAttrModified", gClose, false);
+      gClose = null;
+    }
+    if (gResize !== null) {
+      gBrowser.contentWindow.removeEventListener("resize", gResize, false);
+      gResize = null;
+    }
+    if (gMouseOver !== null) {
+      gBrowser.removeEventListener("mouseover", gMouseOver, false);
+      gMouseOver = null;
+    }
+    if (controller !== null && "function" === typeof controller.destroy) {
       controller.destroy(canvas);
       controller = null;
     }
-
-    if (ui && "function" === typeof ui.destroy) {
+    if (ui !== null && "function" === typeof ui.destroy) {
       ui.destroy(canvas);
       ui = null;
     }
+    if (texture !== null) {
+      texture.destroy();
+      texture = null;
+    }
+    if (mesh !== null) {
+      mesh.destroy();
+      mesh = null;
+    }
+    if (meshWireframe !== null) {
+      meshWireframe.destroy();
+      meshWireframe = null;
+    }
+    if (tilt !== null) {
+      tilt.destroy();
+      tilt = null;
+    }
+    if (transforms !== null) {
+      delete transforms.rotation;
+      delete transforms.translation;
+      transforms = null;
+    }
 
-    texture.destroy();
-    texture = null;
-
-    mesh.destroy();
-    mesh = null;
-
-    meshWireframe.destroy();
-    meshWireframe = null;
-
-    tilt.destroy();
-    tilt = null;
-
-    delete transforms.rotation;
-    delete transforms.translation;
-    transforms = null;
-
+    canvas = null;
     setup = null;
     draw = null;
     setupVisualization = null;
