@@ -46,7 +46,7 @@ TiltChrome.BrowserOverlay = {
   href: null,
 
   /**
-   * The popup panel containing the Ace Cloud9 html editor in an iframe.
+   * The popup panel containing the Ace Cloud9 editor in an iframe.
    */
   panel: null,
 
@@ -68,10 +68,12 @@ TiltChrome.BrowserOverlay = {
     // first, close the visualization and clean up any mess if there was any
     this.destroy(true);
 
-    // if this was the page we just visualized, leave the visualization closed
+    // if the page was just visualized, leave the visualization destroyed
+    // this happens if Tilt is opened and closed in the same tab
     if (this.href === window.content.location.href) {
       this.href = null; // forget the current tab location
-    } else {
+    }
+    else {
       // the current tab has a new page, so recreate the entire visualization
       // remember the current tab location
       this.href = window.content.location.href;
@@ -88,10 +90,10 @@ TiltChrome.BrowserOverlay = {
       Tilt.Document.currentContentDocument = iframe.contentDocument;
       Tilt.Document.currentParentNode = gBrowser.selectedBrowser.parentNode;
 
-      // retain the popup panel for future reference
+      // retain the popup panel for future reference (used by the code editor)
       this.panel = document.getElementById("tilt-panel");
 
-      // initialize the canvas element
+      // initialize the canvas element used to draw the visualization
       this.canvas = Tilt.Document.initCanvas(width, height, true);
 
       // construct the visualization using the canvas
@@ -109,6 +111,7 @@ TiltChrome.BrowserOverlay = {
    * @param {Boolean} timeout: pass true to do the heavy lifting in a timeout
    */
   destroy: function(gc, timeout) {
+    // the document and parent nodes won't be used anymore, so nullify them
     Tilt.Document.currentContentDocument = null;
     Tilt.Document.currentParentNode = null;
 
@@ -129,9 +132,12 @@ TiltChrome.BrowserOverlay = {
         this.panel = null;
       }
 
+      // if the build was in debug mode (profiling enabled), log some
+      // information about the intercepted function
       Tilt.Profiler.log();
-      Tilt.Profiler.clear();
+      Tilt.Profiler.reset();
 
+      // if specified, do a garbage collect when everything is over
       if (gc) {
         window.setTimeout(function() {
           window.QueryInterface(Ci.nsIInterfaceRequestor)
@@ -146,6 +152,7 @@ TiltChrome.BrowserOverlay = {
       window.setTimeout(finish.bind(this), 100);
     }
     else {
+      // the finish timeout wasn't explicitly requested, continue normally
       finish.call(this);
     }
   }
