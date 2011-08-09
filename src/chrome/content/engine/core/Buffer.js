@@ -55,16 +55,15 @@ Tilt.VertexBuffer = function(elementsArray, itemSize, numItems) {
   this.$ref = null;
 
   /**
+   * Array of Float32 components contained in the buffer.
+   */
+  this.components = null;
+
+  /**
    * Variables defining the internal structure of the buffer.
    */
   this.itemSize = 0;
   this.numItems = 0;
-
-  /**
-   * This is an array-like object.
-   * This means each element is accessible via an index.
-   */
-  this.length = 0;
 
   // if the array is specified in the constructor, initialize directly
   if ("undefined" !== typeof elementsArray) {
@@ -89,27 +88,22 @@ Tilt.VertexBuffer.prototype = {
     }
 
     // create the Float32Array using the elements array
-    var array = new Float32Array(elementsArray),
-      gl = Tilt.$gl,
+    this.components = new Float32Array(elementsArray);
+
+    var gl = Tilt.$gl,
       i, len;
 
     // create an array buffer and bind the elements as a Float32Array
     this.$ref = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, this.$ref);
-    gl.bufferData(gl.ARRAY_BUFFER, array, gl.STATIC_DRAW);
+    gl.bufferData(gl.ARRAY_BUFFER, this.components, gl.STATIC_DRAW);
 
     // remember some properties, useful when binding the buffer to a shader
     this.itemSize = itemSize;
     this.numItems = numItems;
-    this.length = elementsArray.length;
-
-    for (i = 0, len = elementsArray.length; i < len; i++) {
-      this[i] = elementsArray[i];
-    }
 
     // cleanup
     elementsArray = null;
-    array = null;
     gl = null;
   },
 
@@ -118,10 +112,7 @@ Tilt.VertexBuffer.prototype = {
    */
   destroy: function() {
     Tilt.$gl.deleteBuffer(this.$ref);
-
-    for (var i in this) {
-      delete this[i];
-    }
+    Tilt.destroyObject(this);
   }
 };
 
@@ -143,10 +134,9 @@ Tilt.IndexBuffer = function(elementsArray, numItems) {
   this.$ref = null;
 
   /**
-   * This is an array-like object.
-   * This means each element is accessible via an index.
+   * Array of Float32 components contained in the buffer.
    */
-  this.length = 0;
+  this.components = null;
 
   /**
    * Variables defining the internal structure of the buffer.
@@ -177,27 +167,22 @@ Tilt.IndexBuffer.prototype = {
     }
 
     // create the Uint16Array using the elements array
-    var array = new Uint16Array(elementsArray),
-      gl = Tilt.$gl,
+    this.components = new Uint16Array(elementsArray);
+
+    var gl = Tilt.$gl,
       i, len;
 
     // create an array buffer and bind the elements as a Uint16Array
     this.$ref = gl.createBuffer();
     gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.$ref);
-    gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, array, gl.STATIC_DRAW);
+    gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, this.components, gl.STATIC_DRAW);
 
     // remember some properties, useful when binding the buffer to a shader
     this.itemSize = 1;
     this.numItems = numItems;
-    this.length = elementsArray.length;
-
-    for (i = 0, len = elementsArray.length; i < len; i++) {
-      this[i] = elementsArray[i];
-    }
 
     // cleanup
     elementsArray = null;
-    array = null;
     gl = null;
   },
 
@@ -206,9 +191,6 @@ Tilt.IndexBuffer.prototype = {
    */
   destroy: function() {
     Tilt.$gl.deleteBuffer(this.$ref);
-
-    for (var i in this) {
-      delete this[i];
-    }
+    Tilt.destroyObject(this);
   }
 };
