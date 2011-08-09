@@ -33,17 +33,24 @@
 "use strict";
 
 var TiltChrome = TiltChrome || {};
-var EXPORTED_SYMBOLS = ["TiltChrome.UI"];
+var EXPORTED_SYMBOLS = ["TiltChrome.UI.Default"];
 
 /**
- * UI implementation.
+ * Default UI implementation.
  */
-TiltChrome.UI = function() {
+TiltChrome.UI = {};
+TiltChrome.UI.Default = function() {
 
   /**
-   * Handler for all the user interface elements.
+   * Cache the top level UI handling events.
    */
-  var ui = null,
+  var ui = Tilt.UI,
+
+  /**
+   * The views containing all the UI elements.
+   */
+  view = null,
+  help = null,
 
   /**
    * The texture containing all the interface elements.
@@ -58,44 +65,19 @@ TiltChrome.UI = function() {
   /**
    * The controls information.
    */
-  helpPopup = null,
+  helpSprite = null,
+  helpCloseButon = null,
 
   /**
    * The top-right menu buttons.
    */
-  optionsButton = null,
-  exportButton = null,
-  helpButton = null,
   exitButton = null,
-  cssButton = null,
+  helpButton = null,
+  exportButton = null,
+  optionsButton = null,
+  attrButton = null,
   htmlButton = null,
-  attributesButton = null,
-
-  /**
-   * Top-left control items.
-   */
-  arcballSprite = null,
-  eyeButton = null,
-  resetButton = null,
-  zoomInButton = null,
-  zoomOutButton = null,
-
-  /**
-   * Middle-left control items.
-   */
-  viewModeButton = null,
-  colorAdjustButton = null,
-  colorAdjustPopup = null,
-  domScrollview = null,
-
-  /**
-   * Sliders.
-   */
-  hueSlider = null,
-  saturationSlider = null,
-  brightnessSlider = null,
-  alphaSlider = null,
-  textureSlider = null,
+  cssButton = null,
 
   /**
    * Arrays holding groups of objects.
@@ -113,252 +95,132 @@ TiltChrome.UI = function() {
    * @param {HTMLCanvasElement} canvas: the canvas element
    */
   this.init = function(canvas) {
-    canvas.addEventListener("mousedown", mouseDown, false);
-    canvas.addEventListener("mouseup", mouseUp, false);
-    canvas.addEventListener("click", click, false);
-    canvas.addEventListener("dblclick", doubleClick, false);
-    canvas.addEventListener("mousemove", mouseMove, false);
+    var panel = TiltChrome.BrowserOverlay.panel;
+    panel.addEventListener("popupshown", ePopupShown, false);
+    panel.addEventListener("popuphidden", ePopupHidden, false);
 
-    ui = new Tilt.UI();
+    view = new Tilt.View();
+    help = new Tilt.View({
+      hidden: true,
+      background: "#0007"
+    });
 
     texture = new Tilt.Texture("chrome://tilt/skin/tilt-ui.png", {
       minFilter: "nearest",
       magFilter: "nearest"
     });
 
-    texture.onload = function() {
-      this.visualization.redraw();
-    }.bind(this);
-
-    background = new Tilt.Sprite(texture, [0, 1024 - 256, 256, 256], {
+    var t = texture;
+    background = new Tilt.Sprite(t, [0, 1024 - 256, 256, 256], {
       width: canvas.width,
-      height: canvas.height
+      height: canvas.height,
+      depthTest: true
     });
 
-    var helpPopupSprite = new Tilt.Sprite(texture, [210, 180, 610, 510]);
-    helpPopup = new Tilt.Container(helpPopupSprite, {
-      background: "#0107",
+    helpSprite = new Tilt.Sprite(t, [210, 180, 610, 510]);
+
+    helpCloseButon = new Tilt.Button(null, {
+      width: 30,
+      height: 30
+    });
+
+    exitButton = new Tilt.Button(new Tilt.Sprite(t, [935, 120, 42, 38]), {
+      x: canvas.width - 50
+    });
+
+    helpButton = new Tilt.Button(new Tilt.Sprite(t, [935, 80, 46, 38]), {
+      x: canvas.width - 150
+    });
+
+    exportButton = new Tilt.Button(new Tilt.Sprite(t, [935, 40, 61, 38]), {
+      x: canvas.width - 215
+    });
+
+    optionsButton = new Tilt.Button(new Tilt.Sprite(t, [935, 0, 66, 38]), {
+      x: canvas.width - 285
+    });
+
+    htmlButton = new Tilt.Button(new Tilt.Sprite(t, [935, 200, 48, 38]), {
+      x: canvas.width - 337,
       hidden: true
     });
 
-    attributesButton = new Tilt.Button(canvas.width - 464, 0,
-      new Tilt.Sprite(texture, [935, 240, 83, 38]), null, { hidden: true });
+    cssButton = new Tilt.Button(new Tilt.Sprite(t, [935, 160, 36, 38]), {
+      x: canvas.width - 377,
+      hidden: true
+    });
 
-    attributesButton.onclick = function() {
-      this.visualization.showAttributesInEditor();
-    }.bind(this);
+    attrButton = new Tilt.Button(new Tilt.Sprite(t, [935, 240, 84, 38]), {
+      x: canvas.width - 465,
+      hidden: true
+    });
 
-    htmlButton = new Tilt.Button(canvas.width - 377, 0,
-      new Tilt.Sprite(texture, [935, 200, 48, 38]), null, { hidden: true });
+    exitButton.onclick = function() {
+      TiltChrome.BrowserOverlay.destroy(true, true);
+      TiltChrome.BrowserOverlay.href = null;
+    };
 
-    htmlButton.onclick = function() {
-      this.visualization.showHtmlInEditor();
-    }.bind(this);
-
-    cssButton = new Tilt.Button(canvas.width - 325, 0,
-      new Tilt.Sprite(texture, [935, 160, 36, 38]), null, { hidden: true });
-
-    cssButton.onclick = function() {
-      this.visualization.showCssInEditor();
-    }.bind(this);
-
-    optionsButton = new Tilt.Button(canvas.width - 285, 0,
-      new Tilt.Sprite(texture, [935, 0, 66, 38]));
-
-    exportButton = new Tilt.Button(canvas.width - 215, 0,
-      new Tilt.Sprite(texture, [935, 40, 61, 38]));
-
-    helpButton = new Tilt.Button(canvas.width - 150, 0,
-      new Tilt.Sprite(texture, [935, 80, 46, 38]));
-
-    helpButton.onclick = function(x, y) {
+    helpButton.onclick = function() {
       var helpX = canvas.width / 2 - 305,
         helpY = canvas.height / 2 - 305,
         exitX = canvas.width / 2 + 197,
         exitY = canvas.height / 2 - 218;
 
-      helpPopup.elements[0].x = helpX;
-      helpPopup.elements[0].y = helpY;
-
-      var exitButton = new Tilt.Button(exitX, exitY, {
-        width: 32,
-        height: 32
-      }, function() {
-        helpPopup.elements[1].destroy();
-        helpPopup.elements.pop();
-        helpPopup.hidden = true;
-      });
-
-      helpPopup.elements[1] = exitButton;
-      helpPopup.hidden = false;
-    }.bind(this);
-
-    exitButton = new Tilt.Button(canvas.width - 50, 0,
-      new Tilt.Sprite(texture, [935, 120, 42, 38]));
-
-    exitButton.onclick = function(x, y) {
-      TiltChrome.BrowserOverlay.destroy(true, true);
-      TiltChrome.BrowserOverlay.href = null;
-    }.bind(this);
-
-    arcballSprite = new Tilt.Sprite(texture, [0, 0, 145, 145], {
-      x: 10,
-      y: 10
-    });
-
-    eyeButton = new Tilt.Button(0, 0,
-      new Tilt.Sprite(texture, [0, 147, 42, 42]));
-
-    eyeButton.onclick = function(x, y) {
-      if (ui.elements.length === alwaysVisibleElements.length) {
-        ui.push(hideableElements);
-      }
-      else {
-        ui.remove(hideableElements);
-      }
-    }.bind(this);
-
-    resetButton = new Tilt.Button(60, 150,
-      new Tilt.Sprite(texture, [0, 190, 42, 42]));
-
-    resetButton.onclick = function(x, y) {
-      this.controller.reset(0.95);
-    }.bind(this);
-
-    resetButton.ondblclick = function(x, y) {
-      this.controller.reset(0);
-    }.bind(this);
-
-    zoomInButton = new Tilt.Button(100, 150,
-      new Tilt.Sprite(texture, [0, 234, 42, 42]));
-
-    zoomInButton.onclick = function(x, y) {
-      this.controller.zoom(200);
-    }.bind(this);
-
-    zoomOutButton = new Tilt.Button(20, 150,
-      new Tilt.Sprite(texture, [0, 278, 42, 42]));
-
-    zoomOutButton.onclick = function(x, y) {
-      this.controller.zoom(-200);
-    }.bind(this);
-
-    var viewModeNormalSprite = new Tilt.Sprite(texture, [438, 67, 66, 66]);
-    var viewModeWireframeSprite = new Tilt.Sprite(texture, [438, 0, 66, 66]);
-    viewModeButton = new Tilt.Button(50, 200, viewModeWireframeSprite);
-
-    viewModeButton.onclick = function() {
-      if (viewModeButton.sprite === viewModeWireframeSprite) {
-        viewModeButton.sprite = viewModeNormalSprite;
-        hueSlider.value = 50;
-        saturationSlider.value = 25;
-        brightnessSlider.value = 100;
-        textureSlider.value = 100;
-        alphaSlider.value = 4;
-
-        this.visualization.setMeshWireframeColor([1, 1, 1, 0.7]);
-      }
-      else {
-        viewModeButton.sprite = viewModeWireframeSprite;
-        hueSlider.value = 50;
-        saturationSlider.value = 0;
-        brightnessSlider.value = 100;
-        textureSlider.value = 100;
-        alphaSlider.value = 100;
-
-        this.visualization.setMeshWireframeColor([0, 0, 0, 0.25]);
-      }
-
-      var rgba = Tilt.Math.hsv2rgb(
-        hueSlider.value / 100,
-        saturationSlider.value / 100,
-        brightnessSlider.value / 100);
-
-      rgba[0] /= 255;
-      rgba[1] /= 255;
-      rgba[2] /= 255;
-      rgba[3] = alphaSlider.value / 100;
-
-      this.visualization.setMeshColor(rgba);
-      this.visualization.setMeshTextureAlpha(textureSlider.value / 100);
-      this.visualization.redraw();
-    }.bind(this);
-
-    colorAdjustButton = new Tilt.Button(50, 260,
-      new Tilt.Sprite(texture, [505, 0, 66, 66]));
-
-    colorAdjustButton.onclick = function(x, y) {
-      colorAdjustPopup.hidden ^= true;
+      helpSprite.setPosition(helpX, helpY);
+      helpCloseButon.setPosition(exitX, exitY);
+      ui.setModal(help);
     };
 
-    var colorAdjustPopupSprite = new Tilt.Sprite(texture, [572, 0, 231, 128],{
-      x: 88,
-      y: 258
-    });
-    colorAdjustPopup = new Tilt.Container([colorAdjustPopupSprite], {
-      hidden: true
+    helpCloseButon.onclick = function() {
+      ui.unsetModal(help);
+    };
+
+    exportButton.onclick = function() {
+    };
+
+    optionsButton.onclick = function() {
+    };
+
+    htmlButton.onclick = function() {
+    };
+
+    cssButton.onclick = function() {
+    };
+
+    attrButton.onclick = function() {
+    };
+
+    alwaysVisibleElements.push(background, exitButton);
+    hideableElements.push(helpButton, exportButton, optionsButton,
+      htmlButton, cssButton, attrButton);
+
+    alwaysVisibleElements.forEach(function(element) {
+      view.push(element);
     });
 
-    var handlerSprite = new Tilt.Sprite(texture, [574, 131, 29, 29], {
-      padding: [8, 8, 8, 8]
-    });
-    hueSlider = new Tilt.Slider(152, 271, 120, handlerSprite, {
-      value: 50
-    });
-    saturationSlider = new Tilt.Slider(152, 290, 120, handlerSprite, {
-      value: 0
-    });
-    brightnessSlider = new Tilt.Slider(152, 308, 120, handlerSprite, {
-      value: 100
-    });
-    alphaSlider = new Tilt.Slider(152, 326, 120, handlerSprite, {
-      value: 90
-    });
-    textureSlider = new Tilt.Slider(152, 344, 120, handlerSprite, {
-      value: 100
+    hideableElements.forEach(function(element) {
+      view.push(element);
     });
 
-    domScrollview = new Tilt.Scrollview(handlerSprite, null, {
-      x: -2,
-      y: 328,
-      width: 200,
-      height: canvas.height - 328
-    });
-
-    alwaysVisibleElements.push(eyeButton, exitButton);
-    hideableElements.push(
-      domScrollview,
-      helpPopup, colorAdjustPopup,
-      arcballSprite, resetButton, zoomInButton, zoomOutButton,
-      viewModeButton, colorAdjustButton,
-      htmlButton, cssButton, attributesButton,
-      optionsButton, exportButton, helpButton);
-
-    ui.push([alwaysVisibleElements, hideableElements]);
-    colorAdjustPopup.push(
-      [hueSlider, saturationSlider, brightnessSlider,
-      alphaSlider, textureSlider]);
-
-    var panel = TiltChrome.BrowserOverlay.panel;
-    panel.addEventListener("popupshown", function popupshown() {
-      htmlButton.hidden = false;
-      cssButton.hidden = false;
-      attributesButton.hidden = false;      
-    }, false);
-
-    panel.addEventListener("popuphidden", function popuphidden() {
-      htmlButton.hidden = true;
-      cssButton.hidden = true;
-      attributesButton.hidden = true;      
-    }, false);
+    help.push(helpSprite, helpCloseButon);
   };
 
   /**
-   * Called automatically by the visualization at the beginning of draw().
-   * @param {Number} frameDelta: the delta time elapsed between frames
+   * Event handling the editor panel popup showing.
    */
-  this.background = function(frameDelta) {
-    background.draw();
+  function ePopupShown() {
+    htmlButton.hidden = false;
+    cssButton.hidden = false;
+    attrButton.hidden = false;
+  };
+
+  /**
+   * Event handling the editor panel popup hiding.
+   */
+  function ePopupHidden() {
+    htmlButton.hidden = true;
+    cssButton.hidden = true;
+    attrButton.hidden = true;
   };
 
   /**
@@ -366,20 +228,7 @@ TiltChrome.UI = function() {
    * @param {Number} frameDelta: the delta time elapsed between frames
    */
   this.draw = function(frameDelta) {
-    ui.draw(frameDelta, true);
-
-    var rgba = Tilt.Math.hsv2rgb(
-      hueSlider.value / 100,
-      saturationSlider.value / 100,
-      brightnessSlider.value / 100);
-
-    rgba[0] /= 255;
-    rgba[1] /= 255;
-    rgba[2] /= 255;
-    rgba[3] = alphaSlider.value / 100;
-
-    this.visualization.setMeshColor(rgba);
-    this.visualization.setMeshTextureAlpha(textureSlider.value / 100);
+    ui.refresh();
   };
 
   /**
@@ -389,133 +238,7 @@ TiltChrome.UI = function() {
    * @param {Number} depth: the node depth in the dom tree
    * @param {Number} index: the index of the node in the dom tree
    */
-  this.domVisualizationNodeCallback = function(node, depth, index) {
-    if ("undefined" === typeof this.stripNo) {
-      this.stripNo = 0;
-    }
-    if ("undefined" === typeof node.localName || node.localName === null) {
-      return;
-    }
-
-    var stripNo = this.stripNo++,
-      x = 25 + depth * 8,
-      y = 340 + stripNo * 10,
-      height = 6,
-      stripButton, stripIdButton, stripClassButton;
-
-    // the general strip button, created in all cases
-    var cx = x + node.localName.length * 10 + 3;
-    var idx = cx + (node.className.length || 3) * 3 + 3;
-
-    stripButton = new Tilt.Button(x, y, {
-      width: node.localName.length * 10,
-      height: height,
-      stroke: "#fff2"
-    });
-
-    if (node.className) {
-      stripClassButton = new Tilt.Button(cx, y, {
-        width: (node.className.length || 3) * 3,
-        height: height,
-        stroke: stripButton.sprite.stroke
-      });
-    }
-
-    if (node.id) {
-      stripIdButton = new Tilt.Button(idx, y, {
-        width: (node.id.length || 3) * 3,
-        height: height,
-        stroke: stripButton.sprite.stroke
-      });
-    }
-
-    if (node.localName === "html") {
-      stripButton.sprite.fill = "#fff";
-    }
-    else if (node.localName === "head") {
-      stripButton.sprite.fill = "#E667AF";
-    }
-    else if (node.localName === "title") {
-      stripButton.sprite.fill = "#CD0074";
-    }
-    else if (node.localName === "meta") {
-      stripButton.sprite.fill = "#BF7130";
-    }
-    else if (node.localName === "script") {
-      stripButton.sprite.fill = "#A64B00";
-    }
-    else if (node.localName === "style") {
-      stripButton.sprite.fill = "#FF9640";
-    }
-    else if (node.localName === "link") {
-      stripButton.sprite.fill = "#FFB273";
-    }
-    else if (node.localName === "body") {
-      stripButton.sprite.fill = "#E667AF";
-    }
-    else if (node.localName === "h1") {
-      stripButton.sprite.fill = "#ff0d";
-    }
-    else if (node.localName === "h2") {
-      stripButton.sprite.fill = "#ee0d";
-    }
-    else if (node.localName === "h3") {
-      stripButton.sprite.fill = "#dd0d";
-    }
-    else if (node.localName === "h4") {
-      stripButton.sprite.fill = "#cc0d";
-    }
-    else if (node.localName === "h5") {
-      stripButton.sprite.fill = "#bb0d";
-    }
-    else if (node.localName === "h6") {
-      stripButton.sprite.fill = "#aa0d";
-    }
-    else if (node.localName === "table") {
-      stripButton.sprite.fill = "#FF0700";
-    }
-    else if (node.localName === "tbody") {
-      stripButton.sprite.fill = "#FF070088";
-    }
-    else if (node.localName === "tr") {
-      stripButton.sprite.fill = "#FF4540";
-    }
-    else if (node.localName === "td") {
-      stripButton.sprite.fill = "#FF7673";
-    }
-    else if (node.localName === "div") {
-      stripButton.sprite.fill = "#5DC8CD";
-    }
-    else if (node.localName === "span") {
-      stripButton.sprite.fill = "#67E46F";
-    }
-    else if (node.localName === "p") {
-      stripButton.sprite.fill = "#888";
-    }
-    else if (node.localName === "a") {
-      stripButton.sprite.fill = "#123EAB";
-    }
-    else if (node.localName === "img") {
-      stripButton.sprite.fill = "#FFB473";
-    }
-    else {
-      stripButton.sprite.fill = "#444";
-    }
-
-    if (stripClassButton) {
-      stripClassButton.sprite.color =
-        node.className ? stripButton.sprite.color : "#0002";
-    }
-    if (stripIdButton) {
-      stripIdButton.sprite.color =
-        node.id ? stripButton.sprite.color : "#0002";
-    }
-
-    stripButton.onclick = function() {
-      alert(depth);
-    };
-
-    domScrollview.push([stripButton, stripIdButton, stripClassButton]);
+  this.domVisualizationMeshNodeCallback = function(node, depth, index) {
   };
 
   /**
@@ -524,68 +247,8 @@ TiltChrome.UI = function() {
    * @param {Number} maxDepth: the maximum depth of the dom tree
    * @param {Number} totalNodes: the total nodes in the dom tree
    */
-  this.domVisualizationReadyCallback = function(maxDepth, totalNodes) {
-    // ui.remove(hideableElements);
-    // ui.push(hideableElements);
+  this.domVisualizationMeshReadyCallback = function(maxDepth, totalNodes) {
   };
-
-  /**
-   * Called once after every time a mouse button is pressed.
-   */
-  var mouseDown = function(e) {
-    downX = e.clientX - e.target.offsetLeft;
-    downY = e.clientY - e.target.offsetTop;
-
-    if (ui.mouseDown(downX, downY, e.which)) {
-      this.controller.pause();
-    }
-  }.bind(this);
-
-  /**
-   * Called every time a mouse button is released.
-   */
-  var mouseUp = function(e) {
-    var upX = e.clientX - e.target.offsetLeft;
-    var upY = e.clientY - e.target.offsetTop;
-
-    ui.mouseUp(upX, upY, e.which);
-    this.controller.unpause();
-  }.bind(this);
-
-  /**
-   * Called every time a mouse button is clicked.
-   */
-  var click = function(e) {
-    var clickX = e.clientX - e.target.offsetLeft;
-    var clickY = e.clientY - e.target.offsetTop;
-
-    if (Math.abs(downX - clickX) < 2 && Math.abs(downY - clickY) < 2) {
-      ui.click(clickX, clickY);
-    }
-  }.bind(this);
-
-  /**
-   * Called every time a mouse button is double clicked.
-   */
-  var doubleClick = function(e) {
-    var dblClickX = e.clientX - e.target.offsetLeft;
-    var dblClickY = e.clientY - e.target.offsetTop;
-
-    if (Math.abs(downX - dblClickX) < 2 && Math.abs(downY - dblClickY) < 2) {
-      ui.doubleClick(dblClickX, dblClickY);
-    }
-  }.bind(this);
-
-  /**
-   * Called every time the mouse moves.
-   */
-  var mouseMove = function(e) {
-    var moveX = e.clientX - e.target.offsetLeft;
-    var moveY = e.clientY - e.target.offsetTop;
-
-    ui.mouseMove(moveX, moveY);
-    this.visualization.redraw();
-  }.bind(this);
 
   /**
    * Delegate method, called when the user interface needs to be resized.
@@ -594,53 +257,28 @@ TiltChrome.UI = function() {
    * @param height: the new height of the visualization
    */
   this.resize = function(width, height) {
-    background.width = width;
-    background.height = height;
-
-    optionsButton.x = width - 320;
-    exportButton.x = width - 240;
-    helpButton.x = width - 160;
-    exitButton.x = width - 50;
   };
 
   /**
    * Destroys this object and sets all members to null.
    */
   this.destroy = function(canvas) {
-    canvas.removeEventListener("mousedown", mouseDown, false);
-    canvas.removeEventListener("mouseup", mouseUp, false);
-    canvas.removeEventListener("click", click, false);
-    canvas.removeEventListener("dblclick", doubleClick, false);
-    canvas.removeEventListener("mousemove", mouseMove, false);
+    this.visualization = null;
 
-    mouseDown = null;
-    mouseUp = null;
-    click = null;
-    doubleClick = null;
-    mouseMove = null;
+    var panel = TiltChrome.BrowserOverlay.panel;
+    if (ePopupShown !== null) {
+      panel.removeEventListener("popupshown", ePopupShown, false);
+      ePopupShown = null;
+    }
+    if (ePopupHidden !== null) {
+      panel.removeEventListener("popuphidden", ePopupHidden, false);
+      ePopupHidden = null;
+    }
 
-    ui.destroy();
-    ui = null;
-
-    texture = null;
-    background = null;
-
-    helpPopup = null;
-    optionsButton = null;
-    exportButton = null;
-    helpButton = null;
-    exitButton = null;
-
-    arcballSprite = null;
-    eyeButton = null;
-    resetButton = null;
-    zoomInButton = null;
-    zoomOutButton = null;
-
-    viewModeNormalButton = null;
-    viewModeWireframeButton = null;
-    colorAdjustButton = null;
-    colorAdjustPopup = null;
+    if (view !== null) {
+      view.destroy();
+      view = null;
+    }
 
     Tilt.destroyObject(this);
   };
