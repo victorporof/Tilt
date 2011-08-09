@@ -116,8 +116,8 @@ Tilt.Console = {
    * nsIScriptError.idl eventually.
    */
   error: function(message, sourceName, sourceLine, lineNumber, columnNumber) {
-    var flags = parameters[5],
-      category = parameters[6],
+    var flags = arguments[5],
+      category = arguments[6],
       consoleService, scriptError;
 
     if ("undefined" === typeof message) {
@@ -176,7 +176,8 @@ Tilt.StringBundle = {
       if (elem) {
         // return the equivalent string from the bundle
         return elem.getString(string);
-      } else {
+      }
+      else {
         // this should never happen when inside a chrome environment
         return string;
       }
@@ -210,7 +211,8 @@ Tilt.StringBundle = {
       if (elem) {
         // return the equivalent formatted string from the bundle
         return elem.getFormattedString(string, args);
-      } else {
+      }
+      else {
         // this should never happen when inside a chrome environment
         return [string, args].join(" ");
       }
