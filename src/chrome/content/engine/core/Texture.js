@@ -51,7 +51,6 @@ var EXPORTED_SYMBOLS = ["Tilt.Texture"];
  *  @param {String} wrapS: either "repeat" or "clamp"
  *  @param {String} wrapT: either "repeat" or "clamp"
  * @param {Function} readyCallback: function called when texture has loaded
- * @return {Tilt.Texture} the newly created object
  */
 Tilt.Texture = function(image, parameters, readyCallback) {
 
@@ -89,9 +88,11 @@ Tilt.Texture = function(image, parameters, readyCallback) {
   // if the image is specified in the constructor, initialize directly
   if ("object" === typeof image) {
     this.initTexture(image, parameters);
-  } else if ("string" === typeof image) {
+  }
+  else if ("string" === typeof image) {
     this.initTextureAt(image, parameters);
-  } else {
+  }
+  else {
     Tilt.Console.error(Tilt.StringBundle.get("initTexture.source.error"));
   }
 
@@ -117,6 +118,7 @@ Tilt.Texture.prototype = {
     this.height = this.$ref.height;
     this.loaded = true;
 
+    // if the onload event function is specified, call it now
     if ("undefined" !== typeof this.onload) {
       this.onload();
     }
@@ -138,20 +140,16 @@ Tilt.Texture.prototype = {
    * @param {Object} parameters: an object containing the texture properties
    */
   initTextureAt: function(imageSource, parameters, readyCallback) {
-    // remember who we are
-    var self = this,
-
-    image = new Image(); // load the image from the source in an object
+    var image = new Image(); // load the image from the source in an object
     image.src = imageSource;
     image.onload = function() {
       // the image has loaded, continue initialization as usual
-      self.initTexture(image, parameters);
+      this.initTexture(image, parameters);
 
       // cleanup
-      self = null;
       image = null;
       parameters = null;
-    };
+    }.bind(this);
   },
 
   /**
