@@ -49,7 +49,7 @@ Tilt.Extensions.WebGL = {
    * @param {Window} contentWindow: the window content to draw
    */
   initDocumentImage: function(contentWindow) {
-    var canvasgl, canvas, gl, ctx, maxSize, pWidth, pHeight, width, height;
+    var canvasgl, canvas, gl, ctx, maxSize, size, width, height;
 
     // use a canvas and a WebGL context to get the maximum texture size
     canvasgl = Tilt.Document.initCanvas();
@@ -62,12 +62,11 @@ Tilt.Extensions.WebGL = {
     maxSize = gl.getParameter(gl.MAX_TEXTURE_SIZE);
 
     // calculate the total width and height of the content page
-    pWidth = contentWindow.innerWidth + contentWindow.scrollMaxX;
-    pHeight = contentWindow.innerHeight + contentWindow.scrollMaxY;
+    size = Tilt.Document.getContentWindowDimensions(contentWindow);
 
     // calculate the valid width and height of the content page
-    width = Tilt.Math.clamp(pWidth, 0, maxSize);
-    height = Tilt.Math.clamp(pHeight, 0, maxSize);
+    width = Tilt.Math.clamp(size.width, 0, maxSize);
+    height = Tilt.Math.clamp(size.height, 0, maxSize);
 
     canvas.width = width;
     canvas.height = height;
