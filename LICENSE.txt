@@ -68,7 +68,7 @@
      appropriate decompression or de-archiving software is widely available
      for no charge.
 
-     1.12. "You" (or "Your")  means an individual or a legal entity
+     1.12. "You" (or "Your") means an individual or a legal entity
      exercising rights under, and complying with all of the terms of, this
      License or a future version of this License issued under Section 6.1.
      For legal entities, "You" includes any entity which controls, is
@@ -85,7 +85,7 @@
      The Initial Developer hereby grants You a world-wide, royalty-free,
      non-exclusive license, subject to third party intellectual property
      claims:
-          (a)  under intellectual property rights (other than patent or
+          (a) under intellectual property rights (other than patent or
           trademark) Licensable by Initial Developer to use, reproduce,
           modify, display, perform, sublicense and distribute the Original
           Code (or portions thereof) with or without Modifications, and/or
@@ -110,7 +110,7 @@
      Subject to third party intellectual property claims, each Contributor
      hereby grants You a world-wide, royalty-free, non-exclusive license
 
-          (a)  under intellectual property rights (other than patent or
+          (a) under intellectual property rights (other than patent or
           trademark) Licensable by Contributor, to use, reproduce, modify,
           display, perform, sublicense and distribute the Modifications
           created by such Contributor (or portions thereof) either on an
@@ -130,7 +130,7 @@
           effective on the date Contributor first makes Commercial Use of
           the Covered Code.
 
-          (d)    Notwithstanding Section 2.2(b) above, no patent license is
+          (d) Notwithstanding Section 2.2(b) above, no patent license is
           granted: 1) for any code that Contributor has deleted from the
           Contributor Version; 2)  separate from the Contributor Version;
           3)  for infringements caused by: i) third party modifications of
@@ -200,7 +200,7 @@
           are reasonably necessary to implement that API, Contributor must
           also include this information in the LEGAL file.
 
-               (c)    Representations.
+          (c) Representations.
           Contributor represents that, except as disclosed pursuant to
           Section 3.4(a) above, Contributor believes that Contributor's
           Modifications are Contributor's original creation(s) and/or
@@ -318,7 +318,7 @@
 
 8. TERMINATION.
 
-     8.1.  This License and the rights granted hereunder will terminate
+     8.1. This License and the rights granted hereunder will terminate
      automatically if You fail to comply with terms herein and fail to cure
      such breach within 30 days of becoming aware of the breach. All
      sublicenses to the Covered Code which are properly granted shall
@@ -326,12 +326,12 @@
      nature, must remain in effect beyond the termination of this License
      shall survive.
 
-     8.2.  If You initiate litigation by asserting a patent infringement
+     8.2. If You initiate litigation by asserting a patent infringement
      claim (excluding declatory judgment actions) against Initial Developer
      or a Contributor (the Initial Developer or Contributor against whom
      You file such action is referred to as "Participant")  alleging that:
 
-     (a)  such Participant's Contributor Version directly or indirectly
+     (a) such Participant's Contributor Version directly or indirectly
      infringes any patent, then any and all rights granted by such
      Participant to You under Sections 2.1 and/or 2.2 of this License
      shall, upon 60 days notice from Participant terminate prospectively,
@@ -346,14 +346,14 @@
      Sections 2.1 and/or 2.2 automatically terminate at the expiration of
      the 60 day notice period specified above.
 
-     (b)  any software, hardware, or device, other than such Participant's
+     (b) any software, hardware, or device, other than such Participant's
      Contributor Version, directly or indirectly infringes any patent, then
      any rights granted to You by such Participant under Sections 2.1(b)
      and 2.2(b) are revoked effective as of the date You first made, used,
      sold, distributed, or had made, Modifications made by that
      Participant.
 
-     8.3.  If You assert a patent infringement claim against Participant
+     8.3. If You assert a patent infringement claim against Participant
      alleging that such Participant's Contributor Version directly or
      indirectly infringes any patent where such claim is resolved (such as
      by license or settlement) prior to the initiation of patent
@@ -362,7 +362,7 @@
      into account in determining the amount or value of any payment or
      license.
 
-     8.4.  In the event of termination under Sections 8.1 or 8.2 above,
+     8.4. In the event of termination under Sections 8.1 or 8.2 above,
      all end user license agreements (excluding distributors and resellers)
      which have been validly granted by You or any distributor hereunder
      prior to termination shall survive termination.
