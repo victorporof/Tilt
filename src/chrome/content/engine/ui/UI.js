@@ -36,301 +36,231 @@ var Tilt = Tilt || {};
 var EXPORTED_SYMBOLS = ["Tilt.UI"];
 
 /**
- * UI constructor.
- * This is a handler for all the UI elements. Any widgets need to be pushed
- * in this object to be properly updated and drawn. Achieve this using the 
- * push() and remove() functions from the prototype.
+ * The top level UI handling events and containing all the views.
  */
-Tilt.UI = function() {
-  Tilt.$ui = this;
+Tilt.UI = [];
+Tilt.UI.mouseX = 0;
+Tilt.UI.mouseY = 0;
+Tilt.UI.pmouseX = 0;
+Tilt.UI.pmouseY = 0;
+Tilt.UI.mousePressed = false;
+Tilt.UI.mouseScrollAmmount = 0;
+Tilt.UI.keyPressed = [];
 
-  // intercept this object using a profiler when building in debug mode
-  Tilt.Profiler.intercept("Tilt.UI", this);
+/**
+ * Updates and draws each view handled by the UI.
+ * @param {Number} frameDelta: the delta time elapsed between frames
+ */
+Tilt.UI.refresh = function(frameDelta) {
+  var tilt = Tilt.$renderer,
+    i, len, view;
 
-  /**
-   * All the UI elements will be added to this list for proper handling.
-   */
-  this.elements = [];
+  tilt.ortho();
+  tilt.defaults();
+  tilt.depthTest(false);
+
+  for (i = 0, len = this.length; i < len; i++) {
+    view = this[i];
+
+    if (!view.hidden) {
+      view.update(frameDelta, tilt);
+      view.draw(frameDelta, tilt);
+    }
+  }
+
+  this.pmouseX = this.mouseX;
+  this.pmouseY = this.mouseY;
 };
 
-Tilt.UI.prototype = {
+/**
+ * Sets a modal view.
+ * @param {Tilt.View} view: the view to be set modal
+ */
+Tilt.UI.setModal = function(view) {
+  if (view.modal || this.indexOf(view) === -1) {
+    return;
+  }
 
-  /**
-   * Draws all the stacked elements.
-   *
-   * @param {Number} frameDelta: the delta time elapsed between frames
-   * @param {Boolean} reset: true if the default view style should be forced
-   * @param {Array} container: optional, the container array for the objects
-   */
-  draw: function(frameDelta, reset, container, left, top, right, bottom) {
-    var tilt = Tilt.$renderer,
-      elements = container || this.elements,
-      element, bounds,
-      x = left || 0,
-      y = top || 0,
-      w = right || window.content.innerWidth,
-      h = bottom || window.content.innerHeight, i, len;
+  for (var i = 0, len = this.length; i < len; i++) {
+    this[i].$prevDisabled = this[i].disabled;
+    this[i].disabled = true;
+  }
 
-    if (reset) {
-      tilt.ortho();
-      tilt.defaults();
-      tilt.depthTest(false);
+  view.modal = true;
+  view.hidden = false;
+  view.disabled = false;
+};
+
+/**
+ * Unsets a modal view.
+ * @param {Tilt.View} view: the view to be set modal
+ */
+Tilt.UI.unsetModal = function(view) {
+  if (!view.modal || this.indexOf(view) === -1) {
+    return;
+  }
+
+  for (var i = 0, len = this.length; i < len; i++) {
+    this[i].disabled = this[i].$prevDisabled;
+    delete this[i].$prevDis;
+  }
+
+  view.modal = false;
+  view.hidden = true;
+  view.disabled = true;
+};
+
+/**
+ * Delegate mouse down method.
+ *
+ * @param {Number} x: the current horizontal coordinate of the mouse
+ * @param {Number} y: the current vertical coordinate of the mouse
+ * @param {Number} button: which mouse button was pressed
+ * @return {Boolean} true if the mouse is over a handled element
+ */
+Tilt.UI.mouseDown = function(x, y, button) {
+  this.mousePressed = true;
+  this.$handleMouseEvent("mouseDown", x, y, button);
+};
+
+/**
+ * Delegate mouse up method.
+ *
+ * @param {Number} x: the current horizontal coordinate of the mouse
+ * @param {Number} y: the current vertical coordinate of the mouse
+ * @param {Number} button: which mouse button was released
+ */
+Tilt.UI.mouseUp = function(x, y, button) {
+  this.mousePressed = false;
+  this.$handleMouseEvent("mouseUp", x, y, button);
+};
+
+/**
+ * Delegate click method.
+ *
+ * @param {Number} x: the current horizontal coordinate of the mouse
+ * @param {Number} y: the current vertical coordinate of the mouse
+ */
+Tilt.UI.click = function(x, y) {
+  this.$handleMouseEvent("onclick", x, y);
+};
+
+/**
+ * Delegate double click method.
+ *
+ * @param {Number} x: the current horizontal coordinate of the mouse
+ * @param {Number} y: the current vertical coordinate of the mouse
+ */
+Tilt.UI.doubleClick = function(x, y) {
+  this.$handleMouseEvent("ondoubleclick", x, y);
+};
+
+/**
+ * Delegate mouse move method.
+ *
+ * @param {Number} x: the current horizontal coordinate of the mouse
+ * @param {Number} y: the current vertical coordinate of the mouse
+ */
+Tilt.UI.mouseMove = function(x, y) {
+  this.mouseX = x;
+  this.mouseY = y;
+};
+
+/**
+ * Delegate mouse scroll method.
+ * @param {Number} scroll: the mouse wheel direction and speed
+ */
+Tilt.UI.mouseScroll = function(scroll) {
+  this.mouseScrollAmmount = scroll;
+};
+
+/**
+ * Delegate key down method.
+ * @param {Number} code: the code for the currently pressed key
+ */
+Tilt.UI.keyDown = function(code) {
+  this.keyPressed[code] = true;
+  this.$handleKeyEvent("onkeydown", code);
+};
+
+/**
+ * Delegate key up method.
+ * @param {Number} code: the code for the currently released key
+ */
+Tilt.UI.keyUp = function(code) {
+  this.keyPressed[code] = false;
+  this.$handleKeyEvent("onkeyup", code);
+};
+
+/**
+ * Internal function, handling a mouse event for each element in a view.
+ * @param {String} name: the event name
+ */
+Tilt.UI.$handleMouseEvent = function(name, x, y, button) {
+  var i, e, len, len2, elements, element, func,
+    bounds, boundsX, boundsY, boundsWidth, boundsHeight,
+    mouseX = this.mouseX,
+    mouseY = this.mouseY;
+
+  for (i = 0, len = this.length; i < len; i++) {
+    elements = this[i];
+
+    if (elements.disabled) {
+      continue;
     }
 
-    for (i = 0, len = elements.length; i < len; i++) {
-      element = elements[i];
-      bounds = element.$bounds || [1, 1, 1, 1];
+    for (e = 0, len2 = elements.length; e < len2; e++) {
+      element = elements[e];
 
-      if (!element.hidden) {
-        element.update();
+      if (!element.hidden && !element.disabled) {
+        bounds = element.$bounds || [-1, -1, -1, -1];
 
-        var r1x1 = bounds[0] + 1,
-          r1y1 = bounds[1] + 1,
-          r1x2 = bounds[0] + bounds[2] - 1,
-          r1y2 = bounds[1] + bounds[3] - 1,
-          r2x1 = x,
-          r2y1 = y,
-          r2x2 = x + w,
-          r2y2 = y + h,
+        boundsX = bounds[0];
+        boundsY = bounds[1];
+        boundsWidth = bounds[2];
+        boundsHeight = bounds[3];
 
-          overlap = r1x1 > r2x1 &&
-                    r1x2 < r2x2 &&
-                    r1y1 > r2y1 &&
-                    r1y2 < r2y2;
+        if (mouseX > boundsX && mouseX < boundsX + boundsWidth &&
+            mouseY > boundsY && mouseY < boundsY + boundsHeight) {
 
-        if (overlap) {
-          element.draw(tilt);
-        }
-      }
-    }
-  },
+          func = element[name];
 
-  /**
-   * Delegate mouse down method.
-   *
-   * @param {Number} x: the current horizontal coordinate of the mouse
-   * @param {Number} y: the current vertical coordinate of the mouse
-   * @param {Number} b: which mouse button was pressed
-   * @return {Boolean} true if the mouse is over a handled element
-   */
-  mouseDown: function(x, y, b) {
-    this.$mousePressed = true;
-    this.$handleEvent(x, y, this.$mouseEvent, "mousedown");
-
-    return this.$mousePressedOver;
-  },
-
-  /**
-   * Delegate mouse up method.
-   *
-   * @param {Number} x: the current horizontal coordinate of the mouse
-   * @param {Number} y: the current vertical coordinate of the mouse
-   * @param {Number} b: which mouse button was released
-   */
-  mouseUp: function(x, y, b) {
-    this.$mousePressed = false;
-    this.$mousePressedOver = false;
-    this.$handleEvent(x, y, this.$mouseEvent, "mouseup");
-  },
-
-  /**
-   * Delegate click method.
-   *
-   * @param {Number} x: the current horizontal coordinate of the mouse
-   * @param {Number} y: the current vertical coordinate of the mouse
-   */
-  click: function(x, y) {
-    this.$handleEvent(x, y, this.$mouseEvent, "click");
-  },
-
-  /**
-   * Delegate double click method.
-   *
-   * @param {Number} x: the current horizontal coordinate of the mouse
-   * @param {Number} y: the current vertical coordinate of the mouse
-   */
-  doubleClick: function(x, y) {
-    this.$handleEvent(x, y, this.$mouseEvent, "dblclick");
-  },
-
-  /**
-   * Delegate mouse move method.
-   *
-   * @param {Number} x: the current horizontal coordinate of the mouse
-   * @param {Number} y: the current vertical coordinate of the mouse
-   */
-  mouseMove: function(x, y) {
-    this.$mouseX = x;
-    this.$mouseY = y;
-  },
-
-  /**
-   * Follows all the elements handled by this object and checks if the element
-   * is valid to receive a custom event, in which case the event is fired.
-   *
-   * @param {Number} x: the current horizontal coordinate of the mouse
-   * @param {Number} y: the current vertical coordinate of the mouse
-   * @param {String} e: the name of the event function
-   */
-  $handleEvent: function(x, y, handle, e) {
-    var elements = this.elements,
-      element, subelements, i, j, len, len2;
-
-    for (i = 0, len = elements.length; i < len; i++) {
-      element = elements[i];
-
-      // a container can have one or more elements, verify each one if it is
-      // valid to receive the click event
-      if (element instanceof Tilt.Container) {
-        subelements = element.elements;
-
-        for (j = 0, len2 = subelements.length; j < len2; j++) {
-          handle.call(this, x, y, subelements[j], "on" + e);
-        }
-      }
-      else {
-        // normally check if the element is valid to receive a click event
-        handle.call(this, x, y, element, "on" + e);
-      }
-    }
-  },
-
-  /**
-   * Checks if a UI element is valid to receive an event. If this is the case
-   * then the event function is called when available.
-   *
-   * @param {Number} x: the current horizontal coordinate of the mouse
-   * @param {Number} y: the current vertical coordinate of the mouse
-   * @param {Object} element: the UI element to be checked
-   * @param {String} e: the name of the event function
-   */
-  $mouseEvent: function(x, y, element, e) {
-    if ("undefined" === typeof element) {
-      return;
-    }
-    if ("function" !== typeof element[e]) {
-      return;
-    }
-
-    var bounds = element.$bounds || [-1, -1, -1, -1],
-      boundsX = bounds[0],
-      boundsY = bounds[1],
-      boundsWidth = bounds[2],
-      boundsHeight = bounds[3];
-
-    if (x > boundsX && x < boundsX + boundsWidth &&
-        y > boundsY && y < boundsY + boundsHeight) {
-
-      if (e === "onmousedown") {
-        this.$mousePressedOver = true;
-      }
-      element[e](x, y);
-    }
-  },
-
-  /**
-   * Adds UI elements to the handler stack.
-   *
-   * @param {Array} elements: array of valid Tilt UI objects (ex: Tilt.Button)
-   * @param {Array} container: optional, the container array for the objects
-   */
-  push: function(elements, container) {
-    var i, len, element, index;
-
-    if ("undefined" === typeof container) {
-      container = this.elements;
-    }
-    if (elements instanceof Array) {
-      for (i = 0, len = elements.length; i < len; i++) {
-
-        element = elements[i];
-        if (element instanceof Array) {
-          this.push(element, container);
-        }
-        else {
-          if ("undefined" === typeof element || element === null) {
-            continue;
-          }
-          if ((index = container.indexOf(element)) === -1) {
-            container.push(element);
+          if ("function" === typeof func) {
+            func(x, y, button);
           }
         }
       }
     }
-    else {
-      element = elements;
-
-      if ("undefined" === typeof element || element === null) {
-        return;
-      }
-      if ((index = container.indexOf(element)) === -1) {
-        container.push(element);
-      }
-    }
-  },
-
-  /**
-   * Removes UI elements from the handler stack.
-   *
-   * @param {Array} elements: array of valid Tilt UI objects (ex: Tilt.Button)
-   * @param {Array} container: optional, the container array for the objects
-   */
-  remove: function(elements, container) {
-    var i, len, element, index;
-
-    if ("undefined" === typeof elements) {
-      this.elements = [];
-      return;
-    }
-
-    if ("undefined" === typeof container) {
-      container = this.elements;
-    }
-    if (elements instanceof Array) {
-      for (i = 0, len = elements.length, index = -1; i < len; i++) {
-
-        element = elements[i];
-        if (element instanceof Array) {
-          this.remove(element, container);
-        }
-        else {
-          if ("undefined" === typeof element || element === null) {
-            continue;
-          }
-          if ((index = this.elements.indexOf(element)) !== -1) {
-            container.splice(index, 1);
-
-            if (element.elements instanceof Array) {
-              this.remove(element.elements);
-            }
-          }
-        }
-      }
-    }
-    else {
-      element = elements;
-
-      if ("undefined" === typeof element || element === null) {
-        return;
-      }
-      if ((index = this.elements.indexOf(element)) !== -1) {
-        container.splice(index, 1);
-
-        if (element.elements instanceof Array) {
-          this.remove(element.elements);
-        }
-      }
-    }
-  },
-
-  /**
-   * Destroys this object and deletes all members.
-   */
-  destroy: function() {
-    for (var i in this.elements) {
-      Tilt.destroyObject(this.elements[i]);
-    }
-
-    Tilt.destroyObject(this);
   }
 };
+
+/**
+ * Internal function, handling a key event for each element in a view.
+ * @param {String} name: the event name
+ */
+Tilt.UI.$handleKeyEvent = function(name, code) {
+  var i, e, len, len2, elements, element, func;
+
+  for (i = 0, len = this.length; i < len; i++) {
+    elements = this[i];
+
+    if (elements.disabled) {
+      continue;
+    }
+
+    for (e = 0, len2 = elements.length; e < len2; e++) {
+      element = elements[e];
+
+      if (!element.hidden && !element.disabled) {
+        func = element[name];
+
+        if ("function" === typeof func) {
+          func(code);
+        }
+      }
+    }
+  }
+};
+
+// intercept this object using a profiler when building in debug mode
+Tilt.Profiler.intercept("Tilt.UI", Tilt.UI);

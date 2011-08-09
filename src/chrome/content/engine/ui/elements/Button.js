@@ -33,77 +33,85 @@
 "use strict";
 
 var Tilt = Tilt || {};
-var EXPORTED_SYMBOLS = ["Tilt.Container"];
+var EXPORTED_SYMBOLS = ["Tilt.Button"];
 
 /**
- * Container constructor.
+ * Button constructor.
  *
- * @param {Array} elements: array of GUI elements added to this container
+ * @param {Tilt.Sprite} sprite: the sprite to be drawn as background
  * @param {Object} properties: additional properties for this object
- *  @param {Boolean} hidden: true if this object should be hidden
- *  @param {String} background: color to fill the screen
+ *  @param {Boolean} hidden: specifies if this object shouldn't be drawn
+ *  @param {Number} x: the x position of the object
+ *  @param {Number} y: the y position of the object
+ *  @param {Number} width: the width of the object
+ *  @param {Number} height: the height of the object
  */
-Tilt.Container = function(elements, properties) {
+Tilt.Button = function(sprite, properties) {
 
   // intercept this object using a profiler when building in debug mode
-  Tilt.Profiler.intercept("Tilt.Container", this);
+  Tilt.Profiler.intercept("Tilt.Button", this);  
 
   // make sure the properties parameter is a valid object
   properties = properties || {};
-  elements = elements || [];
-
-  /**
-   * The draw coordinates of this object.
-   */
-  this.x = properties.x || 0;
-  this.y = properties.y || 0;
-
-  /**
-   * The inner dimensions of this object.
-   */
-  this.width = properties.width || 0;
-  this.height = properties.height || 0;
-
-  /**
-   * The UI elements in this container.
-   */
-  this.elements = elements instanceof Array ? elements : [elements];
-
-  /**
-   * The color of the full screen background rectangle.
-   */
-  this.background = properties.background || null;
 
   /**
    * Variable specifying if this object shouldn't be drawn.
    */
   this.hidden = properties.hidden || false;
-};
-
-Tilt.Container.prototype = {
 
   /**
-   * Adds a UI element to the handler stack.
-   * @param {Array} elements: array of valid Tilt UI objects (ex: Tilt.Button)
-   * @param {Tilt.UI} ui: the ui to handle the child elements
+   * A sprite used as a background for this object.
    */
-  push: function(elements, ui) {
-    if ("undefined" === typeof ui) {
-      ui = Tilt.$ui;
+  this.$sprite = sprite || { $x: -1, $y: -1, $width: -1, $height: -1 };
+  this.$sprite.$x = properties.x || this.$sprite.$x;
+  this.$sprite.$y = properties.y || this.$sprite.$y;
+  this.$sprite.$width = properties.width || this.$sprite.$width;
+  this.$sprite.$height = properties.height || this.$sprite.$height;
+
+  /**
+   * The bounds of this object (used for clicking and intersections).
+   */
+  this.$bounds = [
+    this.$sprite.$x, this.$sprite.$y,
+    this.$sprite.$width, this.$sprite.$height];
+};
+
+Tilt.Button.prototype = {
+
+  /**
+   * Sets this object's position.
+   *
+   * @param {Number} x: the x position of the object
+   * @param {Number} y: the y position of the object
+   */
+  setPosition: function(x, y) {
+    if ("function" === typeof this.$sprite.setPosition) {
+      this.$sprite.setPosition(x, y);
     }
-    ui.push(elements, this.elements);
+    else {
+      this.$sprite.$x = x;
+      this.$sprite.$y = y;
+    }
+    this.$bounds[0] = x;
+    this.$bounds[1] = y;
   },
 
   /**
-   * Removes a UI element from the handler stack.
-   * @param {Array} elements: array of valid Tilt UI objects (ex: Tilt.Button)
-   * @param {Tilt.UI} ui: the ui to handle the child elements
+   * Sets this object's dimensions.
+   *
+   * @param {Number} width: the width of the object
+   * @param {Number} height: the height of the object
    */
-  remove: function(elements, ui) {
-    if ("undefined" === typeof ui) {
-      ui = Tilt.$ui;
+  setSize: function(width, height) {
+    if ("function" === typeof this.$sprite.setSize) {
+      this.$sprite.setSize(width, height);
     }
-    ui.remove(elements, this.elements);
+    else {
+      this.$sprite.$width = width;
+      this.$sprite.$height = height;
+    }
+    this.$bounds[2] = width;
+    this.$bounds[3] = height;
   },
 
   /**
@@ -117,21 +125,10 @@ Tilt.Container.prototype = {
    * @param {Tilt.Renderer} tilt: optional, a reference to a Tilt.Renderer
    */
   draw: function(tilt) {
-    if (!this.hidden) {
-      tilt = tilt || Tilt.$renderer;
+    tilt = tilt || Tilt.$renderer;
 
-      var x = this.x || 0,
-        y = this.y || 0,
-        width = this.width || tilt.width,
-        height = this.height || tilt.height;
-
-      if (this.background !== null) {
-        tilt.fill(this.background);
-        tilt.noStroke();
-        tilt.rect(x, y, width, height);
-      }
-
-      Tilt.$ui.draw(0, false, this.elements, x, y, width, height);
+    if ("undefined" !== typeof this.$sprite.$texture) {
+      this.$sprite.draw(tilt);
     }
   },
 
@@ -139,10 +136,6 @@ Tilt.Container.prototype = {
    * Destroys this object and deletes all members.
    */
   destroy: function() {
-    for (var i in this.elements) {
-      Tilt.destroyObject(this.elements[i]);
-    }
-
     Tilt.destroyObject(this);
   }
 };
