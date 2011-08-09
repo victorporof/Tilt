@@ -150,7 +150,7 @@ TiltChrome.Controller.MouseAndKeyboard = function() {
         Math.abs(downY - dblClickY) < 2) {
 
       this.visualization.performMeshPick(dblClickX, dblClickY, button);
-      ui.doubleClick(upX, upY, button);
+      ui.doubleClick(dblClickX, dblClickY, button);
     }
   }.bind(this);
 
