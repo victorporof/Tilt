@@ -72,11 +72,6 @@ Tilt.$enabledAttributes = -1;
 Tilt.$loadedTextures = {};
 
 /**
- * The current UI handler.
- */
-Tilt.$ui = null;
-
-/**
  * Clears the cache and sets all the variables to default.
  */
 Tilt.clearCache = function() {
@@ -85,7 +80,6 @@ Tilt.clearCache = function() {
   Tilt.$activeShader = -1;
   Tilt.$enabledAttributes = -1;
   Tilt.$loadedTextures = {};
-  Tilt.$ui = null;
 
   Tilt.GLSL.$count = 0;
   Tilt.TextureUtils.$count = 0;
