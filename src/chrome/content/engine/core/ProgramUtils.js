@@ -77,9 +77,11 @@ Tilt.GLSL = {
     // also make sure the necessary shader mime type is valid
     if (shaderType === "x-shader/x-vertex") {
       shader = gl.createShader(gl.VERTEX_SHADER);
-    } else if (shaderType === "x-shader/x-fragment") {
+    }
+    else if (shaderType === "x-shader/x-fragment") {
       shader = gl.createShader(gl.FRAGMENT_SHADER);
-    } else {
+    }
+    else {
       Tilt.Console.error(
         Tilt.StringBundle.format("compileShader.type.error"), [shaderSource]);
 
@@ -188,7 +190,8 @@ Tilt.GLSL = {
       // try to get a shader attribute
       if ((io = this.shaderAttribute(program, variable)) >= 0) {
         return io;
-      } else {
+      }
+      else {
         // if unavailable, search for a shader uniform
         return this.shaderUniform(program, variable);
       }
