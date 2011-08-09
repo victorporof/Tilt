@@ -80,10 +80,26 @@ TiltChrome.UI.Default = function() {
   cssButton = null,
 
   /**
+   * Top-left control items.
+   */
+  eyeButton = null,
+  resetButton = null,
+  zoomInButton = null,
+  zoomOutButton = null,
+  arcballSprite = null,
+
+  /**
+   * Middle-left control items.
+   */
+  viewModeButton = null,
+  colorAdjustButton = null,
+
+  /**
    * Arrays holding groups of objects.
    */
   alwaysVisibleElements = [],
   hideableElements = [],
+  panelElements = [],
 
   /**
    * Retain the position for the mouseDown event.
@@ -155,6 +171,43 @@ TiltChrome.UI.Default = function() {
       hidden: true
     });
 
+    eyeButton = new Tilt.Button(new Tilt.Sprite(t, [0, 147, 42, 42]), {
+      x: 0,
+      y: 0
+    });
+
+    resetButton = new Tilt.Button(new Tilt.Sprite(t, [0, 190, 42, 42]), {
+      x: 60,
+      y: 150
+    });
+
+    zoomInButton = new Tilt.Button(new Tilt.Sprite(t, [0, 234, 42, 42]), {
+      x: 100,
+      y: 150
+    });
+
+    zoomOutButton = new Tilt.Button(new Tilt.Sprite(t, [0, 278, 42, 42]), {
+      x: 20,
+      y: 150
+    });
+
+    arcballSprite = new Tilt.Sprite(t, [0, 0, 145, 145], {
+      x: 10,
+      y: 10
+    });
+
+    var viewModeNormalSprite = new Tilt.Sprite(t, [438, 67, 66, 66]);
+    var viewModeWireframeSprite = new Tilt.Sprite(t, [438, 0, 66, 66]);
+    viewModeButton = new Tilt.Button(viewModeWireframeSprite, {
+      x: 50,
+      y: 200
+    });
+
+    colorAdjustButton = new Tilt.Button(new Tilt.Sprite(t, [505, 0, 66, 66]),{
+      x: 50,
+      y: 260
+    });
+
     exitButton.onclick = function() {
       TiltChrome.BrowserOverlay.destroy(true, true);
       TiltChrome.BrowserOverlay.href = null;
@@ -190,8 +243,36 @@ TiltChrome.UI.Default = function() {
     attrButton.onclick = function() {
     };
 
-    alwaysVisibleElements.push(background, exitButton);
-    hideableElements.push(helpButton, exportButton, optionsButton,
+    eyeButton.onclick = function() {
+      hideableElements.forEach(function(element) {
+        element.hidden ^= true;
+      });
+    };
+
+    resetButton.onclick = function() {
+      this.controller.reset(0.95);
+    }.bind(this);
+
+    zoomInButton.onclick = function(x, y) {
+      this.controller.zoom(200);
+    }.bind(this);
+
+    zoomOutButton.onclick = function(x, y) {
+      this.controller.zoom(-200);
+    }.bind(this);
+
+    viewModeButton.onclick = function() {
+    }.bind(this);
+
+    alwaysVisibleElements.push(
+      background, exitButton, eyeButton);
+
+    hideableElements.push(
+      helpButton, exportButton, optionsButton,
+      resetButton, zoomInButton, zoomOutButton,
+      arcballSprite, viewModeButton, colorAdjustButton);
+
+    panelElements.push(
       htmlButton, cssButton, attrButton);
 
     alwaysVisibleElements.forEach(function(element) {
@@ -199,6 +280,10 @@ TiltChrome.UI.Default = function() {
     });
 
     hideableElements.forEach(function(element) {
+      view.push(element);
+    });
+
+    panelElements.forEach(function(element) {
       view.push(element);
     });
 
@@ -257,6 +342,16 @@ TiltChrome.UI.Default = function() {
    * @param height: the new height of the visualization
    */
   this.resize = function(width, height) {
+    background.setSize(width, height);
+
+    exitButton.setPosition(width - 50, 0);
+    helpButton.setPosition(width - 150, 0);
+    exportButton.setPosition(width - 215, 0);
+    optionsButton.setPosition(width - 285, 0);
+
+    htmlButton.setPosition(width - 337, 0);
+    cssButton.setPosition(width - 377, 0);
+    attrButton.setPosition(width - 465, 0);
   };
 
   /**
