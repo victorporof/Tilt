@@ -116,11 +116,11 @@ Tilt.UI.unsetModal = function(view) {
  * @param {Number} x: the current horizontal coordinate of the mouse
  * @param {Number} y: the current vertical coordinate of the mouse
  * @param {Number} button: which mouse button was pressed
- * @return {Boolean} true if the mouse is over a handled element
  */
 Tilt.UI.mouseDown = function(x, y, button) {
   this.mousePressed = true;
-  this.$handleMouseEvent("mouseDown", x, y, button);
+  this.mouseOver = false;
+  this.$handleMouseEvent("onmousedown", x, y, button);
 };
 
 /**
@@ -132,7 +132,8 @@ Tilt.UI.mouseDown = function(x, y, button) {
  */
 Tilt.UI.mouseUp = function(x, y, button) {
   this.mousePressed = false;
-  this.$handleMouseEvent("mouseUp", x, y, button);
+  this.mouseOver = false;
+  this.$handleMouseEvent("onmouseup", x, y, button);
 };
 
 /**
@@ -172,6 +173,19 @@ Tilt.UI.mouseMove = function(x, y) {
  */
 Tilt.UI.mouseScroll = function(scroll) {
   this.mouseScrollAmmount = scroll;
+  this.$handleKeyEvent("onmousescroll", scroll);
+};
+
+/**
+ * Delegate mouse over method.
+ */
+Tilt.UI.mouseOver = function() {
+};
+
+/**
+ * Delegate mouse out method.
+ */
+Tilt.UI.mouseOut = function() {
 };
 
 /**
@@ -205,30 +219,41 @@ Tilt.UI.$handleMouseEvent = function(name, x, y, button) {
   for (i = 0, len = this.length; i < len; i++) {
     elements = this[i];
 
-    if (elements.disabled) {
+    if (elements.hidden || elements.disabled) {
       continue;
     }
 
     for (e = 0, len2 = elements.length; e < len2; e++) {
       element = elements[e];
 
-      if (!element.hidden && !element.disabled) {
-        bounds = element.$bounds || [-1, -1, -1, -1];
+      if (element.hidden || element.disabled) {
+        continue;
+      }
 
-        boundsX = bounds[0];
-        boundsY = bounds[1];
-        boundsWidth = bounds[2];
-        boundsHeight = bounds[3];
+      bounds = element.$bounds || [-1, -1, -1, -1];
+      boundsX = bounds[0];
+      boundsY = bounds[1];
+      boundsWidth = bounds[2];
+      boundsHeight = bounds[3];
 
-        if (mouseX > boundsX && mouseX < boundsX + boundsWidth &&
-            mouseY > boundsY && mouseY < boundsY + boundsHeight) {
+      if ("onmouseup" === name) {
+        element.mousePressed = false;
+      }
 
-          func = element[name];
+      if (mouseX > boundsX && mouseX < boundsX + boundsWidth &&
+          mouseY > boundsY && mouseY < boundsY + boundsHeight) {
 
-          if ("function" === typeof func) {
-            func(x, y, button);
-          }
+        func = element[name];
+
+        if ("function" === typeof func) {
+          func(x, y, button);
         }
+
+        if ("onmousedown" === name) {
+          element.mousePressed = true;
+        }
+
+        this.mouseOver = true;
       }
     }
   }
@@ -244,19 +269,21 @@ Tilt.UI.$handleKeyEvent = function(name, code) {
   for (i = 0, len = this.length; i < len; i++) {
     elements = this[i];
 
-    if (elements.disabled) {
+    if (elements.hidden || elements.disabled) {
       continue;
     }
 
     for (e = 0, len2 = elements.length; e < len2; e++) {
       element = elements[e];
 
-      if (!element.hidden && !element.disabled) {
-        func = element[name];
+      if (element.hidden || element.disabled) {
+        continue;
+      }
 
-        if ("function" === typeof func) {
-          func(code);
-        }
+      func = element[name];
+
+      if ("function" === typeof func) {
+        func(code);
       }
     }
   }
