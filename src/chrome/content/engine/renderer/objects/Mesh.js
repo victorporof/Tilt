@@ -61,19 +61,22 @@ Tilt.Mesh = function(parameters, draw) {
     this[i] = parameters[i];
   }
 
-  // the color should be a [r, g, b, a] array, check this now
+  // the color should be [r, g, b, a] array, check this now
   if ("string" === typeof this.color) {
     this.color = Tilt.Math.hex2rgba(this.color);
-  } else if ("undefined" === typeof this.color) {
+  }
+  else if ("undefined" === typeof this.color) {
     this.color = [1, 1, 1, 1];
   }
 
   // the texture alpha should be a number between 0..1
   if ("number" === typeof this.texalpha && this.texalpha > 1) {
     this.texalpha /= 255;
-  } else if ("number" === typeof this.texalpha && this.texalpha < 0) {
+  }
+  else if ("number" === typeof this.texalpha && this.texalpha < 0) {
     this.texalpha = 0;
-  } else if ("undefined" === typeof this.texalpha) {
+  }
+  else if ("undefined" === typeof this.texalpha) {
     this.texalpha = 1;
   }
 
@@ -114,18 +117,21 @@ Tilt.Mesh.prototype = {
     // use the necessary shader
     if (t) {
       tilt.useTextureShader(vertices, texCoord, color, a, t);
-    } else {
+    }
+    else {
       tilt.useColorShader(vertices, color);
     }
 
     // draw the vertices as indexed elements or simple arrays
     if (indices) {
       tilt.drawIndexedVertices(drawMode, indices);
-    } else {
+    }
+    else {
       tilt.drawVertices(drawMode, vertices.numItems);
     }
 
     // TODO: use the normals buffer, add some lighting
+
     // save the current model view and projection matrices
     this.mvMatrix = mat4.create(tilt.mvMatrix);
     this.projMatrix = mat4.create(tilt.projMatrix);
