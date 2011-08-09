@@ -73,12 +73,6 @@ Tilt.Renderer = function(canvas, failCallback, successCallback) {
     this.DEPTH_BUFFER_BIT = this.gl.DEPTH_BUFFER_BIT;
     this.STENCIL_BUFFER_BIT = this.gl.STENCIL_BUFFER_BIT;
 
-    this.MAX_TEXTURE_SIZE =
-      this.gl.getParameter(this.gl.MAX_TEXTURE_SIZE);
-
-    this.MAX_TEXTURE_IMAGE_UNITS =
-      this.gl.getParameter(this.gl.MAX_TEXTURE_IMAGE_UNITS);
-
     // if successful, run a success callback function if available
     if ("function" === typeof successCallback) {
       successCallback();
@@ -866,7 +860,7 @@ Tilt.Renderer.prototype = {
    * Clears the Tilt cache, destroys this object and deletes all members.
    */
   destroy: function() {
-    Tilt.clearCache();
     Tilt.destroyObject(this);
+    Tilt.clearCache();
   }
 };
