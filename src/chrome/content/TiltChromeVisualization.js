@@ -211,9 +211,9 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
       // use this node only if it actually has any dimensions
       if (coord.width > 4 && coord.height > 4) {
         // the entire mesh's pivot is the screen center
-        var x = coord.x - tilt.width / 2,
-         y = coord.y - tilt.height / 2,
-         z = depth * thickness,
+        var x = coord.x - tilt.width / 2 + Math.random() / 10,
+         y = coord.y - tilt.height / 2 + Math.random() / 10,
+         z = depth * thickness + Math.random() / 10,
          w = coord.width,
          h = coord.height;
 
