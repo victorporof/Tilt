@@ -50,7 +50,7 @@
     </menuitem>
   </menupopup>
 
-  <menupopup id="appmenu_webDeveloper">
+  <menupopup id="appmenu_webDeveloper_popup">
     <menuitem class="menu-iconic"
               id="tilt-menu"
               key="tilt-menu-key"
