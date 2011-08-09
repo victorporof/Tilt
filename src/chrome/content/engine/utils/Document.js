@@ -185,6 +185,10 @@ Tilt.Document = {
         // also continue the recursion with all the children
         nodeCallback(child, depth, totalNodes);
         recursive(nodeCallback, child, depth + 1);
+
+        if (child.localName === "iframe") {
+          recursive(nodeCallback, child.contentDocument, depth + 2);
+        }
       }
     }
 
@@ -193,7 +197,7 @@ Tilt.Document = {
         recursive(nodeCallback, dom || window.content.document, 0);
       }
 
-      // once we recursively traversed all the dom nodes, run a callback
+      // once we traversed all the dom nodes, run a callback
       if ("function" === typeof readyCallback) {
         readyCallback(maxDepth, totalNodes);
       }
@@ -204,6 +208,27 @@ Tilt.Document = {
   },
 
   /**
+   * Gets the full webpage dimensions (width and height);
+   *
+   * @param {Object} contentWindow: the content window holding the webpage
+   * @return {Object} an object containing the width and height coords
+   */
+  getContentWindowDimensions: function(contentWindow) {
+    var coords,
+      pageWidth = contentWindow.innerWidth + contentWindow.scrollMaxX,
+      pageHeight = contentWindow.innerHeight + contentWindow.scrollMaxY,
+      size = { width: pageWidth, height: pageHeight };
+
+    this.traverse(function(child) {
+      coords = this.getNodeCoordinates(child);
+      size.width = Math.max(size.width, coords.x||0 + coords.width||0);
+      size.height = Math.max(size.height, coords.y||0 + coords.height||0);
+    }.bind(this), null, contentWindow.document);
+
+    return size;
+  },
+
+  /**
    * Returns a node's absolute x, y, width and height coordinates.
    *
    * @param {Object} node: the node which type needs to be analyzed
@@ -211,8 +236,9 @@ Tilt.Document = {
    */
   getNodeCoordinates: function(node) {
     try {
-      if (node.localName === "head" || node.localName === "body")
-        throw new Exception();
+      if (node.localName === "head" || 
+          node.localName === "body" || 
+          node.localName === "iframe") throw new Exception();
 
       // this is the preferred way of getting the bounding client rectangle
       var clientRect = node.getBoundingClientRect();
@@ -315,12 +341,12 @@ Tilt.Document = {
   },
 
   /**
-   * Returns the modified attributes from a dom node.
+   * Returns the attributes from a dom node as a string.
    *
    * @param {NamedNodeMap} attributes: attributes to be analyzed
    * @return {String} the custom attributes text
    */
-  getModifiedAttributes: function(attributes) {
+  getAttributesString: function(attributes) {
     var attText = [], i, len;
 
     for (i = 0, len = attributes.length; i < len; i++) {
