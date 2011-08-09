@@ -85,15 +85,14 @@ The controller is initialized in [browserOverlay.js](https://github.com/victorpo
 this.visualization =
   new TiltChrome.Visualization(this.canvas,
   new TiltChrome.Controller.MouseAndKeyboard(),
-  new TiltChrome.UI());
+  new TiltChrome.UI.Default());
 ```
 
 The current mouse and keyboard implementation is in [TiltChromeController.js](https://github.com/victorporof/Tilt/blob/master/src/chrome/content/TiltChromeController.js). You can implement your own controller by creating a new object respecting a predefined interface. Each controller should have the `init`, `loop`, `resize` and `destroy` functions, and you can access the public delegate methods in the visualization by `this.visualization.publicMethod`. Generally, you should need to handle only the following events:
 
 * `this.visualization.setTranslation(translation)`
 * `this.visualization.setRotation(quaternion)`
-* `this.visualization.click(x, y)`
-* `this.visualization.doubleClick(x, y)`
+* `this.visualization.performMeshPick(x, y)`
 
 The controller pattern is:
 
@@ -141,12 +140,12 @@ TiltChrome.Controller.MyCustomController = function() {
 ## Implement a custom UI
 Just like the controller, the user interface is initialized when constructing the visualization. The current <b>work in progress</b> implementation is in [TiltChromeUI.js](https://github.com/victorporof/Tilt/blob/master/src/chrome/content/TiltChromeUI.js). You can implement your own user interface by creating a new object respecting a predefined interface. 
 
-Each UI should have the `init`, `draw`, `resize` and `destroy` functions. Moreover, you can specify events like `click` or `doubleClick`, handled automatically by the controller.
+Each UI should have the `init`, `draw`, `resize` and `destroy` functions. Moreover, you can specify events like `domVisualizationMeshNodeCallback` or `domVisualizationMeshReadyCallback`, handled automatically by the visualization.
 
 The UI pattern is:
 
 ```
-TiltChrome.MyCustomUserInterface = function() {
+TiltChrome.UI.MyCustomUserInterface = function() {
 
   /**
    * Function called automatically by the visualization at the setup().
@@ -163,24 +162,6 @@ TiltChrome.MyCustomUserInterface = function() {
    * @param {Number} frameDelta: the delta time elapsed between frames
    */
   this.draw = function(frameDelta) {
-  };
-
-  /**
-   * Delegate click method, handled by the controller.
-   *
-   * @param {Number} x: the current horizontal coordinate
-   * @param {Number} y: the current vertical coordinate
-   */
-  this.click = function(x, y) {
-  };
-
-  /**
-   * Delegate double click method, handled by the controller.
-   *
-   * @param {Number} x: the current horizontal coordinate
-   * @param {Number} y: the current vertical coordinate
-   */
-  this.doubleClick = function(x, y) {
   };
 
   /**
