@@ -36,8 +36,7 @@ var TiltChrome = TiltChrome || {};
 var EXPORTED_SYMBOLS = ["TiltChrome.EntryPoint"];
 
 /**
- * Entry point for this extension, including all necessary Javascript files.
- * This also automatically updates the extension if necessary.
+ * Entry point for this extension, including the necessary Javascript files.
  */
 TiltChrome.EntryPoint = {
 
@@ -48,6 +47,10 @@ TiltChrome.EntryPoint = {
     // the script loader responsible with loading each Javascript file
     var scriptLoader = Cc["@mozilla.org/moz/jssubscript-loader;1"]
       .getService(Ci.mozIJSSubScriptLoader);
+
+    // the 'Tilt-extension.js' source file is created at build time, and it's
+    // not part of the project; no other js files will be copied/archived in
+    // the xpi archive
 
     // load everything after a while, don't slow down the browser startup
     window.setTimeout(function() {
