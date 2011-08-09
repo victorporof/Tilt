@@ -59,6 +59,7 @@ Tilt.TextureUtils = {
     // make sure the image is power of two before binding to a texture
     var gl = Tilt.$gl,
       pott = Tilt.TextureUtils.resizeImageToPowerOfTwo(image, parameters),
+      prev = gl.getParameter(gl.TEXTURE_BINDING_2D),
       width = image.width,
       height = image.height,
 
@@ -78,7 +79,7 @@ Tilt.TextureUtils = {
 
     // set the required texture params and do some cleanup
     this.setTextureParams(parameters);
-    gl.bindTexture(gl.TEXTURE_2D, null);
+    gl.bindTexture(gl.TEXTURE_2D, prev);
 
     // cache the current texture in a hash table, for easy future access
     if ("undefined" !== typeof image.src) {
