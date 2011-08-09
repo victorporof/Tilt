@@ -61,6 +61,7 @@ Tilt.Renderer = function(canvas, failCallback, successCallback) {
 
   // check if the context was created successfully
   if ("undefined" !== typeof this.gl && this.gl !== null) {
+
     // set up some global enums
     this.TRIANGLES = this.gl.TRIANGLES;
     this.TRIANGLE_STRIP = this.gl.TRIANGLE_STRIP;
@@ -77,7 +78,8 @@ Tilt.Renderer = function(canvas, failCallback, successCallback) {
     if ("function" === typeof successCallback) {
       successCallback();
     }
-  } else {
+  }
+  else {
     // if unsuccessful, log the error and run a fail callback if available
     Tilt.Console.log(Tilt.StringBundle.get("initWebGL.error"));
 
@@ -202,6 +204,15 @@ Tilt.Renderer = function(canvas, failCallback, successCallback) {
 
   // set the default tint, fill, stroke and other visual properties
   this.defaults();
+
+  // cleanup
+  canvas = null;
+  failCallback = null;
+  successCallback = null;
+  color$vs = null;
+  color$fs = null;
+  texture$vs = null;
+  texture$fs = null;
 };
 
 Tilt.Renderer.prototype = {
@@ -254,11 +265,14 @@ Tilt.Renderer.prototype = {
 
     if ("string" === typeof color) {
       rgba = Tilt.Math.hex2rgba(color);
-    } else if ("undefined" === typeof color) {
+    }
+    else if ("undefined" === typeof color) {
       rgba = [0, 0, 0, 1];
-    } else if ("number" === typeof color) {
+    }
+    else if ("number" === typeof color) {
       rgba = [color / 255, color / 255, color / 255, 1];
-    } else {
+    }
+    else {
       rgba = [color[0] / 255, color[1] / 255, color[2] / 255, color[3] / 255];
     }
 
@@ -489,10 +503,12 @@ Tilt.Renderer.prototype = {
     if ("alpha" === mode) {
       gl.enable(gl.BLEND);
       gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
-    } else if ("add" === mode || "additive" === mode) {
+    }
+    else if ("add" === mode || "additive" === mode) {
       gl.enable(gl.BLEND);
       gl.blendFunc(gl.SRC_ALPHA, gl.ONE);
-    } else {
+    }
+    else {
       gl.disable(gl.BLEND);
     }
   },
@@ -508,7 +524,8 @@ Tilt.Renderer.prototype = {
 
     if (mode) {
       gl.enable(gl.DEPTH_TEST);
-    } else {
+    }
+    else {
       gl.disable(gl.DEPTH_TEST);
     }
   },
@@ -750,7 +767,8 @@ Tilt.Renderer.prototype = {
         this.useTextureShader(cube.vertices, cube.texCoord, tint, a, t);
         this.drawIndexedVertices(this.TRIANGLES, cube.indices);
       }
-    } else {
+    }
+    else {
       // draw the box only if the fill alpha channel is not transparent
       if (fill[3]) {
         // use the necessary shader and draw the vertices
