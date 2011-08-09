@@ -98,8 +98,14 @@ TiltChrome.Controller.MouseAndKeyboard = function() {
     downX = e.clientX - e.target.offsetLeft;
     downY = e.clientY - e.target.offsetTop;
 
-    arcball.mouseDown(downX, downY, e.which);
     ui.mouseDown(downX, downY, e.which);
+
+    if (!ui.mouseOver) {
+      arcball.mouseDown(downX, downY, e.which);
+    }
+    else {
+      arcball.cancel();
+    }
   };
 
   /**
@@ -113,8 +119,8 @@ TiltChrome.Controller.MouseAndKeyboard = function() {
     var upY = e.clientY - e.target.offsetTop;
     var button = e.which;
 
-    arcball.mouseUp(upX, upY, button);
     ui.mouseUp(upX, upY, button);
+    arcball.mouseUp(upX, upY, button);
   };
 
   /**
@@ -149,8 +155,8 @@ TiltChrome.Controller.MouseAndKeyboard = function() {
     if (Math.abs(downX - dblClickX) < 2 && 
         Math.abs(downY - dblClickY) < 2) {
 
-      this.visualization.performMeshPick(dblClickX, dblClickY, button);
       ui.doubleClick(dblClickX, dblClickY, button);
+      this.visualization.performMeshPick(dblClickX, dblClickY, button);
     }
   }.bind(this);
 
@@ -164,8 +170,8 @@ TiltChrome.Controller.MouseAndKeyboard = function() {
     var moveX = e.clientX - e.target.offsetLeft;
     var moveY = e.clientY - e.target.offsetTop;
 
-    arcball.mouseMove(moveX, moveY);
     ui.mouseMove(moveX, moveY);
+    arcball.mouseMove(moveX, moveY);
   };
 
   /**
@@ -175,6 +181,7 @@ TiltChrome.Controller.MouseAndKeyboard = function() {
     e.preventDefault();
     e.stopPropagation();
 
+    ui.mouseOut();
     arcball.mouseOut();
   };
 
@@ -185,8 +192,8 @@ TiltChrome.Controller.MouseAndKeyboard = function() {
     e.preventDefault();
     e.stopPropagation();
 
-    arcball.mouseScroll(e.detail);
     ui.mouseScroll(e.detail);
+    arcball.mouseScroll(e.detail);
   };
 
   /**
@@ -200,8 +207,8 @@ TiltChrome.Controller.MouseAndKeyboard = function() {
       return;
     }
 
-    arcball.keyDown(code);
     ui.keyDown(code);
+    arcball.keyDown(code);
   };
 
   /**
@@ -221,8 +228,8 @@ TiltChrome.Controller.MouseAndKeyboard = function() {
       }
     }
 
-    arcball.keyUp(code);
     ui.keyUp(code);
+    arcball.keyUp(code);
   };
 
   /**
