@@ -269,9 +269,6 @@ Tilt.Program.prototype = {
    */
   destroy: function() {
     Tilt.$gl.deleteShader(this.$ref);
-
-    for (var i in this) {
-      delete this[i];
-    }
+    Tilt.destroyObject(this);
   }
 };
