@@ -96,7 +96,9 @@ TiltChrome.BrowserOverlay = {
 
       // construct the visualization using the canvas
       this.visualization =
-        new TiltChrome.Visualization(this.canvas);
+        new TiltChrome.Visualization(this.canvas,
+        new TiltChrome.Controller.MouseAndKeyboard(),
+        new TiltChrome.UI.Default());
     }
   },
 
@@ -118,13 +120,13 @@ TiltChrome.BrowserOverlay = {
 
     // remove any remaining traces of popups and the visualization
     function finish() {
-      if (this.panel !== null) {
-        this.panel.hidePopup();
-        this.panel = null;
-      }
       if (this.visualization !== null) {
         this.visualization.destroy();
         this.visualization = null;
+      }
+      if (this.panel !== null) {
+        this.panel.hidePopup();
+        this.panel = null;
       }
 
       Tilt.Profiler.log();
