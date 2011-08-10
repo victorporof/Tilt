@@ -77,7 +77,7 @@ Tilt.View = function(properties) {
   /**
    * The inner drawable bounds for this view.
    */
-  this.bounds = properties.bounds || [0, 0, 8192, 8192];
+  this.bounds = properties.bounds || [0, 0, 0, Number.MAX_VALUE];
 
   // if initial elements are specified, add them to this view
   if (properties.elements instanceof Array) {
@@ -150,7 +150,7 @@ Tilt.View.prototype.draw = function(frameDelta, tilt) {
 
     if (!element.hidden) {
       // the current view bounds do not restrict drawing the child elements
-      if (w === 8192 || h === 8192) {
+      if (h === Number.MAX_VALUE || w === Number.MAX_VALUE) {
         element.draw(frameDelta, tilt);
         continue;
       }
