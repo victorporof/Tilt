@@ -188,6 +188,35 @@ Tilt.View.prototype.draw = function(frameDelta, tilt) {
 };
 
 /**
+ * Checks to see if the mouse is over an element handled by this view.
+ *
+ * @param {Object} element: the element to check
+ * @return {Boolean} true if the mouse is over the element
+ */
+Tilt.View.prototype.isMouseOver = function(element) {
+  // get the bounds from the element (if it's not set, use default values)
+  var ui = Tilt.UI,
+    mouseX = ui.mouseX,
+    mouseY = ui.mouseY,
+
+    // remember the view offset (for example, used in scroll containers)
+    offset = this.offset,
+    offsetX = offset[0],
+    offsetY = offset[1],
+
+    // get the bounds from the element (if it's not set, use default values)
+    bounds = element.$bounds || [-1, -1, -1, -1],
+    boundsX = bounds[0] + offsetX,
+    boundsY = bounds[1] + offsetY,
+    boundsWidth = bounds[2],
+    boundsHeight = bounds[3];
+
+  // check to see if the mouse pointer is inside the element bounds
+  return mouseX > boundsX && mouseX < boundsX + boundsWidth &&
+         mouseY > boundsY && mouseY < boundsY + boundsHeight;
+};
+
+/**
  * Destroys this object and deletes all members.
  */
 Tilt.View.prototype.destroy = function() {
