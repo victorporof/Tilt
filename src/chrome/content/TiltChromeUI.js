@@ -50,23 +50,18 @@ TiltChrome.UI.Default = function() {
    * The views containing all the UI elements.
    */
   view = null,
-  help = null,
+  helpPopup = null,
+  colorAdjustPopup = null,
 
   /**
    * The texture containing all the interface elements.
    */
-  texture = null,
+  t = null,
 
   /**
    * The background gradient.
    */
   background = null,
-
-  /**
-   * The controls information.
-   */
-  helpSprite = null,
-  helpCloseButon = null,
 
   /**
    * The top-right menu buttons.
@@ -104,6 +99,12 @@ TiltChrome.UI.Default = function() {
   textureSlider = null,
 
   /**
+   * The controls information.
+   */
+  helpBoxSprite = null,
+  helpCloseButon = null,
+
+  /**
    * Arrays holding groups of objects.
    */
   alwaysVisibleElements = [],
@@ -125,29 +126,17 @@ TiltChrome.UI.Default = function() {
     panel.addEventListener("popuphidden", ePopupHidden, false);
 
     view = new Tilt.View();
-    help = new Tilt.View({
-      hidden: true,
-      background: "#0007"
-    });
 
-    texture = new Tilt.Texture("chrome://tilt/skin/tilt-ui.png", {
+    t = new Tilt.Texture("chrome://tilt/skin/tilt-ui.png", {
       minFilter: "nearest",
       magFilter: "nearest"
     });
 
-    var t = texture;
     background = new Tilt.Sprite(t, [0, 1024 - 256, 256, 256], {
       width: canvas.width,
       height: canvas.height,
       depthTest: true,
       disabled: true
-    });
-
-    helpSprite = new Tilt.Sprite(t, [210, 180, 610, 510]);
-
-    helpCloseButon = new Tilt.Button(null, {
-      width: 30,
-      height: 30
     });
 
     exitButton = new Tilt.Button(new Tilt.Sprite(t, [935, 120, 42, 38]), {
@@ -218,14 +207,64 @@ TiltChrome.UI.Default = function() {
       y: 260
     });
 
-    var handlerSprite = new Tilt.Sprite(texture, [574, 131, 29, 29], {
-      padding: [8, 8, 8, 8]
+    var handlerSprite = new Tilt.Sprite(t, [574, 131, 29, 29], {
+      padding: [10, 10, 10, 10]
     });
     hueSlider = new Tilt.Slider(handlerSprite, {
       x: 152,
       y: 271,
       size: 120,
       value: 50
+    });
+    saturationSlider = new Tilt.Slider(handlerSprite, {
+      x: 152,
+      y: 290,
+      size: 120,
+      value: 0
+    });
+    brightnessSlider = new Tilt.Slider(handlerSprite, {
+      x: 152,
+      y: 308,
+      size: 120,
+      value: 100
+    });
+    alphaSlider = new Tilt.Slider(handlerSprite, {
+      x: 152,
+      y: 326,
+      size: 120,
+      value: 90
+    });
+    textureSlider = new Tilt.Slider(handlerSprite, {
+      x: 152,
+      y: 344,
+      size: 120,
+      value: 100
+    });
+
+    var colorAdjustPopupSprite = new Tilt.Sprite(t, [572, 1, 231, 126], {
+      x: 88,
+      y: 258
+    });
+    colorAdjustPopup = new Tilt.View({
+      hidden: true,
+      elements: [colorAdjustPopupSprite,
+                 hueSlider, saturationSlider, brightnessSlider, 
+                 alphaSlider, textureSlider]
+    });
+
+    helpBoxSprite = new Tilt.Sprite(t, [210, 180, 610, 510], {
+      disabled: true
+    });
+
+    helpCloseButon = new Tilt.Button(null, {
+      width: 30,
+      height: 30
+    });
+
+    helpPopup = new Tilt.View({
+      hidden: true,
+      background: "#0007",
+      elements: [helpBoxSprite, helpCloseButon]
     });
 
     exitButton.onclick = function() {
@@ -239,13 +278,13 @@ TiltChrome.UI.Default = function() {
         exitX = canvas.width / 2 + 197,
         exitY = canvas.height / 2 - 218;
 
-      helpSprite.setPosition(helpX, helpY);
+      helpBoxSprite.setPosition(helpX, helpY);
       helpCloseButon.setPosition(exitX, exitY);
-      ui.setModal(help);
+      ui.presentModal(helpPopup);
     };
 
     helpCloseButon.onclick = function() {
-      ui.unsetModal(help);
+      ui.dismissModal(helpPopup);
     };
 
     exportButton.onclick = function() {
@@ -255,18 +294,28 @@ TiltChrome.UI.Default = function() {
     };
 
     htmlButton.onclick = function() {
-    };
+      this.visualization.setHtmlEditor();
+    }.bind(this);
 
     cssButton.onclick = function() {
-    };
+      this.visualization.setCssEditor();
+    }.bind(this);
 
     attrButton.onclick = function() {
-    };
+      this.visualization.setAttributesEditor();
+    }.bind(this);
 
     eyeButton.onclick = function() {
       hideableElements.forEach(function(element) {
         element.hidden ^= true;
       });
+
+      if (!helpPopup.hidden) {
+        helpPopup.hidden = true;
+      }
+      if (!colorAdjustPopup.hidden) {
+        colorAdjustPopup.hidden = true;
+      }
     };
 
     resetButton.onclick = function() {
@@ -281,7 +330,36 @@ TiltChrome.UI.Default = function() {
       this.controller.zoom(-200);
     }.bind(this);
 
+    viewModeButton.type = 0;
     viewModeButton.onclick = function() {
+      if (viewModeButton.type === 0) {
+        viewModeButton.type = 1;
+        viewModeButton.setSprite(viewModeNormalSprite);
+
+        hueSlider.setValue(55);
+        saturationSlider.setValue(35);
+        brightnessSlider.setValue(100);
+        alphaSlider.setValue(7.5);
+        textureSlider.setValue(100);
+
+        this.visualization.setMeshWireframeColor([1, 1, 1, 0.7]);
+      }
+      else {
+        viewModeButton.type = 0;
+        viewModeButton.setSprite(viewModeWireframeSprite);
+
+        hueSlider.setValue(50);
+        saturationSlider.setValue(0);
+        brightnessSlider.setValue(100);
+        alphaSlider.setValue(100);
+        textureSlider.setValue(100);
+
+        this.visualization.setMeshWireframeColor([0, 0, 0, 0.25]);
+      }
+    }.bind(this);
+
+    colorAdjustButton.onclick = function() {
+      colorAdjustPopup.hidden ^= true;
     }.bind(this);
 
     alwaysVisibleElements.push(
@@ -306,8 +384,6 @@ TiltChrome.UI.Default = function() {
     panelElements.forEach(function(element) {
       view.push(element);
     });
-
-    help.push(helpSprite, helpCloseButon);
   };
 
   /**
@@ -334,6 +410,19 @@ TiltChrome.UI.Default = function() {
    */
   this.draw = function(frameDelta) {
     ui.refresh();
+
+    var rgba = Tilt.Math.hsv2rgb(
+      hueSlider.value / 100,
+      saturationSlider.value / 100,
+      brightnessSlider.value / 100);
+
+    rgba[0] /= 255;
+    rgba[1] /= 255;
+    rgba[2] /= 255;
+    rgba[3] = alphaSlider.value / 100;
+
+    this.visualization.setMeshColor(rgba);
+    this.visualization.setMeshTextureAlpha(textureSlider.value / 100);
   };
 
   /**
