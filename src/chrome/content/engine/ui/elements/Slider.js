@@ -41,10 +41,12 @@ var EXPORTED_SYMBOLS = ["Tilt.Slider"];
  * @param {Tilt.Sprite} sprite: the sprite to be drawn for the handler
  * @param {Object} properties: additional properties for this object
  *  @param {Boolean} hidden: specifies if this object shouldn't be drawn
+ *  @param {Boolean} disabled: specifies if this shouldn't receive events
  *  @param {Number} x: the x position of the object
  *  @param {Number} y: the y position of the object
  *  @param {Number} size: the slider size
  *  @param {Number} value: number ranging from 0..100
+ *  @param {Array} padding: the inner padding offset for mouse events
  *  @param {Boolean} direction: 0 for horizontal, 1 for vertical
  */
 Tilt.Slider = function(sprite, properties) {
@@ -68,7 +70,10 @@ Tilt.Slider = function(sprite, properties) {
   /**
    * A sprite used as a background for this object.
    */
-  this.$sprite = sprite;
+  this.$sprite = new Tilt.Sprite(sprite.$texture, sprite.$region, {
+    padding: sprite.$padding,
+    tint: sprite.$tint
+  });
   this.$sprite.$x = properties.x || this.$sprite.$x;
   this.$sprite.$y = properties.y || this.$sprite.$y;
   this.$sprite.$width = properties.width || this.$sprite.$width;
@@ -86,9 +91,9 @@ Tilt.Slider = function(sprite, properties) {
   this.$size = properties.size || 100;
 
   /**
-   * The slider value (also defining the handler position).
+   * The inner padding offset for mouse events.
    */
-  this.$value = properties.value || 0;
+  this.$padding = properties.padding || sprite.$padding || [0, 0, 0, 0];
 
   /**
    * The slider direction (0 for horizontal, 1 for vertical).
@@ -99,8 +104,15 @@ Tilt.Slider = function(sprite, properties) {
    * The bounds of this object (used for clicking and intersections).
    */
   this.$bounds = [
-    this.$sprite.$x, this.$sprite.$y,
-    this.$sprite.$width, this.$sprite.$height];
+    this.$sprite.$x + this.$padding[0],
+    this.$sprite.$y + this.$padding[1],
+    this.$sprite.$width - this.$padding[2],
+    this.$sprite.$height - this.$padding[3]];
+
+  /**
+   * The slider value (also defining the handler position).
+   */
+  this.setValue(properties.value || 0);
 };
 
 Tilt.Slider.prototype = {
@@ -112,33 +124,11 @@ Tilt.Slider.prototype = {
    * @param {Number} y: the y position of the object
    */
   setPosition: function(x, y) {
-    if ("function" === typeof this.$sprite.setPosition) {
-      this.$sprite.setPosition(x, y);
-    }
-    else {
-      this.$sprite.$x = x;
-      this.$sprite.$y = y;
-    }
-    this.$bounds[0] = x;
-    this.$bounds[1] = y;
-  },
-
-  /**
-   * Sets this object's dimensions.
-   *
-   * @param {Number} width: the width of the object
-   * @param {Number} height: the height of the object
-   */
-  setSize: function(width, height) {
-    if ("function" === typeof this.$sprite.setSize) {
-      this.$sprite.setSize(width, height);
-    }
-    else {
-      this.$sprite.$width = width;
-      this.$sprite.$height = height;
-    }
-    this.$bounds[2] = width;
-    this.$bounds[3] = height;
+    this.$x = x;
+    this.$y = y;
+    this.$bounds[0] = x + this.$padding[0];
+    this.$bounds[1] = y + this.$padding[1];
+    this.setValue(this.$value);
   },
 
   /**
@@ -158,14 +148,46 @@ Tilt.Slider.prototype = {
       p = Tilt.Math.map(this.$value, 0, 100, x, x + size);
 
       sprite.setPosition(p, y);
-      this.$bounds[0] = p;
+      this.$bounds[0] = p + this.$padding[0];
     }
     else {
       p = Tilt.Math.map(this.$value, 0, 100, y, y + size);
 
       sprite.setPosition(x, p);
-      this.$bounds[1] = p;
+      this.$bounds[1] = p + this.$padding[1];
     }
+  },
+
+  /**
+   * Returns the x position of this object.
+   * @return {Number} the x position
+   */
+  get x() {
+    return this.$x;
+  },
+
+  /**
+   * Returns the y position of this object.
+   * @return {Number} the y position
+   */
+  get y() {
+    return this.$y;
+  },
+
+  /**
+   * Returns the size of this object.
+   * @return {Number} the size
+   */
+  get size() {
+    return this.$size;
+  },
+
+  /**
+   * Gets the current value for this controller.
+   * @return {Number} the value, ranging from 0..100
+   */
+  get value() {
+    return this.$value;
   },
 
   /**
@@ -196,14 +218,14 @@ Tilt.Slider.prototype = {
 
         sprite.setPosition(p, y);
         this.$value = Tilt.Math.map(p, x, x + size, 0, 100);
-        this.$bounds[0] = p;
+        this.$bounds[0] = p + this.$padding[0];
       }
       else {
         p = Tilt.Math.clamp(ui.$mouseY - sprite.height / 2, y, y + size);
 
         sprite.setPosition(x, p);
         this.$value = Tilt.Math.map(p, y, y + size, 0, 100);
-        this.$bounds[1] = p;
+        this.$bounds[1] = p + this.$padding[1];
       }
     }
   },
