@@ -72,7 +72,7 @@ Tilt.View = function(properties) {
   /**
    * The offset of the inner contents.
    */
-  this.offset = properties.offset || null;
+  this.offset = properties.offset || [0, 0];
 
   /**
    * The inner drawable bounds for this view.
@@ -102,11 +102,17 @@ Tilt.View.prototype = [];
 Tilt.View.prototype.update = function(frameDelta, tilt) {
   var element, i, len;
 
+  // a view has multiple elements attach, browse and handle each one
   for (i = 0, len = this.length; i < len; i++) {
     element = this[i];
 
-    if (!element.hidden && "function" === typeof element.update) {
-      element.update(frameDelta, tilt);
+    // some elements don't require an update function, check for it first
+    if ("function" === typeof element.update) {
+
+      // update only if the element is visible and enabled
+      if (!element.hidden && !element.disabled) {
+        element.update(frameDelta, tilt);
+      }
     }
   }
 };
@@ -121,46 +127,45 @@ Tilt.View.prototype.draw = function(frameDelta, tilt) {
   tilt = tilt || Tilt.$renderer;
 
   var background = this.background,
-    element, bounds, ex, ey, ew, eh,
-    x = this.bounds[0],
-    y = this.bounds[1],
-    w = this.bounds[2],
-    h = this.bounds[3],
+    offset = this.offset,
+    bounds = this.bounds,
+    x = bounds[0] + offset[0],
+    y = bounds[1] + offset[1],
+    w = bounds[2],
+    h = bounds[3],    
+    element, ebounds, ex, ey, ew, eh,
     r1x1, r1y1, r1x2, r1y2, r2x1, r2y1, r2x2, r2y2, i, len;
 
+  // a view may specify a full screen rectangle as a background
   if (background !== null) {
     tilt.fill(background);
     tilt.noStroke();
     tilt.rect(x, y, w, h);
-
-    var $fill = tilt.$fillColor;
-    var $stroke = tilt.$strokeColor;
-    $fill[0] = 1;
-    $fill[1] = 1;
-    $fill[2] = 1;
-    $fill[3] = 1;
-    $stroke[0] = 0;
-    $stroke[1] = 0;
-    $stroke[2] = 0;
-    $stroke[3] = 1;
   }
 
+  // translate by the view offset (for example, used in scroll containers)
+  tilt.pushMatrix();
+  tilt.translate(offset[0], offset[1], 0);
+
+  // a view has multiple elements attach, browse and handle each one
   for (i = 0, len = this.length; i < len; i++) {
     element = this[i];
 
+    // draw only if the element is visible (it may be enabled or not)
     if (!element.hidden) {
-      // the current view bounds do not restrict drawing the child elements
+
+      // if the current view bounds do not restrict drawing the child elements
       if (h === Number.MAX_VALUE || w === Number.MAX_VALUE) {
         element.draw(frameDelta, tilt);
         continue;
       }
 
       // otherwise, we need to calculate if the child element is visible
-      bounds = element.$bounds || [1, 1, 1, 1];
-      ex = bounds[0];
-      ey = bounds[1];
-      ew = bounds[2];
-      eh = bounds[3];
+      ebounds = element.$bounds || [1, 1, 1, 1];
+      ex = ebounds[0] + offset[0];
+      ey = ebounds[1] + offset[1];
+      ew = ebounds[2];
+      eh = ebounds[3];
 
       // compute the two rectangles representing the element and view bounds
       r1x1 = ex;
@@ -178,6 +183,8 @@ Tilt.View.prototype.draw = function(frameDelta, tilt) {
       }
     }
   }
+
+  tilt.popMatrix();
 };
 
 /**
