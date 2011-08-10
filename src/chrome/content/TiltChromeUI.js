@@ -418,17 +418,17 @@ TiltChrome.UI.Default = function() {
     ui.refresh();
 
     var rgba = Tilt.Math.hsv2rgb(
-      hueSlider.value / 100,
-      saturationSlider.value / 100,
-      brightnessSlider.value / 100);
+      hueSlider.getValue() / 100,
+      saturationSlider.getValue() / 100,
+      brightnessSlider.getValue() / 100);
 
     rgba[0] /= 255;
     rgba[1] /= 255;
     rgba[2] /= 255;
-    rgba[3] = alphaSlider.value / 100;
+    rgba[3] = alphaSlider.getValue() / 100;
 
     this.visualization.setMeshColor(rgba);
-    this.visualization.setMeshTextureAlpha(textureSlider.value / 100);
+    this.visualization.setMeshTextureAlpha(textureSlider.getValue() / 100);
   };
 
   /**
@@ -470,7 +470,7 @@ TiltChrome.UI.Default = function() {
         y: y,
         width: (node.className.length || 3) * 3,
         height: height,
-        stroke: stripButton.stroke
+        stroke: stripButton.getStroke()
       });
     }
 
@@ -480,7 +480,7 @@ TiltChrome.UI.Default = function() {
         y: y,
         width: (node.id.length || 3) * 3,
         height: height,
-        stroke: stripButton.stroke
+        stroke: stripButton.getStroke()
       });
     }
 
@@ -565,12 +565,14 @@ TiltChrome.UI.Default = function() {
       domStripsScrollview.push(stripButton);
     }
     if (stripClassButton) {
-      stripClassButton.setFill(node.className ? stripButton.fill : "#0002");
       domStripsScrollview.push(stripClassButton);
+      stripClassButton.setFill(node.className ? 
+        stripButton.getFill() : "#0002");
     }
     if (stripIdButton) {
-      stripIdButton.setFill(node.id ? stripButton.fill : "#0002");
       domStripsScrollview.push(stripIdButton);
+      stripIdButton.setFill(node.id ?
+        stripButton.getFill() : "#0002");
     }
   };
 
