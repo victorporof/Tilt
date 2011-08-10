@@ -52,6 +52,7 @@ TiltChrome.UI.Default = function() {
   view = null,
   helpPopup = null,
   colorAdjustPopup = null,
+  domStripsScrollview = null,
 
   /**
    * The texture containing all the interface elements.
@@ -126,6 +127,9 @@ TiltChrome.UI.Default = function() {
     panel.addEventListener("popuphidden", ePopupHidden, false);
 
     view = new Tilt.View();
+    domStripsScrollview = new Tilt.View({
+      bounds: [0, 0, canvas.width, canvas.height]
+    });
 
     t = new Tilt.Texture("chrome://tilt/skin/tilt-ui.png", {
       minFilter: "nearest",
@@ -310,6 +314,8 @@ TiltChrome.UI.Default = function() {
         element.hidden ^= true;
       });
 
+      domStripsScrollview.hidden ^= true;
+
       if (!helpPopup.hidden) {
         helpPopup.hidden = true;
       }
@@ -433,6 +439,139 @@ TiltChrome.UI.Default = function() {
    * @param {Number} index: the index of the node in the dom tree
    */
   this.domVisualizationMeshNodeCallback = function(node, depth, index) {
+    if ("undefined" === typeof this.stripNo) {
+      this.stripNo = 0;
+    }
+    if ("undefined" === typeof node.localName || node.localName === null) {
+      return;
+    }
+
+    var stripNo = this.stripNo++,
+      x = 25 + depth * 8,
+      y = 340 + stripNo * 10,
+      height = 6,
+      stripButton, stripIdButton, stripClassButton;
+
+    // the general strip button, created in all cases
+    var clsx = x + (node.localName.length) * 10 + 3;
+    var idx = clsx + (node.className.length || 3) * 3 + 3;
+
+    stripButton = new Tilt.Button(null, {
+      x: x,
+      y: y,
+      width: node.localName.length * 10,
+      height: height,
+      stroke: "#fff2"
+    });
+
+    if (node.className) {
+      stripClassButton = new Tilt.Button(null, {
+        x: clsx,
+        y: y,
+        width: (node.className.length || 3) * 3,
+        height: height,
+        stroke: stripButton.stroke
+      });
+    }
+
+    if (node.id) {
+      stripIdButton = new Tilt.Button(null, {
+        x: idx,
+        y: y,
+        width: (node.id.length || 3) * 3,
+        height: height,
+        stroke: stripButton.stroke
+      });
+    }
+
+    if (node.localName === "html") {
+      stripButton.setFill("#fff");
+    }
+    else if (node.localName === "head") {
+      stripButton.setFill("#E667AF");
+    }
+    else if (node.localName === "title") {
+      stripButton.setFill("#CD0074");
+    }
+    else if (node.localName === "meta") {
+      stripButton.setFill("#BF7130");
+    }
+    else if (node.localName === "script") {
+      stripButton.setFill("#A64B00");
+    }
+    else if (node.localName === "style") {
+      stripButton.setFill("#FF9640");
+    }
+    else if (node.localName === "link") {
+      stripButton.setFill("#FFB273");
+    }
+    else if (node.localName === "body") {
+      stripButton.setFill("#E667AF");
+    }
+    else if (node.localName === "h1") {
+      stripButton.setFill("#ff0d");
+    }
+    else if (node.localName === "h2") {
+      stripButton.setFill("#ee0d");
+    }
+    else if (node.localName === "h3") {
+      stripButton.setFill("#dd0d");
+    }
+    else if (node.localName === "h4") {
+      stripButton.setFill("#cc0d");
+    }
+    else if (node.localName === "h5") {
+      stripButton.setFill("#bb0d");
+    }
+    else if (node.localName === "h6") {
+      stripButton.setFill("#aa0d");
+    }
+    else if (node.localName === "table") {
+      stripButton.setFill("#FF0700");
+    }
+    else if (node.localName === "tbody") {
+      stripButton.setFill("#FF070088");
+    }
+    else if (node.localName === "tr") {
+      stripButton.setFill("#FF4540");
+    }
+    else if (node.localName === "td") {
+      stripButton.setFill("#FF7673");
+    }
+    else if (node.localName === "div") {
+      stripButton.setFill("#5DC8CD");
+    }
+    else if (node.localName === "span") {
+      stripButton.setFill("#67E46F");
+    }
+    else if (node.localName === "p") {
+      stripButton.setFill("#888");
+    }
+    else if (node.localName === "a") {
+      stripButton.setFill("#123EAB");
+    }
+    else if (node.localName === "img") {
+      stripButton.setFill("#FFB473");
+    }
+    else {
+      stripButton.setFill("#444");
+    }
+
+    stripButton.onclick = function() {
+      alert(depth);
+    };
+
+    if (stripButton) {
+      domStripsScrollview.push(stripButton);
+    }
+    if (stripClassButton) {
+      stripClassButton.setFill(node.className ? stripButton.fill : "#0002");
+      domStripsScrollview.push(stripClassButton);
+    }
+    if (stripIdButton) {
+      stripIdButton.setFill(node.id ? stripButton.fill : "#0002");
+      domStripsScrollview.push(stripIdButton);
+    }
   };
 
   /**
@@ -461,6 +600,8 @@ TiltChrome.UI.Default = function() {
     htmlButton.setPosition(width - 337, 0);
     cssButton.setPosition(width - 377, 0);
     attrButton.setPosition(width - 465, 0);
+
+    domStripsScrollview.bounds = [0, 0, width, height];
   };
 
   /**
