@@ -7694,6 +7694,8 @@ var EXPORTED_SYMBOLS = ["Tilt.Button"];
  *  @param {Number} y: the y position of the object
  *  @param {Number} width: the width of the object
  *  @param {Number} height: the height of the object
+ *  @param {String} fill: fill color for the rect bounding this object
+ *  @param {String} stroke: stroke color for the rect bounding this object
  */
 Tilt.Button = function(sprite, properties) {
 
@@ -7721,6 +7723,16 @@ Tilt.Button = function(sprite, properties) {
   this.$sprite.$y = properties.y || this.$sprite.$y;
   this.$sprite.$width = properties.width || this.$sprite.$width;
   this.$sprite.$height = properties.height || this.$sprite.$height;
+
+  /**
+   * The fill color for the rectangle bounding this object.
+   */
+  this.$fill = properties.fill || null;
+
+  /**
+   * The stroke color for the rectangle bounding this object.
+   */
+  this.$stroke = properties.stroke || null;
 
   /**
    * The bounds of this object (used for clicking and intersections).
@@ -7769,12 +7781,82 @@ Tilt.Button.prototype = {
   },
 
   /**
-   * Updates this object's internal params.
-   *
-   * @param {Number} frameDelta: the delta time elapsed between frames
-   * @param {Tilt.Renderer} tilt: optional, a reference to a Tilt.Renderer
+   * Sets a new sprite to be drawn as a background for this object.
    */
-  update: function(frameDelta, tilt) {
+  setSprite: function(sprite) {
+    var x = this.$sprite.$x,
+      y = this.$sprite.$y;
+
+    this.$sprite = sprite;
+    this.$sprite.$x = x;
+    this.$sprite.$y = y;
+
+    this.$bounds[2] = sprite.$width;
+    this.$bounds[3] = sprite.$height;    
+  },
+
+  /**
+   * Sets the fill color for the rectangle bounding this object.
+   * @param {String} color: the fill color
+   */
+  setFill: function(color) {
+    this.$fill = color;
+  },
+
+  /**
+   * Sets the stroke color for the rectangle bounding this object.
+   * @param {String} color: the stroke color
+   */
+  setStroke: function(color) {
+    this.$stroke = color;
+  },
+
+  /**
+   * Returns the x position of this object.
+   * @return {Number} the x position
+   */
+  getX: function() {
+    return this.$sprite.$x;
+  },
+
+  /**
+   * Returns the y position of this object.
+   * @return {Number} the y position
+   */
+  getY: function() {
+    return this.$sprite.$y;
+  },
+
+  /**
+   * Returns the width of this object.
+   * @return {Number} the width
+   */
+  getWidth: function() {
+    return this.$sprite.$width;
+  },
+
+  /**
+   * Returns the height of this object.
+   * @return {Number} the height
+   */
+  getHeight: function() {
+    return this.$sprite.$height;
+  },
+
+  /**
+   * Gets the fill color for the rectangle bounding this object.
+   * @return {String} the fill color
+   */
+  getFill: function() {
+    return this.$fill;
+  },
+
+  /**
+   * Gets the stroke color for the rectangle bounding this object.
+   * @return {String} the stroke color
+   */
+  getStroke: function() {
+    return this.$stroke;
   },
 
   /**
@@ -7786,8 +7868,37 @@ Tilt.Button.prototype = {
   draw: function(frameDelta, tilt) {
     tilt = tilt || Tilt.$renderer;
 
+    // a button may not have a sprite attached, so check before drawing
     if ("undefined" !== typeof this.$sprite.$texture) {
       this.$sprite.draw(tilt);
+    }
+
+    var bounds,
+      fill = this.$fill,
+      stroke = this.$stroke;
+
+    // if fill and stroke params are specified, draw a rectangle using the
+    // current bounds around the object
+    if (fill && stroke) {
+      bounds = this.$bounds;
+
+      tilt.fill(fill);
+      tilt.stroke(stroke);
+      tilt.rect(bounds[0], bounds[1], bounds[2], bounds[3]);
+    }
+    else if (fill) {
+      bounds = this.$bounds;
+
+      tilt.fill(fill);
+      tilt.noStroke();
+      tilt.rect(bounds[0], bounds[1], bounds[2], bounds[3]);
+    }
+    else if (stroke) {
+      bounds = this.$bounds;
+
+      tilt.noFill();
+      tilt.stroke(stroke);
+      tilt.rect(bounds[0], bounds[1], bounds[2], bounds[3]);
     }
   },
 
@@ -7841,10 +7952,12 @@ var EXPORTED_SYMBOLS = ["Tilt.Slider"];
  * @param {Tilt.Sprite} sprite: the sprite to be drawn for the handler
  * @param {Object} properties: additional properties for this object
  *  @param {Boolean} hidden: specifies if this object shouldn't be drawn
+ *  @param {Boolean} disabled: specifies if this shouldn't receive events
  *  @param {Number} x: the x position of the object
  *  @param {Number} y: the y position of the object
  *  @param {Number} size: the slider size
  *  @param {Number} value: number ranging from 0..100
+ *  @param {Array} padding: the inner padding offset for mouse events
  *  @param {Boolean} direction: 0 for horizontal, 1 for vertical
  */
 Tilt.Slider = function(sprite, properties) {
@@ -7868,7 +7981,10 @@ Tilt.Slider = function(sprite, properties) {
   /**
    * A sprite used as a background for this object.
    */
-  this.$sprite = sprite;
+  this.$sprite = new Tilt.Sprite(sprite.$texture, sprite.$region, {
+    padding: sprite.$padding,
+    tint: sprite.$tint
+  });
   this.$sprite.$x = properties.x || this.$sprite.$x;
   this.$sprite.$y = properties.y || this.$sprite.$y;
   this.$sprite.$width = properties.width || this.$sprite.$width;
@@ -7886,9 +8002,9 @@ Tilt.Slider = function(sprite, properties) {
   this.$size = properties.size || 100;
 
   /**
-   * The slider value (also defining the handler position).
+   * The inner padding offset for mouse events.
    */
-  this.$value = properties.value || 0;
+  this.$padding = properties.padding || sprite.$padding || [0, 0, 0, 0];
 
   /**
    * The slider direction (0 for horizontal, 1 for vertical).
@@ -7899,8 +8015,15 @@ Tilt.Slider = function(sprite, properties) {
    * The bounds of this object (used for clicking and intersections).
    */
   this.$bounds = [
-    this.$sprite.$x, this.$sprite.$y,
-    this.$sprite.$width, this.$sprite.$height];
+    this.$sprite.$x + this.$padding[0],
+    this.$sprite.$y + this.$padding[1],
+    this.$sprite.$width - this.$padding[2],
+    this.$sprite.$height - this.$padding[3]];
+
+  /**
+   * The slider value (also defining the handler position).
+   */
+  this.setValue(properties.value || 0);
 };
 
 Tilt.Slider.prototype = {
@@ -7912,33 +8035,11 @@ Tilt.Slider.prototype = {
    * @param {Number} y: the y position of the object
    */
   setPosition: function(x, y) {
-    if ("function" === typeof this.$sprite.setPosition) {
-      this.$sprite.setPosition(x, y);
-    }
-    else {
-      this.$sprite.$x = x;
-      this.$sprite.$y = y;
-    }
-    this.$bounds[0] = x;
-    this.$bounds[1] = y;
-  },
-
-  /**
-   * Sets this object's dimensions.
-   *
-   * @param {Number} width: the width of the object
-   * @param {Number} height: the height of the object
-   */
-  setSize: function(width, height) {
-    if ("function" === typeof this.$sprite.setSize) {
-      this.$sprite.setSize(width, height);
-    }
-    else {
-      this.$sprite.$width = width;
-      this.$sprite.$height = height;
-    }
-    this.$bounds[2] = width;
-    this.$bounds[3] = height;
+    this.$x = x;
+    this.$y = y;
+    this.$bounds[0] = x + this.$padding[0];
+    this.$bounds[1] = y + this.$padding[1];
+    this.setValue(this.$value);
   },
 
   /**
@@ -7952,20 +8053,58 @@ Tilt.Slider.prototype = {
       size = this.$size,
       direction = this.$direction, p;
 
+    // first, make sure the passed value is in 0..100 range
     this.$value = Tilt.Math.clamp(value, 0, 100);
 
+    // depending on the direction, move the handler along the x or y axis
     if (direction === 0) {
+      // calculate the position using the value
       p = Tilt.Math.map(this.$value, 0, 100, x, x + size);
 
+      // set the sprite x position and update the bounds
       sprite.setPosition(p, y);
-      this.$bounds[0] = p;
+      this.$bounds[0] = p + this.$padding[0];
     }
     else {
+      // calculate the position using the value
       p = Tilt.Math.map(this.$value, 0, 100, y, y + size);
 
+      // set the sprite y position and update the bounds
       sprite.setPosition(x, p);
-      this.$bounds[1] = p;
+      this.$bounds[1] = p + this.$padding[1];
     }
+  },
+
+  /**
+   * Returns the x position of this object.
+   * @return {Number} the x position
+   */
+  getX: function() {
+    return this.$x;
+  },
+
+  /**
+   * Returns the y position of this object.
+   * @return {Number} the y position
+   */
+  getY: function() {
+    return this.$y;
+  },
+
+  /**
+   * Returns the size of this object.
+   * @return {Number} the size
+   */
+  getSize: function() {
+    return this.$size;
+  },
+
+  /**
+   * Gets the current value for this controller.
+   * @return {Number} the value, ranging from 0..100
+   */
+  getValue: function() {
+    return this.$value;
   },
 
   /**
@@ -7977,13 +8116,16 @@ Tilt.Slider.prototype = {
   update: function(frameDelta, tilt) {
     var ui = Tilt.UI;
 
+    // if the mouse was pressed over the handler, begin sliding
     if (this.mousePressed) {
       this.$sliding = true;
     }
+    // if the mouse was released (over the slider or not), end sliding
     else if (!ui.mousePressed) {
       this.$sliding = false;
     }
 
+    // if we're currently sliding, update this object's internal params
     if (this.$sliding) {
       var sprite = this.$sprite,
         x = this.$x,
@@ -7991,19 +8133,24 @@ Tilt.Slider.prototype = {
         size = this.$size,
         direction = this.$direction, p;
 
+      // depending on the direction, move the handler along the x or y axis
       if (direction === 0) {
+        // clamp the handler position between the left and right edges
         p = Tilt.Math.clamp(ui.mouseX - sprite.$width / 2, x, x + size);
 
+        // set the sprite x position and update the value and bounds
         sprite.setPosition(p, y);
         this.$value = Tilt.Math.map(p, x, x + size, 0, 100);
-        this.$bounds[0] = p;
+        this.$bounds[0] = p + this.$padding[0];
       }
       else {
+        // clamp the handler position between the top and bottom edges
         p = Tilt.Math.clamp(ui.$mouseY - sprite.height / 2, y, y + size);
 
+        // set the sprite y position and update the value and bounds
         sprite.setPosition(x, p);
         this.$value = Tilt.Math.map(p, y, y + size, 0, 100);
-        this.$bounds[1] = p;
+        this.$bounds[1] = p + this.$padding[1];
       }
     }
   },
@@ -8016,10 +8163,7 @@ Tilt.Slider.prototype = {
    */
   draw: function(frameDelta, tilt) {
     tilt = tilt || Tilt.$renderer;
-
-    if ("undefined" !== typeof this.$sprite.$texture) {
-      this.$sprite.draw(tilt);
-    }
+    this.$sprite.draw(tilt);
   },
 
   /**
@@ -8073,12 +8217,14 @@ var EXPORTED_SYMBOLS = ["Tilt.Sprite"];
  * @param {Array} region: the sub-texture coordinates as [x, y, width, height]
  * @param {Object} properties: additional properties for this object
  *  @param {Boolean} hidden: specifies if this object shouldn't be drawn
+ *  @param {Boolean} disabled: specifies if this shouldn't receive events
  *  @param {Number} x: the x position of the object
  *  @param {Number} y: the y position of the object
  *  @param {Number} width: the width of the object
  *  @param {Number} height: the height of the object
- *  @param {Boolean} depthTest: true to use depth testing
+ *  @param {Array} padding: the inner padding offset for mouse events
  *  @param {String} tint: texture tinting expressed in hex or rgb() or rgba()
+ *  @param {Boolean} depthTest: true to use depth testing
  */
 Tilt.Sprite = function(texture, region, properties) {
 
@@ -8117,9 +8263,9 @@ Tilt.Sprite = function(texture, region, properties) {
   this.$height = properties.height || this.$region[3];
 
   /**
-   * Sets if depth testing should be enabled or not for this object.
+   * The inner padding offset for mouse events.
    */
-  this.$depthTest = properties.depthTest || false;
+  this.$padding = properties.padding || [0, 0, 0, 0];
 
   /**
    * Tint color for this object.
@@ -8127,9 +8273,18 @@ Tilt.Sprite = function(texture, region, properties) {
   this.$tint = properties.tint || null;
 
   /**
+   * Sets if depth testing should be enabled or not for this object.
+   */
+  this.$depthTest = properties.depthTest || false;
+
+  /**
    * The bounds of this object (used for clicking and intersections).
    */
-  this.$bounds = [this.$x, this.$y, this.$width, this.$height];
+  this.$bounds = [
+    this.$x + this.$padding[0],
+    this.$y + this.$padding[1],
+    this.$width - this.$padding[2],
+    this.$height - this.$padding[3]];
 
   /**
    * Buffer of 2-component texture coordinates (u, v) for the sprite.
@@ -8148,8 +8303,8 @@ Tilt.Sprite.prototype = {
   setPosition: function(x, y) {
     this.$x = x;
     this.$y = y;
-    this.$bounds[0] = x;
-    this.$bounds[1] = y;
+    this.$bounds[0] = x + this.$padding[0];
+    this.$bounds[1] = y + this.$padding[1];
   },
 
   /**
@@ -8161,17 +8316,40 @@ Tilt.Sprite.prototype = {
   setSize: function(width, height) {
     this.$width = width;
     this.$height = height;
-    this.$bounds[2] = width;
-    this.$bounds[3] = height;
+    this.$bounds[2] = width - this.$padding[2];
+    this.$bounds[3] = height - this.$padding[3];
   },
 
   /**
-   * Updates this object's internal params.
-   *
-   * @param {Number} frameDelta: the delta time elapsed between frames
-   * @param {Tilt.Renderer} tilt: optional, a reference to a Tilt.Renderer
+   * Returns the x position of this object.
+   * @return {Number} the x position
    */
-  update: function(frameDelta, tilt) {
+  getX: function() {
+    return this.$x;
+  },
+
+  /**
+   * Returns the y position of this object.
+   * @return {Number} the y position
+   */
+  getY: function() {
+    return this.$y;
+  },
+
+  /**
+   * Returns the width of this object.
+   * @return {Number} the width
+   */
+  getWidth: function() {
+    return this.$width;
+  },
+
+  /**
+   * Returns the height of this object.
+   * @return {Number} the height
+   */
+  getHeight: function() {
+    return this.$height;
   },
 
   /**
@@ -8203,10 +8381,12 @@ Tilt.Sprite.prototype = {
         (reg[0] + reg[2]) / tex.width, (reg[1] + reg[3]) / tex.height], 2);
     }
 
+    // if tinting was specified, apply it now (will default back later)
     if (tint !== null) {
       tilt.tint(tint);
     }
 
+    // draw the image using the texCoord & depending on the depthTest param
     if (depthTest) {
       tilt.depthTest(true);
       tilt.image(tex, x, y, width, height, this.$texCoord);
@@ -8216,6 +8396,7 @@ Tilt.Sprite.prototype = {
       tilt.image(tex, x, y, width, height, this.$texCoord);
     }
 
+    // if tinting was specified, default back to the original values
     if (tint !== null) {
       var $tint = tilt.$tintColor;
       $tint[0] = 1;
@@ -8275,8 +8456,6 @@ var EXPORTED_SYMBOLS = ["Tilt.UI"];
 Tilt.UI = [];
 Tilt.UI.mouseX = 0;
 Tilt.UI.mouseY = 0;
-Tilt.UI.pmouseX = 0;
-Tilt.UI.pmouseY = 0;
 Tilt.UI.mousePressed = false;
 Tilt.UI.mouseScrollAmmount = 0;
 Tilt.UI.keyPressed = [];
@@ -8289,6 +8468,7 @@ Tilt.UI.refresh = function(frameDelta) {
   var tilt = Tilt.$renderer,
     i, len, view;
 
+  // before drawing, make sure we're in an orthographic default environment 
   tilt.ortho();
   tilt.defaults();
   tilt.depthTest(false);
@@ -8297,29 +8477,30 @@ Tilt.UI.refresh = function(frameDelta) {
     view = this[i];
 
     if (!view.hidden) {
-      view.update(frameDelta, tilt);
+      if (!view.disabled) {
+        view.update(frameDelta, tilt);
+      }
       view.draw(frameDelta, tilt);
     }
   }
-
-  this.pmouseX = this.mouseX;
-  this.pmouseY = this.mouseY;
 };
 
 /**
  * Sets a modal view.
  * @param {Tilt.View} view: the view to be set modal
  */
-Tilt.UI.setModal = function(view) {
+Tilt.UI.presentModal = function(view) {
   if (view.modal || this.indexOf(view) === -1) {
     return;
   }
 
+  // disable all the other views, so that they become unresponsive to events
   for (var i = 0, len = this.length; i < len; i++) {
     this[i].$prevDisabled = this[i].disabled;
     this[i].disabled = true;
   }
 
+  // a modal view must always be marked as modal, be visible and enabled
   view.modal = true;
   view.hidden = false;
   view.disabled = false;
@@ -8329,16 +8510,18 @@ Tilt.UI.setModal = function(view) {
  * Unsets a modal view.
  * @param {Tilt.View} view: the view to be set modal
  */
-Tilt.UI.unsetModal = function(view) {
+Tilt.UI.dismissModal = function(view) {
   if (!view.modal || this.indexOf(view) === -1) {
     return;
   }
 
+  // reset the disabled parameter for all the other views
   for (var i = 0, len = this.length; i < len; i++) {
     this[i].disabled = this[i].$prevDisabled;
     delete this[i].$prevDis;
   }
 
+  // a non-modal view must always be marked as modal, be hidden and disabled
   view.modal = false;
   view.hidden = true;
   view.disabled = true;
@@ -8446,48 +8629,65 @@ Tilt.UI.keyUp = function(code) {
  */
 Tilt.UI.$handleMouseEvent = function(name, x, y, button) {
   var i, e, len, len2, elements, element, func,
-    bounds, boundsX, boundsY, boundsWidth, boundsHeight,
+    offset, bounds, boundsX, boundsY, boundsWidth, boundsHeight,
     mouseX = this.mouseX,
     mouseY = this.mouseY;
 
+  // browse each view handled by the top level UI array
   for (i = 0, len = this.length; i < len; i++) {
     elements = this[i];
 
+    // handle mouse events only if the view is visible and enabled
     if (elements.hidden || elements.disabled) {
       continue;
     }
 
+    // remember the view offset (for example, used in scroll containers)
+    offset = elements.offset;
+
+    // each view has multiple elements attach, browse and handle each one
     for (e = 0, len2 = elements.length; e < len2; e++) {
       element = elements[e];
 
+      // handle mouse events only if the element is visible and enabled
       if (element.hidden || element.disabled) {
         continue;
       }
-
+      
+      // get the bounds from the element (if it's not set, use default values)
       bounds = element.$bounds || [-1, -1, -1, -1];
-      boundsX = bounds[0];
-      boundsY = bounds[1];
+      boundsX = bounds[0] + offset[0];
+      boundsY = bounds[1] + offset[1];
       boundsWidth = bounds[2];
       boundsHeight = bounds[3];
 
+      // if the mouse was released (no matter where), the mousePressed flag
+      // for that element must be set to false
       if ("onmouseup" === name) {
         element.mousePressed = false;
       }
 
+      // continue only if the mouse pointer is inside the element bounds
       if (mouseX > boundsX && mouseX < boundsX + boundsWidth &&
           mouseY > boundsY && mouseY < boundsY + boundsHeight) {
 
-        func = element[name];
-
-        if ("function" === typeof func) {
-          func(x, y, button);
-        }
-
+        // if the mouse is pressed (inside the element), the mousePressed flag
+        // for that element must be set to true
         if ("onmousedown" === name) {
           element.mousePressed = true;
         }
 
+        // the mouse pointer is over a gui element, set a global flag for this
+        // so it can be used by other controllers
         this.mouseOver = true;
+
+        // get the event function from the element
+        func = element[name];
+
+        // if the event is a valid set function, call it now
+        if ("function" === typeof func) {
+          func(x, y, button);
+        }
       }
     }
   }
@@ -8500,22 +8700,28 @@ Tilt.UI.$handleMouseEvent = function(name, x, y, button) {
 Tilt.UI.$handleKeyEvent = function(name, code) {
   var i, e, len, len2, elements, element, func;
 
+  // browse each view handled by the top level UI array
   for (i = 0, len = this.length; i < len; i++) {
     elements = this[i];
 
+    // handle keyboard events only if the view is visible and enabled
     if (elements.hidden || elements.disabled) {
       continue;
     }
 
+    // each view has multiple elements attach, browse and handle each one
     for (e = 0, len2 = elements.length; e < len2; e++) {
       element = elements[e];
 
+      // handle keyboard events only if the element is visible and enabled
       if (element.hidden || element.disabled) {
         continue;
       }
 
+      // get the event function from the element
       func = element[name];
 
+      // if the event is a valid set function, call it now
       if ("function" === typeof func) {
         func(code);
       }
@@ -8569,7 +8775,9 @@ var EXPORTED_SYMBOLS = ["Tilt.View"];
  *  @param {Boolean} hidden: specifies if this shouldn't be drawn
  *  @param {Boolean} disabled: specifies if this shouldn't receive events
  *  @param {String} background: color to fill the screen
+ *  @param {Array} offset: the [x, y] offset of the inner contents
  *  @param {Boolean} bounds: the inner drawable bounds for this view
+ *  @param {Array} elements: an array of elements to be initially added
  */
 Tilt.View = function(properties) {
 
@@ -8595,9 +8803,19 @@ Tilt.View = function(properties) {
   this.background = properties.background || null;
 
   /**
+   * The offset of the inner contents.
+   */
+  this.offset = properties.offset || [0, 0];
+
+  /**
    * The inner drawable bounds for this view.
    */
-  this.bounds = properties.bounds || [0, 0, 8192, 8192];
+  this.bounds = properties.bounds || [0, 0, 0, 0];
+
+  // if initial elements are specified, add them to this view
+  if (properties.elements instanceof Array) {
+    properties.elements.forEach(function(e) { this.push(e); }.bind(this));
+  }
 
   // add this view to the top level UI handler.
   Tilt.UI.push(this);
@@ -8617,11 +8835,17 @@ Tilt.View.prototype = [];
 Tilt.View.prototype.update = function(frameDelta, tilt) {
   var element, i, len;
 
+  // a view has multiple elements attach, browse and handle each one
   for (i = 0, len = this.length; i < len; i++) {
     element = this[i];
 
-    if (!element.hidden) {
-      element.update(frameDelta, tilt);
+    // some elements don't require an update function, check for it first
+    if ("function" === typeof element.update) {
+
+      // update only if the element is visible and enabled
+      if (!element.hidden && !element.disabled) {
+        element.update(frameDelta, tilt);
+      }
     }
   }
 };
@@ -8636,46 +8860,45 @@ Tilt.View.prototype.draw = function(frameDelta, tilt) {
   tilt = tilt || Tilt.$renderer;
 
   var background = this.background,
-    element, bounds, ex, ey, ew, eh,
-    x = this.bounds[0],
-    y = this.bounds[1],
-    w = this.bounds[2],
-    h = this.bounds[3],
+    offset = this.offset,
+    bounds = this.bounds,
+    x = bounds[0] + offset[0],
+    y = bounds[1] + offset[1],
+    w = bounds[2],
+    h = bounds[3],
+    element, ebounds, ex, ey, ew, eh,
     r1x1, r1y1, r1x2, r1y2, r2x1, r2y1, r2x2, r2y2, i, len;
 
+  // a view may specify a full screen rectangle as a background
   if (background !== null) {
     tilt.fill(background);
     tilt.noStroke();
-    tilt.rect(x, y, w, h);
-
-    var $fill = tilt.$fillColor;
-    var $stroke = tilt.$strokeColor;
-    $fill[0] = 1;
-    $fill[1] = 1;
-    $fill[2] = 1;
-    $fill[3] = 1;
-    $stroke[0] = 0;
-    $stroke[1] = 0;
-    $stroke[2] = 0;
-    $stroke[3] = 1;
+    tilt.rect(x, y, w || tilt.width, h || tilt.height);
   }
 
+  // translate by the view offset (for example, used in scroll containers)
+  tilt.pushMatrix();
+  tilt.translate(offset[0], offset[1], 0);
+
+  // a view has multiple elements attach, browse and handle each one
   for (i = 0, len = this.length; i < len; i++) {
     element = this[i];
 
+    // draw only if the element is visible (it may be enabled or not)
     if (!element.hidden) {
-      // the current view bounds do not restrict drawing the child elements
-      if (w === 8192 || h === 8192) {
+
+      // if the current view bounds do not restrict drawing the child elements
+      if (w === 0 || h === 0) {
         element.draw(frameDelta, tilt);
         continue;
       }
 
       // otherwise, we need to calculate if the child element is visible
-      bounds = element.$bounds || [1, 1, 1, 1];
-      ex = bounds[0];
-      ey = bounds[1];
-      ew = bounds[2];
-      eh = bounds[3];
+      ebounds = element.$bounds || [1, 1, 1, 1];
+      ex = ebounds[0] + offset[0];
+      ey = ebounds[1] + offset[1];
+      ew = ebounds[2];
+      eh = ebounds[3];
 
       // compute the two rectangles representing the element and view bounds
       r1x1 = ex;
@@ -8693,6 +8916,8 @@ Tilt.View.prototype.draw = function(frameDelta, tilt) {
       }
     }
   }
+
+  tilt.popMatrix();
 };
 
 /**
@@ -10660,23 +10885,19 @@ TiltChrome.UI.Default = function() {
    * The views containing all the UI elements.
    */
   view = null,
-  help = null,
+  helpPopup = null,
+  colorAdjustPopup = null,
+  domStripsScrollview = null,
 
   /**
    * The texture containing all the interface elements.
    */
-  texture = null,
+  t = null,
 
   /**
    * The background gradient.
    */
   background = null,
-
-  /**
-   * The controls information.
-   */
-  helpSprite = null,
-  helpCloseButon = null,
 
   /**
    * The top-right menu buttons.
@@ -10714,6 +10935,12 @@ TiltChrome.UI.Default = function() {
   textureSlider = null,
 
   /**
+   * The controls information.
+   */
+  helpBoxSprite = null,
+  helpCloseButon = null,
+
+  /**
    * Arrays holding groups of objects.
    */
   alwaysVisibleElements = [],
@@ -10735,29 +10962,20 @@ TiltChrome.UI.Default = function() {
     panel.addEventListener("popuphidden", ePopupHidden, false);
 
     view = new Tilt.View();
-    help = new Tilt.View({
-      hidden: true,
-      background: "#0007"
+    domStripsScrollview = new Tilt.View({
+      bounds: [0, 0, canvas.width, canvas.height]
     });
 
-    texture = new Tilt.Texture("chrome://tilt/skin/tilt-ui.png", {
+    t = new Tilt.Texture("chrome://tilt/skin/tilt-ui.png", {
       minFilter: "nearest",
       magFilter: "nearest"
     });
 
-    var t = texture;
     background = new Tilt.Sprite(t, [0, 1024 - 256, 256, 256], {
       width: canvas.width,
       height: canvas.height,
       depthTest: true,
       disabled: true
-    });
-
-    helpSprite = new Tilt.Sprite(t, [210, 180, 610, 510]);
-
-    helpCloseButon = new Tilt.Button(null, {
-      width: 30,
-      height: 30
     });
 
     exitButton = new Tilt.Button(new Tilt.Sprite(t, [935, 120, 42, 38]), {
@@ -10828,14 +11046,64 @@ TiltChrome.UI.Default = function() {
       y: 260
     });
 
-    var handlerSprite = new Tilt.Sprite(texture, [574, 131, 29, 29], {
-      padding: [8, 8, 8, 8]
+    var handlerSprite = new Tilt.Sprite(t, [574, 131, 29, 29], {
+      padding: [10, 10, 10, 10]
     });
     hueSlider = new Tilt.Slider(handlerSprite, {
       x: 152,
       y: 271,
       size: 120,
       value: 50
+    });
+    saturationSlider = new Tilt.Slider(handlerSprite, {
+      x: 152,
+      y: 290,
+      size: 120,
+      value: 0
+    });
+    brightnessSlider = new Tilt.Slider(handlerSprite, {
+      x: 152,
+      y: 308,
+      size: 120,
+      value: 100
+    });
+    alphaSlider = new Tilt.Slider(handlerSprite, {
+      x: 152,
+      y: 326,
+      size: 120,
+      value: 90
+    });
+    textureSlider = new Tilt.Slider(handlerSprite, {
+      x: 152,
+      y: 344,
+      size: 120,
+      value: 100
+    });
+
+    var colorAdjustPopupSprite = new Tilt.Sprite(t, [572, 1, 231, 126], {
+      x: 88,
+      y: 258
+    });
+    colorAdjustPopup = new Tilt.View({
+      hidden: true,
+      elements: [colorAdjustPopupSprite,
+                 hueSlider, saturationSlider, brightnessSlider, 
+                 alphaSlider, textureSlider]
+    });
+
+    helpBoxSprite = new Tilt.Sprite(t, [210, 180, 610, 510], {
+      disabled: true
+    });
+
+    helpCloseButon = new Tilt.Button(null, {
+      width: 30,
+      height: 30
+    });
+
+    helpPopup = new Tilt.View({
+      hidden: true,
+      background: "#0007",
+      elements: [helpBoxSprite, helpCloseButon]
     });
 
     exitButton.onclick = function() {
@@ -10849,13 +11117,13 @@ TiltChrome.UI.Default = function() {
         exitX = canvas.width / 2 + 197,
         exitY = canvas.height / 2 - 218;
 
-      helpSprite.setPosition(helpX, helpY);
+      helpBoxSprite.setPosition(helpX, helpY);
       helpCloseButon.setPosition(exitX, exitY);
-      ui.setModal(help);
+      ui.presentModal(helpPopup);
     };
 
     helpCloseButon.onclick = function() {
-      ui.unsetModal(help);
+      ui.dismissModal(helpPopup);
     };
 
     exportButton.onclick = function() {
@@ -10865,18 +11133,30 @@ TiltChrome.UI.Default = function() {
     };
 
     htmlButton.onclick = function() {
-    };
+      this.visualization.setHtmlEditor();
+    }.bind(this);
 
     cssButton.onclick = function() {
-    };
+      this.visualization.setCssEditor();
+    }.bind(this);
 
     attrButton.onclick = function() {
-    };
+      this.visualization.setAttributesEditor();
+    }.bind(this);
 
     eyeButton.onclick = function() {
       hideableElements.forEach(function(element) {
         element.hidden ^= true;
       });
+
+      domStripsScrollview.hidden ^= true;
+
+      if (!helpPopup.hidden) {
+        helpPopup.hidden = true;
+      }
+      if (!colorAdjustPopup.hidden) {
+        colorAdjustPopup.hidden = true;
+      }
     };
 
     resetButton.onclick = function() {
@@ -10891,7 +11171,36 @@ TiltChrome.UI.Default = function() {
       this.controller.zoom(-200);
     }.bind(this);
 
+    viewModeButton.type = 0;
     viewModeButton.onclick = function() {
+      if (viewModeButton.type === 0) {
+        viewModeButton.type = 1;
+        viewModeButton.setSprite(viewModeNormalSprite);
+
+        hueSlider.setValue(55);
+        saturationSlider.setValue(35);
+        brightnessSlider.setValue(100);
+        alphaSlider.setValue(7.5);
+        textureSlider.setValue(100);
+
+        this.visualization.setMeshWireframeColor([1, 1, 1, 0.7]);
+      }
+      else {
+        viewModeButton.type = 0;
+        viewModeButton.setSprite(viewModeWireframeSprite);
+
+        hueSlider.setValue(50);
+        saturationSlider.setValue(0);
+        brightnessSlider.setValue(100);
+        alphaSlider.setValue(100);
+        textureSlider.setValue(100);
+
+        this.visualization.setMeshWireframeColor([0, 0, 0, 0.25]);
+      }
+    }.bind(this);
+
+    colorAdjustButton.onclick = function() {
+      colorAdjustPopup.hidden ^= true;
     }.bind(this);
 
     alwaysVisibleElements.push(
@@ -10916,8 +11225,6 @@ TiltChrome.UI.Default = function() {
     panelElements.forEach(function(element) {
       view.push(element);
     });
-
-    help.push(helpSprite, helpCloseButon);
   };
 
   /**
@@ -10944,6 +11251,19 @@ TiltChrome.UI.Default = function() {
    */
   this.draw = function(frameDelta) {
     ui.refresh();
+
+    var rgba = Tilt.Math.hsv2rgb(
+      hueSlider.getValue() / 100,
+      saturationSlider.getValue() / 100,
+      brightnessSlider.getValue() / 100);
+
+    rgba[0] /= 255;
+    rgba[1] /= 255;
+    rgba[2] /= 255;
+    rgba[3] = alphaSlider.getValue() / 100;
+
+    this.visualization.setMeshColor(rgba);
+    this.visualization.setMeshTextureAlpha(textureSlider.getValue() / 100);
   };
 
   /**
@@ -10954,6 +11274,141 @@ TiltChrome.UI.Default = function() {
    * @param {Number} index: the index of the node in the dom tree
    */
   this.domVisualizationMeshNodeCallback = function(node, depth, index) {
+    if ("undefined" === typeof this.stripNo) {
+      this.stripNo = 0;
+    }
+    if ("undefined" === typeof node.localName || node.localName === null) {
+      return;
+    }
+
+    var stripNo = this.stripNo++,
+      x = 25 + depth * 8,
+      y = 340 + stripNo * 10,
+      height = 6,
+      stripButton, stripIdButton, stripClassButton;
+
+    // the general strip button, created in all cases
+    var clsx = x + (node.localName.length) * 10 + 3;
+    var idx = clsx + (node.className.length || 3) * 3 + 3;
+
+    stripButton = new Tilt.Button(null, {
+      x: x,
+      y: y,
+      width: node.localName.length * 10,
+      height: height,
+      stroke: "#fff2"
+    });
+
+    if (node.className) {
+      stripClassButton = new Tilt.Button(null, {
+        x: clsx,
+        y: y,
+        width: (node.className.length || 3) * 3,
+        height: height,
+        stroke: stripButton.getStroke()
+      });
+    }
+
+    if (node.id) {
+      stripIdButton = new Tilt.Button(null, {
+        x: idx,
+        y: y,
+        width: (node.id.length || 3) * 3,
+        height: height,
+        stroke: stripButton.getStroke()
+      });
+    }
+
+    if (node.localName === "html") {
+      stripButton.setFill("#fff");
+    }
+    else if (node.localName === "head") {
+      stripButton.setFill("#E667AF");
+    }
+    else if (node.localName === "title") {
+      stripButton.setFill("#CD0074");
+    }
+    else if (node.localName === "meta") {
+      stripButton.setFill("#BF7130");
+    }
+    else if (node.localName === "script") {
+      stripButton.setFill("#A64B00");
+    }
+    else if (node.localName === "style") {
+      stripButton.setFill("#FF9640");
+    }
+    else if (node.localName === "link") {
+      stripButton.setFill("#FFB273");
+    }
+    else if (node.localName === "body") {
+      stripButton.setFill("#E667AF");
+    }
+    else if (node.localName === "h1") {
+      stripButton.setFill("#ff0d");
+    }
+    else if (node.localName === "h2") {
+      stripButton.setFill("#ee0d");
+    }
+    else if (node.localName === "h3") {
+      stripButton.setFill("#dd0d");
+    }
+    else if (node.localName === "h4") {
+      stripButton.setFill("#cc0d");
+    }
+    else if (node.localName === "h5") {
+      stripButton.setFill("#bb0d");
+    }
+    else if (node.localName === "h6") {
+      stripButton.setFill("#aa0d");
+    }
+    else if (node.localName === "table") {
+      stripButton.setFill("#FF0700");
+    }
+    else if (node.localName === "tbody") {
+      stripButton.setFill("#FF070088");
+    }
+    else if (node.localName === "tr") {
+      stripButton.setFill("#FF4540");
+    }
+    else if (node.localName === "td") {
+      stripButton.setFill("#FF7673");
+    }
+    else if (node.localName === "div") {
+      stripButton.setFill("#5DC8CD");
+    }
+    else if (node.localName === "span") {
+      stripButton.setFill("#67E46F");
+    }
+    else if (node.localName === "p") {
+      stripButton.setFill("#888");
+    }
+    else if (node.localName === "a") {
+      stripButton.setFill("#123EAB");
+    }
+    else if (node.localName === "img") {
+      stripButton.setFill("#FFB473");
+    }
+    else {
+      stripButton.setFill("#444");
+    }
+
+    stripButton.onclick = function() {
+      alert(depth);
+    };
+
+    if (stripButton) {
+      domStripsScrollview.push(stripButton);
+    }
+    if (stripClassButton) {
+      domStripsScrollview.push(stripClassButton);
+      stripClassButton.setFill(node.className ? 
+        stripButton.getFill() : "#0002");
+    }
+    if (stripIdButton) {
+      domStripsScrollview.push(stripIdButton);
+      stripIdButton.setFill(node.id ?
+        stripButton.getFill() : "#0002");
+    }
   };
 
   /**
@@ -10982,6 +11437,8 @@ TiltChrome.UI.Default = function() {
     htmlButton.setPosition(width - 337, 0);
     cssButton.setPosition(width - 377, 0);
     attrButton.setPosition(width - 465, 0);
+
+    domStripsScrollview.bounds = [0, 0, width, height];
   };
 
   /**
