@@ -77,7 +77,7 @@ Tilt.View = function(properties) {
   /**
    * The inner drawable bounds for this view.
    */
-  this.bounds = properties.bounds || [0, 0, 0, Number.MAX_VALUE];
+  this.bounds = properties.bounds || [0, 0, 0, 0];
 
   // if initial elements are specified, add them to this view
   if (properties.elements instanceof Array) {
@@ -132,7 +132,7 @@ Tilt.View.prototype.draw = function(frameDelta, tilt) {
     x = bounds[0] + offset[0],
     y = bounds[1] + offset[1],
     w = bounds[2],
-    h = bounds[3],    
+    h = bounds[3],
     element, ebounds, ex, ey, ew, eh,
     r1x1, r1y1, r1x2, r1y2, r2x1, r2y1, r2x2, r2y2, i, len;
 
@@ -140,7 +140,7 @@ Tilt.View.prototype.draw = function(frameDelta, tilt) {
   if (background !== null) {
     tilt.fill(background);
     tilt.noStroke();
-    tilt.rect(x, y, w, h);
+    tilt.rect(x, y, w || tilt.width, h || tilt.height);
   }
 
   // translate by the view offset (for example, used in scroll containers)
@@ -155,7 +155,7 @@ Tilt.View.prototype.draw = function(frameDelta, tilt) {
     if (!element.hidden) {
 
       // if the current view bounds do not restrict drawing the child elements
-      if (h === Number.MAX_VALUE || w === Number.MAX_VALUE) {
+      if (w === 0 || h === 0) {
         element.draw(frameDelta, tilt);
         continue;
       }
