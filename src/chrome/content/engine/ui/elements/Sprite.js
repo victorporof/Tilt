@@ -149,7 +149,7 @@ Tilt.Sprite.prototype = {
    * Returns the x position of this object.
    * @return {Number} the x position
    */
-  get x() {
+  getX: function() {
     return this.$x;
   },
 
@@ -157,7 +157,7 @@ Tilt.Sprite.prototype = {
    * Returns the y position of this object.
    * @return {Number} the y position
    */
-  get y() {
+  getY: function() {
     return this.$y;
   },
 
@@ -165,7 +165,7 @@ Tilt.Sprite.prototype = {
    * Returns the width of this object.
    * @return {Number} the width
    */
-  get width() {
+  getWidth: function() {
     return this.$width;
   },
 
@@ -173,7 +173,7 @@ Tilt.Sprite.prototype = {
    * Returns the height of this object.
    * @return {Number} the height
    */
-  get height() {
+  getHeight: function() {
     return this.$height;
   },
 

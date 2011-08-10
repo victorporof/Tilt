@@ -168,7 +168,7 @@ Tilt.Slider.prototype = {
    * Returns the x position of this object.
    * @return {Number} the x position
    */
-  get x() {
+  getX: function() {
     return this.$x;
   },
 
@@ -176,7 +176,7 @@ Tilt.Slider.prototype = {
    * Returns the y position of this object.
    * @return {Number} the y position
    */
-  get y() {
+  getY: function() {
     return this.$y;
   },
 
@@ -184,7 +184,7 @@ Tilt.Slider.prototype = {
    * Returns the size of this object.
    * @return {Number} the size
    */
-  get size() {
+  getSize: function() {
     return this.$size;
   },
 
@@ -192,7 +192,7 @@ Tilt.Slider.prototype = {
    * Gets the current value for this controller.
    * @return {Number} the value, ranging from 0..100
    */
-  get value() {
+  getValue: function() {
     return this.$value;
   },
 

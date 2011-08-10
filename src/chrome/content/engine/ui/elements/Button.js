@@ -167,7 +167,7 @@ Tilt.Button.prototype = {
    * Returns the x position of this object.
    * @return {Number} the x position
    */
-  get x() {
+  getX: function() {
     return this.$sprite.$x;
   },
 
@@ -175,7 +175,7 @@ Tilt.Button.prototype = {
    * Returns the y position of this object.
    * @return {Number} the y position
    */
-  get y() {
+  getY: function() {
     return this.$sprite.$y;
   },
 
@@ -183,7 +183,7 @@ Tilt.Button.prototype = {
    * Returns the width of this object.
    * @return {Number} the width
    */
-  get width() {
+  getWidth: function() {
     return this.$sprite.$width;
   },
 
@@ -191,7 +191,7 @@ Tilt.Button.prototype = {
    * Returns the height of this object.
    * @return {Number} the height
    */
-  get height() {
+  getHeight: function() {
     return this.$sprite.$height;
   },
 
@@ -199,7 +199,7 @@ Tilt.Button.prototype = {
    * Gets the fill color for the rectangle bounding this object.
    * @return {String} the fill color
    */
-  get fill() {
+  getFill: function() {
     return this.$fill;
   },
 
@@ -207,7 +207,7 @@ Tilt.Button.prototype = {
    * Gets the stroke color for the rectangle bounding this object.
    * @return {String} the stroke color
    */
-  get stroke() {
+  getStroke: function() {
     return this.$stroke;
   },
 
