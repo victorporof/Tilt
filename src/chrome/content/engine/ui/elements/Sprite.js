@@ -42,12 +42,14 @@ var EXPORTED_SYMBOLS = ["Tilt.Sprite"];
  * @param {Array} region: the sub-texture coordinates as [x, y, width, height]
  * @param {Object} properties: additional properties for this object
  *  @param {Boolean} hidden: specifies if this object shouldn't be drawn
+ *  @param {Boolean} disabled: specifies if this shouldn't receive events
  *  @param {Number} x: the x position of the object
  *  @param {Number} y: the y position of the object
  *  @param {Number} width: the width of the object
  *  @param {Number} height: the height of the object
- *  @param {Boolean} depthTest: true to use depth testing
+ *  @param {Array} padding: the inner padding offset for mouse events
  *  @param {String} tint: texture tinting expressed in hex or rgb() or rgba()
+ *  @param {Boolean} depthTest: true to use depth testing
  */
 Tilt.Sprite = function(texture, region, properties) {
 
@@ -86,9 +88,9 @@ Tilt.Sprite = function(texture, region, properties) {
   this.$height = properties.height || this.$region[3];
 
   /**
-   * Sets if depth testing should be enabled or not for this object.
+   * The inner padding offset for mouse events.
    */
-  this.$depthTest = properties.depthTest || false;
+  this.$padding = properties.padding || [0, 0, 0, 0];
 
   /**
    * Tint color for this object.
@@ -96,9 +98,18 @@ Tilt.Sprite = function(texture, region, properties) {
   this.$tint = properties.tint || null;
 
   /**
+   * Sets if depth testing should be enabled or not for this object.
+   */
+  this.$depthTest = properties.depthTest || false;
+
+  /**
    * The bounds of this object (used for clicking and intersections).
    */
-  this.$bounds = [this.$x, this.$y, this.$width, this.$height];
+  this.$bounds = [
+    this.$x + this.$padding[0],
+    this.$y + this.$padding[1],
+    this.$width - this.$padding[2],
+    this.$height - this.$padding[3]];
 
   /**
    * Buffer of 2-component texture coordinates (u, v) for the sprite.
@@ -117,8 +128,8 @@ Tilt.Sprite.prototype = {
   setPosition: function(x, y) {
     this.$x = x;
     this.$y = y;
-    this.$bounds[0] = x;
-    this.$bounds[1] = y;
+    this.$bounds[0] = x + this.$padding[0];
+    this.$bounds[1] = y + this.$padding[1];
   },
 
   /**
@@ -130,17 +141,40 @@ Tilt.Sprite.prototype = {
   setSize: function(width, height) {
     this.$width = width;
     this.$height = height;
-    this.$bounds[2] = width;
-    this.$bounds[3] = height;
+    this.$bounds[2] = width - this.$padding[2];
+    this.$bounds[3] = height - this.$padding[3];
   },
 
   /**
-   * Updates this object's internal params.
-   *
-   * @param {Number} frameDelta: the delta time elapsed between frames
-   * @param {Tilt.Renderer} tilt: optional, a reference to a Tilt.Renderer
+   * Returns the x position of this object.
+   * @return {Number} the x position
    */
-  update: function(frameDelta, tilt) {
+  get x() {
+    return this.$x;
+  },
+
+  /**
+   * Returns the y position of this object.
+   * @return {Number} the y position
+   */
+  get y() {
+    return this.$y;
+  },
+
+  /**
+   * Returns the width of this object.
+   * @return {Number} the width
+   */
+  get width() {
+    return this.$width;
+  },
+
+  /**
+   * Returns the height of this object.
+   * @return {Number} the height
+   */
+  get height() {
+    return this.$height;
   },
 
   /**
