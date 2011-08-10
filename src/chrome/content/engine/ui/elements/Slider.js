@@ -142,17 +142,23 @@ Tilt.Slider.prototype = {
       size = this.$size,
       direction = this.$direction, p;
 
+    // first, make sure the passed value is in 0..100 range
     this.$value = Tilt.Math.clamp(value, 0, 100);
 
+    // depending on the direction, move the handler along the x or y axis
     if (direction === 0) {
+      // calculate the position using the value
       p = Tilt.Math.map(this.$value, 0, 100, x, x + size);
 
+      // set the sprite x position and update the bounds
       sprite.setPosition(p, y);
       this.$bounds[0] = p + this.$padding[0];
     }
     else {
+      // calculate the position using the value
       p = Tilt.Math.map(this.$value, 0, 100, y, y + size);
 
+      // set the sprite y position and update the bounds
       sprite.setPosition(x, p);
       this.$bounds[1] = p + this.$padding[1];
     }
@@ -199,13 +205,16 @@ Tilt.Slider.prototype = {
   update: function(frameDelta, tilt) {
     var ui = Tilt.UI;
 
+    // if the mouse was pressed over the handler, begin sliding
     if (this.mousePressed) {
       this.$sliding = true;
     }
+    // if the mouse was released (over the slider or not), end sliding
     else if (!ui.mousePressed) {
       this.$sliding = false;
     }
 
+    // if we're currently sliding, update this object's internal params
     if (this.$sliding) {
       var sprite = this.$sprite,
         x = this.$x,
@@ -213,16 +222,21 @@ Tilt.Slider.prototype = {
         size = this.$size,
         direction = this.$direction, p;
 
+      // depending on the direction, move the handler along the x or y axis
       if (direction === 0) {
+        // clamp the handler position between the left and right edges
         p = Tilt.Math.clamp(ui.mouseX - sprite.$width / 2, x, x + size);
 
+        // set the sprite x position and update the value and bounds
         sprite.setPosition(p, y);
         this.$value = Tilt.Math.map(p, x, x + size, 0, 100);
         this.$bounds[0] = p + this.$padding[0];
       }
       else {
+        // clamp the handler position between the top and bottom edges
         p = Tilt.Math.clamp(ui.$mouseY - sprite.height / 2, y, y + size);
 
+        // set the sprite y position and update the value and bounds
         sprite.setPosition(x, p);
         this.$value = Tilt.Math.map(p, y, y + size, 0, 100);
         this.$bounds[1] = p + this.$padding[1];
@@ -238,10 +252,7 @@ Tilt.Slider.prototype = {
    */
   draw: function(frameDelta, tilt) {
     tilt = tilt || Tilt.$renderer;
-
-    if ("undefined" !== typeof this.$sprite.$texture) {
-      this.$sprite.draw(tilt);
-    }
+    this.$sprite.draw(tilt);
   },
 
   /**
