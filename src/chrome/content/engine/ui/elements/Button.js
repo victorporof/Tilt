@@ -220,6 +220,7 @@ Tilt.Button.prototype = {
   draw: function(frameDelta, tilt) {
     tilt = tilt || Tilt.$renderer;
 
+    // a button may not have a sprite attached, so check before drawing
     if ("undefined" !== typeof this.$sprite.$texture) {
       this.$sprite.draw(tilt);
     }
@@ -228,6 +229,8 @@ Tilt.Button.prototype = {
       fill = this.$fill,
       stroke = this.$stroke;
 
+    // if fill and stroke params are specified, draw a rectangle using the
+    // current bounds around the object
     if (fill && stroke) {
       bounds = this.$bounds;
 
