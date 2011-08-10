@@ -214,7 +214,8 @@ Tilt.UI.keyUp = function(code) {
  */
 Tilt.UI.$handleMouseEvent = function(name, x, y, button) {
   var i, e, len, len2, elements, element, func,
-    offset, bounds, boundsX, boundsY, boundsWidth, boundsHeight,
+    offset, offsetX, offsetY, 
+    bounds, boundsX, boundsY, boundsWidth, boundsHeight,
     mouseX = this.mouseX,
     mouseY = this.mouseY;
 
@@ -228,7 +229,9 @@ Tilt.UI.$handleMouseEvent = function(name, x, y, button) {
     }
 
     // remember the view offset (for example, used in scroll containers)
-    offset = elements.offset;
+    offset = elements.offset || [0, 0];
+    offsetX = offset[0] + elements.x || 0;
+    offsetY = offset[1] + elements.y || 0;
 
     // each view has multiple elements attach, browse and handle each one
     for (e = 0, len2 = elements.length; e < len2; e++) {
@@ -238,11 +241,11 @@ Tilt.UI.$handleMouseEvent = function(name, x, y, button) {
       if (element.hidden || element.disabled) {
         continue;
       }
-      
+
       // get the bounds from the element (if it's not set, use default values)
       bounds = element.$bounds || [-1, -1, -1, -1];
-      boundsX = bounds[0] + offset[0];
-      boundsY = bounds[1] + offset[1];
+      boundsX = bounds[0] + offsetX;
+      boundsY = bounds[1] + offsetY;
       boundsWidth = bounds[2];
       boundsHeight = bounds[3];
 
