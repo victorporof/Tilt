@@ -206,10 +206,12 @@ Tilt.Sprite.prototype = {
         (reg[0] + reg[2]) / tex.width, (reg[1] + reg[3]) / tex.height], 2);
     }
 
+    // if tinting was specified, apply it now (will default back later)
     if (tint !== null) {
       tilt.tint(tint);
     }
 
+    // draw the image using the texCoord & depending on the depthTest param
     if (depthTest) {
       tilt.depthTest(true);
       tilt.image(tex, x, y, width, height, this.$texCoord);
@@ -219,6 +221,7 @@ Tilt.Sprite.prototype = {
       tilt.image(tex, x, y, width, height, this.$texCoord);
     }
 
+    // if tinting was specified, default back to the original values
     if (tint !== null) {
       var $tint = tilt.$tintColor;
       $tint[0] = 1;
