@@ -42,7 +42,9 @@ var EXPORTED_SYMBOLS = ["Tilt.View"];
  *  @param {Boolean} hidden: specifies if this shouldn't be drawn
  *  @param {Boolean} disabled: specifies if this shouldn't receive events
  *  @param {String} background: color to fill the screen
+ *  @param {Array} offset: the [x, y] offset of the inner contents
  *  @param {Boolean} bounds: the inner drawable bounds for this view
+ *  @param {Array} elements: an array of elements to be initially added
  */
 Tilt.View = function(properties) {
 
@@ -68,9 +70,19 @@ Tilt.View = function(properties) {
   this.background = properties.background || null;
 
   /**
+   * The offset of the inner contents.
+   */
+  this.offset = properties.offset || null;
+
+  /**
    * The inner drawable bounds for this view.
    */
   this.bounds = properties.bounds || [0, 0, 8192, 8192];
+
+  // if initial elements are specified, add them to this view
+  if (properties.elements instanceof Array) {
+    properties.elements.forEach(function(e) { this.push(e); }.bind(this));
+  }
 
   // add this view to the top level UI handler.
   Tilt.UI.push(this);
@@ -93,7 +105,7 @@ Tilt.View.prototype.update = function(frameDelta, tilt) {
   for (i = 0, len = this.length; i < len; i++) {
     element = this[i];
 
-    if (!element.hidden) {
+    if (!element.hidden && "function" === typeof element.update) {
       element.update(frameDelta, tilt);
     }
   }
