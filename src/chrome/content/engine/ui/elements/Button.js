@@ -46,6 +46,8 @@ var EXPORTED_SYMBOLS = ["Tilt.Button"];
  *  @param {Number} y: the y position of the object
  *  @param {Number} width: the width of the object
  *  @param {Number} height: the height of the object
+ *  @param {String} fill: fill color for the rect bounding this object
+ *  @param {String} stroke: stroke color for the rect bounding this object
  */
 Tilt.Button = function(sprite, properties) {
 
@@ -73,6 +75,16 @@ Tilt.Button = function(sprite, properties) {
   this.$sprite.$y = properties.y || this.$sprite.$y;
   this.$sprite.$width = properties.width || this.$sprite.$width;
   this.$sprite.$height = properties.height || this.$sprite.$height;
+
+  /**
+   * The fill color for the rectangle bounding this object.
+   */
+  this.$fill = properties.fill || null;
+
+  /**
+   * The stroke color for the rectangle bounding this object.
+   */
+  this.$stroke = properties.stroke || null;
 
   /**
    * The bounds of this object (used for clicking and intersections).
@@ -136,6 +148,22 @@ Tilt.Button.prototype = {
   },
 
   /**
+   * Sets the fill color for the rectangle bounding this object.
+   * @param {String} color: the fill color
+   */
+  setFill: function(color) {
+    this.$fill = color;
+  },
+
+  /**
+   * Sets the stroke color for the rectangle bounding this object.
+   * @param {String} color: the stroke color
+   */
+  setStroke: function(color) {
+    this.$stroke = color;
+  },
+
+  /**
    * Returns the x position of this object.
    * @return {Number} the x position
    */
@@ -168,6 +196,22 @@ Tilt.Button.prototype = {
   },
 
   /**
+   * Gets the fill color for the rectangle bounding this object.
+   * @return {String} the fill color
+   */
+  get fill() {
+    return this.$fill;
+  },
+
+  /**
+   * Gets the stroke color for the rectangle bounding this object.
+   * @return {String} the stroke color
+   */
+  get stroke() {
+    return this.$stroke;
+  },
+
+  /**
    * Draws this object using the specified internal params.
    *
    * @param {Number} frameDelta: the delta time elapsed between frames
@@ -178,6 +222,32 @@ Tilt.Button.prototype = {
 
     if ("undefined" !== typeof this.$sprite.$texture) {
       this.$sprite.draw(tilt);
+    }
+
+    var bounds,
+      fill = this.$fill,
+      stroke = this.$stroke;
+
+    if (fill && stroke) {
+      bounds = this.$bounds;
+
+      tilt.fill(fill);
+      tilt.stroke(stroke);
+      tilt.rect(bounds[0], bounds[1], bounds[2], bounds[3]);
+    }
+    else if (fill) {
+      bounds = this.$bounds;
+
+      tilt.fill(fill);
+      tilt.noStroke();
+      tilt.rect(bounds[0], bounds[1], bounds[2], bounds[3]);
+    }
+    else if (stroke) {
+      bounds = this.$bounds;
+
+      tilt.noFill();
+      tilt.stroke(stroke);
+      tilt.rect(bounds[0], bounds[1], bounds[2], bounds[3]);
     }
   },
 
