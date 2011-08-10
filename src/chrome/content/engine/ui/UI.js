@@ -41,8 +41,6 @@ var EXPORTED_SYMBOLS = ["Tilt.UI"];
 Tilt.UI = [];
 Tilt.UI.mouseX = 0;
 Tilt.UI.mouseY = 0;
-Tilt.UI.pmouseX = 0;
-Tilt.UI.pmouseY = 0;
 Tilt.UI.mousePressed = false;
 Tilt.UI.mouseScrollAmmount = 0;
 Tilt.UI.keyPressed = [];
@@ -55,6 +53,7 @@ Tilt.UI.refresh = function(frameDelta) {
   var tilt = Tilt.$renderer,
     i, len, view;
 
+  // before drawing, make sure we're in an orthographic default environment 
   tilt.ortho();
   tilt.defaults();
   tilt.depthTest(false);
@@ -63,13 +62,12 @@ Tilt.UI.refresh = function(frameDelta) {
     view = this[i];
 
     if (!view.hidden) {
-      view.update(frameDelta, tilt);
+      if (!view.disabled) {
+        view.update(frameDelta, tilt);
+      }
       view.draw(frameDelta, tilt);
     }
   }
-
-  this.pmouseX = this.mouseX;
-  this.pmouseY = this.mouseY;
 };
 
 /**
@@ -81,11 +79,13 @@ Tilt.UI.presentModal = function(view) {
     return;
   }
 
+  // disable all the other views, so that they become unresponsive to events
   for (var i = 0, len = this.length; i < len; i++) {
     this[i].$prevDisabled = this[i].disabled;
     this[i].disabled = true;
   }
 
+  // a modal view must always be marked as modal, be visible and enabled
   view.modal = true;
   view.hidden = false;
   view.disabled = false;
@@ -100,11 +100,13 @@ Tilt.UI.dismissModal = function(view) {
     return;
   }
 
+  // reset the disabled parameter for all the other views
   for (var i = 0, len = this.length; i < len; i++) {
     this[i].disabled = this[i].$prevDisabled;
     delete this[i].$prevDis;
   }
 
+  // a non-modal view must always be marked as modal, be hidden and disabled
   view.modal = false;
   view.hidden = true;
   view.disabled = true;
@@ -212,48 +214,65 @@ Tilt.UI.keyUp = function(code) {
  */
 Tilt.UI.$handleMouseEvent = function(name, x, y, button) {
   var i, e, len, len2, elements, element, func,
-    bounds, boundsX, boundsY, boundsWidth, boundsHeight,
+    offset, bounds, boundsX, boundsY, boundsWidth, boundsHeight,
     mouseX = this.mouseX,
     mouseY = this.mouseY;
 
+  // browse each view handled by the top level UI array
   for (i = 0, len = this.length; i < len; i++) {
     elements = this[i];
 
+    // handle mouse events only if the view is visible and enabled
     if (elements.hidden || elements.disabled) {
       continue;
     }
 
+    // remember the view offset (for example, used in scroll containers)
+    offset = elements.offset;
+
+    // each view has multiple elements attach, browse and handle each one
     for (e = 0, len2 = elements.length; e < len2; e++) {
       element = elements[e];
 
+      // handle mouse events only if the element is visible and enabled
       if (element.hidden || element.disabled) {
         continue;
       }
-
+      
+      // get the bounds from the element (if it's not set, use default values)
       bounds = element.$bounds || [-1, -1, -1, -1];
-      boundsX = bounds[0];
-      boundsY = bounds[1];
+      boundsX = bounds[0] + offset[0];
+      boundsY = bounds[1] + offset[1];
       boundsWidth = bounds[2];
       boundsHeight = bounds[3];
 
+      // if the mouse was released (no matter where), the mousePressed flag
+      // for that element must be set to false
       if ("onmouseup" === name) {
         element.mousePressed = false;
       }
 
+      // continue only if the mouse pointer is inside the element bounds
       if (mouseX > boundsX && mouseX < boundsX + boundsWidth &&
           mouseY > boundsY && mouseY < boundsY + boundsHeight) {
 
-        func = element[name];
-
-        if ("function" === typeof func) {
-          func(x, y, button);
-        }
-
+        // if the mouse is pressed (inside the element), the mousePressed flag
+        // for that element must be set to true
         if ("onmousedown" === name) {
           element.mousePressed = true;
         }
 
+        // the mouse pointer is over a gui element, set a global flag for this
+        // so it can be used by other controllers
         this.mouseOver = true;
+
+        // get the event function from the element
+        func = element[name];
+
+        // if the event is a valid set function, call it now
+        if ("function" === typeof func) {
+          func(x, y, button);
+        }
       }
     }
   }
@@ -266,22 +285,28 @@ Tilt.UI.$handleMouseEvent = function(name, x, y, button) {
 Tilt.UI.$handleKeyEvent = function(name, code) {
   var i, e, len, len2, elements, element, func;
 
+  // browse each view handled by the top level UI array
   for (i = 0, len = this.length; i < len; i++) {
     elements = this[i];
 
+    // handle keyboard events only if the view is visible and enabled
     if (elements.hidden || elements.disabled) {
       continue;
     }
 
+    // each view has multiple elements attach, browse and handle each one
     for (e = 0, len2 = elements.length; e < len2; e++) {
       element = elements[e];
 
+      // handle keyboard events only if the element is visible and enabled
       if (element.hidden || element.disabled) {
         continue;
       }
 
+      // get the event function from the element
       func = element[name];
 
+      // if the event is a valid set function, call it now
       if ("function" === typeof func) {
         func(code);
       }
