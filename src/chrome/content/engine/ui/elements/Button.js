@@ -121,12 +121,50 @@ Tilt.Button.prototype = {
   },
 
   /**
-   * Updates this object's internal params.
-   *
-   * @param {Number} frameDelta: the delta time elapsed between frames
-   * @param {Tilt.Renderer} tilt: optional, a reference to a Tilt.Renderer
+   * Sets a new sprite to be drawn as a background for this object.
    */
-  update: function(frameDelta, tilt) {
+  setSprite: function(sprite) {
+    var x = this.$sprite.$x,
+      y = this.$sprite.$y;
+
+    this.$sprite = sprite;
+    this.$sprite.$x = x;
+    this.$sprite.$y = y;
+
+    this.$bounds[2] = sprite.$width;
+    this.$bounds[3] = sprite.$height;    
+  },
+
+  /**
+   * Returns the x position of this object.
+   * @return {Number} the x position
+   */
+  get x() {
+    return this.$sprite.$x;
+  },
+
+  /**
+   * Returns the y position of this object.
+   * @return {Number} the y position
+   */
+  get y() {
+    return this.$sprite.$y;
+  },
+
+  /**
+   * Returns the width of this object.
+   * @return {Number} the width
+   */
+  get width() {
+    return this.$sprite.$width;
+  },
+
+  /**
+   * Returns the height of this object.
+   * @return {Number} the height
+   */
+  get height() {
+    return this.$sprite.$height;
   },
 
   /**
