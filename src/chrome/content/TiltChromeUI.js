@@ -52,7 +52,7 @@ TiltChrome.UI.Default = function() {
   view = null,
   helpPopup = null,
   colorAdjustPopup = null,
-  domStripsScrollview = null,
+  domStripsContainer = null,
 
   /**
    * The texture containing all the interface elements.
@@ -127,8 +127,10 @@ TiltChrome.UI.Default = function() {
     panel.addEventListener("popuphidden", ePopupHidden, false);
 
     view = new Tilt.View();
-    domStripsScrollview = new Tilt.View({
-      bounds: [0, 0, canvas.width, canvas.height]
+    domStripsContainer = new Tilt.ScrollContainer({
+      x: 20,
+      y: 335,
+      bounds: [0, 0, canvas.width - 25, canvas.height - 340]
     });
 
     t = new Tilt.Texture("chrome://tilt/skin/tilt-ui.png", {
@@ -251,9 +253,13 @@ TiltChrome.UI.Default = function() {
     });
     colorAdjustPopup = new Tilt.View({
       hidden: true,
-      elements: [colorAdjustPopupSprite,
-                 hueSlider, saturationSlider, brightnessSlider, 
-                 alphaSlider, textureSlider]
+      elements: [
+        colorAdjustPopupSprite,
+        hueSlider,
+        saturationSlider,
+        brightnessSlider,
+        alphaSlider,
+        textureSlider]
     });
 
     helpBoxSprite = new Tilt.Sprite(t, [210, 180, 610, 510], {
@@ -314,7 +320,7 @@ TiltChrome.UI.Default = function() {
         element.hidden ^= true;
       });
 
-      domStripsScrollview.hidden ^= true;
+      domStripsContainer.view.hidden ^= true;
 
       if (!helpPopup.hidden) {
         helpPopup.hidden = true;
@@ -447,8 +453,8 @@ TiltChrome.UI.Default = function() {
     }
 
     var stripNo = this.stripNo++,
-      x = 25 + depth * 8,
-      y = 340 + stripNo * 10,
+      x = 3 + depth * 8,
+      y = 3 + stripNo * 10,
       height = 6,
       stripButton, stripIdButton, stripClassButton;
 
@@ -557,22 +563,32 @@ TiltChrome.UI.Default = function() {
       stripButton.setFill("#444");
     }
 
-    stripButton.onclick = function() {
-      alert(depth);
-    };
-
     if (stripButton) {
-      domStripsScrollview.push(stripButton);
+      domStripsContainer.view.push(stripButton);
+
+      stripButton.onclick = function() {
+        alert(depth + " " + index);
+      };
     }
     if (stripClassButton) {
-      domStripsScrollview.push(stripClassButton);
+      domStripsContainer.view.push(stripClassButton);
+
       stripClassButton.setFill(node.className ? 
         stripButton.getFill() : "#0002");
+
+      stripClassButton.onclick = function() {
+        alert("class " + depth + " " + index);
+      };
     }
     if (stripIdButton) {
-      domStripsScrollview.push(stripIdButton);
+      domStripsContainer.view.push(stripIdButton);
+
       stripIdButton.setFill(node.id ?
         stripButton.getFill() : "#0002");
+
+      stripIdButton.onclick = function() {
+        alert("id " + depth + " " + index);
+      };
     }
   };
 
@@ -603,7 +619,7 @@ TiltChrome.UI.Default = function() {
     cssButton.setPosition(width - 377, 0);
     attrButton.setPosition(width - 465, 0);
 
-    domStripsScrollview.bounds = [0, 0, width, height];
+    domStripsContainer.view.bounds = [0, 0, width, height];
   };
 
   /**
