@@ -44,8 +44,9 @@ var EXPORTED_SYMBOLS = ["Tilt.View"];
  *  @param {String} background: color to fill the screen
  *  @param {Number} x: the x position of the object
  *  @param {Number} y: the y position of the object
+ *  @param {Number} width: the width of the object
+ *  @param {Number} height: the height of the object
  *  @param {Array} offset: the [x, y] offset of the inner contents
- *  @param {Boolean} bounds: the inner drawable bounds for this view
  *  @param {Array} elements: an array of elements to be initially added
  */
 Tilt.View = function(properties) {
@@ -69,23 +70,20 @@ Tilt.View = function(properties) {
   /**
    * The color of the full screen background rectangle.
    */
-  this.background = properties.background || null;
+  this.$background = properties.background || null;
 
   /**
    * The draw coordinates of this object.
    */
-  this.x = properties.x || 0;
-  this.y = properties.y || 0;
+  this.$x = properties.x || 0;
+  this.$y = properties.y || 0;
+  this.$width = properties.width || 0;
+  this.$height = properties.height || 0;
 
   /**
    * The offset of the inner contents.
    */
-  this.offset = properties.offset || [0, 0];
-
-  /**
-   * The inner drawable bounds for this view.
-   */
-  this.bounds = properties.bounds || [0, 0, 0, 0];
+  this.$offset = properties.offset || [0, 0];
 
   // if initial elements are specified, add them to this view
   if (properties.elements instanceof Array) {
@@ -100,6 +98,92 @@ Tilt.View = function(properties) {
  * All the UI elements will be added to a list for proper handling.
  */
 Tilt.View.prototype = [];
+
+/**
+ * Sets this object's position.
+ *
+ * @param {Number} x: the x position of the object
+ * @param {Number} y: the y position of the object
+ */
+Tilt.View.prototype.setPosition = function(x, y) {
+  this.$x = x;
+  this.$y = y;
+};
+
+/**
+ * Sets this object's dimensions.
+ *
+ * @param {Number} width: the width of the object
+ * @param {Number} height: the height of the object
+ */
+Tilt.View.prototype.setSize = function(width, height) {
+  this.$width = width;
+  this.$height = height;
+};
+
+/**
+ * Sets this object's position.
+ * @param {Number} x: the x position of the object
+ */
+Tilt.View.prototype.setX = function(x) {
+  this.$x = x;
+};
+
+/**
+ * Sets this object's position.
+ * @param {Number} y: the y position of the object
+ */
+Tilt.View.prototype.setY = function(y) {
+  this.$y = y;
+};
+
+/**
+ * Sets this object's dimensions.
+ * @param {Number} width: the width of the object
+ */
+Tilt.View.prototype.setWidth = function(width) {
+  this.$width = width;
+};
+
+/**
+ * Sets this object's dimensions.
+ * @param {Number} height: the height of the object
+ */
+Tilt.View.prototype.setHeight = function(height) {
+  this.$height = height;
+};
+
+/**
+ * Returns the x position of this object.
+ * @return {Number} the x position
+ */
+Tilt.View.prototype.getX = function() {
+  return this.$x;
+};
+
+/**
+ * Returns the y position of this object.
+ * @return {Number} the y position
+ */
+Tilt.View.prototype.getY = function() {
+  return this.$y;
+};
+
+/**
+ * Returns the width of this object.
+ * @return {Number} the width
+ */
+Tilt.View.prototype.getWidth = function() {
+  return this.$width;
+};
+
+/**
+ * Returns the height of this object.
+ * @return {Number} the height
+ */
+Tilt.View.prototype.getHeight = function() {
+  return this.$height;
+};
 
 /**
  * Updates this object's internal params.
@@ -135,30 +219,29 @@ Tilt.View.prototype.draw = function(frameDelta, tilt) {
   tilt = tilt || Tilt.$renderer;
 
   var element,
-    background = this.background,
-    offset = this.offset,
-    offsetX = offset[0] + this.x,
-    offsetY = offset[1] + this.y,
-    bounds = this.bounds,
-    boundsX = bounds[0],
-    boundsY = bounds[1],
-    boundsWidth = bounds[2],
-    boundsHeight = bounds[3],
-    ebounds, elementX, elementY, elementWidth, elementHeight,
+    background = this.$background,
+    x = this.$x,
+    y = this.$y,
+    width = this.$width,
+    height = this.$height,
+    offset = this.$offset,
+    offsetX = offset[0],
+    offsetY = offset[1],
+    left = x + offsetX,
+    top = y + offsetY,
+    elementBounds, elementX, elementY, elementWidth, elementHeight,
     r1x1, r1y1, r1x2, r1y2, r2x1, r2y1, r2x2, r2y2, i, len;
 
   // a view may specify a full screen rectangle as a background
   if (background !== null) {
     tilt.fill(background);
     tilt.noStroke();
-    tilt.rect(
-      boundsX, boundsY,
-      boundsWidth || tilt.width, boundsHeight || tilt.height);
+    tilt.rect(x, y, width || tilt.width, height || tilt.height);
   }
 
   // translate by the view offset (for example, used in scroll containers)
   tilt.pushMatrix();
-  tilt.translate(offsetX, offsetY, 0);
+  tilt.translate(left, top, 0);
 
   // a view has multiple elements attach, browse and handle each one
   for (i = 0, len = this.length; i < len; i++) {
@@ -168,27 +251,27 @@ Tilt.View.prototype.draw = function(frameDelta, tilt) {
     if (!element.hidden) {
 
       // if the current view bounds do not restrict drawing the child elements
-      if (boundsWidth === 0 || boundsHeight === 0) {
+      if (width === 0 || height === 0) {
         element.draw(frameDelta, tilt);
         continue;
       }
 
       // otherwise, we need to calculate if the child element is visible
-      ebounds = element.$bounds || [1, 1, 1, 1];
-      elementX = ebounds[0] + offsetX;
-      elementY = ebounds[1] + offsetY;
-      elementWidth = ebounds[2];
-      elementHeight = ebounds[3];
+      elementBounds = element.$bounds || [1, 1, 1, 1];
+      elementX = elementBounds[0] + left;
+      elementY = elementBounds[1] + top;
+      elementWidth = elementBounds[2];
+      elementHeight = elementBounds[3];
 
       // compute the two rectangles representing the element and view bounds
       r1x1 = elementX;
       r1y1 = elementY;
       r1x2 = elementX + elementWidth;
       r1y2 = elementY + elementHeight;
-      r2x1 = boundsX;
-      r2y1 = boundsY;
-      r2x2 = boundsX + boundsWidth;
-      r2y2 = boundsY + boundsHeight;
+      r2x1 = x;
+      r2y1 = y;
+      r2x2 = x + width;
+      r2y2 = y + height;
 
       // check to see if the child UI element is visible inside the bounds
       if (r1x1 > r2x1 && r1x2 < r2x2 && r1y1 > r2y1 && r1y2 < r2y2) {
@@ -213,14 +296,14 @@ Tilt.View.prototype.isMouseOver = function(element) {
     mouseY = ui.mouseY,
 
     // remember the view offset (for example, used in scroll containers)
-    offset = this.offset,
-    offsetX = offset[0],
-    offsetY = offset[1],
+    offset = this.$offset || [0, 0],
+    left = this.$x || 0 + offset[0],
+    top = this.$y || 0 + offset[1],
 
     // get the bounds from the element (if it's not set, use default values)
     bounds = element.$bounds || [-1, -1, -1, -1],
-    boundsX = bounds[0] + offsetX,
-    boundsY = bounds[1] + offsetY,
+    boundsX = bounds[0] + left,
+    boundsY = bounds[1] + top,
     boundsWidth = bounds[2],
     boundsHeight = bounds[3];
 
