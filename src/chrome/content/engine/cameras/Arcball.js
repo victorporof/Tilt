@@ -95,6 +95,8 @@ Tilt.Arcball = function(width, height, radius) {
    */
   this.$addKeyRot = [0, 0];
   this.$addKeyTrans = [0, 0];
+  this.$deltaKeyRot = quat4.create([0, 0, 0, 1]);
+  this.$deltaKeyTrans = vec3.create();
 
   // set the current dimensions of the arcball
   this.resize(width, height, radius);
@@ -147,7 +149,9 @@ Tilt.Arcball.prototype = {
       currentTrans = this.$currentTrans,
 
       addKeyRot = this.$addKeyRot,
-      addKeyTrans = this.$addKeyTrans;
+      addKeyTrans = this.$addKeyTrans,
+      deltaKeyRot = this.$deltaKeyRot,
+      deltaKeyTrans = this.$deltaKeyTrans;
 
     // smoothly update the mouse coordinates
     mouseLerp[0] += (mouseMove[0] - mouseLerp[0]) * frameDelta;
@@ -248,12 +252,18 @@ Tilt.Arcball.prototype = {
       addKeyTrans[1] -= frameDelta * 50;
     }
 
+    deltaKeyRot[0] += (addKeyRot[0] - deltaKeyRot[0]) * frameDelta;
+    deltaKeyRot[1] += (addKeyRot[1] - deltaKeyRot[1]) * frameDelta;
+
+    deltaKeyTrans[0] += (addKeyTrans[0] - deltaKeyTrans[0]) * frameDelta;
+    deltaKeyTrans[1] += (addKeyTrans[1] - deltaKeyTrans[1]) * frameDelta;
+
     // create an additional rotation based on the key events
-    Tilt.Math.quat4fromEuler(addKeyRot[0], addKeyRot[1], 0, deltaRot);
+    Tilt.Math.quat4fromEuler(deltaKeyRot[0], deltaKeyRot[1], 0, deltaRot);
 
     // create an additional translation based on the key events
-    deltaTrans[0] = addKeyTrans[0];
-    deltaTrans[1] = addKeyTrans[1];
+    deltaTrans[0] = deltaKeyTrans[0];
+    deltaTrans[1] = deltaKeyTrans[1];
     deltaTrans[2] = 0;
 
     // return the current rotation and translation
@@ -423,6 +433,28 @@ Tilt.Arcball.prototype = {
   },
 
   /**
+   * Moves the camera on the x and y axis depending on the passed ammounts.
+   *
+   * @param {Number} x: the translation along the x axis
+   * @param {Number} y: the translation along the y axis
+   */
+  translate: function(x, y) {
+    this.$addKeyTrans[0] += x;
+    this.$addKeyTrans[1] += y;
+  },
+
+  /**
+   * Rotates the camera on the x and y axis depending on the passed ammounts.
+   *
+   * @param {Number} x: the rotation along the x axis
+   * @param {Number} y: the rotation along the y axis
+   */
+  rotate: function(x, y) {
+    this.$addKeyRot[0] += x;
+    this.$addKeyRot[1] += y;
+  },
+
+  /**
    * Moves the camera forward or backward depending on the passed amount.
    * @param {Number} amount: the amount of zooming to do
    */
@@ -433,7 +465,7 @@ Tilt.Arcball.prototype = {
   /**
    * Cancels any current actions.
    */
-  cancel: function() {
+  stop: function() {
     this.$clearInterval();
     this.$save();
     this.$mouseButton = -1;
