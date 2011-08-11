@@ -45,6 +45,8 @@ var EXPORTED_SYMBOLS = ["Tilt.Scrollview"];
  *  @param {Array} offset: the [x, y] offset of the inner contents
  *  @param {Boolean} bounds: the inner drawable bounds for this view
  *  @param {Array} elements: an array of elements to be initially added
+ *  @param {Tilt.Sprite} top: a sprite for the slider top button
+ *  @param {Tilt.Sprite} bottom: a sprite for the slider bottom button
  */
 Tilt.ScrollContainer = function(properties) {
 
@@ -63,6 +65,54 @@ Tilt.ScrollContainer = function(properties) {
    * The view containing the scrollbars.
    */
   this.scrollbars = new Tilt.View();
+
+  var topButton = new Tilt.Button(properties.top, {
+    x: this.view.$x - 25,
+    y: this.view.$y - 5,
+    width: 32,
+    height: 30,
+    fill: properties.top ? null : "#f00a"
+  });
+
+  var bottomButton = new Tilt.Button(properties.bottom, {
+    x: this.view.$x - 25,
+    y: this.view.$y + this.view.$height - 25,
+    width: 32,
+    height: 30,
+    fill: properties.bottom ? null : "#0f0a"
+  });
+
+  topButton.onmousedown = function() {
+    var ui = Tilt.UI,
+
+    scroll = window.setInterval(function() {
+      this.view.$offset[1] += 5;
+
+      if (!ui.mousePressed) {
+        ui = null;
+        window.clearInterval(scroll);
+      }
+    }.bind(this), 1000 / 60);
+  }.bind(this);
+
+  bottomButton.onmousedown = function() {
+    var ui = Tilt.UI,
+
+    scroll = window.setInterval(function() {
+      this.view.$offset[1] -= 5;
+
+      if (!ui.mousePressed) {
+        ui = null;
+        window.clearInterval(scroll);
+      }
+    }.bind(this), 1000 / 60);
+  }.bind(this);
+
+  this.scrollbars.push(topButton);
+  this.scrollbars.push(bottomButton);
+
+  topButton = null;
+  bottomButton = null;
 };
 
 Tilt.ScrollContainer.prototype = {
@@ -74,6 +124,8 @@ Tilt.ScrollContainer.prototype = {
    * @param {Tilt.Renderer} tilt: optional, a reference to a Tilt.Renderer
    */
   update: function(frameDelta, tilt) {
+    this.scrollbars.hidden = this.view.hidden;
+    this.scrollbars.disabled = this.view.disabled;
   },
 
   /**
@@ -89,6 +141,7 @@ Tilt.ScrollContainer.prototype = {
    * Destroys this object and deletes all members.
    */
   destroy: function() {
+    Tilt.UI.splice(Tilt.UI.indexOf(this), 1);
     Tilt.destroyObject(this);
   }
 };
