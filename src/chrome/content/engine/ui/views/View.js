@@ -246,6 +246,7 @@ Tilt.View.prototype.draw = function(frameDelta, tilt) {
   // a view has multiple elements attach, browse and handle each one
   for (i = 0, len = this.length; i < len; i++) {
     element = this[i];
+    element.drawable = false;
 
     // draw only if the element is visible (it may be enabled or not)
     if (!element.hidden) {
@@ -253,6 +254,7 @@ Tilt.View.prototype.draw = function(frameDelta, tilt) {
       // if the current view bounds do not restrict drawing the child elements
       if (width === 0 || height === 0) {
         element.draw(frameDelta, tilt);
+        element.drawable = true;
         continue;
       }
 
@@ -276,6 +278,7 @@ Tilt.View.prototype.draw = function(frameDelta, tilt) {
       // check to see if the child UI element is visible inside the bounds
       if (r1x1 > r2x1 && r1x2 < r2x2 && r1y1 > r2y1 && r1y2 < r2y2) {
         element.draw(frameDelta, tilt);
+        element.drawable = true;
       }
     }
   }
