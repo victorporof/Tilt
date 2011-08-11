@@ -254,6 +254,8 @@ Tilt.Arcball = function(width, height, radius) {
    */
   this.$addKeyRot = [0, 0];
   this.$addKeyTrans = [0, 0];
+  this.$deltaKeyRot = quat4.create([0, 0, 0, 1]);
+  this.$deltaKeyTrans = vec3.create();
 
   // set the current dimensions of the arcball
   this.resize(width, height, radius);
@@ -306,7 +308,9 @@ Tilt.Arcball.prototype = {
       currentTrans = this.$currentTrans,
 
       addKeyRot = this.$addKeyRot,
-      addKeyTrans = this.$addKeyTrans;
+      addKeyTrans = this.$addKeyTrans,
+      deltaKeyRot = this.$deltaKeyRot,
+      deltaKeyTrans = this.$deltaKeyTrans;
 
     // smoothly update the mouse coordinates
     mouseLerp[0] += (mouseMove[0] - mouseLerp[0]) * frameDelta;
@@ -407,12 +411,18 @@ Tilt.Arcball.prototype = {
       addKeyTrans[1] -= frameDelta * 50;
     }
 
+    deltaKeyRot[0] += (addKeyRot[0] - deltaKeyRot[0]) * frameDelta;
+    deltaKeyRot[1] += (addKeyRot[1] - deltaKeyRot[1]) * frameDelta;
+
+    deltaKeyTrans[0] += (addKeyTrans[0] - deltaKeyTrans[0]) * frameDelta;
+    deltaKeyTrans[1] += (addKeyTrans[1] - deltaKeyTrans[1]) * frameDelta;
+
     // create an additional rotation based on the key events
-    Tilt.Math.quat4fromEuler(addKeyRot[0], addKeyRot[1], 0, deltaRot);
+    Tilt.Math.quat4fromEuler(deltaKeyRot[0], deltaKeyRot[1], 0, deltaRot);
 
     // create an additional translation based on the key events
-    deltaTrans[0] = addKeyTrans[0];
-    deltaTrans[1] = addKeyTrans[1];
+    deltaTrans[0] = deltaKeyTrans[0];
+    deltaTrans[1] = deltaKeyTrans[1];
     deltaTrans[2] = 0;
 
     // return the current rotation and translation
@@ -582,6 +592,28 @@ Tilt.Arcball.prototype = {
   },
 
   /**
+   * Moves the camera on the x and y axis depending on the passed ammounts.
+   *
+   * @param {Number} x: the translation along the x axis
+   * @param {Number} y: the translation along the y axis
+   */
+  translate: function(x, y) {
+    this.$addKeyTrans[0] += x;
+    this.$addKeyTrans[1] += y;
+  },
+
+  /**
+   * Rotates the camera on the x and y axis depending on the passed ammounts.
+   *
+   * @param {Number} x: the rotation along the x axis
+   * @param {Number} y: the rotation along the y axis
+   */
+  rotate: function(x, y) {
+    this.$addKeyRot[0] += x;
+    this.$addKeyRot[1] += y;
+  },
+
+  /**
    * Moves the camera forward or backward depending on the passed amount.
    * @param {Number} amount: the amount of zooming to do
    */
@@ -592,7 +624,7 @@ Tilt.Arcball.prototype = {
   /**
    * Cancels any current actions.
    */
-  cancel: function() {
+  stop: function() {
     this.$clearInterval();
     this.$save();
     this.$mouseButton = -1;
@@ -8629,7 +8661,8 @@ Tilt.UI.keyUp = function(code) {
  */
 Tilt.UI.$handleMouseEvent = function(name, x, y, button) {
   var i, e, len, len2, elements, element, func,
-    offset, bounds, boundsX, boundsY, boundsWidth, boundsHeight,
+    offset, left, top,
+    bounds, boundsX, boundsY, boundsWidth, boundsHeight,
     mouseX = this.mouseX,
     mouseY = this.mouseY;
 
@@ -8643,7 +8676,9 @@ Tilt.UI.$handleMouseEvent = function(name, x, y, button) {
     }
 
     // remember the view offset (for example, used in scroll containers)
-    offset = elements.offset;
+    offset = elements.$offset || [0, 0];
+    left = elements.$x + offset[0];
+    top = elements.$y + offset[1];
 
     // each view has multiple elements attach, browse and handle each one
     for (e = 0, len2 = elements.length; e < len2; e++) {
@@ -8653,11 +8688,11 @@ Tilt.UI.$handleMouseEvent = function(name, x, y, button) {
       if (element.hidden || element.disabled) {
         continue;
       }
-      
+
       // get the bounds from the element (if it's not set, use default values)
       bounds = element.$bounds || [-1, -1, -1, -1];
-      boundsX = bounds[0] + offset[0];
-      boundsY = bounds[1] + offset[1];
+      boundsX = bounds[0] + left;
+      boundsY = bounds[1] + top;
       boundsWidth = bounds[2];
       boundsHeight = bounds[3];
 
@@ -8766,6 +8801,153 @@ Tilt.Profiler.intercept("Tilt.UI", Tilt.UI);
 "use strict";
 
 var Tilt = Tilt || {};
+var EXPORTED_SYMBOLS = ["Tilt.Scrollview"];
+
+/**
+ * ScrollContainer constructor.
+ *
+ * @param {Object} properties: additional properties for this object
+ *  @param {Boolean} hidden: specifies if this shouldn't be drawn
+ *  @param {Boolean} disabled: specifies if this shouldn't receive events
+ *  @param {String} background: color to fill the screen
+ *  @param {Array} offset: the [x, y] offset of the inner contents
+ *  @param {Boolean} bounds: the inner drawable bounds for this view
+ *  @param {Array} elements: an array of elements to be initially added
+ *  @param {Tilt.Sprite} top: a sprite for the slider top button
+ *  @param {Tilt.Sprite} bottom: a sprite for the slider bottom button
+ */
+Tilt.ScrollContainer = function(properties) {
+
+  // intercept this object using a profiler when building in debug mode
+  Tilt.Profiler.intercept("Tilt.ScrollContainer", this); 
+
+  // add this view to the top level UI handler.
+  Tilt.UI.push(this);
+
+  /**
+   * The normal view containing all the elements.
+   */
+  this.view = new Tilt.View(properties);
+
+  /**
+   * The view containing the scrollbars.
+   */
+  this.scrollbars = new Tilt.View();
+
+  var topButton = new Tilt.Button(properties.top, {
+    x: this.view.$x - 25,
+    y: this.view.$y - 5,
+    width: 32,
+    height: 30,
+    fill: properties.top ? null : "#f00a"
+  });
+
+  var bottomButton = new Tilt.Button(properties.bottom, {
+    x: this.view.$x - 25,
+    y: this.view.$y + this.view.$height - 25,
+    width: 32,
+    height: 30,
+    fill: properties.bottom ? null : "#0f0a"
+  });
+
+  topButton.onmousedown = function() {
+    var ui = Tilt.UI,
+
+    scroll = window.setInterval(function() {
+      this.view.$offset[1] += 5;
+
+      if (!ui.mousePressed) {
+        ui = null;
+        window.clearInterval(scroll);
+      }
+    }.bind(this), 1000 / 60);
+  }.bind(this);
+
+  bottomButton.onmousedown = function() {
+    var ui = Tilt.UI,
+
+    scroll = window.setInterval(function() {
+      this.view.$offset[1] -= 5;
+
+      if (!ui.mousePressed) {
+        ui = null;
+        window.clearInterval(scroll);
+      }
+    }.bind(this), 1000 / 60);
+  }.bind(this);
+
+  this.scrollbars.push(topButton);
+  this.scrollbars.push(bottomButton);
+
+  topButton = null;
+  bottomButton = null;
+};
+
+Tilt.ScrollContainer.prototype = {
+
+  /**
+   * Updates this object's internal params.
+   *
+   * @param {Number} frameDelta: the delta time elapsed between frames
+   * @param {Tilt.Renderer} tilt: optional, a reference to a Tilt.Renderer
+   */
+  update: function(frameDelta, tilt) {
+    this.scrollbars.hidden = this.view.hidden;
+    this.scrollbars.disabled = this.view.disabled;
+  },
+
+  /**
+   * Draws this object using the specified internal params.
+   *
+   * @param {Number} frameDelta: the delta time elapsed between frames
+   * @param {Tilt.Renderer} tilt: optional, a reference to a Tilt.Renderer
+   */
+  draw: function(frameDelta, tilt) {
+  },
+
+  /**
+   * Destroys this object and deletes all members.
+   */
+  destroy: function() {
+    Tilt.UI.splice(Tilt.UI.indexOf(this), 1);
+    Tilt.destroyObject(this);
+  }
+};
+/***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is Tilt: A WebGL-based 3D visualization of a webpage.
+ *
+ * The Initial Developer of the Original Code is Victor Porof.
+ * Portions created boundsY the Initial Developer are Copyright (C) 2011
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision boundsY deleting the provisions above and replace them with the notice
+ * and other provisions required boundsY the LGPL or the GPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ ***** END LICENSE BLOCK *****/
+"use strict";
+
+var Tilt = Tilt || {};
 var EXPORTED_SYMBOLS = ["Tilt.View"];
 
 /**
@@ -8775,8 +8957,11 @@ var EXPORTED_SYMBOLS = ["Tilt.View"];
  *  @param {Boolean} hidden: specifies if this shouldn't be drawn
  *  @param {Boolean} disabled: specifies if this shouldn't receive events
  *  @param {String} background: color to fill the screen
+ *  @param {Number} x: the x position of the object
+ *  @param {Number} y: the y position of the object
+ *  @param {Number} width: the width of the object
+ *  @param {Number} height: the height of the object
  *  @param {Array} offset: the [x, y] offset of the inner contents
- *  @param {Boolean} bounds: the inner drawable bounds for this view
  *  @param {Array} elements: an array of elements to be initially added
  */
 Tilt.View = function(properties) {
@@ -8800,17 +8985,20 @@ Tilt.View = function(properties) {
   /**
    * The color of the full screen background rectangle.
    */
-  this.background = properties.background || null;
+  this.$background = properties.background || null;
+
+  /**
+   * The draw coordinates of this object.
+   */
+  this.$x = properties.x || 0;
+  this.$y = properties.y || 0;
+  this.$width = properties.width || 0;
+  this.$height = properties.height || 0;
 
   /**
    * The offset of the inner contents.
    */
-  this.offset = properties.offset || [0, 0];
-
-  /**
-   * The inner drawable bounds for this view.
-   */
-  this.bounds = properties.bounds || [0, 0, 0, 0];
+  this.$offset = properties.offset || [0, 0];
 
   // if initial elements are specified, add them to this view
   if (properties.elements instanceof Array) {
@@ -8825,6 +9013,92 @@ Tilt.View = function(properties) {
  * All the UI elements will be added to a list for proper handling.
  */
 Tilt.View.prototype = [];
+
+/**
+ * Sets this object's position.
+ *
+ * @param {Number} x: the x position of the object
+ * @param {Number} y: the y position of the object
+ */
+Tilt.View.prototype.setPosition = function(x, y) {
+  this.$x = x;
+  this.$y = y;
+};
+
+/**
+ * Sets this object's dimensions.
+ *
+ * @param {Number} width: the width of the object
+ * @param {Number} height: the height of the object
+ */
+Tilt.View.prototype.setSize = function(width, height) {
+  this.$width = width;
+  this.$height = height;
+};
+
+/**
+ * Sets this object's position.
+ * @param {Number} x: the x position of the object
+ */
+Tilt.View.prototype.setX = function(x) {
+  this.$x = x;
+};
+
+/**
+ * Sets this object's position.
+ * @param {Number} y: the y position of the object
+ */
+Tilt.View.prototype.setY = function(y) {
+  this.$y = y;
+};
+
+/**
+ * Sets this object's dimensions.
+ * @param {Number} width: the width of the object
+ */
+Tilt.View.prototype.setWidth = function(width) {
+  this.$width = width;
+};
+
+/**
+ * Sets this object's dimensions.
+ * @param {Number} height: the height of the object
+ */
+Tilt.View.prototype.setHeight = function(height) {
+  this.$height = height;
+};
+
+/**
+ * Returns the x position of this object.
+ * @return {Number} the x position
+ */
+Tilt.View.prototype.getX = function() {
+  return this.$x;
+};
+
+/**
+ * Returns the y position of this object.
+ * @return {Number} the y position
+ */
+Tilt.View.prototype.getY = function() {
+  return this.$y;
+};
+
+/**
+ * Returns the width of this object.
+ * @return {Number} the width
+ */
+Tilt.View.prototype.getWidth = function() {
+  return this.$width;
+};
+
+/**
+ * Returns the height of this object.
+ * @return {Number} the height
+ */
+Tilt.View.prototype.getHeight = function() {
+  return this.$height;
+};
 
 /**
  * Updates this object's internal params.
@@ -8859,26 +9133,30 @@ Tilt.View.prototype.update = function(frameDelta, tilt) {
 Tilt.View.prototype.draw = function(frameDelta, tilt) {
   tilt = tilt || Tilt.$renderer;
 
-  var background = this.background,
-    offset = this.offset,
-    bounds = this.bounds,
-    x = bounds[0] + offset[0],
-    y = bounds[1] + offset[1],
-    w = bounds[2],
-    h = bounds[3],
-    element, ebounds, ex, ey, ew, eh,
+  var element,
+    background = this.$background,
+    x = this.$x,
+    y = this.$y,
+    width = this.$width,
+    height = this.$height,
+    offset = this.$offset,
+    offsetX = offset[0],
+    offsetY = offset[1],
+    left = x + offsetX,
+    top = y + offsetY,
+    elementBounds, elementX, elementY, elementWidth, elementHeight,
     r1x1, r1y1, r1x2, r1y2, r2x1, r2y1, r2x2, r2y2, i, len;
 
   // a view may specify a full screen rectangle as a background
   if (background !== null) {
     tilt.fill(background);
     tilt.noStroke();
-    tilt.rect(x, y, w || tilt.width, h || tilt.height);
+    tilt.rect(x, y, width || tilt.width, height || tilt.height);
   }
 
   // translate by the view offset (for example, used in scroll containers)
   tilt.pushMatrix();
-  tilt.translate(offset[0], offset[1], 0);
+  tilt.translate(left, top, 0);
 
   // a view has multiple elements attach, browse and handle each one
   for (i = 0, len = this.length; i < len; i++) {
@@ -8888,27 +9166,27 @@ Tilt.View.prototype.draw = function(frameDelta, tilt) {
     if (!element.hidden) {
 
       // if the current view bounds do not restrict drawing the child elements
-      if (w === 0 || h === 0) {
+      if (width === 0 || height === 0) {
         element.draw(frameDelta, tilt);
         continue;
       }
 
       // otherwise, we need to calculate if the child element is visible
-      ebounds = element.$bounds || [1, 1, 1, 1];
-      ex = ebounds[0] + offset[0];
-      ey = ebounds[1] + offset[1];
-      ew = ebounds[2];
-      eh = ebounds[3];
+      elementBounds = element.$bounds || [1, 1, 1, 1];
+      elementX = elementBounds[0] + left;
+      elementY = elementBounds[1] + top;
+      elementWidth = elementBounds[2];
+      elementHeight = elementBounds[3];
 
       // compute the two rectangles representing the element and view bounds
-      r1x1 = ex;
-      r1y1 = ey;
-      r1x2 = ex + ew;
-      r1y2 = ey + eh;
+      r1x1 = elementX;
+      r1y1 = elementY;
+      r1x2 = elementX + elementWidth;
+      r1y2 = elementY + elementHeight;
       r2x1 = x;
       r2y1 = y;
-      r2x2 = x + w;
-      r2y2 = y + h;
+      r2x2 = x + width;
+      r2y2 = y + height;
 
       // check to see if the child UI element is visible inside the bounds
       if (r1x1 > r2x1 && r1x2 < r2x2 && r1y1 > r2y1 && r1y2 < r2y2) {
@@ -8918,6 +9196,35 @@ Tilt.View.prototype.draw = function(frameDelta, tilt) {
   }
 
   tilt.popMatrix();
+};
+
+/**
+ * Checks to see if the mouse is over an element handled boundsY this view.
+ *
+ * @param {Object} element: the element to check
+ * @return {Boolean} true if the mouse is over the element
+ */
+Tilt.View.prototype.isMouseOver = function(element) {
+  // get the bounds from the element (if it's not set, use default values)
+  var ui = Tilt.UI,
+    mouseX = ui.mouseX,
+    mouseY = ui.mouseY,
+
+    // remember the view offset (for example, used in scroll containers)
+    offset = this.$offset || [0, 0],
+    left = this.$x || 0 + offset[0],
+    top = this.$y || 0 + offset[1],
+
+    // get the bounds from the element (if it's not set, use default values)
+    bounds = element.$bounds || [-1, -1, -1, -1],
+    boundsX = bounds[0] + left,
+    boundsY = bounds[1] + top,
+    boundsWidth = bounds[2],
+    boundsHeight = bounds[3];
+
+  // check to see if the mouse pointer is inside the element bounds
+  return mouseX > boundsX && mouseX < boundsX + boundsWidth &&
+         mouseY > boundsY && mouseY < boundsY + boundsHeight;
 };
 
 /**
@@ -10576,6 +10883,14 @@ TiltChrome.Controller.MouseAndKeyboard = function() {
   this.init = function(canvas) {
     arcball = new Tilt.Arcball(canvas.width, canvas.height);
 
+    // bind some closures to easily handle the arcball
+    this.stop = arcball.stop.bind(arcball);
+    this.translate = arcball.translate.bind(arcball);
+    this.rotate = arcball.rotate.bind(arcball);
+    this.zoom = arcball.zoom.bind(arcball);
+    this.reset = arcball.reset.bind(arcball);
+    this.resize = arcball.resize.bind(arcball);
+
     // bind commonly used mouse and keyboard events with the controller
     canvas.addEventListener("mousedown", mouseDown, false);
     canvas.addEventListener("mouseup", mouseUp, false);
@@ -10617,7 +10932,7 @@ TiltChrome.Controller.MouseAndKeyboard = function() {
       arcball.mouseDown(downX, downY, e.which);
     }
     else {
-      arcball.cancel();
+      arcball.stop();
     }
   };
 
@@ -10746,39 +11061,6 @@ TiltChrome.Controller.MouseAndKeyboard = function() {
   };
 
   /**
-   * Stops the controller from handling the current stacked events.
-   */
-  this.stop = function() {
-    arcball.cancel();
-  };
-
-  /**
-   * Moves the camera forward or backward depending on the passed amount.
-   * @param {Number} amount: the amount of zooming to do
-   */
-  this.zoom = function(amount) {
-    arcball.zoom(amount);
-  };
-
-  /**
-   * Resets the rotation and translation to origin.
-   * @param {Number} factor: the reset interpolation factor between frames
-   */
-  this.reset = function(factor) {
-    arcball.reset(factor);
-  };
-
-  /**
-   * Delegate method, called when the controller needs to be resized.
-   *
-   * @param width: the new width of the visualization
-   * @param height: the new height of the visualization
-   */
-  this.resize = function(width, height) {
-    arcball.resize(width, height);
-  };
-
-  /**
    * Destroys this object and sets all members to null.
    * @param {HTMLCanvasElement} canvas: the canvas dom element
    */
@@ -10887,7 +11169,7 @@ TiltChrome.UI.Default = function() {
   view = null,
   helpPopup = null,
   colorAdjustPopup = null,
-  domStripsScrollview = null,
+  domStripsContainer = null,
 
   /**
    * The texture containing all the interface elements.
@@ -10917,6 +11199,10 @@ TiltChrome.UI.Default = function() {
   resetButton = null,
   zoomInButton = null,
   zoomOutButton = null,
+  arcballUpButton = null,
+  arcballDownButton = null,
+  arcballLeftButton = null,
+  arcballRightButton = null,
   arcballSprite = null,
 
   /**
@@ -10961,14 +11247,22 @@ TiltChrome.UI.Default = function() {
     panel.addEventListener("popupshown", ePopupShown, false);
     panel.addEventListener("popuphidden", ePopupHidden, false);
 
-    view = new Tilt.View();
-    domStripsScrollview = new Tilt.View({
-      bounds: [0, 0, canvas.width, canvas.height]
-    });
-
     t = new Tilt.Texture("chrome://tilt/skin/tilt-ui.png", {
       minFilter: "nearest",
       magFilter: "nearest"
+    });
+
+    view = new Tilt.View({
+    });
+
+    domStripsContainer = new Tilt.ScrollContainer({
+      x: 20,
+      y: 335,
+      width: 130,
+      height: canvas.height - 340,
+      background: "#0001",
+      top: new Tilt.Sprite(t, [506, 68, 33, 30]),
+      bottom: new Tilt.Sprite(t, [506, 100, 33, 30])
     });
 
     background = new Tilt.Sprite(t, [0, 1024 - 256, 256, 256], {
@@ -11029,6 +11323,34 @@ TiltChrome.UI.Default = function() {
       y: 150
     });
 
+    arcballUpButton = new Tilt.Button(null, {
+      x: 60,
+      y: 14,
+      width: 45,
+      height: 30
+    });
+
+    arcballDownButton = new Tilt.Button(null, {
+      x: 60,
+      y: 120,
+      width: 45,
+      height: 30
+    });
+
+    arcballLeftButton = new Tilt.Button(null, {
+      x: 14,
+      y: 60,
+      width: 30,
+      height: 45
+    });
+
+    arcballRightButton = new Tilt.Button(null, {
+      x: 120,
+      y: 60,
+      width: 30,
+      height: 45
+    });
+
     arcballSprite = new Tilt.Sprite(t, [0, 0, 145, 145], {
       x: 10,
       y: 10
@@ -11086,9 +11408,13 @@ TiltChrome.UI.Default = function() {
     });
     colorAdjustPopup = new Tilt.View({
       hidden: true,
-      elements: [colorAdjustPopupSprite,
-                 hueSlider, saturationSlider, brightnessSlider, 
-                 alphaSlider, textureSlider]
+      elements: [
+        colorAdjustPopupSprite,
+        hueSlider,
+        saturationSlider,
+        brightnessSlider,
+        alphaSlider,
+        textureSlider]
     });
 
     helpBoxSprite = new Tilt.Sprite(t, [210, 180, 610, 510], {
@@ -11149,7 +11475,7 @@ TiltChrome.UI.Default = function() {
         element.hidden ^= true;
       });
 
-      domStripsScrollview.hidden ^= true;
+      domStripsContainer.view.hidden ^= true;
 
       if (!helpPopup.hidden) {
         helpPopup.hidden = true;
@@ -11163,12 +11489,28 @@ TiltChrome.UI.Default = function() {
       this.controller.reset(0.95);
     }.bind(this);
 
-    zoomInButton.onclick = function(x, y) {
+    zoomInButton.onclick = function() {
       this.controller.zoom(200);
     }.bind(this);
 
-    zoomOutButton.onclick = function(x, y) {
+    zoomOutButton.onclick = function() {
       this.controller.zoom(-200);
+    }.bind(this);
+
+    arcballUpButton.onmousedown = function() {
+      this.controller.translate(0, -30);
+    }.bind(this);
+
+    arcballDownButton.onmousedown = function() {
+      this.controller.translate(0, 30);
+    }.bind(this);
+
+    arcballLeftButton.onmousedown = function() {
+      this.controller.translate(-30, 0);
+    }.bind(this);
+
+    arcballRightButton.onmousedown = function() {
+      this.controller.translate(30, 0);
     }.bind(this);
 
     viewModeButton.type = 0;
@@ -11208,8 +11550,10 @@ TiltChrome.UI.Default = function() {
 
     hideableElements.push(
       helpButton, exportButton, optionsButton,
-      resetButton, zoomInButton, zoomOutButton,
-      arcballSprite, viewModeButton, colorAdjustButton);
+      resetButton, zoomInButton, zoomOutButton, arcballSprite, 
+      arcballUpButton, arcballDownButton,
+      arcballLeftButton, arcballRightButton,
+      viewModeButton, colorAdjustButton);
 
     panelElements.push(
       htmlButton, cssButton, attrButton);
@@ -11282,14 +11626,14 @@ TiltChrome.UI.Default = function() {
     }
 
     var stripNo = this.stripNo++,
-      x = 25 + depth * 8,
-      y = 340 + stripNo * 10,
+      x = 3 + depth * 8,
+      y = 3 + stripNo * 10,
       height = 6,
-      stripButton, stripIdButton, stripClassButton;
+      stripButton, stripIdButton, stripClassButton, right,
 
     // the general strip button, created in all cases
-    var clsx = x + (node.localName.length) * 10 + 3;
-    var idx = clsx + (node.className.length || 3) * 3 + 3;
+    clsx = x + (node.localName.length) * 10 + 3,
+    idx = clsx + (node.className.length || 3) * 3 + 3;
 
     stripButton = new Tilt.Button(null, {
       x: x,
@@ -11299,6 +11643,8 @@ TiltChrome.UI.Default = function() {
       stroke: "#fff2"
     });
 
+    right = stripButton.getX() + stripButton.getWidth();
+
     if (node.className) {
       stripClassButton = new Tilt.Button(null, {
         x: clsx,
@@ -11307,6 +11653,9 @@ TiltChrome.UI.Default = function() {
         height: height,
         stroke: stripButton.getStroke()
       });
+
+      right = Math.max(right,
+        stripClassButton.getX() + stripClassButton.getWidth());
     }
 
     if (node.id) {
@@ -11317,97 +11666,114 @@ TiltChrome.UI.Default = function() {
         height: height,
         stroke: stripButton.getStroke()
       });
+
+      right = Math.max(right,
+        stripIdButton.getX() + stripIdButton.getWidth());
+    }
+
+    if (right > domStripsContainer.view.getWidth()) {
+      domStripsContainer.view.setWidth(right);
     }
 
     if (node.localName === "html") {
-      stripButton.setFill("#fff");
+      stripButton.setFill("#FFFE");
     }
     else if (node.localName === "head") {
-      stripButton.setFill("#E667AF");
+      stripButton.setFill("#E667AFEE");
     }
     else if (node.localName === "title") {
-      stripButton.setFill("#CD0074");
+      stripButton.setFill("#CD0074EE");
     }
     else if (node.localName === "meta") {
-      stripButton.setFill("#BF7130");
+      stripButton.setFill("#BF7130EE");
     }
     else if (node.localName === "script") {
-      stripButton.setFill("#A64B00");
+      stripButton.setFill("#A64B00EE");
     }
     else if (node.localName === "style") {
-      stripButton.setFill("#FF9640");
+      stripButton.setFill("#FF9640EE");
     }
     else if (node.localName === "link") {
-      stripButton.setFill("#FFB273");
+      stripButton.setFill("#FFB273EE");
     }
     else if (node.localName === "body") {
-      stripButton.setFill("#E667AF");
+      stripButton.setFill("#E667AFEE");
     }
     else if (node.localName === "h1") {
-      stripButton.setFill("#ff0d");
+      stripButton.setFill("#FF0D");
     }
     else if (node.localName === "h2") {
-      stripButton.setFill("#ee0d");
+      stripButton.setFill("#EE0D");
     }
     else if (node.localName === "h3") {
-      stripButton.setFill("#dd0d");
+      stripButton.setFill("#DD0D");
     }
     else if (node.localName === "h4") {
-      stripButton.setFill("#cc0d");
+      stripButton.setFill("#CC0D");
     }
     else if (node.localName === "h5") {
-      stripButton.setFill("#bb0d");
+      stripButton.setFill("#BB0D");
     }
     else if (node.localName === "h6") {
-      stripButton.setFill("#aa0d");
+      stripButton.setFill("#AA0D");
     }
     else if (node.localName === "table") {
-      stripButton.setFill("#FF0700");
+      stripButton.setFill("#FF0700EE");
     }
     else if (node.localName === "tbody") {
       stripButton.setFill("#FF070088");
     }
     else if (node.localName === "tr") {
-      stripButton.setFill("#FF4540");
+      stripButton.setFill("#FF4540EE");
     }
     else if (node.localName === "td") {
-      stripButton.setFill("#FF7673");
+      stripButton.setFill("#FF7673EE");
     }
     else if (node.localName === "div") {
-      stripButton.setFill("#5DC8CD");
+      stripButton.setFill("#5DC8CDEE");
     }
     else if (node.localName === "span") {
-      stripButton.setFill("#67E46F");
+      stripButton.setFill("#67E46FEE");
     }
     else if (node.localName === "p") {
-      stripButton.setFill("#888");
+      stripButton.setFill("#888E");
     }
     else if (node.localName === "a") {
-      stripButton.setFill("#123EAB");
+      stripButton.setFill("#123EABEE");
     }
     else if (node.localName === "img") {
-      stripButton.setFill("#FFB473");
+      stripButton.setFill("#FFB473EE");
     }
     else {
-      stripButton.setFill("#444");
+      stripButton.setFill("#444E");
     }
-
-    stripButton.onclick = function() {
-      alert(depth);
-    };
 
     if (stripButton) {
-      domStripsScrollview.push(stripButton);
+      domStripsContainer.view.push(stripButton);
+
+      stripButton.onclick = function() {
+        alert(depth + " " + index);
+      };
     }
     if (stripClassButton) {
-      domStripsScrollview.push(stripClassButton);
+      domStripsContainer.view.push(stripClassButton);
+
       stripClassButton.setFill(node.className ? 
         stripButton.getFill() : "#0002");
+
+      stripClassButton.onclick = function() {
+        alert("class " + depth + " " + index);
+      };
     }
     if (stripIdButton) {
-      domStripsScrollview.push(stripIdButton);
+      domStripsContainer.view.push(stripIdButton);
+
       stripIdButton.setFill(node.id ?
         stripButton.getFill() : "#0002");
+
+      stripIdButton.onclick = function() {
+        alert("id " + depth + " " + index);
+      };
     }
   };
 
@@ -11437,8 +11803,6 @@ TiltChrome.UI.Default = function() {
     htmlButton.setPosition(width - 337, 0);
     cssButton.setPosition(width - 377, 0);
     attrButton.setPosition(width - 465, 0);
-
-    domStripsScrollview.bounds = [0, 0, width, height];
   };
 
   /**
@@ -11460,6 +11824,18 @@ TiltChrome.UI.Default = function() {
     if (view !== null) {
       view.destroy();
       view = null;
+    }
+    if (helpPopup !== null) {
+      helpPopup.destroy();
+      helpPopup = null;
+    }
+    if (colorAdjustPopup !== null) {
+      colorAdjustPopup.destroy();
+      colorAdjustPopup = null;
+    }
+    if (domStripsContainer !== null) {
+      domStripsContainer.destroy();
+      domStripsContainer = null;
     }
 
     Tilt.destroyObject(this);
