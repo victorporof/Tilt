@@ -8526,7 +8526,7 @@ Tilt.UI.$handleMouseEvent = function(name, x, y, button) {
       element = elements[e];
 
       // handle mouse events only if the element is visible and enabled
-      if (element.hidden || element.disabled) {
+      if (element.hidden || element.disabled || !element.drawable) {
         continue;
       }
 
@@ -8691,34 +8691,53 @@ Tilt.ScrollContainer = function(properties) {
     fill: properties.bottom ? null : "#0f0a"
   });
 
-  topButton.onmousedown = function() {
-    var ui = Tilt.UI,
+  var topResetButton = new Tilt.Button(properties.topReset, {
+    x: this.view.$x - 25,
+    y: this.view.$y + 12.5,
+    width: 32,
+    height: 30,
+    fill: properties.topReset ? null : "#0f0b"
+  });
 
-    scroll = window.setInterval(function() {
+  topButton.onmousedown = function() {
+    window.clearInterval(this.$scrollTopReset);
+    var ui = Tilt.UI;
+
+    this.$scrollTop = window.setInterval(function() {
       this.view.$offset[1] += 5;
 
       if (!ui.mousePressed) {
         ui = null;
-        window.clearInterval(scroll);
+        window.clearInterval(this.$scrollTop);
       }
     }.bind(this), 1000 / 60);
   }.bind(this);
 
   bottomButton.onmousedown = function() {
-    var ui = Tilt.UI,
+    window.clearInterval(this.$scrollTopReset);
+    var ui = Tilt.UI;
 
-    scroll = window.setInterval(function() {
+    this.$scrollBottom = window.setInterval(function() {
       this.view.$offset[1] -= 5;
 
       if (!ui.mousePressed) {
         ui = null;
-        window.clearInterval(scroll);
+        window.clearInterval(this.$scrollBottom);
       }
     }.bind(this), 1000 / 60);
   }.bind(this);
 
-  this.scrollbars.push(topButton);
-  this.scrollbars.push(bottomButton);
+  topResetButton.onmousedown = function() {
+    this.$scrollTopReset = window.setInterval(function() {
+      this.view.$offset[1] /= 1.15;
+
+      if (Math.abs(this.view.$offset[1]) < 0.1) {
+        window.clearInterval(this.$scrollTopReset);
+      }
+    }.bind(this), 1000 / 60);
+  }.bind(this);
+
+  this.scrollbars.push(topButton, topResetButton, bottomButton);
 
   topButton = null;
   bottomButton = null;
@@ -9002,6 +9021,7 @@ Tilt.View.prototype.draw = function(frameDelta, tilt) {
   // a view has multiple elements attach, browse and handle each one
   for (i = 0, len = this.length; i < len; i++) {
     element = this[i];
+    element.drawable = false;
 
     // draw only if the element is visible (it may be enabled or not)
     if (!element.hidden) {
@@ -9009,6 +9029,7 @@ Tilt.View.prototype.draw = function(frameDelta, tilt) {
       // if the current view bounds do not restrict drawing the child elements
       if (width === 0 || height === 0) {
         element.draw(frameDelta, tilt);
+        element.drawable = true;
         continue;
       }
 
@@ -9032,6 +9053,7 @@ Tilt.View.prototype.draw = function(frameDelta, tilt) {
       // check to see if the child UI element is visible inside the bounds
       if (r1x1 > r2x1 && r1x2 < r2x2 && r1y1 > r2y1 && r1y2 < r2y2) {
         element.draw(frameDelta, tilt);
+        element.drawable = true;
       }
     }
   }
