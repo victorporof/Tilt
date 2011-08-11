@@ -238,7 +238,7 @@ Tilt.UI.$handleMouseEvent = function(name, x, y, button) {
       element = elements[e];
 
       // handle mouse events only if the element is visible and enabled
-      if (element.hidden || element.disabled) {
+      if (element.hidden || element.disabled || !element.drawable) {
         continue;
       }
 
