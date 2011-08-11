@@ -141,7 +141,7 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
       tilt.clear(0, 0, 0, 1);
 
       // apply the preliminary transformations to the model view
-      tilt.translate(tilt.width / 2 + 50,
+      tilt.translate(tilt.width / 2 + 100,
                      tilt.height / 2 - 50, -thickness * 30);
 
       // calculate the camera matrix using the rotation and translation
@@ -185,7 +185,8 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
       texCoord = [],
       indices = [],
       wireframeIndices = [],
-      nodes = [];
+      visibleNodes = [],
+      hiddenNodes = [];
 
     // traverse the document
     Tilt.Document.traverse(function(node, depth, index, uid) {
@@ -194,14 +195,39 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
         ui.domVisualizationMeshNodeCallback(node, depth, index, uid);
       }
 
+      var info = {
+        innerHTML: node.innerHTML,
+        attributes: node.attributes,
+        localName: node.localName,
+        className: node.className,
+        id: node.id,
+        uid: uid
+      };
+
+      try {
+        info.style = window.getComputedStyle(node);
+      }
+      catch (e) {
+        info.style = "";
+      }
+
       if (node.nodeType === 3 ||
           node.nodeType === 10 ||
+          node.localName === "head" ||
+          node.localName === "title" ||
+          node.localName === "meta" ||
+          node.localName === "script" ||
+          node.localName === "noscript" ||
+          node.localName === "style" ||
+          node.localName === "link" ||
           node.localName === "span" ||
           node.localName === "option" ||
           node.localName === "a" ||
           node.localName === "b" ||
           node.localName === "i" ||
           node.localName === "u") {
+
+        hiddenNodes.push(info);
         return;
       }
 
@@ -210,6 +236,8 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
 
       // use this node only if it actually has any dimensions
       if (coord.width > 4 && coord.height > 4) {
+        visibleNodes.push(info);
+
         // the entire mesh's pivot is the screen center
         var x = coord.x - tilt.width / 2 + Math.random() / 10,
          y = coord.y - tilt.height / 2 + Math.random() / 10,
@@ -255,17 +283,6 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
           texCoord.push(0, 0, 0, 0, 0, 0, 0, 0);
         }
 
-        // save the inner html for each triangle
-        nodes.push({
-          innerHTML: node.innerHTML,
-          style: window.getComputedStyle(node),
-          attributes: node.attributes,
-          localName: node.localName,
-          className: node.className,
-          id: node.id,
-          uid: uid
-        });
-
         // compute the indices
         indices.push(i + 0,  i + 1,  i + 2,  i + 0,  i + 2,  i + 3);
         indices.push(i + 4,  i + 5,  i + 6,  i + 4,  i + 6,  i + 7);
@@ -302,7 +319,8 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
       color: "#fffd",
       texalpha: 255,
       texture: texture,
-      nodes: nodes
+      visibleNodes: visibleNodes,
+      hiddenNodes: hiddenNodes
     });
 
     meshWireframe = new Tilt.Mesh({
@@ -454,7 +472,7 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
         // save the intersection, along with the node information
         intersections.push({
           location: vec3.create(point),
-          node: mesh.nodes[Math.floor(i / 30)]
+          node: mesh.visibleNodes[Math.floor(i / 30)]
         });
       }
     }
@@ -482,11 +500,19 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
    */
   this.openEditor = function(uid) {
     if ("number" === typeof uid) {
-      var nodes = mesh.nodes,
+      var visibleNodes = mesh.visibleNodes,
+        hiddenNodes = mesh.hiddenNodes,
         node, i, len;
 
-      for (i = 0, len = nodes.length; i < len; i++) {
-        node = nodes[i];
+      for (i = 0, len = visibleNodes.length; i < len; i++) {
+        node = visibleNodes[i];
+
+        if (uid === node.uid) {
+          return this.openEditor(node);
+        }
+      }
+      for (i = 0, len = hiddenNodes.length; i < len; i++) {
+        node = hiddenNodes[i];
 
         if (uid === node.uid) {
           return this.openEditor(node);
