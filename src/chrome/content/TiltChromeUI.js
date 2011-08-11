@@ -65,6 +65,11 @@ TiltChrome.UI.Default = function() {
   background = null,
 
   /**
+   *
+   */
+  domStripsLegend = null,
+
+  /**
    * The top-right menu buttons.
    */
   exitButton = null,
@@ -139,19 +144,26 @@ TiltChrome.UI.Default = function() {
     });
 
     domStripsContainer = new Tilt.ScrollContainer({
-      x: 20,
+      x: 78,
       y: 335,
       width: 130,
       height: canvas.height - 340,
       background: "#0001",
-      top: new Tilt.Sprite(t, [506, 68, 33, 30]),
-      bottom: new Tilt.Sprite(t, [506, 100, 33, 30])
+      top: new Tilt.Sprite(t, [506, 69, 33, 30]),
+      bottom: new Tilt.Sprite(t, [506, 102, 33, 30]),
+      topReset: new Tilt.Sprite(t, [506, 134, 33, 30])
     });
 
     background = new Tilt.Sprite(t, [0, 1024 - 256, 256, 256], {
       width: canvas.width,
       height: canvas.height,
       depthTest: true,
+      disabled: true
+    });
+
+    domStripsLegend = new Tilt.Sprite(t, [1, 365, 69, 290], {
+      x: 0,
+      y: 327,
       disabled: true
     });
 
@@ -336,9 +348,11 @@ TiltChrome.UI.Default = function() {
     };
 
     exportButton.onclick = function() {
+      Tilt.Console.alert("Tilt", Tilt.StringBundle.get("implement.info"));
     };
 
     optionsButton.onclick = function() {
+      Tilt.Console.alert("Tilt", Tilt.StringBundle.get("implement.info"));
     };
 
     htmlButton.onclick = function() {
@@ -381,19 +395,19 @@ TiltChrome.UI.Default = function() {
     }.bind(this);
 
     arcballUpButton.onmousedown = function() {
-      this.controller.translate(0, -30);
+      this.controller.translate(0, -50);
     }.bind(this);
 
     arcballDownButton.onmousedown = function() {
-      this.controller.translate(0, 30);
+      this.controller.translate(0, 50);
     }.bind(this);
 
     arcballLeftButton.onmousedown = function() {
-      this.controller.translate(-30, 0);
+      this.controller.translate(-50, 0);
     }.bind(this);
 
     arcballRightButton.onmousedown = function() {
-      this.controller.translate(30, 0);
+      this.controller.translate(50, 0);
     }.bind(this);
 
     viewModeButton.type = 0;
@@ -402,8 +416,8 @@ TiltChrome.UI.Default = function() {
         viewModeButton.type = 1;
         viewModeButton.setSprite(viewModeNormalSprite);
 
-        hueSlider.setValue(55);
-        saturationSlider.setValue(35);
+        hueSlider.setValue(57.5);
+        saturationSlider.setValue(40);
         brightnessSlider.setValue(100);
         alphaSlider.setValue(7.5);
         textureSlider.setValue(100);
@@ -436,7 +450,7 @@ TiltChrome.UI.Default = function() {
       resetButton, zoomInButton, zoomOutButton, arcballSprite, 
       arcballUpButton, arcballDownButton,
       arcballLeftButton, arcballRightButton,
-      viewModeButton, colorAdjustButton);
+      viewModeButton, colorAdjustButton, domStripsLegend);
 
     panelElements.push(
       htmlButton, cssButton, attrButton);
@@ -510,19 +524,23 @@ TiltChrome.UI.Default = function() {
     }
 
     var stripNo = this.stripNo++,
-      x = 3 + depth * 8,
+      x = 3 + depth * 6,
       y = 3 + stripNo * 10,
       height = 6,
       stripButton, stripIdButton, stripClassButton, right,
 
+    namelength = Tilt.Math.clamp(node.localName.length, 3, 10),
+    clslength = Tilt.Math.clamp(node.localName.length, 3, 10),
+    idlength = Tilt.Math.clamp(node.id.length, 3, 10),
+
     // the general strip button, created in all cases
-    clsx = x + (node.localName.length) * 10 + 3,
-    idx = clsx + (node.className.length || 3) * 3 + 3;
+    clsx = x + namelength * 10 + 3,
+    idx = clsx + clslength * 3 + 3;
 
     stripButton = new Tilt.Button(null, {
       x: x,
       y: y,
-      width: node.localName.length * 10,
+      width: namelength * 10,
       height: height,
       stroke: "#fff2"
     });
@@ -533,7 +551,7 @@ TiltChrome.UI.Default = function() {
       stripClassButton = new Tilt.Button(null, {
         x: clsx,
         y: y,
-        width: (node.className.length || 3) * 3,
+        width: clslength * 3,
         height: height,
         stroke: stripButton.getStroke()
       });
@@ -546,7 +564,7 @@ TiltChrome.UI.Default = function() {
       stripIdButton = new Tilt.Button(null, {
         x: idx,
         y: y,
-        width: (node.id.length || 3) * 3,
+        width: idlength * 3,
         height: height,
         stroke: stripButton.getStroke()
       });
@@ -569,16 +587,16 @@ TiltChrome.UI.Default = function() {
       stripButton.setFill("#CD0074EE");
     }
     else if (node.localName === "meta") {
-      stripButton.setFill("#BF7130EE");
+      stripButton.setFill("#BF713022");
     }
-    else if (node.localName === "script") {
+    else if (node.localName === "link") {
+      stripButton.setFill("#FFB27322");
+    }
+    else if (node.localName === "script" || node.localName === "noscript") {
       stripButton.setFill("#A64B00EE");
     }
     else if (node.localName === "style") {
       stripButton.setFill("#FF9640EE");
-    }
-    else if (node.localName === "link") {
-      stripButton.setFill("#FFB273EE");
     }
     else if (node.localName === "body") {
       stripButton.setFill("#E667AFEE");
@@ -601,6 +619,12 @@ TiltChrome.UI.Default = function() {
     else if (node.localName === "h6") {
       stripButton.setFill("#AA0D");
     }
+    else if (node.localName === "div") {
+      stripButton.setFill("#5DC8CDEE");
+    }
+    else if (node.localName === "span") {
+      stripButton.setFill("#67E46FEE");
+    }
     else if (node.localName === "table") {
       stripButton.setFill("#FF0700EE");
     }
@@ -612,12 +636,6 @@ TiltChrome.UI.Default = function() {
     }
     else if (node.localName === "td") {
       stripButton.setFill("#FF7673EE");
-    }
-    else if (node.localName === "div") {
-      stripButton.setFill("#5DC8CDEE");
-    }
-    else if (node.localName === "span") {
-      stripButton.setFill("#67E46FEE");
     }
     else if (node.localName === "p") {
       stripButton.setFill("#888E");
@@ -636,8 +654,18 @@ TiltChrome.UI.Default = function() {
       domStripsContainer.view.push(stripButton);
 
       stripButton.onclick = function() {
-        this.visualization.setHtmlEditor();
-        this.visualization.openEditor(uid);
+        if (node.localName === "meta" ||
+            node.localName === "link" ||
+            node.localName === "script" || node.localName === "noscript" ||
+            node.localName === "style") {
+
+          this.visualization.setAttributesEditor();
+          this.visualization.openEditor(uid);
+        }
+        else {
+          this.visualization.setHtmlEditor();
+          this.visualization.openEditor(uid);
+        }
       }.bind(this);
     }
     if (stripClassButton) {
@@ -720,6 +748,30 @@ TiltChrome.UI.Default = function() {
       domStripsContainer.destroy();
       domStripsContainer = null;
     }
+    if (t !== null) {
+      t.destroy();
+      t = null;
+    }
+    if (background !== null) {
+      background.destroy();
+      background = null;
+    }
+    if (domStripsLegend !== null) {
+      domStripsLegend.destroy();
+      domStripsLegend = null;
+    }
+    if (arcballSprite !== null) {
+      arcballSprite.destroy();
+      arcballSprite = null;
+    }
+    if (helpBoxSprite !== null) {
+      helpBoxSprite.destroy();
+      helpBoxSprite = null;
+    }
+
+    alwaysVisibleElements = null;
+    hideableElements = null;
+    panelElements = null;
 
     Tilt.destroyObject(this);
   };
