@@ -63,6 +63,14 @@ TiltChrome.Controller.MouseAndKeyboard = function() {
   this.init = function(canvas) {
     arcball = new Tilt.Arcball(canvas.width, canvas.height);
 
+    // bind some closures to easily handle the arcball
+    this.stop = arcball.stop.bind(arcball);
+    this.translate = arcball.translate.bind(arcball);
+    this.rotate = arcball.rotate.bind(arcball);
+    this.zoom = arcball.zoom.bind(arcball);
+    this.reset = arcball.reset.bind(arcball);
+    this.resize = arcball.resize.bind(arcball);
+
     // bind commonly used mouse and keyboard events with the controller
     canvas.addEventListener("mousedown", mouseDown, false);
     canvas.addEventListener("mouseup", mouseUp, false);
@@ -104,7 +112,7 @@ TiltChrome.Controller.MouseAndKeyboard = function() {
       arcball.mouseDown(downX, downY, e.which);
     }
     else {
-      arcball.cancel();
+      arcball.stop();
     }
   };
 
@@ -230,39 +238,6 @@ TiltChrome.Controller.MouseAndKeyboard = function() {
 
     ui.keyUp(code);
     arcball.keyUp(code);
-  };
-
-  /**
-   * Stops the controller from handling the current stacked events.
-   */
-  this.stop = function() {
-    arcball.cancel();
-  };
-
-  /**
-   * Moves the camera forward or backward depending on the passed amount.
-   * @param {Number} amount: the amount of zooming to do
-   */
-  this.zoom = function(amount) {
-    arcball.zoom(amount);
-  };
-
-  /**
-   * Resets the rotation and translation to origin.
-   * @param {Number} factor: the reset interpolation factor between frames
-   */
-  this.reset = function(factor) {
-    arcball.reset(factor);
-  };
-
-  /**
-   * Delegate method, called when the controller needs to be resized.
-   *
-   * @param width: the new width of the visualization
-   * @param height: the new height of the visualization
-   */
-  this.resize = function(width, height) {
-    arcball.resize(width, height);
   };
 
   /**
