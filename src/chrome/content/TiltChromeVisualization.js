@@ -188,10 +188,10 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
       nodes = [];
 
     // traverse the document
-    Tilt.Document.traverse(function(node, depth, index) {
+    Tilt.Document.traverse(function(node, depth, index, uid) {
       // call the node callback in the ui
       if (ui && "function" === typeof ui.domVisualizationMeshNodeCallback) {
-        ui.domVisualizationMeshNodeCallback(node, depth, index);
+        ui.domVisualizationMeshNodeCallback(node, depth, index, uid);
       }
 
       if (node.nodeType === 3 ||
@@ -262,7 +262,8 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
           attributes: node.attributes,
           localName: node.localName,
           className: node.className,
-          id: node.id
+          id: node.id,
+          uid: uid
         });
 
         // compute the indices
@@ -471,12 +472,33 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
       });
 
       // use only the first intersection (closest to the camera)
-      var intersection = intersections[0],
-        node = intersection.node,
+      this.openEditor(intersections[0].node);
+    }
+  };
+
+  /**
+   * Opens the editor showing details about a specific node in the dom.
+   * @param {Number} uid: the unique id of the node
+   */
+  this.openEditor = function(uid) {
+    if ("number" === typeof uid) {
+      var nodes = mesh.nodes,
+        node, i, len;
+
+      for (i = 0, len = nodes.length; i < len; i++) {
+        node = nodes[i];
+
+        if (uid === node.uid) {
+          return this.openEditor(node);
+        }
+      }
+    }
+    else if ("object" === typeof uid) {
+      var node = uid,
 
       // get and format the inner html text from the node
       html = Tilt.String.trim(
-        style_html(intersection.node.innerHTML, {
+        style_html(node.innerHTML, {
           'indent_size': 2,
           'indent_char': ' ',
           'max_char': 78,
@@ -486,8 +508,8 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
         .replace(/>/g, "&gt;")) + "\n",
 
       // compute the custom css text from all the properties
-      css = Tilt.Document.getModifiedCss(intersection.node.style),
-      attr = Tilt.Document.getAttributesString(intersection.node.attributes),
+      css = Tilt.Document.getModifiedCss(node.style),
+      attr = Tilt.Document.getAttributesString(node.attributes),
 
       // get the elements used by the popup
       label = document.getElementById("tilt-panel-label"),
