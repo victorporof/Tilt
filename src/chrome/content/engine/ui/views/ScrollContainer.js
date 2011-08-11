@@ -82,34 +82,53 @@ Tilt.ScrollContainer = function(properties) {
     fill: properties.bottom ? null : "#0f0a"
   });
 
-  topButton.onmousedown = function() {
-    var ui = Tilt.UI,
+  var topResetButton = new Tilt.Button(properties.topReset, {
+    x: this.view.$x - 25,
+    y: this.view.$y + 12.5,
+    width: 32,
+    height: 30,
+    fill: properties.topReset ? null : "#0f0b"
+  });
 
-    scroll = window.setInterval(function() {
+  topButton.onmousedown = function() {
+    window.clearInterval(this.$scrollTopReset);
+    var ui = Tilt.UI;
+
+    this.$scrollTop = window.setInterval(function() {
       this.view.$offset[1] += 5;
 
       if (!ui.mousePressed) {
         ui = null;
-        window.clearInterval(scroll);
+        window.clearInterval(this.$scrollTop);
       }
     }.bind(this), 1000 / 60);
   }.bind(this);
 
   bottomButton.onmousedown = function() {
-    var ui = Tilt.UI,
+    window.clearInterval(this.$scrollTopReset);
+    var ui = Tilt.UI;
 
-    scroll = window.setInterval(function() {
+    this.$scrollBottom = window.setInterval(function() {
       this.view.$offset[1] -= 5;
 
       if (!ui.mousePressed) {
         ui = null;
-        window.clearInterval(scroll);
+        window.clearInterval(this.$scrollBottom);
       }
     }.bind(this), 1000 / 60);
   }.bind(this);
 
-  this.scrollbars.push(topButton);
-  this.scrollbars.push(bottomButton);
+  topResetButton.onmousedown = function() {
+    this.$scrollTopReset = window.setInterval(function() {
+      this.view.$offset[1] /= 1.15;
+
+      if (Math.abs(this.view.$offset[1]) < 0.1) {
+        window.clearInterval(this.$scrollTopReset);
+      }
+    }.bind(this), 1000 / 60);
+  }.bind(this);
+
+  this.scrollbars.push(topButton, topResetButton, bottomButton);
 
   topButton = null;
   bottomButton = null;
