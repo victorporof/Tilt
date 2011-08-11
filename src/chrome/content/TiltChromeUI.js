@@ -499,8 +499,9 @@ TiltChrome.UI.Default = function() {
    * @param {HTMLNode} node: the dom node
    * @param {Number} depth: the node depth in the dom tree
    * @param {Number} index: the index of the node in the dom tree
+   * @param {Number} uid: a unique id for the node
    */
-  this.domVisualizationMeshNodeCallback = function(node, depth, index) {
+  this.domVisualizationMeshNodeCallback = function(node, depth, index, uid) {
     if ("undefined" === typeof this.stripNo) {
       this.stripNo = 0;
     }
@@ -635,28 +636,27 @@ TiltChrome.UI.Default = function() {
       domStripsContainer.view.push(stripButton);
 
       stripButton.onclick = function() {
-        alert(depth + " " + index);
-      };
+        this.visualization.setHtmlEditor();
+        this.visualization.openEditor(uid);
+      }.bind(this);
     }
     if (stripClassButton) {
       domStripsContainer.view.push(stripClassButton);
-
-      stripClassButton.setFill(node.className ? 
-        stripButton.getFill() : "#0002");
+      stripClassButton.setFill(stripButton.getFill());
 
       stripClassButton.onclick = function() {
-        alert("class " + depth + " " + index);
-      };
+        this.visualization.setAttributesEditor();
+        this.visualization.openEditor(uid);
+      }.bind(this);
     }
     if (stripIdButton) {
       domStripsContainer.view.push(stripIdButton);
-
-      stripIdButton.setFill(node.id ?
-        stripButton.getFill() : "#0002");
+      stripIdButton.setFill(stripButton.getFill());
 
       stripIdButton.onclick = function() {
-        alert("id " + depth + " " + index);
-      };
+        this.visualization.setAttributesEditor();
+        this.visualization.openEditor(uid);
+      }.bind(this);
     }
   };
 
