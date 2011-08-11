@@ -82,6 +82,10 @@ TiltChrome.UI.Default = function() {
   resetButton = null,
   zoomInButton = null,
   zoomOutButton = null,
+  arcballUpButton = null,
+  arcballDownButton = null,
+  arcballLeftButton = null,
+  arcballRightButton = null,
   arcballSprite = null,
 
   /**
@@ -126,16 +130,22 @@ TiltChrome.UI.Default = function() {
     panel.addEventListener("popupshown", ePopupShown, false);
     panel.addEventListener("popuphidden", ePopupHidden, false);
 
-    view = new Tilt.View();
-    domStripsContainer = new Tilt.ScrollContainer({
-      x: 20,
-      y: 335,
-      bounds: [0, 0, canvas.width - 25, canvas.height - 340]
-    });
-
     t = new Tilt.Texture("chrome://tilt/skin/tilt-ui.png", {
       minFilter: "nearest",
       magFilter: "nearest"
+    });
+
+    view = new Tilt.View({
+    });
+
+    domStripsContainer = new Tilt.ScrollContainer({
+      x: 20,
+      y: 335,
+      width: 130,
+      height: canvas.height - 340,
+      background: "#0001",
+      top: new Tilt.Sprite(t, [506, 68, 33, 30]),
+      bottom: new Tilt.Sprite(t, [506, 100, 33, 30])
     });
 
     background = new Tilt.Sprite(t, [0, 1024 - 256, 256, 256], {
@@ -194,6 +204,34 @@ TiltChrome.UI.Default = function() {
     zoomOutButton = new Tilt.Button(new Tilt.Sprite(t, [0, 278, 42, 42]), {
       x: 20,
       y: 150
+    });
+
+    arcballUpButton = new Tilt.Button(null, {
+      x: 60,
+      y: 14,
+      width: 45,
+      height: 30
+    });
+
+    arcballDownButton = new Tilt.Button(null, {
+      x: 60,
+      y: 120,
+      width: 45,
+      height: 30
+    });
+
+    arcballLeftButton = new Tilt.Button(null, {
+      x: 14,
+      y: 60,
+      width: 30,
+      height: 45
+    });
+
+    arcballRightButton = new Tilt.Button(null, {
+      x: 120,
+      y: 60,
+      width: 30,
+      height: 45
     });
 
     arcballSprite = new Tilt.Sprite(t, [0, 0, 145, 145], {
@@ -334,12 +372,28 @@ TiltChrome.UI.Default = function() {
       this.controller.reset(0.95);
     }.bind(this);
 
-    zoomInButton.onclick = function(x, y) {
+    zoomInButton.onclick = function() {
       this.controller.zoom(200);
     }.bind(this);
 
-    zoomOutButton.onclick = function(x, y) {
+    zoomOutButton.onclick = function() {
       this.controller.zoom(-200);
+    }.bind(this);
+
+    arcballUpButton.onmousedown = function() {
+      this.controller.translate(0, -30);
+    }.bind(this);
+
+    arcballDownButton.onmousedown = function() {
+      this.controller.translate(0, 30);
+    }.bind(this);
+
+    arcballLeftButton.onmousedown = function() {
+      this.controller.translate(-30, 0);
+    }.bind(this);
+
+    arcballRightButton.onmousedown = function() {
+      this.controller.translate(30, 0);
     }.bind(this);
 
     viewModeButton.type = 0;
@@ -379,8 +433,10 @@ TiltChrome.UI.Default = function() {
 
     hideableElements.push(
       helpButton, exportButton, optionsButton,
-      resetButton, zoomInButton, zoomOutButton,
-      arcballSprite, viewModeButton, colorAdjustButton);
+      resetButton, zoomInButton, zoomOutButton, arcballSprite, 
+      arcballUpButton, arcballDownButton,
+      arcballLeftButton, arcballRightButton,
+      viewModeButton, colorAdjustButton);
 
     panelElements.push(
       htmlButton, cssButton, attrButton);
@@ -456,11 +512,11 @@ TiltChrome.UI.Default = function() {
       x = 3 + depth * 8,
       y = 3 + stripNo * 10,
       height = 6,
-      stripButton, stripIdButton, stripClassButton;
+      stripButton, stripIdButton, stripClassButton, right,
 
     // the general strip button, created in all cases
-    var clsx = x + (node.localName.length) * 10 + 3;
-    var idx = clsx + (node.className.length || 3) * 3 + 3;
+    clsx = x + (node.localName.length) * 10 + 3,
+    idx = clsx + (node.className.length || 3) * 3 + 3;
 
     stripButton = new Tilt.Button(null, {
       x: x,
@@ -470,6 +526,8 @@ TiltChrome.UI.Default = function() {
       stroke: "#fff2"
     });
 
+    right = stripButton.getX() + stripButton.getWidth();
+
     if (node.className) {
       stripClassButton = new Tilt.Button(null, {
         x: clsx,
@@ -478,6 +536,9 @@ TiltChrome.UI.Default = function() {
         height: height,
         stroke: stripButton.getStroke()
       });
+
+      right = Math.max(right,
+        stripClassButton.getX() + stripClassButton.getWidth());
     }
 
     if (node.id) {
@@ -488,79 +549,86 @@ TiltChrome.UI.Default = function() {
         height: height,
         stroke: stripButton.getStroke()
       });
+
+      right = Math.max(right,
+        stripIdButton.getX() + stripIdButton.getWidth());
+    }
+
+    if (right > domStripsContainer.view.getWidth()) {
+      domStripsContainer.view.setWidth(right);
     }
 
     if (node.localName === "html") {
-      stripButton.setFill("#fff");
+      stripButton.setFill("#FFFE");
     }
     else if (node.localName === "head") {
-      stripButton.setFill("#E667AF");
+      stripButton.setFill("#E667AFEE");
     }
     else if (node.localName === "title") {
-      stripButton.setFill("#CD0074");
+      stripButton.setFill("#CD0074EE");
     }
     else if (node.localName === "meta") {
-      stripButton.setFill("#BF7130");
+      stripButton.setFill("#BF7130EE");
     }
     else if (node.localName === "script") {
-      stripButton.setFill("#A64B00");
+      stripButton.setFill("#A64B00EE");
     }
     else if (node.localName === "style") {
-      stripButton.setFill("#FF9640");
+      stripButton.setFill("#FF9640EE");
     }
     else if (node.localName === "link") {
-      stripButton.setFill("#FFB273");
+      stripButton.setFill("#FFB273EE");
     }
     else if (node.localName === "body") {
-      stripButton.setFill("#E667AF");
+      stripButton.setFill("#E667AFEE");
     }
     else if (node.localName === "h1") {
-      stripButton.setFill("#ff0d");
+      stripButton.setFill("#FF0D");
     }
     else if (node.localName === "h2") {
-      stripButton.setFill("#ee0d");
+      stripButton.setFill("#EE0D");
     }
     else if (node.localName === "h3") {
-      stripButton.setFill("#dd0d");
+      stripButton.setFill("#DD0D");
     }
     else if (node.localName === "h4") {
-      stripButton.setFill("#cc0d");
+      stripButton.setFill("#CC0D");
     }
     else if (node.localName === "h5") {
-      stripButton.setFill("#bb0d");
+      stripButton.setFill("#BB0D");
     }
     else if (node.localName === "h6") {
-      stripButton.setFill("#aa0d");
+      stripButton.setFill("#AA0D");
     }
     else if (node.localName === "table") {
-      stripButton.setFill("#FF0700");
+      stripButton.setFill("#FF0700EE");
     }
     else if (node.localName === "tbody") {
       stripButton.setFill("#FF070088");
     }
     else if (node.localName === "tr") {
-      stripButton.setFill("#FF4540");
+      stripButton.setFill("#FF4540EE");
     }
     else if (node.localName === "td") {
-      stripButton.setFill("#FF7673");
+      stripButton.setFill("#FF7673EE");
     }
     else if (node.localName === "div") {
-      stripButton.setFill("#5DC8CD");
+      stripButton.setFill("#5DC8CDEE");
     }
     else if (node.localName === "span") {
-      stripButton.setFill("#67E46F");
+      stripButton.setFill("#67E46FEE");
     }
     else if (node.localName === "p") {
-      stripButton.setFill("#888");
+      stripButton.setFill("#888E");
     }
     else if (node.localName === "a") {
-      stripButton.setFill("#123EAB");
+      stripButton.setFill("#123EABEE");
     }
     else if (node.localName === "img") {
-      stripButton.setFill("#FFB473");
+      stripButton.setFill("#FFB473EE");
     }
     else {
-      stripButton.setFill("#444");
+      stripButton.setFill("#444E");
     }
 
     if (stripButton) {
@@ -618,8 +686,6 @@ TiltChrome.UI.Default = function() {
     htmlButton.setPosition(width - 337, 0);
     cssButton.setPosition(width - 377, 0);
     attrButton.setPosition(width - 465, 0);
-
-    domStripsContainer.view.bounds = [0, 0, width, height];
   };
 
   /**
@@ -641,6 +707,18 @@ TiltChrome.UI.Default = function() {
     if (view !== null) {
       view.destroy();
       view = null;
+    }
+    if (helpPopup !== null) {
+      helpPopup.destroy();
+      helpPopup = null;
+    }
+    if (colorAdjustPopup !== null) {
+      colorAdjustPopup.destroy();
+      colorAdjustPopup = null;
+    }
+    if (domStripsContainer !== null) {
+      domStripsContainer.destroy();
+      domStripsContainer = null;
     }
 
     Tilt.destroyObject(this);
