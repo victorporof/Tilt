@@ -9625,12 +9625,16 @@ Tilt.Document = {
    * @param {HTMLDocument} dom: the document object model to traverse
    */
   traverse: function(nodeCallback, readyCallback, dom) {
+    if ("undefined" === typeof this.uid) {
+      this.uid = 0;
+    }
+
     // used to calculate the maximum depth of a dom node
     var maxDepth = 0,
       totalNodes = 0;
 
     // used internally for recursively traversing a document object model
-    function recursive(nodeCallback, dom, depth) {
+    var recursive = function(nodeCallback, dom, depth) {
       var i, len, child;
 
       for (i = 0, len = dom.childNodes.length; i < len; i++) {
@@ -9640,17 +9644,18 @@ Tilt.Document = {
           maxDepth = depth;
         }
         totalNodes++;
+        this.uid++;
 
         // run the node callback function for each node, pass the depth, and
         // also continue the recursion with all the children
-        nodeCallback(child, depth, totalNodes);
+        nodeCallback(child, depth, totalNodes, this.uid);
         recursive(nodeCallback, child, depth + 1);
 
         if (child.localName === "iframe") {
-          recursive(nodeCallback, child.contentDocument, depth + 2);
+          recursive(nodeCallback, child.contentDocument, depth + 1);
         }
       }
-    }
+    }.bind(this);
 
     try {
       if ("function" === typeof nodeCallback) {
@@ -11616,8 +11621,9 @@ TiltChrome.UI.Default = function() {
    * @param {HTMLNode} node: the dom node
    * @param {Number} depth: the node depth in the dom tree
    * @param {Number} index: the index of the node in the dom tree
+   * @param {Number} uid: a unique id for the node
    */
-  this.domVisualizationMeshNodeCallback = function(node, depth, index) {
+  this.domVisualizationMeshNodeCallback = function(node, depth, index, uid) {
     if ("undefined" === typeof this.stripNo) {
       this.stripNo = 0;
     }
@@ -11752,28 +11758,27 @@ TiltChrome.UI.Default = function() {
       domStripsContainer.view.push(stripButton);
 
       stripButton.onclick = function() {
-        alert(depth + " " + index);
-      };
+        this.visualization.setHtmlEditor();
+        this.visualization.openEditor(uid);
+      }.bind(this);
     }
     if (stripClassButton) {
       domStripsContainer.view.push(stripClassButton);
-
-      stripClassButton.setFill(node.className ? 
-        stripButton.getFill() : "#0002");
+      stripClassButton.setFill(stripButton.getFill());
 
       stripClassButton.onclick = function() {
-        alert("class " + depth + " " + index);
-      };
+        this.visualization.setAttributesEditor();
+        this.visualization.openEditor(uid);
+      }.bind(this);
     }
     if (stripIdButton) {
       domStripsContainer.view.push(stripIdButton);
-
-      stripIdButton.setFill(node.id ?
-        stripButton.getFill() : "#0002");
+      stripIdButton.setFill(stripButton.getFill());
 
       stripIdButton.onclick = function() {
-        alert("id " + depth + " " + index);
-      };
+        this.visualization.setAttributesEditor();
+        this.visualization.openEditor(uid);
+      }.bind(this);
     }
   };
 
@@ -12034,10 +12039,10 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
       nodes = [];
 
     // traverse the document
-    Tilt.Document.traverse(function(node, depth, index) {
+    Tilt.Document.traverse(function(node, depth, index, uid) {
       // call the node callback in the ui
       if (ui && "function" === typeof ui.domVisualizationMeshNodeCallback) {
-        ui.domVisualizationMeshNodeCallback(node, depth, index);
+        ui.domVisualizationMeshNodeCallback(node, depth, index, uid);
       }
 
       if (node.nodeType === 3 ||
@@ -12108,7 +12113,8 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
           attributes: node.attributes,
           localName: node.localName,
           className: node.className,
-          id: node.id
+          id: node.id,
+          uid: uid
         });
 
         // compute the indices
@@ -12317,12 +12323,33 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
       });
 
       // use only the first intersection (closest to the camera)
-      var intersection = intersections[0],
-        node = intersection.node,
+      this.openEditor(intersections[0].node);
+    }
+  };
+
+  /**
+   * Opens the editor showing details about a specific node in the dom.
+   * @param {Number} uid: the unique id of the node
+   */
+  this.openEditor = function(uid) {
+    if ("number" === typeof uid) {
+      var nodes = mesh.nodes,
+        node, i, len;
+
+      for (i = 0, len = nodes.length; i < len; i++) {
+        node = nodes[i];
+
+        if (uid === node.uid) {
+          return this.openEditor(node);
+        }
+      }
+    }
+    else if ("object" === typeof uid) {
+      var node = uid,
 
       // get and format the inner html text from the node
       html = Tilt.String.trim(
-        style_html(intersection.node.innerHTML, {
+        style_html(node.innerHTML, {
           'indent_size': 2,
           'indent_char': ' ',
           'max_char': 78,
@@ -12332,8 +12359,8 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
         .replace(/>/g, "&gt;")) + "\n",
 
       // compute the custom css text from all the properties
-      css = Tilt.Document.getModifiedCss(intersection.node.style),
-      attr = Tilt.Document.getAttributesString(intersection.node.attributes),
+      css = Tilt.Document.getModifiedCss(node.style),
+      attr = Tilt.Document.getAttributesString(node.attributes),
 
       // get the elements used by the popup
       label = document.getElementById("tilt-panel-label"),

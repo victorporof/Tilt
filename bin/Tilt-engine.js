@@ -9466,12 +9466,16 @@ Tilt.Document = {
    * @param {HTMLDocument} dom: the document object model to traverse
    */
   traverse: function(nodeCallback, readyCallback, dom) {
+    if ("undefined" === typeof this.uid) {
+      this.uid = 0;
+    }
+
     // used to calculate the maximum depth of a dom node
     var maxDepth = 0,
       totalNodes = 0;
 
     // used internally for recursively traversing a document object model
-    function recursive(nodeCallback, dom, depth) {
+    var recursive = function(nodeCallback, dom, depth) {
       var i, len, child;
 
       for (i = 0, len = dom.childNodes.length; i < len; i++) {
@@ -9481,17 +9485,18 @@ Tilt.Document = {
           maxDepth = depth;
         }
         totalNodes++;
+        this.uid++;
 
         // run the node callback function for each node, pass the depth, and
         // also continue the recursion with all the children
-        nodeCallback(child, depth, totalNodes);
+        nodeCallback(child, depth, totalNodes, this.uid);
         recursive(nodeCallback, child, depth + 1);
 
         if (child.localName === "iframe") {
-          recursive(nodeCallback, child.contentDocument, depth + 2);
+          recursive(nodeCallback, child.contentDocument, depth + 1);
         }
       }
-    }
+    }.bind(this);
 
     try {
       if ("function" === typeof nodeCallback) {
