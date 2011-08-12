@@ -46,7 +46,6 @@ var EXPORTED_SYMBOLS = ["Tilt.Slider"];
  *  @param {Number} y: the y position of the object
  *  @param {Number} size: the slider size
  *  @param {Number} value: number ranging from 0..100
- *  @param {Array} padding: the inner padding offset for mouse events
  *  @param {Boolean} direction: 0 for horizontal, 1 for vertical
  */
 Tilt.Slider = function(sprite, properties) {
@@ -91,11 +90,6 @@ Tilt.Slider = function(sprite, properties) {
   this.$size = properties.size || 100;
 
   /**
-   * The inner padding offset for mouse events.
-   */
-  this.$padding = properties.padding || sprite.$padding || [0, 0, 0, 0];
-
-  /**
    * The slider direction (0 for horizontal, 1 for vertical).
    */
   this.$direction = properties.direction || 0;
@@ -104,10 +98,10 @@ Tilt.Slider = function(sprite, properties) {
    * The bounds of this object (used for clicking and intersections).
    */
   this.$bounds = [
-    this.$sprite.$x + this.$padding[0],
-    this.$sprite.$y + this.$padding[1],
-    this.$sprite.$width - this.$padding[2],
-    this.$sprite.$height - this.$padding[3]];
+    this.$sprite.$x + this.$sprite.$padding[0],
+    this.$sprite.$y + this.$sprite.$padding[1],
+    this.$sprite.$width - this.$sprite.$padding[2],
+    this.$sprite.$height - this.$sprite.$padding[3]];
 
   /**
    * The slider value (also defining the handler position).
@@ -126,8 +120,8 @@ Tilt.Slider.prototype = {
   setPosition: function(x, y) {
     this.$x = x;
     this.$y = y;
-    this.$bounds[0] = x + this.$padding[0];
-    this.$bounds[1] = y + this.$padding[1];
+    this.$bounds[0] = x + this.$sprite.$padding[0];
+    this.$bounds[1] = y + this.$sprite.$padding[1];
     this.setValue(this.$value);
   },
 
@@ -179,7 +173,7 @@ Tilt.Slider.prototype = {
 
       // set the sprite x position and update the bounds
       sprite.setPosition(p, y);
-      this.$bounds[0] = p + this.$padding[0];
+      this.$bounds[0] = p + sprite.$padding[0];
     }
     else {
       // calculate the position using the value
@@ -187,7 +181,7 @@ Tilt.Slider.prototype = {
 
       // set the sprite y position and update the bounds
       sprite.setPosition(x, p);
-      this.$bounds[1] = p + this.$padding[1];
+      this.$bounds[1] = p + sprite.$padding[1];
     }
   },
 
@@ -263,7 +257,7 @@ Tilt.Slider.prototype = {
         // set the sprite x position and update the value and bounds
         sprite.setPosition(pmpx, y);
         this.$value = Tilt.Math.map(p, x, xps, 0, 100);
-        this.$bounds[0] = pmpx + this.$padding[0];
+        this.$bounds[0] = pmpx + sprite.$padding[0];
       }
       else {
         y += py;
@@ -276,7 +270,7 @@ Tilt.Slider.prototype = {
         // set the sprite y position and update the value and bounds
         sprite.setPosition(x, pmpy);
         this.$value = Tilt.Math.map(pmpy, y, y + size, 0, 100);
-        this.$bounds[1] = pmpy + this.$padding[1];
+        this.$bounds[1] = pmpy + sprite.$padding[1];
       }
     }
   },
