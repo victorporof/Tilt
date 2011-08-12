@@ -7920,7 +7920,8 @@ Tilt.ScrollContainer = function(properties) {
     y: this.view.$y - 5,
     width: 32,
     height: 30,
-    fill: properties.top ? null : "#f00a"
+    fill: properties.top ? null : "#f00a",
+    padding: properties.top ? properties.top.$padding : [0, 0, 0, 0]
   });
 
   var bottomButton = new Tilt.Button(properties.bottom, {
@@ -7928,7 +7929,8 @@ Tilt.ScrollContainer = function(properties) {
     y: this.view.$y + this.view.$height - 25,
     width: 32,
     height: 30,
-    fill: properties.bottom ? null : "#0f0a"
+    fill: properties.bottom ? null : "#0f0a",
+    padding: properties.bottom ? properties.bottom.$padding : [0, 0, 0, 0]
   });
 
   var topResetButton = new Tilt.Button(properties.topReset, {
@@ -7936,7 +7938,8 @@ Tilt.ScrollContainer = function(properties) {
     y: this.view.$y + 12.5,
     width: 32,
     height: 30,
-    fill: properties.topReset ? null : "#0f0b"
+    fill: properties.topReset ? null : "#0f0b",
+    padding: properties.topReset ? properties.topReset.$padding : [0, 0, 0, 0]
   });
 
   topButton.onmousedown = function() {
@@ -8091,6 +8094,7 @@ Tilt.Button = function(sprite, properties) {
   this.$sprite.$y = properties.y || this.$sprite.$y;
   this.$sprite.$width = properties.width || this.$sprite.$width;
   this.$sprite.$height = properties.height || this.$sprite.$height;
+  this.$sprite.disabled = true;
 
   /**
    * The inner padding offset for mouse events.
@@ -8113,8 +8117,8 @@ Tilt.Button = function(sprite, properties) {
   this.$bounds = [
     this.$sprite.$x + this.$padding[0],
     this.$sprite.$y + this.$padding[1],
-    this.$sprite.$width - this.$padding[2],
-    this.$sprite.$height - this.$padding[3]];
+    this.$sprite.$width - this.$padding[0] - this.$padding[2],
+    this.$sprite.$height - this.$padding[1] - this.$padding[3]];
 };
 
 Tilt.Button.prototype = {
@@ -8151,8 +8155,8 @@ Tilt.Button.prototype = {
       this.$sprite.$width = width;
       this.$sprite.$height = height;
     }
-    this.$bounds[2] = width - this.$padding[2];
-    this.$bounds[3] = height - this.$padding[3];
+    this.$bounds[2] = width - this.$padding[0] - this.$padding[2];
+    this.$bounds[3] = height - this.$padding[1] - this.$padding[3];
   },
 
   /**
@@ -8192,14 +8196,16 @@ Tilt.Button.prototype = {
    */
   setSprite: function(sprite) {
     var x = this.$sprite.$x,
-      y = this.$sprite.$y;
+      y = this.$sprite.$y,
+      width = this.$sprite.$width,
+      height = this.$sprite.$height,
+      padding = this.$sprite.$padding;
 
     this.$sprite = sprite;
-    this.$sprite.$x = x;
-    this.$sprite.$y = y;
-
-    this.$bounds[2] = sprite.$width;
-    this.$bounds[3] = sprite.$height;    
+    this.$sprite.$padding = padding;
+    this.$sprite.setPosition(x, y);
+    this.$sprite.setSize(width, height);
+    this.$sprite.disabled = true;
   },
 
   /**
@@ -8290,13 +8296,29 @@ Tilt.Button.prototype = {
       bounds = this.$bounds;
       padding = this.$padding;
 
-      tilt.fill(fill || "#fff");
-      tilt.stroke(stroke || "#000");
+      tilt.fill(fill || "#fff0");
+      tilt.stroke(stroke || "#0000");
       tilt.rect(
         bounds[0] - padding[0],
         bounds[1] - padding[1],
-        bounds[2] + padding[2],
-        bounds[3] + padding[3]);
+        bounds[2] + padding[0] + padding[2],
+        bounds[3] + padding[1] + padding[3]);
+    }
+
+    if (Tilt.UI.debug) {
+      tilt.fill("#fff2");
+      tilt.stroke("#00f");
+      tilt.rect(
+        this.$sprite.$x,
+        this.$sprite.$y,
+        this.$sprite.$width,
+        this.$sprite.$height);
+
+      if (!this.disabled) {
+        tilt.fill("#0f04");
+        tilt.rect(
+          this.$bounds[0], this.$bounds[1], this.$bounds[2], this.$bounds[3]);
+      }
     }
   },
 
@@ -8712,8 +8734,8 @@ Tilt.Sprite = function(texture, region, properties) {
   this.$bounds = [
     this.$x + this.$padding[0],
     this.$y + this.$padding[1],
-    this.$width - this.$padding[2],
-    this.$height - this.$padding[3]];
+    this.$width - this.$padding[0] - this.$padding[2],
+    this.$height - this.$padding[0]- this.$padding[3]];
 
   /**
    * Buffer of 2-component texture coordinates (u, v) for the sprite.
@@ -8745,8 +8767,8 @@ Tilt.Sprite.prototype = {
   setSize: function(width, height) {
     this.$width = width;
     this.$height = height;
-    this.$bounds[2] = width - this.$padding[2];
-    this.$bounds[3] = height - this.$padding[3];
+    this.$bounds[2] = width - this.$padding[0] - this.$padding[2];
+    this.$bounds[3] = height - this.$padding[1] - this.$padding[3];
   },
 
   /**
@@ -8865,6 +8887,18 @@ Tilt.Sprite.prototype = {
       $tint[2] = 1;
       $tint[3] = 1;
     }
+
+    if (Tilt.UI.debug) {
+      tilt.fill("#fff2");
+      tilt.stroke("#f00");
+      tilt.rect(this.$x, this.$y, this.$width, this.$height);
+
+      if (!this.disabled) {
+        tilt.fill("#0f04");
+        tilt.rect(
+          this.$bounds[0], this.$bounds[1], this.$bounds[2], this.$bounds[3]);
+      }
+    }
   },
 
   /**
@@ -8927,7 +8961,7 @@ Tilt.UI.keyPressed = [];
  */
 Tilt.UI.refresh = function(frameDelta) {
   var tilt = Tilt.$renderer,
-    i, len, view;
+    i, len, container;
 
   // before drawing, make sure we're in an orthographic default environment 
   tilt.ortho();
@@ -8935,23 +8969,23 @@ Tilt.UI.refresh = function(frameDelta) {
   tilt.depthTest(false);
 
   for (i = 0, len = this.length; i < len; i++) {
-    view = this[i];
+    container = this[i];
 
-    if (!view.hidden) {
-      if (!view.disabled) {
-        view.update(frameDelta, tilt);
+    if (!container.hidden) {
+      if (!container.disabled) {
+        container.update(frameDelta, tilt);
       }
-      view.draw(frameDelta, tilt);
+      container.draw(frameDelta, tilt);
     }
   }
 };
 
 /**
  * Sets a modal view.
- * @param {Tilt.Container} view: the view to be set modal
+ * @param {Tilt.Container} container: the container to be set modal
  */
-Tilt.UI.presentModal = function(view) {
-  if (view.modal || this.indexOf(view) === -1) {
+Tilt.UI.presentModal = function(container) {
+  if (container.modal || this.indexOf(container) === -1) {
     return;
   }
 
@@ -8962,30 +8996,30 @@ Tilt.UI.presentModal = function(view) {
   }
 
   // a modal view must always be marked as modal, be visible and enabled
-  view.modal = true;
-  view.hidden = false;
-  view.disabled = false;
+  container.modal = true;
+  container.hidden = false;
+  container.disabled = false;
 };
 
 /**
  * Unsets a modal view.
  * @param {Tilt.Container} view: the view to be set modal
  */
-Tilt.UI.dismissModal = function(view) {
-  if (!view.modal || this.indexOf(view) === -1) {
+Tilt.UI.dismissModal = function(container) {
+  if (!container.modal || this.indexOf(container) === -1) {
     return;
   }
 
   // reset the disabled parameter for all the other views
   for (var i = 0, len = this.length; i < len; i++) {
     this[i].disabled = this[i].$prevDisabled;
-    delete this[i].$prevDis;
+    delete this[i].$prevDisabled;
   }
 
   // a non-modal view must always be marked as modal, be hidden and disabled
-  view.modal = false;
-  view.hidden = true;
-  view.disabled = true;
+  container.modal = false;
+  container.hidden = true;
+  container.disabled = true;
 };
 
 /**
@@ -9089,7 +9123,7 @@ Tilt.UI.keyUp = function(code) {
  * @param {String} name: the event name
  */
 Tilt.UI.$handleMouseEvent = function(name, x, y, button) {
-  var i, e, len, len2, elements, element, func,
+  var i, e, len, len2, container, element, func,
     offset, left, top,
     bounds, boundsX, boundsY, boundsWidth, boundsHeight,
     mouseX = this.mouseX,
@@ -9097,21 +9131,21 @@ Tilt.UI.$handleMouseEvent = function(name, x, y, button) {
 
   // browse each view handled by the top level UI array
   for (i = 0, len = this.length; i < len; i++) {
-    elements = this[i];
+    container = this[i];
 
     // handle mouse events only if the view is visible and enabled
-    if (elements.hidden || elements.disabled) {
+    if (container.hidden || container.disabled) {
       continue;
     }
 
     // remember the view offset (for example, used in scroll containers)
-    offset = elements.$offset || [0, 0];
-    left = elements.$x + offset[0];
-    top = elements.$y + offset[1];
+    offset = container.$offset || [0, 0];
+    left = container.$x + offset[0];
+    top = container.$y + offset[1] + 2;
 
-    // each view has multiple elements attach, browse and handle each one
-    for (e = 0, len2 = elements.length; e < len2; e++) {
-      element = elements[e];
+    // each view has multiple container attach, browse and handle each one
+    for (e = 0, len2 = container.length; e < len2; e++) {
+      element = container[e];
 
       // handle mouse events only if the element is visible and enabled
       if (element.hidden || element.disabled || !element.drawable) {
@@ -9162,20 +9196,20 @@ Tilt.UI.$handleMouseEvent = function(name, x, y, button) {
  * @param {String} name: the event name
  */
 Tilt.UI.$handleKeyEvent = function(name, code) {
-  var i, e, len, len2, elements, element, func;
+  var i, e, len, len2, container, element, func;
 
   // browse each view handled by the top level UI array
   for (i = 0, len = this.length; i < len; i++) {
-    elements = this[i];
+    container = this[i];
 
     // handle keyboard events only if the view is visible and enabled
-    if (elements.hidden || elements.disabled) {
+    if (container.hidden || container.disabled) {
       continue;
     }
 
-    // each view has multiple elements attach, browse and handle each one
-    for (e = 0, len2 = elements.length; e < len2; e++) {
-      element = elements[e];
+    // each view has multiple container attach, browse and handle each one
+    for (e = 0, len2 = container.length; e < len2; e++) {
+      element = container[e];
 
       // handle keyboard events only if the element is visible and enabled
       if (element.hidden || element.disabled) {
