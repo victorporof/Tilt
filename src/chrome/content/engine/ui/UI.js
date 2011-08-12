@@ -72,7 +72,7 @@ Tilt.UI.refresh = function(frameDelta) {
 
 /**
  * Sets a modal view.
- * @param {Tilt.View} view: the view to be set modal
+ * @param {Tilt.Container} view: the view to be set modal
  */
 Tilt.UI.presentModal = function(view) {
   if (view.modal || this.indexOf(view) === -1) {
@@ -93,7 +93,7 @@ Tilt.UI.presentModal = function(view) {
 
 /**
  * Unsets a modal view.
- * @param {Tilt.View} view: the view to be set modal
+ * @param {Tilt.Container} view: the view to be set modal
  */
 Tilt.UI.dismissModal = function(view) {
   if (!view.modal || this.indexOf(view) === -1) {
