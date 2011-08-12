@@ -71,7 +71,8 @@ Tilt.ScrollContainer = function(properties) {
     y: this.view.$y - 5,
     width: 32,
     height: 30,
-    fill: properties.top ? null : "#f00a"
+    fill: properties.top ? null : "#f00a",
+    padding: properties.top ? properties.top.$padding : [0, 0, 0, 0]
   });
 
   var bottomButton = new Tilt.Button(properties.bottom, {
@@ -79,7 +80,8 @@ Tilt.ScrollContainer = function(properties) {
     y: this.view.$y + this.view.$height - 25,
     width: 32,
     height: 30,
-    fill: properties.bottom ? null : "#0f0a"
+    fill: properties.bottom ? null : "#0f0a",
+    padding: properties.bottom ? properties.bottom.$padding : [0, 0, 0, 0]
   });
 
   var topResetButton = new Tilt.Button(properties.topReset, {
@@ -87,7 +89,8 @@ Tilt.ScrollContainer = function(properties) {
     y: this.view.$y + 12.5,
     width: 32,
     height: 30,
-    fill: properties.topReset ? null : "#0f0b"
+    fill: properties.topReset ? null : "#0f0b",
+    padding: properties.topReset ? properties.topReset.$padding : [0, 0, 0, 0]
   });
 
   topButton.onmousedown = function() {
