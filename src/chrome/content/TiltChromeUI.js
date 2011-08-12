@@ -401,19 +401,43 @@ TiltChrome.UI.Default = function() {
     }.bind(this);
 
     arcballUpButton.onmousedown = function() {
-      this.controller.translate(0, -50);
+      this.$arcballMove = window.setInterval(function() {
+        this.controller.translate(0, -5);
+
+        if (!ui.mousePressed) {
+          window.clearInterval(this.$arcballMove);
+        }
+      }.bind(this), 1000 / 60);
     }.bind(this);
 
     arcballDownButton.onmousedown = function() {
-      this.controller.translate(0, 50);
+      this.$arcballMove = window.setInterval(function() {
+        this.controller.translate(0, 5);
+
+        if (!ui.mousePressed) {
+          window.clearInterval(this.$arcballMove);
+        }
+      }.bind(this), 1000 / 60);
     }.bind(this);
 
     arcballLeftButton.onmousedown = function() {
-      this.controller.translate(-50, 0);
+      this.$arcballMove = window.setInterval(function() {
+        this.controller.translate(-5, 0);
+
+        if (!ui.mousePressed) {
+          window.clearInterval(this.$arcballMove);
+        }
+      }.bind(this), 1000 / 60);
     }.bind(this);
 
     arcballRightButton.onmousedown = function() {
-      this.controller.translate(50, 0);
+      this.$arcballMove = window.setInterval(function() {
+        this.controller.translate(5, 0);
+
+        if (!ui.mousePressed) {
+          window.clearInterval(this.$arcballMove);
+        }
+      }.bind(this), 1000 / 60);
     }.bind(this);
 
     viewModeButton.type = 0;
@@ -548,6 +572,7 @@ TiltChrome.UI.Default = function() {
       y: y,
       width: namelength * 10,
       height: height,
+      padding: [-2, -2, -2, -2],
       stroke: "#fff3"
     });
 
@@ -559,6 +584,7 @@ TiltChrome.UI.Default = function() {
         y: y,
         width: clslength * 3,
         height: height,
+        padding: [-2, -2, -2, -2],
         stroke: stripButton.getStroke()
       });
 
@@ -572,6 +598,7 @@ TiltChrome.UI.Default = function() {
         y: y,
         width: idlength * 3,
         height: height,
+        padding: [-2, -2, -2, -2],
         stroke: stripButton.getStroke()
       });
 
