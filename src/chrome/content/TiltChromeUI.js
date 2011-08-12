@@ -140,14 +140,14 @@ TiltChrome.UI.Default = function() {
       magFilter: "nearest"
     });
 
-    view = new Tilt.View({
+    view = new Tilt.Container({
     });
 
     domStripsContainer = new Tilt.ScrollContainer({
       x: 78,
-      y: 335,
+      y: 310,
       width: 130,
-      height: canvas.height - 340,
+      height: canvas.height - 310,
       background: "#0001",
       top: new Tilt.Sprite(t, [506, 69, 33, 30]),
       bottom: new Tilt.Sprite(t, [506, 102, 33, 30]),
@@ -163,145 +163,151 @@ TiltChrome.UI.Default = function() {
 
     domStripsLegend = new Tilt.Sprite(t, [1, 365, 69, 290], {
       x: 0,
-      y: 327,
+      y: 302,
       disabled: true
     });
 
     exitButton = new Tilt.Button(new Tilt.Sprite(t, [935, 120, 42, 38]), {
-      x: canvas.width - 50
+      x: canvas.width - 50,
+      y: -5
     });
 
     helpButton = new Tilt.Button(new Tilt.Sprite(t, [935, 80, 46, 38]), {
-      x: canvas.width - 150
+      x: canvas.width - 150,
+      y: -5
     });
 
     exportButton = new Tilt.Button(new Tilt.Sprite(t, [935, 40, 61, 38]), {
-      x: canvas.width - 215
+      x: canvas.width - 215,
+      y: -5
     });
 
     optionsButton = new Tilt.Button(new Tilt.Sprite(t, [935, 0, 66, 38]), {
-      x: canvas.width - 285
+      x: canvas.width - 285,
+      y: -5
     });
 
     htmlButton = new Tilt.Button(new Tilt.Sprite(t, [935, 200, 48, 38]), {
       x: canvas.width - 337,
+      y: -5,
       hidden: true
     });
 
     cssButton = new Tilt.Button(new Tilt.Sprite(t, [935, 160, 36, 38]), {
       x: canvas.width - 377,
+      y: -5,
       hidden: true
     });
 
     attrButton = new Tilt.Button(new Tilt.Sprite(t, [935, 240, 84, 38]), {
       x: canvas.width - 465,
+      y: -5,
       hidden: true
     });
 
     eyeButton = new Tilt.Button(new Tilt.Sprite(t, [0, 147, 42, 42]), {
       x: 0,
-      y: 0
+      y: -5
     });
 
     resetButton = new Tilt.Button(new Tilt.Sprite(t, [0, 190, 42, 42]), {
-      x: 60,
-      y: 150
+      x: 50,
+      y: 140
     });
 
     zoomInButton = new Tilt.Button(new Tilt.Sprite(t, [0, 234, 42, 42]), {
-      x: 100,
-      y: 150
+      x: 90,
+      y: 140
     });
 
     zoomOutButton = new Tilt.Button(new Tilt.Sprite(t, [0, 278, 42, 42]), {
-      x: 20,
-      y: 150
+      x: 10,
+      y: 140
     });
 
     arcballUpButton = new Tilt.Button(null, {
-      x: 60,
-      y: 14,
+      x: 50,
+      y: 4,
       width: 45,
       height: 30
     });
 
     arcballDownButton = new Tilt.Button(null, {
-      x: 60,
-      y: 120,
+      x: 50,
+      y: 110,
       width: 45,
       height: 30
     });
 
     arcballLeftButton = new Tilt.Button(null, {
-      x: 14,
-      y: 60,
+      x: 4,
+      y: 50,
       width: 30,
       height: 45
     });
 
     arcballRightButton = new Tilt.Button(null, {
-      x: 120,
-      y: 60,
+      x: 110,
+      y: 50,
       width: 30,
       height: 45
     });
 
     arcballSprite = new Tilt.Sprite(t, [0, 0, 145, 145], {
-      x: 10,
-      y: 10
+      x: 0,
+      y: 0
     });
 
     var viewModeNormalSprite = new Tilt.Sprite(t, [438, 67, 66, 66]);
     var viewModeWireframeSprite = new Tilt.Sprite(t, [438, 0, 66, 66]);
     viewModeButton = new Tilt.Button(viewModeWireframeSprite, {
-      x: 50,
-      y: 200
+      x: 40,
+      y: 180
     });
 
     colorAdjustButton = new Tilt.Button(new Tilt.Sprite(t, [505, 0, 66, 66]),{
-      x: 50,
-      y: 260
+      x: 40,
+      y: 240
     });
 
     var handlerSprite = new Tilt.Sprite(t, [574, 131, 29, 29], {
       padding: [10, 10, 10, 10]
     });
     hueSlider = new Tilt.Slider(handlerSprite, {
-      x: 152,
-      y: 271,
+      x: 64,
+      y: 12,
       size: 120,
       value: 50
     });
     saturationSlider = new Tilt.Slider(handlerSprite, {
-      x: 152,
-      y: 290,
+      x: hueSlider.getX(),
+      y: hueSlider.getY() + 19,
       size: 120,
       value: 0
     });
     brightnessSlider = new Tilt.Slider(handlerSprite, {
-      x: 152,
-      y: 308,
+      x: hueSlider.getX(),
+      y: saturationSlider.getY() + 18,
       size: 120,
       value: 100
     });
     alphaSlider = new Tilt.Slider(handlerSprite, {
-      x: 152,
-      y: 326,
+      x: hueSlider.getX(),
+      y: brightnessSlider.getY() + 18,
       size: 120,
       value: 90
     });
     textureSlider = new Tilt.Slider(handlerSprite, {
-      x: 152,
-      y: 344,
+      x: hueSlider.getX(),
+      y: alphaSlider.getY() + 18,
       size: 120,
       value: 100
     });
 
-    var colorAdjustPopupSprite = new Tilt.Sprite(t, [572, 1, 231, 126], {
-      x: 88,
-      y: 258
-    });
-    colorAdjustPopup = new Tilt.View({
+    var colorAdjustPopupSprite = new Tilt.Sprite(t, [572, 1, 231, 126]);
+    colorAdjustPopup = new Tilt.Container({
+      x: 78,
+      y: 239,
       hidden: true,
       elements: [
         colorAdjustPopupSprite,
@@ -321,7 +327,7 @@ TiltChrome.UI.Default = function() {
       height: 30
     });
 
-    helpPopup = new Tilt.View({
+    helpPopup = new Tilt.Container({
       hidden: true,
       background: "#0007",
       elements: [helpBoxSprite, helpCloseButon]
@@ -542,7 +548,7 @@ TiltChrome.UI.Default = function() {
       y: y,
       width: namelength * 10,
       height: height,
-      stroke: "#fff2"
+      stroke: "#fff3"
     });
 
     right = stripButton.getX() + stripButton.getWidth();
@@ -587,10 +593,10 @@ TiltChrome.UI.Default = function() {
       stripButton.setFill("#CD0074EE");
     }
     else if (node.localName === "meta") {
-      stripButton.setFill("#BF713022");
+      stripButton.setFill("#BF713044");
     }
     else if (node.localName === "link") {
-      stripButton.setFill("#FFB27322");
+      stripButton.setFill("#FFB27344");
     }
     else if (node.localName === "script" || node.localName === "noscript") {
       stripButton.setFill("#A64B00EE");
@@ -706,14 +712,16 @@ TiltChrome.UI.Default = function() {
   this.resize = function(width, height) {
     background.setSize(width, height);
 
-    exitButton.setPosition(width - 50, 0);
-    helpButton.setPosition(width - 150, 0);
-    exportButton.setPosition(width - 215, 0);
-    optionsButton.setPosition(width - 285, 0);
+    exitButton.setX(width - 50);
+    helpButton.setX(width - 150);
+    exportButton.setX(width - 215);
+    optionsButton.setX(width - 285);
 
-    htmlButton.setPosition(width - 337, 0);
-    cssButton.setPosition(width - 377, 0);
-    attrButton.setPosition(width - 465, 0);
+    htmlButton.setX(width - 337);
+    cssButton.setX(width - 377);
+    attrButton.setX(width - 465);
+
+    domStripsContainer.view.setHeight(height - 310);
   };
 
   /**
