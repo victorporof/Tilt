@@ -51,7 +51,7 @@ Tilt.UI.keyPressed = [];
  */
 Tilt.UI.refresh = function(frameDelta) {
   var tilt = Tilt.$renderer,
-    i, len, view;
+    i, len, container;
 
   // before drawing, make sure we're in an orthographic default environment 
   tilt.ortho();
@@ -59,23 +59,23 @@ Tilt.UI.refresh = function(frameDelta) {
   tilt.depthTest(false);
 
   for (i = 0, len = this.length; i < len; i++) {
-    view = this[i];
+    container = this[i];
 
-    if (!view.hidden) {
-      if (!view.disabled) {
-        view.update(frameDelta, tilt);
+    if (!container.hidden) {
+      if (!container.disabled) {
+        container.update(frameDelta, tilt);
       }
-      view.draw(frameDelta, tilt);
+      container.draw(frameDelta, tilt);
     }
   }
 };
 
 /**
  * Sets a modal view.
- * @param {Tilt.Container} view: the view to be set modal
+ * @param {Tilt.Container} container: the container to be set modal
  */
-Tilt.UI.presentModal = function(view) {
-  if (view.modal || this.indexOf(view) === -1) {
+Tilt.UI.presentModal = function(container) {
+  if (container.modal || this.indexOf(container) === -1) {
     return;
   }
 
@@ -86,30 +86,30 @@ Tilt.UI.presentModal = function(view) {
   }
 
   // a modal view must always be marked as modal, be visible and enabled
-  view.modal = true;
-  view.hidden = false;
-  view.disabled = false;
+  container.modal = true;
+  container.hidden = false;
+  container.disabled = false;
 };
 
 /**
  * Unsets a modal view.
  * @param {Tilt.Container} view: the view to be set modal
  */
-Tilt.UI.dismissModal = function(view) {
-  if (!view.modal || this.indexOf(view) === -1) {
+Tilt.UI.dismissModal = function(container) {
+  if (!container.modal || this.indexOf(container) === -1) {
     return;
   }
 
   // reset the disabled parameter for all the other views
   for (var i = 0, len = this.length; i < len; i++) {
     this[i].disabled = this[i].$prevDisabled;
-    delete this[i].$prevDis;
+    delete this[i].$prevDisabled;
   }
 
   // a non-modal view must always be marked as modal, be hidden and disabled
-  view.modal = false;
-  view.hidden = true;
-  view.disabled = true;
+  container.modal = false;
+  container.hidden = true;
+  container.disabled = true;
 };
 
 /**
@@ -213,7 +213,7 @@ Tilt.UI.keyUp = function(code) {
  * @param {String} name: the event name
  */
 Tilt.UI.$handleMouseEvent = function(name, x, y, button) {
-  var i, e, len, len2, elements, element, func,
+  var i, e, len, len2, container, element, func,
     offset, left, top,
     bounds, boundsX, boundsY, boundsWidth, boundsHeight,
     mouseX = this.mouseX,
@@ -221,21 +221,21 @@ Tilt.UI.$handleMouseEvent = function(name, x, y, button) {
 
   // browse each view handled by the top level UI array
   for (i = 0, len = this.length; i < len; i++) {
-    elements = this[i];
+    container = this[i];
 
     // handle mouse events only if the view is visible and enabled
-    if (elements.hidden || elements.disabled) {
+    if (container.hidden || container.disabled) {
       continue;
     }
 
     // remember the view offset (for example, used in scroll containers)
-    offset = elements.$offset || [0, 0];
-    left = elements.$x + offset[0];
-    top = elements.$y + offset[1];
+    offset = container.$offset || [0, 0];
+    left = container.$x + offset[0];
+    top = container.$y + offset[1] + 2;
 
-    // each view has multiple elements attach, browse and handle each one
-    for (e = 0, len2 = elements.length; e < len2; e++) {
-      element = elements[e];
+    // each view has multiple container attach, browse and handle each one
+    for (e = 0, len2 = container.length; e < len2; e++) {
+      element = container[e];
 
       // handle mouse events only if the element is visible and enabled
       if (element.hidden || element.disabled || !element.drawable) {
@@ -286,20 +286,20 @@ Tilt.UI.$handleMouseEvent = function(name, x, y, button) {
  * @param {String} name: the event name
  */
 Tilt.UI.$handleKeyEvent = function(name, code) {
-  var i, e, len, len2, elements, element, func;
+  var i, e, len, len2, container, element, func;
 
   // browse each view handled by the top level UI array
   for (i = 0, len = this.length; i < len; i++) {
-    elements = this[i];
+    container = this[i];
 
     // handle keyboard events only if the view is visible and enabled
-    if (elements.hidden || elements.disabled) {
+    if (container.hidden || container.disabled) {
       continue;
     }
 
-    // each view has multiple elements attach, browse and handle each one
-    for (e = 0, len2 = elements.length; e < len2; e++) {
-      element = elements[e];
+    // each view has multiple container attach, browse and handle each one
+    for (e = 0, len2 = container.length; e < len2; e++) {
+      element = container[e];
 
       // handle keyboard events only if the element is visible and enabled
       if (element.hidden || element.disabled) {
