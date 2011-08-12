@@ -132,6 +132,33 @@ Tilt.Slider.prototype = {
   },
 
   /**
+   * Sets the x position of this object.
+   * @param {Number} x: the x position
+   */
+  setX: function(x) {
+    this.setPosition(x, this.$y);
+    this.setValue(this.$value);
+  },
+
+  /**
+   * Sets the y position of this object.
+   * @param {Number} y: the y position
+   */
+  setY: function(y) {
+    this.setPosition(this.$x, y);
+    this.setValue(this.$value);
+  },
+
+  /**
+   * Sets the size of this object.
+   * @param {Number} size: the size
+   */
+  setSize: function(size) {
+    this.$size = size;
+    this.setValue(this.$value);
+  },
+
+  /**
    * Sets the value for this controller.
    * @param {Number} value: the value, ranging from 0..100
    */
@@ -217,29 +244,39 @@ Tilt.Slider.prototype = {
     // if we're currently sliding, update this object's internal params
     if (this.$sliding) {
       var sprite = this.$sprite,
+        px = this.$parentX,
+        py = this.$parentY,
         x = this.$x,
         y = this.$y,
         size = this.$size,
-        direction = this.$direction, p;
+        direction = this.$direction, xps, yps, p, pmpx;
 
       // depending on the direction, move the handler along the x or y axis
       if (direction === 0) {
+        x += px;
+        xps = x + size;
+
         // clamp the handler position between the left and right edges
-        p = Tilt.Math.clamp(ui.mouseX - sprite.$width / 2, x, x + size);
+        p = Tilt.Math.clamp(ui.mouseX - sprite.$width / 2, x, xps);
+        pmpx = p - px;
 
         // set the sprite x position and update the value and bounds
-        sprite.setPosition(p, y);
-        this.$value = Tilt.Math.map(p, x, x + size, 0, 100);
-        this.$bounds[0] = p + this.$padding[0];
+        sprite.setPosition(pmpx, y);
+        this.$value = Tilt.Math.map(p, x, xps, 0, 100);
+        this.$bounds[0] = pmpx + this.$padding[0];
       }
       else {
+        y += py;
+        yps = y + size;
+
         // clamp the handler position between the top and bottom edges
-        p = Tilt.Math.clamp(ui.$mouseY - sprite.height / 2, y, y + size);
+        p = Tilt.Math.clamp(ui.$mouseY - sprite.$height / 2, y, yps);
+        pmpy = p - py;
 
         // set the sprite y position and update the value and bounds
-        sprite.setPosition(x, p);
-        this.$value = Tilt.Math.map(p, y, y + size, 0, 100);
-        this.$bounds[1] = p + this.$padding[1];
+        sprite.setPosition(x, pmpy);
+        this.$value = Tilt.Math.map(pmpy, y, y + size, 0, 100);
+        this.$bounds[1] = pmpy + this.$padding[1];
       }
     }
   },
