@@ -521,9 +521,9 @@ Tilt.Arcball.prototype = {
         this.$scrollValue *= factor;
 
         // clear the loop if the all values are very close to zero
-        if (vec3.length(lastRot) < 0.001 &&
-            vec3.length(deltaRot) < 0.001 &&
-            vec3.length(currentRot) < 0.001 &&
+        if (vec3.length(lastRot) < 0.0001 &&
+            vec3.length(deltaRot) < 0.0001 &&
+            vec3.length(currentRot) < 0.0001 &&
             vec3.length(lastTrans) < 0.01 &&
             vec3.length(deltaTrans) < 0.01 &&
             vec3.length(currentTrans) < 0.01 &&
