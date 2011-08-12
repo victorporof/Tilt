@@ -149,9 +149,15 @@ TiltChrome.UI.Default = function() {
       width: 130,
       height: canvas.height - 310,
       background: "#0001",
-      top: new Tilt.Sprite(t, [506, 69, 33, 30]),
-      bottom: new Tilt.Sprite(t, [506, 102, 33, 30]),
-      topReset: new Tilt.Sprite(t, [506, 134, 33, 30])
+      top: new Tilt.Sprite(t, [506, 69, 33, 30], {
+        padding: [4, 4, 4, 8]
+      }),
+      bottom: new Tilt.Sprite(t, [506, 102, 33, 30], {
+        padding: [4, 4, 4, 8]
+      }),
+      topReset: new Tilt.Sprite(t, [506, 134, 33, 30], {
+        padding: [4, 8, 4, 4]
+      })
     });
 
     background = new Tilt.Sprite(t, [0, 1024 - 256, 256, 256], {
@@ -169,39 +175,46 @@ TiltChrome.UI.Default = function() {
 
     exitButton = new Tilt.Button(new Tilt.Sprite(t, [935, 120, 42, 38]), {
       x: canvas.width - 50,
-      y: -5
+      y: -5,
+      padding: [0, 0, 0, 5]
     });
 
     helpButton = new Tilt.Button(new Tilt.Sprite(t, [935, 80, 46, 38]), {
       x: canvas.width - 150,
-      y: -5
+      y: -5,
+      padding: [0, 0, 0, 5]
     });
 
     exportButton = new Tilt.Button(new Tilt.Sprite(t, [935, 40, 61, 38]), {
       x: canvas.width - 215,
-      y: -5
+      y: -5,
+      padding: [0, 0, 0, 5]
     });
 
     optionsButton = new Tilt.Button(new Tilt.Sprite(t, [935, 0, 66, 38]), {
       x: canvas.width - 285,
-      y: -5
+      y: -5,
+      padding: [0, 0, 0, 5]
     });
 
     htmlButton = new Tilt.Button(new Tilt.Sprite(t, [935, 200, 48, 38]), {
       x: canvas.width - 337,
       y: -5,
+      padding: [0, 0, 0, 5],
       hidden: true
     });
 
     cssButton = new Tilt.Button(new Tilt.Sprite(t, [935, 160, 36, 38]), {
       x: canvas.width - 377,
       y: -5,
+      padding: [0, 0, 0, 5],
       hidden: true
     });
 
     attrButton = new Tilt.Button(new Tilt.Sprite(t, [935, 240, 84, 38]), {
       x: canvas.width - 465,
       y: -5,
+      padding: [0, 0, 0, 5],
       hidden: true
     });
 
@@ -262,16 +275,18 @@ TiltChrome.UI.Default = function() {
     var viewModeWireframeSprite = new Tilt.Sprite(t, [438, 0, 66, 66]);
     viewModeButton = new Tilt.Button(viewModeWireframeSprite, {
       x: 40,
-      y: 180
+      y: 180,
+      padding: [12, 10, 12, 12]
     });
 
     colorAdjustButton = new Tilt.Button(new Tilt.Sprite(t, [505, 0, 66, 66]),{
       x: 40,
-      y: 240
+      y: 240,
+      padding: [12, 10, 14, 16]
     });
 
     var handlerSprite = new Tilt.Sprite(t, [574, 131, 29, 29], {
-      padding: [10, 10, 10, 10]
+      padding: [8, 8, 8, 8]
     });
     hueSlider = new Tilt.Slider(handlerSprite, {
       x: 64,
@@ -304,7 +319,9 @@ TiltChrome.UI.Default = function() {
       value: 100
     });
 
-    var colorAdjustPopupSprite = new Tilt.Sprite(t, [572, 1, 231, 126]);
+    var colorAdjustPopupSprite = new Tilt.Sprite(t, [572, 1, 231, 126], {
+      disabled: true
+    });
     colorAdjustPopup = new Tilt.Container({
       x: 78,
       y: 239,
@@ -556,7 +573,7 @@ TiltChrome.UI.Default = function() {
     var stripNo = this.stripNo++,
       x = 3 + depth * 6,
       y = 3 + stripNo * 10,
-      height = 6,
+      height = 7,
       stripButton, stripIdButton, stripClassButton, right,
 
     namelength = Tilt.Math.clamp(node.localName.length, 3, 10),
@@ -572,7 +589,7 @@ TiltChrome.UI.Default = function() {
       y: y,
       width: namelength * 10,
       height: height,
-      padding: [-2, -2, -2, -2],
+      padding: [-1, -1, -1, -1],
       stroke: "#fff3"
     });
 
@@ -584,7 +601,7 @@ TiltChrome.UI.Default = function() {
         y: y,
         width: clslength * 3,
         height: height,
-        padding: [-2, -2, -2, -2],
+        padding: [-1, -1, -1, -1],
         stroke: stripButton.getStroke()
       });
 
@@ -598,7 +615,7 @@ TiltChrome.UI.Default = function() {
         y: y,
         width: idlength * 3,
         height: height,
-        padding: [-2, -2, -2, -2],
+        padding: [-1, -1, -1, -1],
         stroke: stripButton.getStroke()
       });
 
