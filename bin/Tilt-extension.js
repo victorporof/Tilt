@@ -7713,6 +7713,500 @@ Tilt.Shaders.Texture = {
 "use strict";
 
 var Tilt = Tilt || {};
+var EXPORTED_SYMBOLS = ["Tilt.Container"];
+
+/**
+ * View constructor.
+ *
+ * @param {Object} properties: additional properties for this object
+ *  @param {Boolean} hidden: specifies if this shouldn't be drawn
+ *  @param {Boolean} disabled: specifies if this shouldn't receive events
+ *  @param {String} background: color to fill the screen
+ *  @param {Number} x: the x position of the object
+ *  @param {Number} y: the y position of the object
+ *  @param {Number} width: the width of the object
+ *  @param {Number} height: the height of the object
+ *  @param {Array} offset: the [x, y] offset of the inner contents
+ *  @param {Array} elements: an array of elements to be initially added
+ */
+Tilt.Container = function(properties) {
+
+  // intercept this object using a profiler when building in debug mode
+  Tilt.Profiler.intercept("Tilt.Container", this); 
+
+  // make sure the properties parameter is a valid object
+  properties = properties || {};
+
+  /**
+   * Variable specifying if this object shouldn't be drawn.
+   */
+  this.hidden = properties.hidden || false;
+
+  /**
+   * Variable specifying if this object shouldn't be responsive to events.
+   */
+  this.disabled = properties.disabled || false;
+
+  /**
+   * The color of the full screen background rectangle.
+   */
+  this.$background = properties.background || null;
+
+  /**
+   * The draw coordinates of this object.
+   */
+  this.$x = properties.x || 0;
+  this.$y = properties.y || 0;
+  this.$width = properties.width || 0;
+  this.$height = properties.height || 0;
+
+  /**
+   * The offset of the inner contents.
+   */
+  this.$offset = properties.offset || [0, 0];
+
+  // if initial elements are specified, add them to this view
+  if (properties.elements instanceof Array) {
+    properties.elements.forEach(function(e) { this.push(e); }.bind(this));
+  }
+
+  // add this view to the top level UI handler.
+  Tilt.UI.push(this);
+};
+
+/**
+ * All the UI elements will be added to a list for proper handling.
+ */
+Tilt.Container.prototype = [];
+
+/**
+ * Sets this object's position.
+ *
+ * @param {Number} x: the x position of the object
+ * @param {Number} y: the y position of the object
+ */
+Tilt.Container.prototype.setPosition = function(x, y) {
+  this.$x = x;
+  this.$y = y;
+};
+
+/**
+ * Sets this object's dimensions.
+ *
+ * @param {Number} width: the width of the object
+ * @param {Number} height: the height of the object
+ */
+Tilt.Container.prototype.setSize = function(width, height) {
+  this.$width = width;
+  this.$height = height;
+};
+
+/**
+ * Sets this object's position.
+ * @param {Number} x: the x position of the object
+ */
+Tilt.Container.prototype.setX = function(x) {
+  this.$x = x;
+};
+
+/**
+ * Sets this object's position.
+ * @param {Number} y: the y position of the object
+ */
+Tilt.Container.prototype.setY = function(y) {
+  this.$y = y;
+};
+
+/**
+ * Sets this object's dimensions.
+ * @param {Number} width: the width of the object
+ */
+Tilt.Container.prototype.setWidth = function(width) {
+  this.$width = width;
+};
+
+/**
+ * Sets this object's dimensions.
+ * @param {Number} height: the height of the object
+ */
+Tilt.Container.prototype.setHeight = function(height) {
+  this.$height = height;
+};
+
+/**
+ * Returns the x position of this object.
+ * @return {Number} the x position
+ */
+Tilt.Container.prototype.getX = function() {
+  return this.$x;
+};
+
+/**
+ * Returns the y position of this object.
+ * @return {Number} the y position
+ */
+Tilt.Container.prototype.getY = function() {
+  return this.$y;
+};
+
+/**
+ * Returns the width of this object.
+ * @return {Number} the width
+ */
+Tilt.Container.prototype.getWidth = function() {
+  return this.$width;
+};
+
+/**
+ * Returns the height of this object.
+ * @return {Number} the height
+ */
+Tilt.Container.prototype.getHeight = function() {
+  return this.$height;
+};
+
+/**
+ * Updates this object's internal params.
+ *
+ * @param {Number} frameDelta: the delta time elapsed between frames
+ * @param {Tilt.Renderer} tilt: optional, a reference to a Tilt.Renderer
+ */
+Tilt.Container.prototype.update = function(frameDelta, tilt) {
+  var element, i, len;
+
+  // a view has multiple elements attach, browse and handle each one
+  for (i = 0, len = this.length; i < len; i++) {
+    element = this[i];
+
+    // some elements don't require an update function, check for it first
+    if ("function" === typeof element.update) {
+
+      // update only if the element is visible and enabled
+      if (!element.hidden && !element.disabled) {
+        element.update(frameDelta, tilt);
+      }
+    }
+  }
+};
+
+/**
+ * Draws this object using the specified internal params.
+ *
+ * @param {Number} frameDelta: the delta time elapsed between frames
+ * @param {Tilt.Renderer} tilt: optional, a reference to a Tilt.Renderer
+ */
+Tilt.Container.prototype.draw = function(frameDelta, tilt) {
+  tilt = tilt || Tilt.$renderer;
+
+  var element,
+    background = this.$background,
+    x = this.$x,
+    y = this.$y,
+    width = this.$width,
+    height = this.$height,
+    offset = this.$offset,
+    offsetX = offset[0],
+    offsetY = offset[1],
+    left = x + offsetX,
+    top = y + offsetY,
+    elementBounds, elementX, elementY, elementWidth, elementHeight,
+    r1x1, r1y1, r1x2, r1y2, r2x1, r2y1, r2x2, r2y2, i, len;
+
+  // a view may specify a full screen rectangle as a background
+  if (background !== null) {
+    tilt.fill(background);
+    tilt.noStroke();
+    tilt.rect(x, y, width || tilt.width, height || tilt.height);
+  }
+
+  // translate by the view offset (for example, used in scroll containers)
+  tilt.pushMatrix();
+  tilt.translate(left, top, 0);
+
+  // a view has multiple elements attach, browse and handle each one
+  for (i = 0, len = this.length; i < len; i++) {
+    element = this[i];
+    element.drawable = false;
+    element.$parentX = x;
+    element.$parentY = y;
+    element.$parentWidth = width;
+    element.$parentHeight = height;
+
+    // draw only if the element is visible (it may be enabled or not)
+    if (!element.hidden) {
+
+      // if the current view bounds do not restrict drawing the child elements
+      if (width === 0 || height === 0) {
+        element.draw(frameDelta, tilt);
+        element.drawable = true;
+        continue;
+      }
+
+      // otherwise, we need to calculate if the child element is visible
+      elementBounds = element.$bounds || [1, 1, 1, 1];
+      elementX = elementBounds[0] + left;
+      elementY = elementBounds[1] + top;
+      elementWidth = elementBounds[2];
+      elementHeight = elementBounds[3];
+
+      // compute the two rectangles representing the element and view bounds
+      r1x1 = elementX;
+      r1y1 = elementY;
+      r1x2 = elementX + elementWidth;
+      r1y2 = elementY + elementHeight;
+      r2x1 = x;
+      r2y1 = y;
+      r2x2 = x + width;
+      r2y2 = y + height;
+
+      // check to see if the child UI element is visible inside the bounds
+      if (r1x1 > r2x1 && r1x2 < r2x2 && r1y1 > r2y1 && r1y2 < r2y2) {
+        element.draw(frameDelta, tilt);
+        element.drawable = true;
+      }
+    }
+  }
+
+  tilt.popMatrix();
+};
+
+/**
+ * Checks to see if the mouse is over an element handled boundsY this view.
+ *
+ * @param {Object} element: the element to check
+ * @return {Boolean} true if the mouse is over the element
+ */
+Tilt.Container.prototype.isMouseOver = function(element) {
+  // get the bounds from the element (if it's not set, use default values)
+  var ui = Tilt.UI,
+    mouseX = ui.mouseX,
+    mouseY = ui.mouseY,
+
+    // remember the view offset (for example, used in scroll containers)
+    offset = this.$offset || [0, 0],
+    left = this.$x || 0 + offset[0],
+    top = this.$y || 0 + offset[1],
+
+    // get the bounds from the element (if it's not set, use default values)
+    bounds = element.$bounds || [-1, -1, -1, -1],
+    boundsX = bounds[0] + left,
+    boundsY = bounds[1] + top,
+    boundsWidth = bounds[2],
+    boundsHeight = bounds[3];
+
+  // check to see if the mouse pointer is inside the element bounds
+  return mouseX > boundsX && mouseX < boundsX + boundsWidth &&
+         mouseY > boundsY && mouseY < boundsY + boundsHeight;
+};
+
+/**
+ * Destroys this object and deletes all members.
+ */
+Tilt.Container.prototype.destroy = function() {
+  Tilt.UI.splice(Tilt.UI.indexOf(this), 1);
+  Tilt.destroyObject(this);
+};
+/***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is Tilt: A WebGL-based 3D visualization of a webpage.
+ *
+ * The Initial Developer of the Original Code is Victor Porof.
+ * Portions created by the Initial Developer are Copyright (C) 2011
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the LGPL or the GPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ ***** END LICENSE BLOCK *****/
+"use strict";
+
+var Tilt = Tilt || {};
+var EXPORTED_SYMBOLS = ["Tilt.Scrollview"];
+
+/**
+ * ScrollContainer constructor.
+ *
+ * @param {Object} properties: additional properties for this object
+ *  @param {Boolean} hidden: specifies if this shouldn't be drawn
+ *  @param {Boolean} disabled: specifies if this shouldn't receive events
+ *  @param {String} background: color to fill the screen
+ *  @param {Array} offset: the [x, y] offset of the inner contents
+ *  @param {Boolean} bounds: the inner drawable bounds for this view
+ *  @param {Array} elements: an array of elements to be initially added
+ *  @param {Tilt.Sprite} top: a sprite for the slider top button
+ *  @param {Tilt.Sprite} bottom: a sprite for the slider bottom button
+ */
+Tilt.ScrollContainer = function(properties) {
+
+  // intercept this object using a profiler when building in debug mode
+  Tilt.Profiler.intercept("Tilt.ScrollContainer", this); 
+
+  // add this view to the top level UI handler.
+  Tilt.UI.push(this);
+
+  /**
+   * The normal view containing all the elements.
+   */
+  this.view = new Tilt.Container(properties);
+
+  /**
+   * The view containing the scrollbars.
+   */
+  this.scrollbars = new Tilt.Container();
+
+  var topButton = new Tilt.Button(properties.top, {
+    x: this.view.$x - 25,
+    y: this.view.$y - 5,
+    width: 32,
+    height: 30,
+    fill: properties.top ? null : "#f00a"
+  });
+
+  var bottomButton = new Tilt.Button(properties.bottom, {
+    x: this.view.$x - 25,
+    y: this.view.$y + this.view.$height - 25,
+    width: 32,
+    height: 30,
+    fill: properties.bottom ? null : "#0f0a"
+  });
+
+  var topResetButton = new Tilt.Button(properties.topReset, {
+    x: this.view.$x - 25,
+    y: this.view.$y + 12.5,
+    width: 32,
+    height: 30,
+    fill: properties.topReset ? null : "#0f0b"
+  });
+
+  topButton.onmousedown = function() {
+    window.clearInterval(this.$scrollTopReset);
+    var ui = Tilt.UI;
+
+    this.$scrollTop = window.setInterval(function() {
+      this.view.$offset[1] += 5;
+
+      if (!ui.mousePressed) {
+        ui = null;
+        window.clearInterval(this.$scrollTop);
+      }
+    }.bind(this), 1000 / 60);
+  }.bind(this);
+
+  bottomButton.onmousedown = function() {
+    window.clearInterval(this.$scrollTopReset);
+    var ui = Tilt.UI;
+
+    this.$scrollBottom = window.setInterval(function() {
+      this.view.$offset[1] -= 5;
+
+      if (!ui.mousePressed) {
+        ui = null;
+        window.clearInterval(this.$scrollBottom);
+      }
+    }.bind(this), 1000 / 60);
+  }.bind(this);
+
+  topResetButton.onmousedown = function() {
+    this.$scrollTopReset = window.setInterval(function() {
+      this.view.$offset[1] /= 1.15;
+
+      if (Math.abs(this.view.$offset[1]) < 0.1) {
+        window.clearInterval(this.$scrollTopReset);
+      }
+    }.bind(this), 1000 / 60);
+  }.bind(this);
+
+  this.scrollbars.push(topButton, topResetButton, bottomButton);
+
+  topButton = null;
+  bottomButton = null;
+};
+
+Tilt.ScrollContainer.prototype = {
+
+  /**
+   * Updates this object's internal params.
+   *
+   * @param {Number} frameDelta: the delta time elapsed between frames
+   * @param {Tilt.Renderer} tilt: optional, a reference to a Tilt.Renderer
+   */
+  update: function(frameDelta, tilt) {
+    this.scrollbars.hidden = this.view.hidden;
+    this.scrollbars.disabled = this.view.disabled;
+  },
+
+  /**
+   * Draws this object using the specified internal params.
+   *
+   * @param {Number} frameDelta: the delta time elapsed between frames
+   * @param {Tilt.Renderer} tilt: optional, a reference to a Tilt.Renderer
+   */
+  draw: function(frameDelta, tilt) {
+  },
+
+  /**
+   * Destroys this object and deletes all members.
+   */
+  destroy: function() {
+    Tilt.UI.splice(Tilt.UI.indexOf(this), 1);
+    Tilt.destroyObject(this);
+  }
+};
+/***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is Tilt: A WebGL-based 3D visualization of a webpage.
+ *
+ * The Initial Developer of the Original Code is Victor Porof.
+ * Portions created by the Initial Developer are Copyright (C) 2011
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the LGPL or the GPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ ***** END LICENSE BLOCK *****/
+"use strict";
+
+var Tilt = Tilt || {};
 var EXPORTED_SYMBOLS = ["Tilt.Button"];
 
 /**
@@ -7810,6 +8304,38 @@ Tilt.Button.prototype = {
     }
     this.$bounds[2] = width;
     this.$bounds[3] = height;
+  },
+
+  /**
+   * Sets the x position of this object.
+   * @param {Number} x: the x position
+   */
+  setX: function(x) {
+    this.setPosition(x, this.$sprite.$y);
+  },
+
+  /**
+   * Sets the y position of this object.
+   * @param {Number} y: the y position
+   */
+  setY: function(y) {
+    this.setPosition(this.$sprite.$x, y);
+  },
+
+  /**
+   * Sets the width of this object.
+   * @param {Number} width: the width
+   */
+  setWidth: function(width) {
+    this.setSize(width, this.$sprite.$height);
+  },
+
+  /**
+   * Sets the height of this object.
+   * @param {Number} height: the height
+   */
+  setHeight: function(height) {
+    this.setSize(this.$sprite.$width, height);
   },
 
   /**
@@ -8075,6 +8601,33 @@ Tilt.Slider.prototype = {
   },
 
   /**
+   * Sets the x position of this object.
+   * @param {Number} x: the x position
+   */
+  setX: function(x) {
+    this.setPosition(x, this.$y);
+    this.setValue(this.$value);
+  },
+
+  /**
+   * Sets the y position of this object.
+   * @param {Number} y: the y position
+   */
+  setY: function(y) {
+    this.setPosition(this.$x, y);
+    this.setValue(this.$value);
+  },
+
+  /**
+   * Sets the size of this object.
+   * @param {Number} size: the size
+   */
+  setSize: function(size) {
+    this.$size = size;
+    this.setValue(this.$value);
+  },
+
+  /**
    * Sets the value for this controller.
    * @param {Number} value: the value, ranging from 0..100
    */
@@ -8160,29 +8713,39 @@ Tilt.Slider.prototype = {
     // if we're currently sliding, update this object's internal params
     if (this.$sliding) {
       var sprite = this.$sprite,
+        px = this.$parentX,
+        py = this.$parentY,
         x = this.$x,
         y = this.$y,
         size = this.$size,
-        direction = this.$direction, p;
+        direction = this.$direction, xps, yps, p, pmpx;
 
       // depending on the direction, move the handler along the x or y axis
       if (direction === 0) {
+        x += px;
+        xps = x + size;
+
         // clamp the handler position between the left and right edges
-        p = Tilt.Math.clamp(ui.mouseX - sprite.$width / 2, x, x + size);
+        p = Tilt.Math.clamp(ui.mouseX - sprite.$width / 2, x, xps);
+        pmpx = p - px;
 
         // set the sprite x position and update the value and bounds
-        sprite.setPosition(p, y);
-        this.$value = Tilt.Math.map(p, x, x + size, 0, 100);
-        this.$bounds[0] = p + this.$padding[0];
+        sprite.setPosition(pmpx, y);
+        this.$value = Tilt.Math.map(p, x, xps, 0, 100);
+        this.$bounds[0] = pmpx + this.$padding[0];
       }
       else {
+        y += py;
+        yps = y + size;
+
         // clamp the handler position between the top and bottom edges
-        p = Tilt.Math.clamp(ui.$mouseY - sprite.height / 2, y, y + size);
+        p = Tilt.Math.clamp(ui.$mouseY - sprite.$height / 2, y, yps);
+        pmpy = p - py;
 
         // set the sprite y position and update the value and bounds
-        sprite.setPosition(x, p);
-        this.$value = Tilt.Math.map(p, y, y + size, 0, 100);
-        this.$bounds[1] = p + this.$padding[1];
+        sprite.setPosition(x, pmpy);
+        this.$value = Tilt.Math.map(pmpy, y, y + size, 0, 100);
+        this.$bounds[1] = pmpy + this.$padding[1];
       }
     }
   },
@@ -8353,6 +8916,38 @@ Tilt.Sprite.prototype = {
   },
 
   /**
+   * Sets the x position of this object.
+   * @param {Number} x: the x position
+   */
+  setX: function(x) {
+    this.setPosition(x, this.$y);
+  },
+
+  /**
+   * Sets the y position of this object.
+   * @param {Number} y: the y position
+   */
+  setY: function(y) {
+    this.setPosition(this.$x, y);
+  },
+
+  /**
+   * Sets the width of this object.
+   * @param {Number} width: the width
+   */
+  setWidth: function(width) {
+    this.setSize(width, this.$height);
+  },
+
+  /**
+   * Sets the height of this object.
+   * @param {Number} height: the height
+   */
+  setHeight: function(height) {
+    this.setSize(this.$width, height);
+  },
+
+  /**
    * Returns the x position of this object.
    * @return {Number} the x position
    */
@@ -8519,7 +9114,7 @@ Tilt.UI.refresh = function(frameDelta) {
 
 /**
  * Sets a modal view.
- * @param {Tilt.View} view: the view to be set modal
+ * @param {Tilt.Container} view: the view to be set modal
  */
 Tilt.UI.presentModal = function(view) {
   if (view.modal || this.indexOf(view) === -1) {
@@ -8540,7 +9135,7 @@ Tilt.UI.presentModal = function(view) {
 
 /**
  * Unsets a modal view.
- * @param {Tilt.View} view: the view to be set modal
+ * @param {Tilt.Container} view: the view to be set modal
  */
 Tilt.UI.dismissModal = function(view) {
   if (!view.modal || this.indexOf(view) === -1) {
@@ -8766,496 +9361,6 @@ Tilt.UI.$handleKeyEvent = function(name, code) {
 
 // intercept this object using a profiler when building in debug mode
 Tilt.Profiler.intercept("Tilt.UI", Tilt.UI);
-/***** BEGIN LICENSE BLOCK *****
- * Version: MPL 1.1/GPL 2.0/LGPL 2.1
- *
- * The contents of this file are subject to the Mozilla Public License Version
- * 1.1 (the "License"); you may not use this file except in compliance with
- * the License. You may obtain a copy of the License at
- * http://www.mozilla.org/MPL/
- *
- * Software distributed under the License is distributed on an "AS IS" basis,
- * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
- * for the specific language governing rights and limitations under the
- * License.
- *
- * The Original Code is Tilt: A WebGL-based 3D visualization of a webpage.
- *
- * The Initial Developer of the Original Code is Victor Porof.
- * Portions created by the Initial Developer are Copyright (C) 2011
- * the Initial Developer. All Rights Reserved.
- *
- * Alternatively, the contents of this file may be used under the terms of
- * either the GNU General Public License Version 2 or later (the "GPL"), or
- * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
- * in which case the provisions of the GPL or the LGPL are applicable instead
- * of those above. If you wish to allow use of your version of this file only
- * under the terms of either the GPL or the LGPL, and not to allow others to
- * use your version of this file under the terms of the MPL, indicate your
- * decision by deleting the provisions above and replace them with the notice
- * and other provisions required by the LGPL or the GPL. If you do not delete
- * the provisions above, a recipient may use your version of this file under
- * the terms of any one of the MPL, the GPL or the LGPL.
- *
- ***** END LICENSE BLOCK *****/
-"use strict";
-
-var Tilt = Tilt || {};
-var EXPORTED_SYMBOLS = ["Tilt.Scrollview"];
-
-/**
- * ScrollContainer constructor.
- *
- * @param {Object} properties: additional properties for this object
- *  @param {Boolean} hidden: specifies if this shouldn't be drawn
- *  @param {Boolean} disabled: specifies if this shouldn't receive events
- *  @param {String} background: color to fill the screen
- *  @param {Array} offset: the [x, y] offset of the inner contents
- *  @param {Boolean} bounds: the inner drawable bounds for this view
- *  @param {Array} elements: an array of elements to be initially added
- *  @param {Tilt.Sprite} top: a sprite for the slider top button
- *  @param {Tilt.Sprite} bottom: a sprite for the slider bottom button
- */
-Tilt.ScrollContainer = function(properties) {
-
-  // intercept this object using a profiler when building in debug mode
-  Tilt.Profiler.intercept("Tilt.ScrollContainer", this); 
-
-  // add this view to the top level UI handler.
-  Tilt.UI.push(this);
-
-  /**
-   * The normal view containing all the elements.
-   */
-  this.view = new Tilt.View(properties);
-
-  /**
-   * The view containing the scrollbars.
-   */
-  this.scrollbars = new Tilt.View();
-
-  var topButton = new Tilt.Button(properties.top, {
-    x: this.view.$x - 25,
-    y: this.view.$y - 5,
-    width: 32,
-    height: 30,
-    fill: properties.top ? null : "#f00a"
-  });
-
-  var bottomButton = new Tilt.Button(properties.bottom, {
-    x: this.view.$x - 25,
-    y: this.view.$y + this.view.$height - 25,
-    width: 32,
-    height: 30,
-    fill: properties.bottom ? null : "#0f0a"
-  });
-
-  var topResetButton = new Tilt.Button(properties.topReset, {
-    x: this.view.$x - 25,
-    y: this.view.$y + 12.5,
-    width: 32,
-    height: 30,
-    fill: properties.topReset ? null : "#0f0b"
-  });
-
-  topButton.onmousedown = function() {
-    window.clearInterval(this.$scrollTopReset);
-    var ui = Tilt.UI;
-
-    this.$scrollTop = window.setInterval(function() {
-      this.view.$offset[1] += 5;
-
-      if (!ui.mousePressed) {
-        ui = null;
-        window.clearInterval(this.$scrollTop);
-      }
-    }.bind(this), 1000 / 60);
-  }.bind(this);
-
-  bottomButton.onmousedown = function() {
-    window.clearInterval(this.$scrollTopReset);
-    var ui = Tilt.UI;
-
-    this.$scrollBottom = window.setInterval(function() {
-      this.view.$offset[1] -= 5;
-
-      if (!ui.mousePressed) {
-        ui = null;
-        window.clearInterval(this.$scrollBottom);
-      }
-    }.bind(this), 1000 / 60);
-  }.bind(this);
-
-  topResetButton.onmousedown = function() {
-    this.$scrollTopReset = window.setInterval(function() {
-      this.view.$offset[1] /= 1.15;
-
-      if (Math.abs(this.view.$offset[1]) < 0.1) {
-        window.clearInterval(this.$scrollTopReset);
-      }
-    }.bind(this), 1000 / 60);
-  }.bind(this);
-
-  this.scrollbars.push(topButton, topResetButton, bottomButton);
-
-  topButton = null;
-  bottomButton = null;
-};
-
-Tilt.ScrollContainer.prototype = {
-
-  /**
-   * Updates this object's internal params.
-   *
-   * @param {Number} frameDelta: the delta time elapsed between frames
-   * @param {Tilt.Renderer} tilt: optional, a reference to a Tilt.Renderer
-   */
-  update: function(frameDelta, tilt) {
-    this.scrollbars.hidden = this.view.hidden;
-    this.scrollbars.disabled = this.view.disabled;
-  },
-
-  /**
-   * Draws this object using the specified internal params.
-   *
-   * @param {Number} frameDelta: the delta time elapsed between frames
-   * @param {Tilt.Renderer} tilt: optional, a reference to a Tilt.Renderer
-   */
-  draw: function(frameDelta, tilt) {
-  },
-
-  /**
-   * Destroys this object and deletes all members.
-   */
-  destroy: function() {
-    Tilt.UI.splice(Tilt.UI.indexOf(this), 1);
-    Tilt.destroyObject(this);
-  }
-};
-/***** BEGIN LICENSE BLOCK *****
- * Version: MPL 1.1/GPL 2.0/LGPL 2.1
- *
- * The contents of this file are subject to the Mozilla Public License Version
- * 1.1 (the "License"); you may not use this file except in compliance with
- * the License. You may obtain a copy of the License at
- * http://www.mozilla.org/MPL/
- *
- * Software distributed under the License is distributed on an "AS IS" basis,
- * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
- * for the specific language governing rights and limitations under the
- * License.
- *
- * The Original Code is Tilt: A WebGL-based 3D visualization of a webpage.
- *
- * The Initial Developer of the Original Code is Victor Porof.
- * Portions created boundsY the Initial Developer are Copyright (C) 2011
- * the Initial Developer. All Rights Reserved.
- *
- * Alternatively, the contents of this file may be used under the terms of
- * either the GNU General Public License Version 2 or later (the "GPL"), or
- * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
- * in which case the provisions of the GPL or the LGPL are applicable instead
- * of those above. If you wish to allow use of your version of this file only
- * under the terms of either the GPL or the LGPL, and not to allow others to
- * use your version of this file under the terms of the MPL, indicate your
- * decision boundsY deleting the provisions above and replace them with the notice
- * and other provisions required boundsY the LGPL or the GPL. If you do not delete
- * the provisions above, a recipient may use your version of this file under
- * the terms of any one of the MPL, the GPL or the LGPL.
- *
- ***** END LICENSE BLOCK *****/
-"use strict";
-
-var Tilt = Tilt || {};
-var EXPORTED_SYMBOLS = ["Tilt.View"];
-
-/**
- * View constructor.
- *
- * @param {Object} properties: additional properties for this object
- *  @param {Boolean} hidden: specifies if this shouldn't be drawn
- *  @param {Boolean} disabled: specifies if this shouldn't receive events
- *  @param {String} background: color to fill the screen
- *  @param {Number} x: the x position of the object
- *  @param {Number} y: the y position of the object
- *  @param {Number} width: the width of the object
- *  @param {Number} height: the height of the object
- *  @param {Array} offset: the [x, y] offset of the inner contents
- *  @param {Array} elements: an array of elements to be initially added
- */
-Tilt.View = function(properties) {
-
-  // intercept this object using a profiler when building in debug mode
-  Tilt.Profiler.intercept("Tilt.View", this); 
-
-  // make sure the properties parameter is a valid object
-  properties = properties || {};
-
-  /**
-   * Variable specifying if this object shouldn't be drawn.
-   */
-  this.hidden = properties.hidden || false;
-
-  /**
-   * Variable specifying if this object shouldn't be responsive to events.
-   */
-  this.disabled = properties.disabled || false;
-
-  /**
-   * The color of the full screen background rectangle.
-   */
-  this.$background = properties.background || null;
-
-  /**
-   * The draw coordinates of this object.
-   */
-  this.$x = properties.x || 0;
-  this.$y = properties.y || 0;
-  this.$width = properties.width || 0;
-  this.$height = properties.height || 0;
-
-  /**
-   * The offset of the inner contents.
-   */
-  this.$offset = properties.offset || [0, 0];
-
-  // if initial elements are specified, add them to this view
-  if (properties.elements instanceof Array) {
-    properties.elements.forEach(function(e) { this.push(e); }.bind(this));
-  }
-
-  // add this view to the top level UI handler.
-  Tilt.UI.push(this);
-};
-
-/**
- * All the UI elements will be added to a list for proper handling.
- */
-Tilt.View.prototype = [];
-
-/**
- * Sets this object's position.
- *
- * @param {Number} x: the x position of the object
- * @param {Number} y: the y position of the object
- */
-Tilt.View.prototype.setPosition = function(x, y) {
-  this.$x = x;
-  this.$y = y;
-};
-
-/**
- * Sets this object's dimensions.
- *
- * @param {Number} width: the width of the object
- * @param {Number} height: the height of the object
- */
-Tilt.View.prototype.setSize = function(width, height) {
-  this.$width = width;
-  this.$height = height;
-};
-
-/**
- * Sets this object's position.
- * @param {Number} x: the x position of the object
- */
-Tilt.View.prototype.setX = function(x) {
-  this.$x = x;
-};
-
-/**
- * Sets this object's position.
- * @param {Number} y: the y position of the object
- */
-Tilt.View.prototype.setY = function(y) {
-  this.$y = y;
-};
-
-/**
- * Sets this object's dimensions.
- * @param {Number} width: the width of the object
- */
-Tilt.View.prototype.setWidth = function(width) {
-  this.$width = width;
-};
-
-/**
- * Sets this object's dimensions.
- * @param {Number} height: the height of the object
- */
-Tilt.View.prototype.setHeight = function(height) {
-  this.$height = height;
-};
-
-/**
- * Returns the x position of this object.
- * @return {Number} the x position
- */
-Tilt.View.prototype.getX = function() {
-  return this.$x;
-};
-
-/**
- * Returns the y position of this object.
- * @return {Number} the y position
- */
-Tilt.View.prototype.getY = function() {
-  return this.$y;
-};
-
-/**
- * Returns the width of this object.
- * @return {Number} the width
- */
-Tilt.View.prototype.getWidth = function() {
-  return this.$width;
-};
-
-/**
- * Returns the height of this object.
- * @return {Number} the height
- */
-Tilt.View.prototype.getHeight = function() {
-  return this.$height;
-};
-
-/**
- * Updates this object's internal params.
- *
- * @param {Number} frameDelta: the delta time elapsed between frames
- * @param {Tilt.Renderer} tilt: optional, a reference to a Tilt.Renderer
- */
-Tilt.View.prototype.update = function(frameDelta, tilt) {
-  var element, i, len;
-
-  // a view has multiple elements attach, browse and handle each one
-  for (i = 0, len = this.length; i < len; i++) {
-    element = this[i];
-
-    // some elements don't require an update function, check for it first
-    if ("function" === typeof element.update) {
-
-      // update only if the element is visible and enabled
-      if (!element.hidden && !element.disabled) {
-        element.update(frameDelta, tilt);
-      }
-    }
-  }
-};
-
-/**
- * Draws this object using the specified internal params.
- *
- * @param {Number} frameDelta: the delta time elapsed between frames
- * @param {Tilt.Renderer} tilt: optional, a reference to a Tilt.Renderer
- */
-Tilt.View.prototype.draw = function(frameDelta, tilt) {
-  tilt = tilt || Tilt.$renderer;
-
-  var element,
-    background = this.$background,
-    x = this.$x,
-    y = this.$y,
-    width = this.$width,
-    height = this.$height,
-    offset = this.$offset,
-    offsetX = offset[0],
-    offsetY = offset[1],
-    left = x + offsetX,
-    top = y + offsetY,
-    elementBounds, elementX, elementY, elementWidth, elementHeight,
-    r1x1, r1y1, r1x2, r1y2, r2x1, r2y1, r2x2, r2y2, i, len;
-
-  // a view may specify a full screen rectangle as a background
-  if (background !== null) {
-    tilt.fill(background);
-    tilt.noStroke();
-    tilt.rect(x, y, width || tilt.width, height || tilt.height);
-  }
-
-  // translate by the view offset (for example, used in scroll containers)
-  tilt.pushMatrix();
-  tilt.translate(left, top, 0);
-
-  // a view has multiple elements attach, browse and handle each one
-  for (i = 0, len = this.length; i < len; i++) {
-    element = this[i];
-    element.drawable = false;
-
-    // draw only if the element is visible (it may be enabled or not)
-    if (!element.hidden) {
-
-      // if the current view bounds do not restrict drawing the child elements
-      if (width === 0 || height === 0) {
-        element.draw(frameDelta, tilt);
-        element.drawable = true;
-        continue;
-      }
-
-      // otherwise, we need to calculate if the child element is visible
-      elementBounds = element.$bounds || [1, 1, 1, 1];
-      elementX = elementBounds[0] + left;
-      elementY = elementBounds[1] + top;
-      elementWidth = elementBounds[2];
-      elementHeight = elementBounds[3];
-
-      // compute the two rectangles representing the element and view bounds
-      r1x1 = elementX;
-      r1y1 = elementY;
-      r1x2 = elementX + elementWidth;
-      r1y2 = elementY + elementHeight;
-      r2x1 = x;
-      r2y1 = y;
-      r2x2 = x + width;
-      r2y2 = y + height;
-
-      // check to see if the child UI element is visible inside the bounds
-      if (r1x1 > r2x1 && r1x2 < r2x2 && r1y1 > r2y1 && r1y2 < r2y2) {
-        element.draw(frameDelta, tilt);
-        element.drawable = true;
-      }
-    }
-  }
-
-  tilt.popMatrix();
-};
-
-/**
- * Checks to see if the mouse is over an element handled boundsY this view.
- *
- * @param {Object} element: the element to check
- * @return {Boolean} true if the mouse is over the element
- */
-Tilt.View.prototype.isMouseOver = function(element) {
-  // get the bounds from the element (if it's not set, use default values)
-  var ui = Tilt.UI,
-    mouseX = ui.mouseX,
-    mouseY = ui.mouseY,
-
-    // remember the view offset (for example, used in scroll containers)
-    offset = this.$offset || [0, 0],
-    left = this.$x || 0 + offset[0],
-    top = this.$y || 0 + offset[1],
-
-    // get the bounds from the element (if it's not set, use default values)
-    bounds = element.$bounds || [-1, -1, -1, -1],
-    boundsX = bounds[0] + left,
-    boundsY = bounds[1] + top,
-    boundsWidth = bounds[2],
-    boundsHeight = bounds[3];
-
-  // check to see if the mouse pointer is inside the element bounds
-  return mouseX > boundsX && mouseX < boundsX + boundsWidth &&
-         mouseY > boundsY && mouseY < boundsY + boundsHeight;
-};
-
-/**
- * Destroys this object and deletes all members.
- */
-Tilt.View.prototype.destroy = function() {
-  Tilt.UI.splice(Tilt.UI.indexOf(this), 1);
-  Tilt.destroyObject(this);
-};
 /***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -11284,14 +11389,14 @@ TiltChrome.UI.Default = function() {
       magFilter: "nearest"
     });
 
-    view = new Tilt.View({
+    view = new Tilt.Container({
     });
 
     domStripsContainer = new Tilt.ScrollContainer({
       x: 78,
-      y: 335,
+      y: 310,
       width: 130,
-      height: canvas.height - 340,
+      height: canvas.height - 310,
       background: "#0001",
       top: new Tilt.Sprite(t, [506, 69, 33, 30]),
       bottom: new Tilt.Sprite(t, [506, 102, 33, 30]),
@@ -11307,145 +11412,151 @@ TiltChrome.UI.Default = function() {
 
     domStripsLegend = new Tilt.Sprite(t, [1, 365, 69, 290], {
       x: 0,
-      y: 327,
+      y: 302,
       disabled: true
     });
 
     exitButton = new Tilt.Button(new Tilt.Sprite(t, [935, 120, 42, 38]), {
-      x: canvas.width - 50
+      x: canvas.width - 50,
+      y: -5
     });
 
     helpButton = new Tilt.Button(new Tilt.Sprite(t, [935, 80, 46, 38]), {
-      x: canvas.width - 150
+      x: canvas.width - 150,
+      y: -5
     });
 
     exportButton = new Tilt.Button(new Tilt.Sprite(t, [935, 40, 61, 38]), {
-      x: canvas.width - 215
+      x: canvas.width - 215,
+      y: -5
     });
 
     optionsButton = new Tilt.Button(new Tilt.Sprite(t, [935, 0, 66, 38]), {
-      x: canvas.width - 285
+      x: canvas.width - 285,
+      y: -5
     });
 
     htmlButton = new Tilt.Button(new Tilt.Sprite(t, [935, 200, 48, 38]), {
       x: canvas.width - 337,
+      y: -5,
       hidden: true
     });
 
     cssButton = new Tilt.Button(new Tilt.Sprite(t, [935, 160, 36, 38]), {
       x: canvas.width - 377,
+      y: -5,
       hidden: true
     });
 
     attrButton = new Tilt.Button(new Tilt.Sprite(t, [935, 240, 84, 38]), {
       x: canvas.width - 465,
+      y: -5,
       hidden: true
     });
 
     eyeButton = new Tilt.Button(new Tilt.Sprite(t, [0, 147, 42, 42]), {
       x: 0,
-      y: 0
+      y: -5
     });
 
     resetButton = new Tilt.Button(new Tilt.Sprite(t, [0, 190, 42, 42]), {
-      x: 60,
-      y: 150
+      x: 50,
+      y: 140
     });
 
     zoomInButton = new Tilt.Button(new Tilt.Sprite(t, [0, 234, 42, 42]), {
-      x: 100,
-      y: 150
+      x: 90,
+      y: 140
     });
 
     zoomOutButton = new Tilt.Button(new Tilt.Sprite(t, [0, 278, 42, 42]), {
-      x: 20,
-      y: 150
+      x: 10,
+      y: 140
     });
 
     arcballUpButton = new Tilt.Button(null, {
-      x: 60,
-      y: 14,
+      x: 50,
+      y: 4,
       width: 45,
       height: 30
     });
 
     arcballDownButton = new Tilt.Button(null, {
-      x: 60,
-      y: 120,
+      x: 50,
+      y: 110,
       width: 45,
       height: 30
     });
 
     arcballLeftButton = new Tilt.Button(null, {
-      x: 14,
-      y: 60,
+      x: 4,
+      y: 50,
       width: 30,
       height: 45
     });
 
     arcballRightButton = new Tilt.Button(null, {
-      x: 120,
-      y: 60,
+      x: 110,
+      y: 50,
       width: 30,
       height: 45
     });
 
     arcballSprite = new Tilt.Sprite(t, [0, 0, 145, 145], {
-      x: 10,
-      y: 10
+      x: 0,
+      y: 0
     });
 
     var viewModeNormalSprite = new Tilt.Sprite(t, [438, 67, 66, 66]);
     var viewModeWireframeSprite = new Tilt.Sprite(t, [438, 0, 66, 66]);
     viewModeButton = new Tilt.Button(viewModeWireframeSprite, {
-      x: 50,
-      y: 200
+      x: 40,
+      y: 180
     });
 
     colorAdjustButton = new Tilt.Button(new Tilt.Sprite(t, [505, 0, 66, 66]),{
-      x: 50,
-      y: 260
+      x: 40,
+      y: 240
     });
 
     var handlerSprite = new Tilt.Sprite(t, [574, 131, 29, 29], {
       padding: [10, 10, 10, 10]
     });
     hueSlider = new Tilt.Slider(handlerSprite, {
-      x: 152,
-      y: 271,
+      x: 64,
+      y: 12,
       size: 120,
       value: 50
     });
     saturationSlider = new Tilt.Slider(handlerSprite, {
-      x: 152,
-      y: 290,
+      x: hueSlider.getX(),
+      y: hueSlider.getY() + 19,
       size: 120,
       value: 0
     });
     brightnessSlider = new Tilt.Slider(handlerSprite, {
-      x: 152,
-      y: 308,
+      x: hueSlider.getX(),
+      y: saturationSlider.getY() + 18,
       size: 120,
       value: 100
     });
     alphaSlider = new Tilt.Slider(handlerSprite, {
-      x: 152,
-      y: 326,
+      x: hueSlider.getX(),
+      y: brightnessSlider.getY() + 18,
       size: 120,
       value: 90
     });
     textureSlider = new Tilt.Slider(handlerSprite, {
-      x: 152,
-      y: 344,
+      x: hueSlider.getX(),
+      y: alphaSlider.getY() + 18,
       size: 120,
       value: 100
     });
 
-    var colorAdjustPopupSprite = new Tilt.Sprite(t, [572, 1, 231, 126], {
-      x: 88,
-      y: 258
-    });
-    colorAdjustPopup = new Tilt.View({
+    var colorAdjustPopupSprite = new Tilt.Sprite(t, [572, 1, 231, 126]);
+    colorAdjustPopup = new Tilt.Container({
+      x: 78,
+      y: 239,
       hidden: true,
       elements: [
         colorAdjustPopupSprite,
@@ -11465,7 +11576,7 @@ TiltChrome.UI.Default = function() {
       height: 30
     });
 
-    helpPopup = new Tilt.View({
+    helpPopup = new Tilt.Container({
       hidden: true,
       background: "#0007",
       elements: [helpBoxSprite, helpCloseButon]
@@ -11686,7 +11797,7 @@ TiltChrome.UI.Default = function() {
       y: y,
       width: namelength * 10,
       height: height,
-      stroke: "#fff2"
+      stroke: "#fff3"
     });
 
     right = stripButton.getX() + stripButton.getWidth();
@@ -11731,10 +11842,10 @@ TiltChrome.UI.Default = function() {
       stripButton.setFill("#CD0074EE");
     }
     else if (node.localName === "meta") {
-      stripButton.setFill("#BF713022");
+      stripButton.setFill("#BF713044");
     }
     else if (node.localName === "link") {
-      stripButton.setFill("#FFB27322");
+      stripButton.setFill("#FFB27344");
     }
     else if (node.localName === "script" || node.localName === "noscript") {
       stripButton.setFill("#A64B00EE");
@@ -11850,14 +11961,16 @@ TiltChrome.UI.Default = function() {
   this.resize = function(width, height) {
     background.setSize(width, height);
 
-    exitButton.setPosition(width - 50, 0);
-    helpButton.setPosition(width - 150, 0);
-    exportButton.setPosition(width - 215, 0);
-    optionsButton.setPosition(width - 285, 0);
+    exitButton.setX(width - 50);
+    helpButton.setX(width - 150);
+    exportButton.setX(width - 215);
+    optionsButton.setX(width - 285);
 
-    htmlButton.setPosition(width - 337, 0);
-    cssButton.setPosition(width - 377, 0);
-    attrButton.setPosition(width - 465, 0);
+    htmlButton.setX(width - 337);
+    cssButton.setX(width - 377);
+    attrButton.setX(width - 465);
+
+    domStripsContainer.view.setHeight(height - 310);
   };
 
   /**
