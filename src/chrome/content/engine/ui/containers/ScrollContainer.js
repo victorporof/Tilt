@@ -59,12 +59,12 @@ Tilt.ScrollContainer = function(properties) {
   /**
    * The normal view containing all the elements.
    */
-  this.view = new Tilt.View(properties);
+  this.view = new Tilt.Container(properties);
 
   /**
    * The view containing the scrollbars.
    */
-  this.scrollbars = new Tilt.View();
+  this.scrollbars = new Tilt.Container();
 
   var topButton = new Tilt.Button(properties.top, {
     x: this.view.$x - 25,

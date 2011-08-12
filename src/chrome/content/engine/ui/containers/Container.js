@@ -14,7 +14,7 @@
  * The Original Code is Tilt: A WebGL-based 3D visualization of a webpage.
  *
  * The Initial Developer of the Original Code is Victor Porof.
- * Portions created boundsY the Initial Developer are Copyright (C) 2011
+ * Portions created by the Initial Developer are Copyright (C) 2011
  * the Initial Developer. All Rights Reserved.
  *
  * Alternatively, the contents of this file may be used under the terms of
@@ -24,8 +24,8 @@
  * of those above. If you wish to allow use of your version of this file only
  * under the terms of either the GPL or the LGPL, and not to allow others to
  * use your version of this file under the terms of the MPL, indicate your
- * decision boundsY deleting the provisions above and replace them with the notice
- * and other provisions required boundsY the LGPL or the GPL. If you do not delete
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the LGPL or the GPL. If you do not delete
  * the provisions above, a recipient may use your version of this file under
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
@@ -33,7 +33,7 @@
 "use strict";
 
 var Tilt = Tilt || {};
-var EXPORTED_SYMBOLS = ["Tilt.View"];
+var EXPORTED_SYMBOLS = ["Tilt.Container"];
 
 /**
  * View constructor.
@@ -49,10 +49,10 @@ var EXPORTED_SYMBOLS = ["Tilt.View"];
  *  @param {Array} offset: the [x, y] offset of the inner contents
  *  @param {Array} elements: an array of elements to be initially added
  */
-Tilt.View = function(properties) {
+Tilt.Container = function(properties) {
 
   // intercept this object using a profiler when building in debug mode
-  Tilt.Profiler.intercept("Tilt.View", this); 
+  Tilt.Profiler.intercept("Tilt.Container", this); 
 
   // make sure the properties parameter is a valid object
   properties = properties || {};
@@ -97,7 +97,7 @@ Tilt.View = function(properties) {
 /**
  * All the UI elements will be added to a list for proper handling.
  */
-Tilt.View.prototype = [];
+Tilt.Container.prototype = [];
 
 /**
  * Sets this object's position.
@@ -105,7 +105,7 @@ Tilt.View.prototype = [];
  * @param {Number} x: the x position of the object
  * @param {Number} y: the y position of the object
  */
-Tilt.View.prototype.setPosition = function(x, y) {
+Tilt.Container.prototype.setPosition = function(x, y) {
   this.$x = x;
   this.$y = y;
 };
@@ -116,7 +116,7 @@ Tilt.View.prototype.setPosition = function(x, y) {
  * @param {Number} width: the width of the object
  * @param {Number} height: the height of the object
  */
-Tilt.View.prototype.setSize = function(width, height) {
+Tilt.Container.prototype.setSize = function(width, height) {
   this.$width = width;
   this.$height = height;
 };
@@ -125,7 +125,7 @@ Tilt.View.prototype.setSize = function(width, height) {
  * Sets this object's position.
  * @param {Number} x: the x position of the object
  */
-Tilt.View.prototype.setX = function(x) {
+Tilt.Container.prototype.setX = function(x) {
   this.$x = x;
 };
 
@@ -133,7 +133,7 @@ Tilt.View.prototype.setX = function(x) {
  * Sets this object's position.
  * @param {Number} y: the y position of the object
  */
-Tilt.View.prototype.setY = function(y) {
+Tilt.Container.prototype.setY = function(y) {
   this.$y = y;
 };
 
@@ -141,7 +141,7 @@ Tilt.View.prototype.setY = function(y) {
  * Sets this object's dimensions.
  * @param {Number} width: the width of the object
  */
-Tilt.View.prototype.setWidth = function(width) {
+Tilt.Container.prototype.setWidth = function(width) {
   this.$width = width;
 };
 
@@ -149,7 +149,7 @@ Tilt.View.prototype.setWidth = function(width) {
  * Sets this object's dimensions.
  * @param {Number} height: the height of the object
  */
-Tilt.View.prototype.setHeight = function(height) {
+Tilt.Container.prototype.setHeight = function(height) {
   this.$height = height;
 };
 
@@ -157,7 +157,7 @@ Tilt.View.prototype.setHeight = function(height) {
  * Returns the x position of this object.
  * @return {Number} the x position
  */
-Tilt.View.prototype.getX = function() {
+Tilt.Container.prototype.getX = function() {
   return this.$x;
 };
 
@@ -165,7 +165,7 @@ Tilt.View.prototype.getX = function() {
  * Returns the y position of this object.
  * @return {Number} the y position
  */
-Tilt.View.prototype.getY = function() {
+Tilt.Container.prototype.getY = function() {
   return this.$y;
 };
 
@@ -173,7 +173,7 @@ Tilt.View.prototype.getY = function() {
  * Returns the width of this object.
  * @return {Number} the width
  */
-Tilt.View.prototype.getWidth = function() {
+Tilt.Container.prototype.getWidth = function() {
   return this.$width;
 };
 
@@ -181,7 +181,7 @@ Tilt.View.prototype.getWidth = function() {
  * Returns the height of this object.
  * @return {Number} the height
  */
-Tilt.View.prototype.getHeight = function() {
+Tilt.Container.prototype.getHeight = function() {
   return this.$height;
 };
 
@@ -191,7 +191,7 @@ Tilt.View.prototype.getHeight = function() {
  * @param {Number} frameDelta: the delta time elapsed between frames
  * @param {Tilt.Renderer} tilt: optional, a reference to a Tilt.Renderer
  */
-Tilt.View.prototype.update = function(frameDelta, tilt) {
+Tilt.Container.prototype.update = function(frameDelta, tilt) {
   var element, i, len;
 
   // a view has multiple elements attach, browse and handle each one
@@ -215,7 +215,7 @@ Tilt.View.prototype.update = function(frameDelta, tilt) {
  * @param {Number} frameDelta: the delta time elapsed between frames
  * @param {Tilt.Renderer} tilt: optional, a reference to a Tilt.Renderer
  */
-Tilt.View.prototype.draw = function(frameDelta, tilt) {
+Tilt.Container.prototype.draw = function(frameDelta, tilt) {
   tilt = tilt || Tilt.$renderer;
 
   var element,
@@ -247,6 +247,10 @@ Tilt.View.prototype.draw = function(frameDelta, tilt) {
   for (i = 0, len = this.length; i < len; i++) {
     element = this[i];
     element.drawable = false;
+    element.$parentX = x;
+    element.$parentY = y;
+    element.$parentWidth = width;
+    element.$parentHeight = height;
 
     // draw only if the element is visible (it may be enabled or not)
     if (!element.hidden) {
@@ -292,7 +296,7 @@ Tilt.View.prototype.draw = function(frameDelta, tilt) {
  * @param {Object} element: the element to check
  * @return {Boolean} true if the mouse is over the element
  */
-Tilt.View.prototype.isMouseOver = function(element) {
+Tilt.Container.prototype.isMouseOver = function(element) {
   // get the bounds from the element (if it's not set, use default values)
   var ui = Tilt.UI,
     mouseX = ui.mouseX,
@@ -318,7 +322,7 @@ Tilt.View.prototype.isMouseOver = function(element) {
 /**
  * Destroys this object and deletes all members.
  */
-Tilt.View.prototype.destroy = function() {
+Tilt.Container.prototype.destroy = function() {
   Tilt.UI.splice(Tilt.UI.indexOf(this), 1);
   Tilt.destroyObject(this);
 };
