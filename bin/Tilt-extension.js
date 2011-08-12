@@ -680,9 +680,9 @@ Tilt.Arcball.prototype = {
         this.$scrollValue *= factor;
 
         // clear the loop if the all values are very close to zero
-        if (vec3.length(lastRot) < 0.001 &&
-            vec3.length(deltaRot) < 0.001 &&
-            vec3.length(currentRot) < 0.001 &&
+        if (vec3.length(lastRot) < 0.0001 &&
+            vec3.length(deltaRot) < 0.0001 &&
+            vec3.length(currentRot) < 0.0001 &&
             vec3.length(lastTrans) < 0.01 &&
             vec3.length(deltaTrans) < 0.01 &&
             vec3.length(currentTrans) < 0.01 &&
@@ -8220,6 +8220,7 @@ var EXPORTED_SYMBOLS = ["Tilt.Button"];
  *  @param {Number} y: the y position of the object
  *  @param {Number} width: the width of the object
  *  @param {Number} height: the height of the object
+ *  @param {Array} padding: the inner padding offset for mouse events
  *  @param {String} fill: fill color for the rect bounding this object
  *  @param {String} stroke: stroke color for the rect bounding this object
  */
@@ -8251,6 +8252,11 @@ Tilt.Button = function(sprite, properties) {
   this.$sprite.$height = properties.height || this.$sprite.$height;
 
   /**
+   * The inner padding offset for mouse events.
+   */
+  this.$padding = properties.padding || [0, 0, 0, 0];
+
+  /**
    * The fill color for the rectangle bounding this object.
    */
   this.$fill = properties.fill || null;
@@ -8264,8 +8270,10 @@ Tilt.Button = function(sprite, properties) {
    * The bounds of this object (used for clicking and intersections).
    */
   this.$bounds = [
-    this.$sprite.$x, this.$sprite.$y,
-    this.$sprite.$width, this.$sprite.$height];
+    this.$sprite.$x + this.$padding[0],
+    this.$sprite.$y + this.$padding[1],
+    this.$sprite.$width - this.$padding[2],
+    this.$sprite.$height - this.$padding[3]];
 };
 
 Tilt.Button.prototype = {
@@ -8284,8 +8292,8 @@ Tilt.Button.prototype = {
       this.$sprite.$x = x;
       this.$sprite.$y = y;
     }
-    this.$bounds[0] = x;
-    this.$bounds[1] = y;
+    this.$bounds[0] = x + this.$padding[0];
+    this.$bounds[1] = y + this.$padding[1];
   },
 
   /**
@@ -8302,8 +8310,8 @@ Tilt.Button.prototype = {
       this.$sprite.$width = width;
       this.$sprite.$height = height;
     }
-    this.$bounds[2] = width;
-    this.$bounds[3] = height;
+    this.$bounds[2] = width - this.$padding[2];
+    this.$bounds[3] = height - this.$padding[3];
   },
 
   /**
@@ -8431,32 +8439,23 @@ Tilt.Button.prototype = {
       this.$sprite.draw(tilt);
     }
 
-    var bounds,
+    var bounds, padding,
       fill = this.$fill,
       stroke = this.$stroke;
 
     // if fill and stroke params are specified, draw a rectangle using the
     // current bounds around the object
-    if (fill && stroke) {
+    if (fill || stroke) {
       bounds = this.$bounds;
+      padding = this.$padding;
 
-      tilt.fill(fill);
-      tilt.stroke(stroke);
-      tilt.rect(bounds[0], bounds[1], bounds[2], bounds[3]);
-    }
-    else if (fill) {
-      bounds = this.$bounds;
-
-      tilt.fill(fill);
-      tilt.noStroke();
-      tilt.rect(bounds[0], bounds[1], bounds[2], bounds[3]);
-    }
-    else if (stroke) {
-      bounds = this.$bounds;
-
-      tilt.noFill();
-      tilt.stroke(stroke);
-      tilt.rect(bounds[0], bounds[1], bounds[2], bounds[3]);
+      tilt.fill(fill || "#fff");
+      tilt.stroke(stroke || "#000");
+      tilt.rect(
+        bounds[0] - padding[0],
+        bounds[1] - padding[1],
+        bounds[2] + padding[2],
+        bounds[3] + padding[3]);
     }
   },
 
@@ -8515,7 +8514,6 @@ var EXPORTED_SYMBOLS = ["Tilt.Slider"];
  *  @param {Number} y: the y position of the object
  *  @param {Number} size: the slider size
  *  @param {Number} value: number ranging from 0..100
- *  @param {Array} padding: the inner padding offset for mouse events
  *  @param {Boolean} direction: 0 for horizontal, 1 for vertical
  */
 Tilt.Slider = function(sprite, properties) {
@@ -8560,11 +8558,6 @@ Tilt.Slider = function(sprite, properties) {
   this.$size = properties.size || 100;
 
   /**
-   * The inner padding offset for mouse events.
-   */
-  this.$padding = properties.padding || sprite.$padding || [0, 0, 0, 0];
-
-  /**
    * The slider direction (0 for horizontal, 1 for vertical).
    */
   this.$direction = properties.direction || 0;
@@ -8573,10 +8566,10 @@ Tilt.Slider = function(sprite, properties) {
    * The bounds of this object (used for clicking and intersections).
    */
   this.$bounds = [
-    this.$sprite.$x + this.$padding[0],
-    this.$sprite.$y + this.$padding[1],
-    this.$sprite.$width - this.$padding[2],
-    this.$sprite.$height - this.$padding[3]];
+    this.$sprite.$x + this.$sprite.$padding[0],
+    this.$sprite.$y + this.$sprite.$padding[1],
+    this.$sprite.$width - this.$sprite.$padding[2],
+    this.$sprite.$height - this.$sprite.$padding[3]];
 
   /**
    * The slider value (also defining the handler position).
@@ -8595,8 +8588,8 @@ Tilt.Slider.prototype = {
   setPosition: function(x, y) {
     this.$x = x;
     this.$y = y;
-    this.$bounds[0] = x + this.$padding[0];
-    this.$bounds[1] = y + this.$padding[1];
+    this.$bounds[0] = x + this.$sprite.$padding[0];
+    this.$bounds[1] = y + this.$sprite.$padding[1];
     this.setValue(this.$value);
   },
 
@@ -8648,7 +8641,7 @@ Tilt.Slider.prototype = {
 
       // set the sprite x position and update the bounds
       sprite.setPosition(p, y);
-      this.$bounds[0] = p + this.$padding[0];
+      this.$bounds[0] = p + sprite.$padding[0];
     }
     else {
       // calculate the position using the value
@@ -8656,7 +8649,7 @@ Tilt.Slider.prototype = {
 
       // set the sprite y position and update the bounds
       sprite.setPosition(x, p);
-      this.$bounds[1] = p + this.$padding[1];
+      this.$bounds[1] = p + sprite.$padding[1];
     }
   },
 
@@ -8732,7 +8725,7 @@ Tilt.Slider.prototype = {
         // set the sprite x position and update the value and bounds
         sprite.setPosition(pmpx, y);
         this.$value = Tilt.Math.map(p, x, xps, 0, 100);
-        this.$bounds[0] = pmpx + this.$padding[0];
+        this.$bounds[0] = pmpx + sprite.$padding[0];
       }
       else {
         y += py;
@@ -8745,7 +8738,7 @@ Tilt.Slider.prototype = {
         // set the sprite y position and update the value and bounds
         sprite.setPosition(x, pmpy);
         this.$value = Tilt.Math.map(pmpy, y, y + size, 0, 100);
-        this.$bounds[1] = pmpy + this.$padding[1];
+        this.$bounds[1] = pmpy + sprite.$padding[1];
       }
     }
   },
@@ -11650,19 +11643,43 @@ TiltChrome.UI.Default = function() {
     }.bind(this);
 
     arcballUpButton.onmousedown = function() {
-      this.controller.translate(0, -50);
+      this.$arcballMove = window.setInterval(function() {
+        this.controller.translate(0, -5);
+
+        if (!ui.mousePressed) {
+          window.clearInterval(this.$arcballMove);
+        }
+      }.bind(this), 1000 / 60);
     }.bind(this);
 
     arcballDownButton.onmousedown = function() {
-      this.controller.translate(0, 50);
+      this.$arcballMove = window.setInterval(function() {
+        this.controller.translate(0, 5);
+
+        if (!ui.mousePressed) {
+          window.clearInterval(this.$arcballMove);
+        }
+      }.bind(this), 1000 / 60);
     }.bind(this);
 
     arcballLeftButton.onmousedown = function() {
-      this.controller.translate(-50, 0);
+      this.$arcballMove = window.setInterval(function() {
+        this.controller.translate(-5, 0);
+
+        if (!ui.mousePressed) {
+          window.clearInterval(this.$arcballMove);
+        }
+      }.bind(this), 1000 / 60);
     }.bind(this);
 
     arcballRightButton.onmousedown = function() {
-      this.controller.translate(50, 0);
+      this.$arcballMove = window.setInterval(function() {
+        this.controller.translate(5, 0);
+
+        if (!ui.mousePressed) {
+          window.clearInterval(this.$arcballMove);
+        }
+      }.bind(this), 1000 / 60);
     }.bind(this);
 
     viewModeButton.type = 0;
@@ -11797,6 +11814,7 @@ TiltChrome.UI.Default = function() {
       y: y,
       width: namelength * 10,
       height: height,
+      padding: [-2, -2, -2, -2],
       stroke: "#fff3"
     });
 
@@ -11808,6 +11826,7 @@ TiltChrome.UI.Default = function() {
         y: y,
         width: clslength * 3,
         height: height,
+        padding: [-2, -2, -2, -2],
         stroke: stripButton.getStroke()
       });
 
@@ -11821,6 +11840,7 @@ TiltChrome.UI.Default = function() {
         y: y,
         width: idlength * 3,
         height: height,
+        padding: [-2, -2, -2, -2],
         stroke: stripButton.getStroke()
       });
 
