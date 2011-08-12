@@ -146,6 +146,38 @@ Tilt.Sprite.prototype = {
   },
 
   /**
+   * Sets the x position of this object.
+   * @param {Number} x: the x position
+   */
+  setX: function(x) {
+    this.setPosition(x, this.$y);
+  },
+
+  /**
+   * Sets the y position of this object.
+   * @param {Number} y: the y position
+   */
+  setY: function(y) {
+    this.setPosition(this.$x, y);
+  },
+
+  /**
+   * Sets the width of this object.
+   * @param {Number} width: the width
+   */
+  setWidth: function(width) {
+    this.setSize(width, this.$height);
+  },
+
+  /**
+   * Sets the height of this object.
+   * @param {Number} height: the height
+   */
+  setHeight: function(height) {
+    this.setSize(this.$width, height);
+  },
+
+  /**
    * Returns the x position of this object.
    * @return {Number} the x position
    */
