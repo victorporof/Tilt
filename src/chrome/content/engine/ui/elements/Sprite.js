@@ -108,8 +108,8 @@ Tilt.Sprite = function(texture, region, properties) {
   this.$bounds = [
     this.$x + this.$padding[0],
     this.$y + this.$padding[1],
-    this.$width - this.$padding[2],
-    this.$height - this.$padding[3]];
+    this.$width - this.$padding[0] - this.$padding[2],
+    this.$height - this.$padding[0]- this.$padding[3]];
 
   /**
    * Buffer of 2-component texture coordinates (u, v) for the sprite.
@@ -141,8 +141,8 @@ Tilt.Sprite.prototype = {
   setSize: function(width, height) {
     this.$width = width;
     this.$height = height;
-    this.$bounds[2] = width - this.$padding[2];
-    this.$bounds[3] = height - this.$padding[3];
+    this.$bounds[2] = width - this.$padding[0] - this.$padding[2];
+    this.$bounds[3] = height - this.$padding[1] - this.$padding[3];
   },
 
   /**
@@ -260,6 +260,18 @@ Tilt.Sprite.prototype = {
       $tint[1] = 1;
       $tint[2] = 1;
       $tint[3] = 1;
+    }
+
+    if (Tilt.UI.debug) {
+      tilt.fill("#fff2");
+      tilt.stroke("#f00");
+      tilt.rect(this.$x, this.$y, this.$width, this.$height);
+
+      if (!this.disabled) {
+        tilt.fill("#0f04");
+        tilt.rect(
+          this.$bounds[0], this.$bounds[1], this.$bounds[2], this.$bounds[3]);
+      }
     }
   },
 

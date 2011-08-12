@@ -76,6 +76,7 @@ Tilt.Button = function(sprite, properties) {
   this.$sprite.$y = properties.y || this.$sprite.$y;
   this.$sprite.$width = properties.width || this.$sprite.$width;
   this.$sprite.$height = properties.height || this.$sprite.$height;
+  this.$sprite.disabled = true;
 
   /**
    * The inner padding offset for mouse events.
@@ -98,8 +99,8 @@ Tilt.Button = function(sprite, properties) {
   this.$bounds = [
     this.$sprite.$x + this.$padding[0],
     this.$sprite.$y + this.$padding[1],
-    this.$sprite.$width - this.$padding[2],
-    this.$sprite.$height - this.$padding[3]];
+    this.$sprite.$width - this.$padding[0] - this.$padding[2],
+    this.$sprite.$height - this.$padding[1] - this.$padding[3]];
 };
 
 Tilt.Button.prototype = {
@@ -136,8 +137,8 @@ Tilt.Button.prototype = {
       this.$sprite.$width = width;
       this.$sprite.$height = height;
     }
-    this.$bounds[2] = width - this.$padding[2];
-    this.$bounds[3] = height - this.$padding[3];
+    this.$bounds[2] = width - this.$padding[0] - this.$padding[2];
+    this.$bounds[3] = height - this.$padding[1] - this.$padding[3];
   },
 
   /**
@@ -177,14 +178,16 @@ Tilt.Button.prototype = {
    */
   setSprite: function(sprite) {
     var x = this.$sprite.$x,
-      y = this.$sprite.$y;
+      y = this.$sprite.$y,
+      width = this.$sprite.$width,
+      height = this.$sprite.$height,
+      padding = this.$sprite.$padding;
 
     this.$sprite = sprite;
-    this.$sprite.$x = x;
-    this.$sprite.$y = y;
-
-    this.$bounds[2] = sprite.$width;
-    this.$bounds[3] = sprite.$height;    
+    this.$sprite.$padding = padding;
+    this.$sprite.setPosition(x, y);
+    this.$sprite.setSize(width, height);
+    this.$sprite.disabled = true;
   },
 
   /**
@@ -275,13 +278,29 @@ Tilt.Button.prototype = {
       bounds = this.$bounds;
       padding = this.$padding;
 
-      tilt.fill(fill || "#fff");
-      tilt.stroke(stroke || "#000");
+      tilt.fill(fill || "#fff0");
+      tilt.stroke(stroke || "#0000");
       tilt.rect(
         bounds[0] - padding[0],
         bounds[1] - padding[1],
-        bounds[2] + padding[2],
-        bounds[3] + padding[3]);
+        bounds[2] + padding[0] + padding[2],
+        bounds[3] + padding[1] + padding[3]);
+    }
+
+    if (Tilt.UI.debug) {
+      tilt.fill("#fff2");
+      tilt.stroke("#00f");
+      tilt.rect(
+        this.$sprite.$x,
+        this.$sprite.$y,
+        this.$sprite.$width,
+        this.$sprite.$height);
+
+      if (!this.disabled) {
+        tilt.fill("#0f04");
+        tilt.rect(
+          this.$bounds[0], this.$bounds[1], this.$bounds[2], this.$bounds[3]);
+      }
     }
   },
 
