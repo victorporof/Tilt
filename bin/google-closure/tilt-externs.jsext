@@ -1,6 +1,6 @@
 window["gBrowser"] = gBrowser;
 gBrowser["addTab"] = gBrowser.addTab;
-gBrowser["selectedTab"] = gBrowser.selectedTab
+gBrowser["selectedTab"] = gBrowser.selectedTab;
 gBrowser["tabContainer"] = gBrowser.tabContainer;
 gBrowser["contentWindow"] = gBrowser.contentWindow;
 gBrowser["selectedBrowser"] = gBrowser.selectedBrowser;
@@ -33,4 +33,6 @@ scriptError.init;
 consoleService.logMessage;
 consoleService.logStringMessage;
 
-iframe.contentWindow.refreshEditor
+iframe.contentWindow.refreshEditor;
+iframe.contentWindow.refreshColorPicker;
+iframe.contentDocument.colorPicked;
