@@ -43,7 +43,7 @@ var EXPORTED_SYMBOLS = [
   "Tilt.clearCache",
   "Tilt.destroyObject"];
 
-/* All cached variables begin with the $ sign, for easy spotting
+/* All cached variables begin with the $ sign, for easy spotting.
  * ------------------------------------------------------------------------ */
 
 /**
