@@ -41,39 +41,57 @@
 
   <menupopup id="menuWebDeveloperPopup">
     <menuitem class="menu-iconic"
-              id="tilt-menu"
-              key="tilt-menu-key"
-              label="&tilt.menu.label;"
-              accesskey="&tilt.menu.accesskey;"
-              insertbefore="devToolsEndSeparator"
-              oncommand="TiltChrome.BrowserOverlay.initialize(event);">
+      id="tilt-menu"
+      key="tilt-menu-key"
+      label="&tilt.menu.label;"
+      accesskey="&tilt.menu.accesskey;"
+      insertbefore="devToolsEndSeparator"
+      oncommand="TiltChrome.BrowserOverlay.initialize(event);">
     </menuitem>
   </menupopup>
 
   <menupopup id="appmenu_webDeveloper_popup">
     <menuitem class="menu-iconic"
-              id="tilt-menu"
-              key="tilt-menu-key"
-              label="&tilt.menu.label;"
-              accesskey="&tilt.menu.accesskey;"
-              insertbefore="appmenu_devToolsEndSeparator"
-              oncommand="TiltChrome.BrowserOverlay.initialize(event);">
+      id="tilt-menu"
+      key="tilt-menu-key"
+      label="&tilt.menu.label;"
+      accesskey="&tilt.menu.accesskey;"
+      insertbefore="appmenu_devToolsEndSeparator"
+      oncommand="TiltChrome.BrowserOverlay.initialize(event);">
     </menuitem>
   </menupopup>
 
   <window>
-    <panel id="tilt-panel" type="arrow" noautohide="true">
+    <panel id="tilt-sourceeditor"
+      type="arrow"
+      backdrag="true"
+      noautohide="true">
+
       <vbox>
         <hbox align="center">
-          <label id="tilt-panel-label" crop="center" width="380"/>
+          <label id="tilt-sourceeditor-label"
+            crop="center"
+            width="380"/>
+
           <spacer flex="1"/>
-          <button id="tilt-panel-close" label="Close"
-            oncommand="document.getElementById('tilt-panel').hidePopup();"/>
+
+          <button id="tilt-sourceeditor-close"
+            label="Close"
+            oncommand="document.getElementById('tilt-sourceeditor').hidePopup();"/>
         </hbox>
 
-        <iframe id="tilt-panel-iframe" width="480" height="320"
-          src="chrome://tilt/content/ace/editor.html"/>
+        <iframe id="tilt-sourceeditor-iframe"
+          src="chrome://tilt/content/ace/editor.html"
+          width="480"
+          height="320"/>
       </vbox>
     </panel>
-  </window>
+
+    <panel id="tilt-colorpicker">
+      <iframe id="tilt-colorpicker-iframe"
+        src="chrome://tilt/content/acolorjack/picker.html"
+        width="219"
+        height="203"/>
+    </panel>
+  </window>  
 </overlay>
