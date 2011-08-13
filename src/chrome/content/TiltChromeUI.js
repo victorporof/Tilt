@@ -163,6 +163,10 @@ TiltChrome.UI.Default = function() {
       magFilter: "nearest"
     });
 
+    t.onload = function() {
+      this.visualization.performRedraw();
+    }.bind(this);
+
     view = new Tilt.Container({
     });
 
@@ -255,14 +259,15 @@ TiltChrome.UI.Default = function() {
           element.hidden ^= true;
         });
 
-        domStripsContainer.view.hidden ^= true;
-
         if (!helpPopup.hidden) {
           helpPopup.hidden = true;
         }
         if (!colorAdjustPopup.hidden) {
           colorAdjustPopup.hidden = true;
         }
+
+        domStripsContainer.view.hidden ^= true;
+        this.visualization.performRedraw();
       }
     });
 
@@ -552,7 +557,7 @@ TiltChrome.UI.Default = function() {
         .refreshColorPicker(hsl[0] * 360, hsl[1] * 100, hsl[2] * 100);
 
       TiltChrome.BrowserOverlay.colorPicker.openPopup(null, null,
-        220 + sender.getX(),
+        200 + sender.getX(),
         80 + sender.getY());
     }.bind(this);
 
@@ -602,6 +607,7 @@ TiltChrome.UI.Default = function() {
       padding: [12, 10, 14, 16],
       onclick: function() {
         colorAdjustPopup.hidden ^= true;
+        this.visualization.performRedraw();
       }.bind(this)
     });
 
@@ -676,6 +682,7 @@ TiltChrome.UI.Default = function() {
 
         this.visualization.setMeshColor(rgba);
         this.visualization.setMeshTextureAlpha(textureAlpha);
+        this.visualization.performRedraw();
 
         if (!ui.mousePressed) {
           window.clearInterval(this.$sliderMove);
@@ -764,7 +771,8 @@ TiltChrome.UI.Default = function() {
     htmlButton.hidden = false;
     cssButton.hidden = false;
     attrButton.hidden = false;
-  };
+    this.visualization.performRedraw();
+  }.bind(this);
 
   /**
    * Event handling the source editor panel popup hiding.
@@ -773,17 +781,19 @@ TiltChrome.UI.Default = function() {
     htmlButton.hidden = true;
     cssButton.hidden = true;
     attrButton.hidden = true;
+    this.visualization.performRedraw();
 
     window.QueryInterface(Ci.nsIInterfaceRequestor)
       .getInterface(Ci.nsIDOMWindowUtils)
       .garbageCollect();
-  };
+  }.bind(this);
 
   /**
    * Event handling the color picker panel popup showing.
    */
   var ePickerShown = function() {
-  };
+    this.visualization.performRedraw();
+  }.bind(this);
 
   /**
    * Event handling the color picker panel popup hiding.
@@ -796,6 +806,7 @@ TiltChrome.UI.Default = function() {
       this.$colorPickerConfig.fill = hex;
       this.$colorPickerSender.setFill(hex);
       this.domVisualizationMeshReadyCallback();
+      this.visualization.performRedraw();
     }
 
     window.QueryInterface(Ci.nsIInterfaceRequestor)
@@ -1035,6 +1046,7 @@ TiltChrome.UI.Default = function() {
    */
   this.destroy = function(canvas) {
     this.visualization = null;
+    this.controller = null;
     ui = null;
     config = null;
 
