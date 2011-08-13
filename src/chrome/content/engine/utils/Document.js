@@ -191,9 +191,9 @@ Tilt.Document = {
         nodeCallback(child, depth, totalNodes, this.uid);
         recursive(nodeCallback, child, depth + 1);
 
-        // if (child.localName === "iframe") {
-        //   recursive(nodeCallback, child.contentDocument, depth + 1);
-        // }
+        if (child.localName === "iframe") {
+          recursive(nodeCallback, child.contentDocument, depth + 1);
+        }
       }
     }.bind(this);
 
