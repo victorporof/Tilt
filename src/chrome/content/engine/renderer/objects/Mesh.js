@@ -44,21 +44,22 @@ var EXPORTED_SYMBOLS = ["Tilt.Mesh"];
  *  @param {Tilt.VertexBuffer} normals: the normals buffer (m, n, p)
  *  @param {Tilt.IndexBuffer} indices: indices for the passed vertices buffer
  *  @param {String} color: the color to be used by the shader if required
- *  @param {Number} texalpha: the texture transparency
  *  @param {Tilt.Texture} texture: optional texture to be used by the shader
  *  @param {Number} drawMode: WebGL enum, like tilt.TRIANGLES
- * @param {Function} draw: optional function to handle custom drawing
+ *  @param {Function} draw: optional function to handle custom drawing
  */
-Tilt.Mesh = function(parameters, draw) {
+Tilt.Mesh = function(parameters) {
 
   // intercept this object using a profiler when building in debug mode
   Tilt.Profiler.intercept("Tilt.Mesh", this);
 
   /**
-   * Retain each parameters for easy access.
+   * Retain each parameter for easy access.
    */
   for (var i in parameters) {
-    this[i] = parameters[i];
+    if (this[i] !== "draw") {
+      this[i] = parameters[i];
+    }
   }
 
   // the color should be [r, g, b, a] array, check this now
@@ -86,8 +87,8 @@ Tilt.Mesh = function(parameters, draw) {
   }
 
   // if the draw call is specified in the constructor, overwrite directly
-  if ("function" === typeof draw) {
-    this.draw = draw;
+  if ("function" === typeof parameters.draw) {
+    this.draw = parameters.draw;
   }
 };
 
@@ -99,10 +100,6 @@ Tilt.Mesh.prototype = {
    * Overwrite this function to handle custom drawing.
    */
   draw: function() {
-    if (this.hidden === true) {
-      return;
-    }
-
     // cache some properties for easy access
     var tilt = Tilt.$renderer,
       vertices = this.vertices,
@@ -110,13 +107,12 @@ Tilt.Mesh.prototype = {
       normals = this.normals,
       indices = this.indices,
       color = this.color,
-      a = this.texalpha,
-      t = this.texture,
+      texture = this.texture,
       drawMode = this.drawMode;
 
     // use the necessary shader
-    if (t) {
-      tilt.useTextureShader(vertices, texCoord, color, a, t);
+    if (texture) {
+      tilt.useTextureShader(vertices, texCoord, color, texture);
     }
     else {
       tilt.useColorShader(vertices, color);
@@ -131,10 +127,6 @@ Tilt.Mesh.prototype = {
     }
 
     // TODO: use the normals buffer, add some lighting
-
-    // save the current model view and projection matrices
-    this.mvMatrix = mat4.create(tilt.mvMatrix);
-    this.projMatrix = mat4.create(tilt.projMatrix);
   },
 
   /**
