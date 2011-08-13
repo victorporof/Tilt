@@ -153,8 +153,6 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
     if (redraw) {
       redraw = false;
 
-      Tilt.Console.log(1);
-
       // clear the context to an opaque black background
       tilt.clear(0, 0, 0, 1);
 
