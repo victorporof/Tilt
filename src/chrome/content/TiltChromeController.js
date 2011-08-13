@@ -63,7 +63,7 @@ TiltChrome.Controller.MouseAndKeyboard = function() {
   this.init = function(canvas) {
     arcball = new Tilt.Arcball(canvas.width, canvas.height);
 
-    // bind some closures to easily handle the arcball
+    // bind some closures to more easily handle the arcball
     this.stop = arcball.stop.bind(arcball);
     this.translate = arcball.translate.bind(arcball);
     this.rotate = arcball.rotate.bind(arcball);
@@ -103,11 +103,16 @@ TiltChrome.Controller.MouseAndKeyboard = function() {
     e.preventDefault();
     e.stopPropagation();
 
+    // calculate x and y coordinates using using the client and target offset
     downX = e.clientX - e.target.offsetLeft;
     downY = e.clientY - e.target.offsetTop;
 
+    // let the ui handle the mouse down event
+    // this will update the mouseOver property, which specifies if the mouse
+    // was pressed over a widget, like a container view, button or slider
     ui.mouseDown(downX, downY, e.which);
 
+    // update the arcball rotation only if the mouse insn't over a ui element
     if (!ui.mouseOver) {
       arcball.mouseDown(downX, downY, e.which);
     }
@@ -123,6 +128,7 @@ TiltChrome.Controller.MouseAndKeyboard = function() {
     e.preventDefault();
     e.stopPropagation();
 
+    // calculate x and y coordinates using using the client and target offset
     var upX = e.clientX - e.target.offsetLeft;
     var upY = e.clientY - e.target.offsetTop;
     var button = e.which;
@@ -138,10 +144,13 @@ TiltChrome.Controller.MouseAndKeyboard = function() {
     e.preventDefault();
     e.stopPropagation();
 
+    // calculate x and y coordinates using using the client and target offset
     var clickX = e.clientX - e.target.offsetLeft;
     var clickY = e.clientY - e.target.offsetTop;
     var button = e.which;
 
+    // a click in Tilt is issued only when the mouse pointer stays in 
+    // relatively the same position
     if (Math.abs(downX - clickX) < 2 && 
         Math.abs(downY - clickY) < 2) {
 
@@ -156,14 +165,19 @@ TiltChrome.Controller.MouseAndKeyboard = function() {
     e.preventDefault();
     e.stopPropagation();
 
+    // calculate x and y coordinates using using the client and target offset
     var dblClickX = e.clientX - e.target.offsetLeft;
     var dblClickY = e.clientY - e.target.offsetTop;
     var button = e.which;
 
+    // a double click in Tilt is issued only when the mouse pointer stays in 
+    // relatively the same position
     if (Math.abs(downX - dblClickX) < 2 && 
         Math.abs(downY - dblClickY) < 2) {
 
       ui.doubleClick(dblClickX, dblClickY, button);
+
+      // double clicking is also the default action for visualization picking
       this.visualization.performMeshPick(dblClickX, dblClickY, button);
     }
   }.bind(this);
@@ -175,6 +189,7 @@ TiltChrome.Controller.MouseAndKeyboard = function() {
     e.preventDefault();
     e.stopPropagation();
 
+    // calculate x and y coordinates using using the client and target offset
     var moveX = e.clientX - e.target.offsetLeft;
     var moveY = e.clientY - e.target.offsetTop;
 
@@ -211,7 +226,7 @@ TiltChrome.Controller.MouseAndKeyboard = function() {
     var code = e.keyCode || e.which;
 
     // handle key events only if the html editor is not open
-    if ("open" === TiltChrome.BrowserOverlay.panel.state) {
+    if ("open" === TiltChrome.BrowserOverlay.sourceEditor.state) {
       return;
     }
 
@@ -226,11 +241,12 @@ TiltChrome.Controller.MouseAndKeyboard = function() {
     var code = e.keyCode || e.which;
 
     if (code === 27) {
-      // if the panel with the html editor was open, hide it now
-      if ("open" === TiltChrome.BrowserOverlay.panel.state) {
-        TiltChrome.BrowserOverlay.panel.hidePopup();
+      // if the panel with the source code editor was open, hide it now
+      if ("open" === TiltChrome.BrowserOverlay.sourceEditor.state) {
+        TiltChrome.BrowserOverlay.sourceEditor.hidePopup();
       }
       else {
+        // escape also closes the visualization if no other panel is open
         TiltChrome.BrowserOverlay.destroy(true, true);
         TiltChrome.BrowserOverlay.href = null;
       }
@@ -246,6 +262,7 @@ TiltChrome.Controller.MouseAndKeyboard = function() {
    */
   this.destroy = function(canvas) {
     this.visualization = null;
+    ui = null;
 
     if (mouseDown !== null) {
       canvas.removeEventListener("mousedown", mouseDown, false);
@@ -283,6 +300,7 @@ TiltChrome.Controller.MouseAndKeyboard = function() {
       window.removeEventListener("keyup", keyUp, false);
       keyUp = null;
     }
+
     if (arcball !== null) {
       arcball.destroy();
       arcball = null;
