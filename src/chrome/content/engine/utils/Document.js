@@ -191,9 +191,9 @@ Tilt.Document = {
         nodeCallback(child, depth, totalNodes, this.uid);
         recursive(nodeCallback, child, depth + 1);
 
-        if (child.localName === "iframe") {
-          recursive(nodeCallback, child.contentDocument, depth + 1);
-        }
+        // if (child.localName === "iframe") {
+        //   recursive(nodeCallback, child.contentDocument, depth + 1);
+        // }
       }
     }.bind(this);
 
@@ -241,9 +241,8 @@ Tilt.Document = {
    */
   getNodeCoordinates: function(node) {
     try {
-      if (node.localName === "head" || 
-          node.localName === "body" || 
-          node.localName === "iframe") throw new Exception();
+      if (node.localName === "head" ||
+          node.localName === "body") throw new Exception();
 
       // this is the preferred way of getting the bounding client rectangle
       var clientRect = node.getBoundingClientRect();
