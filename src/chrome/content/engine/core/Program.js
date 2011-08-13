@@ -71,6 +71,7 @@ Tilt.Program = function(vertShaderSrc, fragShaderSrc) {
    * attributes and uniforms at runtime, when using the shader.
    */
   this.$cache = {};
+  this.$texcache = {};
 
   // if the sources are specified in the constructor, initialize directly
   if (arguments.length === 2) {
@@ -148,6 +149,7 @@ Tilt.Program.prototype = {
 
       // use the the program if it wasn't already set
       gl.useProgram(this.$ref);
+      this.clearTextureCache();
 
       // check if the required vertex attributes aren't already set
       if (Tilt.$enabledAttributes < this.$attributes.length) {
@@ -244,7 +246,7 @@ Tilt.Program.prototype = {
    * @param {Tilt.Texture} texture: the texture to be bound
    */
   bindTexture: function(sampler, texture, unit) {
-    var cache = this.$cache,
+    var cache = this.$texcache,
       id = texture.$id;
 
     // check the cache to see if this texture wasn't already set
@@ -255,6 +257,13 @@ Tilt.Program.prototype = {
       gl.bindTexture(gl.TEXTURE_2D, texture.$ref);
       gl.uniform1i(this.$uniforms[sampler], 0);
     }
+  },
+
+  /**
+   * Clears any bound uniforms from the cache.
+   */
+  clearTextureCache: function() {
+    this.$texcache = {};
   },
 
   /**
