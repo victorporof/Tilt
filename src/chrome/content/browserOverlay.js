@@ -46,11 +46,6 @@ TiltChrome.BrowserOverlay = {
   href: null,
 
   /**
-   * The popup panel containing the Ace Cloud9 editor in an iframe.
-   */
-  panel: null,
-
-  /**
    * The canvas element used for rendering the visualization.
    */
   canvas: null,
@@ -59,6 +54,16 @@ TiltChrome.BrowserOverlay = {
    * Visualization logic and drawing loop.
    */
   visualization: null,
+
+  /**
+   * The popup panel containing the Ace Cloud9 editor in an iframe.
+   */
+  sourceEditor: null,
+
+  /**
+   * A popup panel containing a simple color picker.
+   */
+  colorPicker: null,
 
   /**
    * Initializes Tilt.
@@ -82,16 +87,17 @@ TiltChrome.BrowserOverlay = {
       var width = window.content.innerWidth;
       var height = window.content.innerHeight;
 
+      // retain the panels for future reference (used by the code editor)
+      this.sourceEditor = document.getElementById("tilt-sourceeditor");
+      this.colorPicker = document.getElementById("tilt-colorpicker");
+
       // get the iframe which will be used to create the canvas element
-      var iframe = document.getElementById("tilt-panel-iframe");
+      var iframe = document.getElementById("tilt-sourceeditor-iframe");
 
       // inside a chrome environment the default document and parent nodes
       // are different from an unprivileged html page, so change these
       Tilt.Document.currentContentDocument = iframe.contentDocument;
       Tilt.Document.currentParentNode = gBrowser.selectedBrowser.parentNode;
-
-      // retain the popup panel for future reference (used by the code editor)
-      this.panel = document.getElementById("tilt-panel");
 
       // initialize the canvas element used to draw the visualization
       this.canvas = Tilt.Document.initCanvas(width, height, true);
@@ -127,9 +133,13 @@ TiltChrome.BrowserOverlay = {
         this.visualization.destroy();
         this.visualization = null;
       }
-      if (this.panel !== null) {
-        this.panel.hidePopup();
-        this.panel = null;
+      if (this.sourceEditor !== null) {
+        this.sourceEditor.hidePopup();
+        this.sourceEditor = null;
+      }
+      if (this.colorPicker !== null) {
+        this.colorPicker.hidePopup();
+        this.colorPicker = null;
       }
 
       // if the build was in debug mode (profiling enabled), log some
