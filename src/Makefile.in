@@ -15,6 +15,9 @@ jar_sources := $(wildcard $(jar_source_root)/content/Tilt-extension.js) \
                $(wildcard $(jar_source_root)/content/*.css) \
                $(wildcard $(jar_source_root)/content/ace/*.html) \
                $(wildcard $(jar_source_root)/content/ace/src/*.js) \
+               $(wildcard $(jar_source_root)/content/acolorjack/*.html) \
+               $(wildcard $(jar_source_root)/content/acolorjack/src/*.js) \
+               $(wildcard $(jar_source_root)/content/acolorjack/src/*.css) \
                $(wildcard $(jar_source_root)/skin/*.css) \
                $(wildcard $(jar_source_root)/skin/*.png) \
                $(wildcard $(jar_source_root)/skin/*.jpg) \
