@@ -11677,7 +11677,8 @@ TiltChrome.UI.Default = function() {
         helpBoxSprite.setPosition(helpX, helpY);
         helpCloseButon.setPosition(exitX, exitY);
         ui.presentModal(helpPopup);
-      }
+        this.visualization.performRedraw();
+      }.bind(this)
     });
 
     exportButton = new Tilt.Button(new Tilt.Sprite(t, [935, 40, 61, 38]), {
@@ -11745,7 +11746,7 @@ TiltChrome.UI.Default = function() {
 
         domStripsContainer.view.hidden ^= true;
         this.visualization.performRedraw();
-      }
+      }.bind(this)
     });
 
     arcballSprite = new Tilt.Sprite(t, [0, 0, 145, 145], {
@@ -12192,7 +12193,8 @@ TiltChrome.UI.Default = function() {
       height: 30,
       onclick: function() {
         ui.dismissModal(helpPopup);
-      }
+        this.visualization.performRedraw();
+      }.bind(this)
     });
 
     helpPopup = new Tilt.Container({
@@ -12800,8 +12802,6 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
     // only redraw if we really have to
     if (redraw) {
       redraw = false;
-
-      Tilt.Console.log(1);
 
       // clear the context to an opaque black background
       tilt.clear(0, 0, 0, 1);
