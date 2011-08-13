@@ -99,6 +99,7 @@ Tilt.ScrollContainer = function(properties) {
 
     this.$scrollTop = window.setInterval(function() {
       this.view.$offset[1] += 5;
+      ui.performRedraw();
 
       if (!ui.mousePressed) {
         ui = null;
@@ -113,6 +114,7 @@ Tilt.ScrollContainer = function(properties) {
 
     this.$scrollBottom = window.setInterval(function() {
       this.view.$offset[1] -= 5;
+      ui.performRedraw();
 
       if (!ui.mousePressed) {
         ui = null;
@@ -122,8 +124,11 @@ Tilt.ScrollContainer = function(properties) {
   }.bind(this);
 
   topResetButton.onmousedown = function() {
+    var ui = Tilt.UI;
+
     this.$scrollTopReset = window.setInterval(function() {
       this.view.$offset[1] /= 1.15;
+      ui.performRedraw();
 
       if (Math.abs(this.view.$offset[1]) < 0.1) {
         window.clearInterval(this.$scrollTopReset);
