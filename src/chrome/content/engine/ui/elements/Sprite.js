@@ -50,6 +50,9 @@ var EXPORTED_SYMBOLS = ["Tilt.Sprite"];
  *  @param {Array} padding: the inner padding offset for mouse events
  *  @param {String} tint: texture tinting expressed in hex or rgb() or rgba()
  *  @param {Boolean} depthTest: true to use depth testing
+ *  @param {Function} onmousedown: function called when the event is triggered
+ *  @param {Function} onmouseup: function called when the event is triggered
+ *  @param {Function} onclick: function called when the event is triggered
  */
 Tilt.Sprite = function(texture, region, properties) {
 
@@ -68,6 +71,13 @@ Tilt.Sprite = function(texture, region, properties) {
    * Variable specifying if this object shouldn't be responsive to events.
    */
   this.disabled = properties.disabled || false;
+
+  /**
+   * Functions called when the specific event is triggered.
+   */
+  this.onmousedown = properties.onmousedown || undefined;
+  this.onmouseup = properties.onmouseup || undefined;
+  this.onclick = properties.onclick || undefined;
 
   /**
    * A texture used as the pixel data for this object.

@@ -49,6 +49,9 @@ var EXPORTED_SYMBOLS = ["Tilt.Button"];
  *  @param {Array} padding: the inner padding offset for mouse events
  *  @param {String} fill: fill color for the rect bounding this object
  *  @param {String} stroke: stroke color for the rect bounding this object
+ *  @param {Function} onmousedown: function called when the event is triggered
+ *  @param {Function} onmouseup: function called when the event is triggered
+ *  @param {Function} onclick: function called when the event is triggered
  */
 Tilt.Button = function(sprite, properties) {
 
@@ -67,6 +70,13 @@ Tilt.Button = function(sprite, properties) {
    * Variable specifying if this object shouldn't be responsive to events.
    */
   this.disabled = properties.disabled || false;
+
+  /**
+   * Functions called when the specific event is triggered.
+   */
+  this.onmousedown = properties.onmousedown || undefined;
+  this.onmouseup = properties.onmouseup || undefined;
+  this.onclick = properties.onclick || undefined;
 
   /**
    * A sprite used as a background for this object.

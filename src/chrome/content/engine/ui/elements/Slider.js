@@ -47,6 +47,9 @@ var EXPORTED_SYMBOLS = ["Tilt.Slider"];
  *  @param {Number} size: the slider size
  *  @param {Number} value: number ranging from 0..100
  *  @param {Boolean} direction: 0 for horizontal, 1 for vertical
+ *  @param {Function} onmousedown: function called when the event is triggered
+ *  @param {Function} onmouseup: function called when the event is triggered
+ *  @param {Function} onclick: function called when the event is triggered
  */
 Tilt.Slider = function(sprite, properties) {
 
@@ -65,6 +68,13 @@ Tilt.Slider = function(sprite, properties) {
    * Variable specifying if this object shouldn't be responsive to events.
    */
   this.disabled = properties.disabled || false;
+
+  /**
+   * Functions called when the specific event is triggered.
+   */
+  this.onmousedown = properties.onmousedown || undefined;
+  this.onmouseup = properties.onmouseup || undefined;
+  this.onclick = properties.onclick || undefined;
 
   /**
    * A sprite used as a background for this object.
