@@ -139,11 +139,6 @@ Tilt.Renderer = function(canvas, failCallback, successCallback) {
   this.$strokeWeightValue = 1;
 
   /**
-   * The transparency of a sampled texture.
-   */
-  this.$textureAlphaValue = 1;
-
-  /**
    * A shader useful for drawing vertices with only a color component.
    */
   var color$vs = Tilt.Shaders.Color.vs;
@@ -482,16 +477,6 @@ Tilt.Renderer.prototype = {
   },
 
   /**
-   * Sets the current texture transparency.
-   * @param {Number} weight: the transparency, between 0 and 255
-   */
-  textureAlpha: function(value) {
-    if (this.$textureAlphaValue !== value / 255) {
-      this.$textureAlphaValue = value / 255;
-    }
-  },
-
-  /**
    * Sets blending, either "alpha" or "add" (additive blending).
    * Anything else disables blending.
    *
@@ -541,7 +526,6 @@ Tilt.Renderer.prototype = {
     this.fill("#fff");
     this.stroke("#000");
     this.strokeWeight(1);
-    this.textureAlpha(255);
     this.depthTest(depthTest || true);
     this.blendMode(blendMode || "alpha");
   },
@@ -571,10 +555,9 @@ Tilt.Renderer.prototype = {
    * @param {Tilt.VertexBuffer} verticesBuffer: a buffer of vertices positions
    * @param {Tilt.VertexBuffer} texCoordBuffer: a buffer of texture coords
    * @param {Array} color: the color used, as [r, g, b, a] with 0..1 range
-   * @param {Number} texalpha: the texture transparency
    * @param {Tilt.Texture} texture: the texture to be applied
    */
-  useTextureShader: function(vertices, texCoord, color, texalpha, texture) {
+  useTextureShader: function(vertices, texCoord, color, texture) {
     var program = this.textureShader;
 
     // use this program
@@ -586,7 +569,6 @@ Tilt.Renderer.prototype = {
     program.bindUniformMatrix("mvMatrix", this.mvMatrix);
     program.bindUniformMatrix("projMatrix", this.projMatrix);
     program.bindUniformVec4("color", color);
-    program.bindUniformFloat("texalpha", texalpha);
     program.bindTexture("sampler", texture);
   },
 
@@ -690,30 +672,28 @@ Tilt.Renderer.prototype = {
   /**
    * Draws an image using the specified parameters.
    *
-   * @param {Tilt.Texture} texture: the texture to be used
+   * @param {Tilt.Texture} tex: the texture to be used
    * @param {Number} x: the x position of the object
    * @param {Number} y: the y position of the object
    * @param {Number} width: the width of the object
    * @param {Number} height: the height of the object
    * @param {Tilt.VertexBuffer} texCoord: optional, custom texture coordinates
    */
-  image: function(texture, x, y, width, height, texCoord) {
-    if (!texture.loaded) {
+  image: function(tex, x, y, width, height, texCoord) {
+    if (!tex.loaded) {
       return;
     }
 
     var rectangle = this.$rectangle,
       tint = this.$tintColor,
       stroke = this.$strokeColor,
-      a = this.$textureAlphaValue,
-      t = texture,
       texCoordBuffer = texCoord || rectangle.texCoord;
 
     // if the width and height are not specified, we use the embedded
     // texture dimensions, from the source image or framebuffer
     if ("undefined" === typeof width || "undefined" === typeof height) {
-      width = t.width;
-      height = t.height;
+      width = tex.width;
+      height = tex.height;
     }
 
     // if imageMode is set to "center", we need to offset the origin
@@ -731,7 +711,7 @@ Tilt.Renderer.prototype = {
       this.scale(width, height, 1);
 
       // use the necessary shader and draw the vertices
-      this.useTextureShader(rectangle.vertices, texCoordBuffer, tint, a, t);
+      this.useTextureShader(rectangle.vertices, texCoordBuffer, tint, tex);
       this.drawVertices(this.TRIANGLE_STRIP, rectangle.vertices.numItems);
 
       this.popMatrix();
@@ -744,27 +724,25 @@ Tilt.Renderer.prototype = {
    * @param {Number} width: the width of the object
    * @param {Number} height: the height of the object
    * @param {Number} depth: the depth of the object
-   * @param {Tilt.Texture} texture: the texture to be used
+   * @param {Tilt.Texture} tex: the texture to be used
    */
-  box: function(width, height, depth, texture) {
+  box: function(width, height, depth, tex) {
     var cube = this.$cube,
       wireframe = this.$cubeWireframe,
       tint = this.$tintColor,
       fill = this.$fillColor,
-      stroke = this.$strokeColor,
-      a = this.$textureAlphaValue,
-      t = texture;
+      stroke = this.$strokeColor;
 
     // in memory, the box is represented as a simple perfect 1x1 cube, so
     // some transformations are applied to achieve the desired shape
     this.pushMatrix();
     this.scale(width, height, depth);
 
-    if (t) {
+    if (tex) {
       // draw the box only if the tint alpha channel is not transparent
       if (tint[3]) {
         // use the necessary shader and draw the vertices
-        this.useTextureShader(cube.vertices, cube.texCoord, tint, a, t);
+        this.useTextureShader(cube.vertices, cube.texCoord, tint, tex);
         this.drawIndexedVertices(this.TRIANGLES, cube.indices);
       }
     }
