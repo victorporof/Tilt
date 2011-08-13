@@ -1,35 +1,29 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-    <title>Tilt</title>
+    <title>Tilt Editor</title>
 
-    <style type="text/css" media="screen">
+    <style type="text/css">
       body {
         overflow: hidden;
       }
-      #editor {
+      #code {
         position: absolute;
-        margin: 0;
-        top: 0;
-        bottom: 0;
+        margin: 0px;
+        top: 0px;
+        bottom: 0px;
         left: -20px;
-        right: 0;
+        right: 0px;
       }
     </style>
-  </head>
-  <body>
-    <pre id="editor"/>
-
-    <script src="src/ace.js" type="text/javascript" charset="utf-8"></script>
-    <script src="src/theme-dawn.js" type="text/javascript" charset="utf-8"></script>
-    <script src="src/mode-html.js" type="text/javascript" charset="utf-8"></script>
-    <script src="src/mode-scss.js" type="text/javascript" charset="utf-8"></script>
-    <script src="src/mode-javascript.js" type="text/javascript" charset="utf-8"></script>
+    <script type="text/javascript" src="src/ace.js"></script>
+    <script type="text/javascript" src="src/theme-dawn.js"></script>
+    <script type="text/javascript" src="src/mode-html.js"></script>
+    <script type="text/javascript" src="src/mode-scss.js"></script>
+    <script type="text/javascript" src="src/mode-javascript.js"></script>
     <script>
-      window.refreshEditor = function(type) {
-        var editor = ace.edit("editor");
+      window.refreshCodeEditor = function(type) {
+        var editor = ace.edit("code");
         editor.setTheme("ace/theme/dawn");
         editor.renderer.setHScrollBarAlwaysVisible(false);
 
@@ -47,5 +41,8 @@
         }
       };
     </script>
+  </head>
+  <body>
+    <pre id="code"/>
   </body>
 </html>
