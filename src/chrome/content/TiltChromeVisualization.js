@@ -73,6 +73,11 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
   meshWireframe = null,
 
   /**
+   * A custom shader used for drawing the visualization mesh.
+   */
+  visualizationShader = null,
+
+  /**
    * Scene transformations, exposing translation, rotation etc.
    * Modified by events in the controller through delegate functions.
    */
@@ -104,6 +109,11 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
     texture = new Tilt.Texture(image, {
       fill: "white", stroke: "#aaa", strokeWeight: 8
     });
+
+    // create the visualization shaders and program to draw the stacks mesh
+    var v$vs = TiltChrome.Shaders.Visualization.vs;
+    var v$fs = TiltChrome.Shaders.Visualization.fs;
+    visualizationShader = new Tilt.Program(v$vs, v$fs);
 
     // setup the controller, user interface, visualization mesh, and the 
     // browser event handlers
@@ -141,7 +151,9 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
 
     // only redraw if we really have to
     if (redraw) {
-      redraw = true;
+      redraw = false;
+
+      Tilt.Console.log(1);
 
       // clear the context to an opaque black background
       tilt.clear(0, 0, 0, 1);
@@ -339,7 +351,43 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
       texalpha: 255,
       texture: texture,
       visibleNodes: visibleNodes,
-      hiddenNodes: hiddenNodes
+      hiddenNodes: hiddenNodes,
+      draw: function() {
+        // cache some properties for easy access
+        var tilt = Tilt.$renderer,
+          vertices = this.vertices,
+          texCoord = this.texCoord,
+          indices = this.indices,
+          color = this.color,
+          texalpha = this.texalpha,
+          texture = this.texture,
+          drawMode = this.drawMode,
+          program = visualizationShader;
+
+        if (texalpha < 0.95) {
+          // use the custom visualization program
+          program.use();
+
+          // bind the attributes and uniforms as necessary
+          program.bindVertexBuffer("vertexPosition", vertices);
+          program.bindVertexBuffer("vertexTexCoord", texCoord);
+          program.bindUniformMatrix("mvMatrix", tilt.mvMatrix);
+          program.bindUniformMatrix("projMatrix", tilt.projMatrix);
+          program.bindUniformVec4("color", color);
+          program.bindUniformFloat("texalpha", texalpha);
+          program.bindTexture("sampler", texture);
+        }
+        else {
+          tilt.useTextureShader(vertices, texCoord, color, texture);
+        }
+
+        // use the necessary shader and draw the vertices as indexed elements
+        tilt.drawIndexedVertices(drawMode, indices);
+
+        // save the current model view and projection matrices
+        this.mvMatrix = mat4.create(tilt.mvMatrix);
+        this.projMatrix = mat4.create(tilt.projMatrix);
+      }
     });
 
     // additionally, create a wireframe representation to make the 
@@ -397,6 +445,9 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
     // set a reference in the ui for this visualization and the controller
     ui.visualization = this;
     ui.controller = controller;
+
+    // the top-level UI might need to force redraw
+    Tilt.UI.performRedraw = this.performRedraw;
 
     // call the init function on the user interface if available
     if ("function" === typeof ui.init) {
@@ -631,6 +682,7 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
 
     code.innerHTML = code.html;
     code.editorType = "html";
+    iframe.contentWindow.refreshCodeEditor("html");
   };
 
   /**
@@ -642,6 +694,7 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
 
     code.innerHTML = code.css;
     code.editorType = "css";
+    iframe.contentWindow.refreshCodeEditor("css");
   };
 
   /**
@@ -653,6 +706,7 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
 
     code.innerHTML = code.attr;
     code.editorType = "attr";
+    iframe.contentWindow.refreshCodeEditor("css");
   };
 
   /**
@@ -736,25 +790,6 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
   };
 
   /**
-   * Sets the current draw mode for the mesh.
-   * @param {String} mode: either 'fill', 'stroke' or 'both'
-   */
-  this.setMeshDrawMode = function(mode) {
-    if (mode === "fill") {
-      mesh.hidden = false;
-      meshWireframe.hidden = true;
-    }
-    else if (mode === "stroke") {
-      mesh.hidden = true;
-      meshWireframe.hidden = false;
-    }
-    else if (mode === "both") {
-      mesh.hidden = false;
-      meshWireframe.hidden = false;
-    }
-  };
-
-  /**
    * Destroys this object and sets all members to null.
    */
   this.destroy = function() {
@@ -774,11 +809,11 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
       gMouseOver = null;
     }
 
-    if (controller !== null && "function" === typeof controller.destroy) {
+    if (controller && "function" === typeof controller.destroy) {
       controller.destroy(canvas);
       controller = null;
     }
-    if (ui !== null && "function" === typeof ui.destroy) {
+    if (ui && "function" === typeof ui.destroy) {
       ui.destroy(canvas);
       ui = null;
     }
