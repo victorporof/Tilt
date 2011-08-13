@@ -27,17 +27,17 @@
         editor.setTheme("ace/theme/dawn");
         editor.renderer.setHScrollBarAlwaysVisible(false);
 
-        if (type === "css") {
+        if (type === "html") {
+          var HTMLMode = require("ace/mode/html").Mode;
+          editor.getSession().setMode(new HTMLMode());
+        }
+        else if (type === "css") {
           var CSSMode = require("ace/mode/scss").Mode;
           editor.getSession().setMode(new CSSMode());
         }
         else if (type === "js") {
           var JSMode = require("ace/mode/javascript").Mode;
           editor.getSession().setMode(new JSMode());
-        }
-        else if (type === "html") {
-          var HTMLMode = require("ace/mode/html").Mode;
-          editor.getSession().setMode(new HTMLMode());
         }
       };
     </script>
