@@ -49,7 +49,7 @@ Tilt.UI.keyPressed = [];
  * Updates and draws each view handled by the UI.
  * @param {Number} frameDelta: the delta time elapsed between frames
  */
-Tilt.UI.refresh = function(frameDelta) {
+Tilt.UI.draw = function(frameDelta) {
   var tilt = Tilt.$renderer,
     i, len, container;
 
