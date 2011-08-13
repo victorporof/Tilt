@@ -49,6 +49,9 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
    * Create the renderer, containing useful functions for easy drawing.
    */
   var tilt = new Tilt.Renderer(canvas, function failCallback() {
+
+    // if initialization fails because WebGL context coulnd't be created,
+    // show a corresponding alert message and open a tab to troubleshooting
     TiltChrome.BrowserOverlay.destroy(true, true);
     TiltChrome.BrowserOverlay.href = null;
     Tilt.Console.alert("Firefox", Tilt.StringBundle.get("initWebGL.error"));
@@ -56,12 +59,6 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
     gBrowser.selectedTab =
       gBrowser.addTab("http://get.webgl.org/troubleshooting/");
   }),
-
-  /**
-   * Variable specifying if the scene should be redrawn.
-   * This happens, for example, when the visualization is rotated.
-   */
-  redraw = true,
 
   /**
    * Mesh initialization properties.
@@ -76,13 +73,19 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
   meshWireframe = null,
 
   /**
-   * Scene transformations, expressing translation, rotation etc.
+   * Scene transformations, exposing translation, rotation etc.
    * Modified by events in the controller through delegate functions.
    */
   transforms = {
     translation: vec3.create(), // scene translation, on the [x, y, z] axis
     rotation: quat4.create()    // scene rotation, expressed as a quaternion
-  };
+  },
+
+  /**
+   * Variable specifying if the scene should be redrawn.
+   * This happens, for example, when the visualization is translated/rotated.
+   */
+  redraw = true;
 
   /**
    * The initialization logic.
@@ -93,7 +96,7 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
     }
 
     // use an extension to get the image representation of the document
-    // this will be removed once the MOZ_dom_element_texture WebGL extension
+    // this will be removed once the MOZ_window_region_texture WebGL extension
     // is finished; currently converting the document image to a texture
     var image = Tilt.Extensions.WebGL.initDocumentImage(window.content);
 
@@ -102,7 +105,8 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
       fill: "white", stroke: "#aaa", strokeWeight: 8
     });
 
-    // setup the visualization, browser event handlers and the controller
+    // setup the controller, user interface, visualization mesh, and the 
+    // browser event handlers
     setupController.call(this);
     setupUI.call(this);
     setupVisualization.call(this);
@@ -131,13 +135,15 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
     }
 
     // prepare for the next frame of the animation loop
+    // behind the scenes, this issues a requestAnimFrame and updates some
+    // timing variables, frame count, frame rate etc.
     tilt.loop(draw);
 
-    // only update if we really have to
+    // only redraw if we really have to
     if (redraw) {
       redraw = true;
 
-      // clear the context and draw a background gradient
+      // clear the context to an opaque black background
       tilt.clear(0, 0, 0, 1);
 
       // apply the preliminary transformations to the model view
@@ -188,13 +194,18 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
       visibleNodes = [],
       hiddenNodes = [];
 
-    // traverse the document
+    // traverse the document and issue a callback for each node in the dom
     Tilt.Document.traverse(function(node, depth, index, uid) {
+
       // call the node callback in the ui
+      // this is done (in the default implementation) to create a tree-like
+      // representation using color coded strips for each node in the dom
       if (ui && "function" === typeof ui.domVisualizationMeshNodeCallback) {
         ui.domVisualizationMeshNodeCallback(node, depth, index, uid);
       }
 
+      // save some information about each node in the dom
+      // this will be used when showing the source editor panel popup
       var info = {
         innerHTML: node.innerHTML,
         attributes: node.attributes,
@@ -204,6 +215,7 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
         uid: uid
       };
 
+      // if css style is available for the current node, compute it now
       try {
         info.style = window.getComputedStyle(node);
       }
@@ -211,8 +223,9 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
         info.style = "";
       }
 
-      if (node.nodeType === 3 ||
-          node.nodeType === 10 ||
+      // skip some nodes to avoid too bloated visualization meshes
+      if (node.nodeType === 3 ||  // TEXT_NODE
+          node.nodeType === 10 || // DOCUMENT_TYPE_NODE
           node.localName === "head" ||
           node.localName === "title" ||
           node.localName === "meta" ||
@@ -227,6 +240,8 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
           node.localName === "i" ||
           node.localName === "u") {
 
+        // information about these nodes should still be accessible, despite
+        // the fact that they're not rendered
         hiddenNodes.push(info);
         return;
       }
@@ -234,7 +249,7 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
       // get the x, y, width and height coordinates of a node
       var coord = Tilt.Document.getNodeCoordinates(node);
 
-      // use this node only if it actually has any dimensions
+      // use this node only if it actually has visible dimensions
       if (coord.width > 4 && coord.height > 4) {
         visibleNodes.push(info);
 
@@ -307,11 +322,15 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
       }
     }, function(maxDepth, totalNodes) {
       // call the ready callback in the ui
+      // this is done (in the default implementation) to create a tree-like
+      // representation using color coded strips for each node in the dom
       if (ui && "undefined" !== ui.domVisualizationMeshReadyCallback) {
         ui.domVisualizationMeshReadyCallback(maxDepth, totalNodes);
       }
     });
 
+    // create the visualization mesh using the vertices, texture coordinates
+    // and indices computed when traversing the dom
     mesh = new Tilt.Mesh({
       vertices: new Tilt.VertexBuffer(vertices, 3),
       texCoord: new Tilt.VertexBuffer(texCoord, 2),
@@ -323,6 +342,8 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
       hiddenNodes: hiddenNodes
     });
 
+    // additionally, create a wireframe representation to make the 
+    // visualization a bit more pretty
     meshWireframe = new Tilt.Mesh({
       vertices: mesh.vertices,
       indices: new Tilt.IndexBuffer(wireframeIndices),
@@ -332,7 +353,7 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
   };
 
   /**
-   * Handle some browser events, when the tabs are selected or closed.
+   * Handle some browser events, e.g. when the tabs are selected or closed.
    */
   function setupBrowserEvents() {
     var tabContainer = gBrowser.tabContainer;
@@ -348,6 +369,8 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
    * Setup the controller, referencing this visualization.
    */
   function setupController() {
+    // we might have the controller undefined (not passed as a parameter in 
+    // the constructor, in which case the controller won't be used)
     if ("undefined" === typeof controller) {
       return;
     }
@@ -365,11 +388,13 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
    * Setup the user interface, referencing this visualization.
    */
   function setupUI() {
+    // we might have the interface undefined (not passed as a parameter in 
+    // the constructor, in which case the interface won't be used)
     if ("undefined" === typeof ui) {
       return;
     }
 
-    // set a reference in the user interface for this visualization
+    // set a reference in the ui for this visualization and the controller
     ui.visualization = this;
     ui.controller = controller;
 
@@ -397,6 +422,7 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
     tilt.height = window.content.innerHeight;
     redraw = true;
 
+    // resize and update the controller and the user interface accordingly
     if (controller && "function" === typeof controller.resize) {
       controller.resize(tilt.width, tilt.height);
     }
@@ -405,8 +431,8 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
     }
 
     // hide the panel with the html editor (to avoid wrong positioning)
-    if ("open" === TiltChrome.BrowserOverlay.panel.state) {
-      TiltChrome.BrowserOverlay.panel.hidePopup();
+    if ("open" === TiltChrome.BrowserOverlay.sourceEditor.state) {
+      TiltChrome.BrowserOverlay.sourceEditor.hidePopup();
     }
   };
 
@@ -416,15 +442,22 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
   function gMouseOver() {
     redraw = true;
 
-    // happens after the browser window is resized
+    // this happens after the browser window is resized
     if (canvas.width !== tilt.width || canvas.height !== tilt.height) {
+
+      // we need to update the canvas width and height to use full resolution
+      // and avoid blurry rendering
       canvas.width = tilt.width;
       canvas.height = tilt.height;
 
+      // update the WebGL viewport and redraw the visualization now
       tilt.gl.viewport(0, 0, canvas.width, canvas.height);
       draw();
     }
   };
+
+/* The following are delegate functions used in the controller or the UI.
+ * ------------------------------------------------------------------------ */
 
   /**
    * Redraws the visualization once.
@@ -435,7 +468,8 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
   };
 
   /**
-   * Picks a stacked dom node at the x and y screen coordinates.
+   * Picks a stacked dom node at the x and y screen coordinates and opens up
+   * the source editor with the corresponding information.
    *
    * @param {Number} x: the current horizontal coordinate
    * @param {Number} y: the current vertical coordinate
@@ -453,40 +487,46 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
       vertices = mesh.vertices.components,
       i, len, v0, v1, v2;
 
+    // check each triangle in the visualization mesh for intersections with
+    // the mouse ray (using a simple ray picking algorithm)
     for (i = 0, len = indices.length; i < len; i += 3) {
+
+      // the first triangle vertex
       v0 = [vertices[indices[i    ] * 3    ],
             vertices[indices[i    ] * 3 + 1],
             vertices[indices[i    ] * 3 + 2]];
 
+      // the second triangle vertex
       v1 = [vertices[indices[i + 1] * 3    ],
             vertices[indices[i + 1] * 3 + 1],
             vertices[indices[i + 1] * 3 + 2]];
 
+      // the third triangle vertex
       v2 = [vertices[indices[i + 2] * 3    ],
             vertices[indices[i + 2] * 3 + 1],
             vertices[indices[i + 2] * 3 + 2]];
 
-      // for each triangle in the mesh, check to see if the mouse ray
-      // intersects the triangle
+      // for each triangle in the mesh, check for the exact intersections
       if (Tilt.Math.intersectRayTriangle(v0, v1, v2, ray, point) > 0) {
+
+        // if the ray-triangle intersection is greater than 0, continue and
         // save the intersection, along with the node information
         intersections.push({
           location: vec3.create(point),
           node: mesh.visibleNodes[Math.floor(i / 30)]
+          // each stack is composed of 30 vertices, so there's information
+          // about a node once in 30 iterations (to avoid duplication)
         });
       }
     }
 
-    // if there were any intersections, sort them by the distance towards the
-    // camera, and show a panel with the node information
+    // continue only if we actually clicked something
     if (intersections.length > 0) {
+
+      // if there were any intersections, sort them by the distance towards 
+      // the camera, and show a panel with the node information
       intersections.sort(function(a, b) {
-        if (a.location[2] < b.location[2]) {
-          return 1;
-        }
-        else {
-          return -1;
-        }
+        return a.location[2] < b.location[2] ? 1 : -1;
       });
 
       // use only the first intersection (closest to the camera)
@@ -496,7 +536,7 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
 
   /**
    * Opens the editor showing details about a specific node in the dom.
-   * @param {Number} uid: the unique id of the node
+   * @param {Number | Object} uid: the unique node id or the node itself
    */
   this.openEditor = function(uid) {
     if ("number" === typeof uid) {
@@ -504,16 +544,25 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
         hiddenNodes = mesh.hiddenNodes,
         node, i, len;
 
+      // first check all the visible nodes for the uid
+      // we're not using hashtables for this because it's not necessary, as
+      // this function is called very few times
       for (i = 0, len = visibleNodes.length; i < len; i++) {
         node = visibleNodes[i];
 
+        // if we found the searched node uid, open the editor with the node
         if (uid === node.uid) {
           return this.openEditor(node);
         }
       }
+
+      // second check all the hidden nodes for the uid
+      // this will happen when the editor needs to open information about a
+      // node that is not rendered (it isn't part of the visualization mesh)
       for (i = 0, len = hiddenNodes.length; i < len; i++) {
         node = hiddenNodes[i];
 
+        // if we found the searched node uid, open the editor with the node
         if (uid === node.uid) {
           return this.openEditor(node);
         }
@@ -533,41 +582,42 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
         .replace(/</g, "&lt;")
         .replace(/>/g, "&gt;")) + "\n",
 
-      // compute the custom css text from all the properties
+      // compute the custom css and attributes text from all the properties
       css = Tilt.Document.getModifiedCss(node.style),
       attr = Tilt.Document.getAttributesString(node.attributes),
 
       // get the elements used by the popup
-      label = document.getElementById("tilt-panel-label"),
-      iframe = document.getElementById("tilt-panel-iframe"),
-      editor = iframe.contentDocument.getElementById("editor");
+      label = document.getElementById("tilt-sourceeditor-label"),
+      iframe = document.getElementById("tilt-sourceeditor-iframe"),
+      code = iframe.contentDocument.getElementById("code");
 
       // set the title label of the popup panel
       label.value = "<" + node.localName +
         (node.className ? " class=\"" + node.className + "\"" : "") +
         (node.id ? " id=\"" + node.id + "\"" : "") + ">";
 
-      // show the popup panel containing the html editor iframe
-      TiltChrome.BrowserOverlay.panel.openPopup(null, "overlap",
+      // show the popup panel containing the source editor iframe
+      TiltChrome.BrowserOverlay.sourceEditor.openPopup(null, "overlap",
         window.innerWidth - iframe.width - 21,
         window.innerHeight - iframe.height - 77, false, false);
 
-      // get the content document containing the html editor, and add the html
-      editor.html = html;
-      editor.css = css;
-      editor.attr = attr;
+      // update the html, css and attributes for the source editor element
+      code.html = html;
+      code.css = css;
+      code.attr = attr;
 
-      if (editor.editorType === "attr") {
-        editor.innerHTML = attr;
-        iframe.contentWindow.refreshEditor("css");
+      // refresh the editor using specific syntax highlighting in each case
+      if (code.editorType === "attr") {
+        code.innerHTML = attr;
+        iframe.contentWindow.refreshCodeEditor("css");
       }
-      else if (editor.editorType === "css") {
-        editor.innerHTML = css;
-        iframe.contentWindow.refreshEditor("css");
+      else if (code.editorType === "css") {
+        code.innerHTML = css;
+        iframe.contentWindow.refreshCodeEditor("css");
       }
       else {
-        editor.innerHTML = html;
-        iframe.contentWindow.refreshEditor("html");
+        code.innerHTML = html;
+        iframe.contentWindow.refreshCodeEditor("html");
       }
     }
   };
@@ -576,36 +626,33 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
    * Show the inner html contents of a dom node in the editor if open.
    */
   this.setHtmlEditor = function() {
-    var iframe = document.getElementById("tilt-panel-iframe"),
-      editor = iframe.contentDocument.getElementById("editor");
+    var iframe = document.getElementById("tilt-sourceeditor-iframe"),
+      code = iframe.contentDocument.getElementById("code");
 
-    editor.innerHTML = editor.html;
-    editor.editorType = "html";
-    iframe.contentWindow.refreshEditor("html");
+    code.innerHTML = code.html;
+    code.editorType = "html";
   };
 
   /**
    * Show the computed css contents of a dom node in the editor if open.
    */
   this.setCssEditor = function() {
-    var iframe = document.getElementById("tilt-panel-iframe"),
-      editor = iframe.contentDocument.getElementById("editor");
+    var iframe = document.getElementById("tilt-sourceeditor-iframe"),
+      code = iframe.contentDocument.getElementById("code");
 
-    editor.innerHTML = editor.css;
-    editor.editorType = "css";
-    iframe.contentWindow.refreshEditor("css");
+    code.innerHTML = code.css;
+    code.editorType = "css";
   };
 
   /**
-   * Show the attributes for a dom node in the editor if open.
+   * Show the specific attributes for a dom node in the editor if open.
    */
   this.setAttributesEditor = function() {
-    var iframe = document.getElementById("tilt-panel-iframe"),
-      editor = iframe.contentDocument.getElementById("editor");
+    var iframe = document.getElementById("tilt-sourceeditor-iframe"),
+      code = iframe.contentDocument.getElementById("code");
 
-    editor.innerHTML = editor.attr;
-    editor.editorType = "attr";
-    iframe.contentWindow.refreshEditor("css");
+    code.innerHTML = code.attr;
+    code.editorType = "attr";
   };
 
   /**
@@ -617,6 +664,7 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
       y = translation[1],
       z = translation[2];
 
+    // only update the translation if it's not already set
     if (transforms.translation[0] != x ||
         transforms.translation[1] != y ||
         transforms.translation[2] != z) {
@@ -636,6 +684,7 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
       z = quaternion[2],
       w = quaternion[3];
 
+    // only update the rotation if it's not already set
     if (transforms.rotation[0] != x ||
         transforms.rotation[1] != y ||
         transforms.rotation[2] != z ||
@@ -724,6 +773,7 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
       gBrowser.removeEventListener("mouseover", gMouseOver, false);
       gMouseOver = null;
     }
+
     if (controller !== null && "function" === typeof controller.destroy) {
       controller.destroy(canvas);
       controller = null;
@@ -732,6 +782,7 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
       ui.destroy(canvas);
       ui = null;
     }
+
     if (texture !== null) {
       texture.destroy();
       texture = null;
@@ -744,14 +795,14 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
       meshWireframe.destroy();
       meshWireframe = null;
     }
-    if (tilt !== null) {
-      tilt.destroy();
-      tilt = null;
-    }
     if (transforms !== null) {
       delete transforms.rotation;
       delete transforms.translation;
       transforms = null;
+    }
+    if (tilt !== null) {
+      tilt.destroy();
+      tilt = null;
     }
 
     canvas = null;
@@ -761,6 +812,7 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
     setupBrowserEvents = null;
     setupController = null;
     setupUI = null;
+    tabContainer = null;
 
     Tilt.destroyObject(this);
   };
