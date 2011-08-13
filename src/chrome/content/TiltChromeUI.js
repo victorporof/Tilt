@@ -47,6 +47,11 @@ TiltChrome.UI.Default = function() {
   var ui = Tilt.UI,
 
   /**
+   * The configuration properties for the UI.
+   */
+  config = TiltChrome.Config.UI,
+
+  /**
    * The views containing all the UI elements.
    */
   view = null,
@@ -65,9 +70,23 @@ TiltChrome.UI.Default = function() {
   background = null,
 
   /**
-   *
+   * The "minidom" strips legend.
    */
   domStripsLegend = null,
+  htmlStripButton = null,
+  headStripButton = null,
+  titleStripButton = null,
+  scriptStripButton = null,
+  styleStripButton = null,
+  divStripButton = null,
+  spanStripButton = null,
+  tableStripButton = null,
+  trStripButton = null,
+  tdStripButton = null,
+  pStripButton = null,
+  aStripButton = null,
+  imgStripButton = null,
+  otherStripButton = null,
 
   /**
    * The top-right menu buttons.
@@ -84,14 +103,14 @@ TiltChrome.UI.Default = function() {
    * Top-left control items.
    */
   eyeButton = null,
-  resetButton = null,
-  zoomInButton = null,
-  zoomOutButton = null,
+  arcballSprite = null,
   arcballUpButton = null,
   arcballDownButton = null,
   arcballLeftButton = null,
   arcballRightButton = null,
-  arcballSprite = null,
+  resetButton = null,
+  zoomInButton = null,
+  zoomOutButton = null,
 
   /**
    * Middle-left control items.
@@ -100,7 +119,7 @@ TiltChrome.UI.Default = function() {
   colorAdjustButton = null,
 
   /**
-   * Sliders.
+   * Color adjustment sliders.
    */
   hueSlider = null,
   saturationSlider = null,
@@ -109,7 +128,7 @@ TiltChrome.UI.Default = function() {
   textureSlider = null,
 
   /**
-   * The controls information.
+   * The controls help information.
    */
   helpBoxSprite = null,
   helpCloseButon = null,
@@ -119,7 +138,7 @@ TiltChrome.UI.Default = function() {
    */
   alwaysVisibleElements = [],
   hideableElements = [],
-  panelElements = [],
+  sourceEditorElements = [],
 
   /**
    * Retain the position for the mouseDown event.
@@ -131,9 +150,13 @@ TiltChrome.UI.Default = function() {
    * @param {HTMLCanvasElement} canvas: the canvas element
    */
   this.init = function(canvas) {
-    var panel = TiltChrome.BrowserOverlay.panel;
-    panel.addEventListener("popupshown", ePopupShown, false);
-    panel.addEventListener("popuphidden", ePopupHidden, false);
+    var sourceEditor = TiltChrome.BrowserOverlay.sourceEditor;
+    sourceEditor.addEventListener("popupshown", eEditorShown, false);
+    sourceEditor.addEventListener("popuphidden", eEditorHidden, false);
+
+    var colorPicker = TiltChrome.BrowserOverlay.colorPicker;
+    colorPicker.addEventListener("popupshown", ePickerShown, false);
+    colorPicker.addEventListener("popuphidden", ePickerHidden, false);
 
     t = new Tilt.Texture("chrome://tilt/skin/tilt-ui.png", {
       minFilter: "nearest",
@@ -141,6 +164,203 @@ TiltChrome.UI.Default = function() {
     });
 
     view = new Tilt.Container({
+    });
+
+    background = new Tilt.Sprite(t, [0, 1024 - 256, 256, 256], {
+      width: canvas.width,
+      height: canvas.height,
+      depthTest: true,
+      disabled: true
+    });
+
+    exitButton = new Tilt.Button(new Tilt.Sprite(t, [935, 120, 42, 38]), {
+      x: canvas.width - 50,
+      y: -5,
+      padding: [0, 0, 0, 5],
+      onclick: function() {
+        TiltChrome.BrowserOverlay.destroy(true, true);
+        TiltChrome.BrowserOverlay.href = null;
+      }
+    });
+
+    helpButton = new Tilt.Button(new Tilt.Sprite(t, [935, 80, 46, 38]), {
+      x: canvas.width - 150,
+      y: -5,
+      padding: [0, 0, 0, 5],
+      onclick: function() {
+        var helpX = canvas.width / 2 - 305,
+          helpY = canvas.height / 2 - 305,
+          exitX = canvas.width / 2 + 197,
+          exitY = canvas.height / 2 - 218;
+
+        helpBoxSprite.setPosition(helpX, helpY);
+        helpCloseButon.setPosition(exitX, exitY);
+        ui.presentModal(helpPopup);
+      }
+    });
+
+    exportButton = new Tilt.Button(new Tilt.Sprite(t, [935, 40, 61, 38]), {
+      x: canvas.width - 215,
+      y: -5,
+      padding: [0, 0, 0, 5],
+      onclick: function() {
+        Tilt.Console.alert("Tilt", Tilt.StringBundle.get("implement.info"));
+      }
+    });
+
+    optionsButton = new Tilt.Button(new Tilt.Sprite(t, [935, 0, 66, 38]), {
+      x: canvas.width - 285,
+      y: -5,
+      padding: [0, 0, 0, 5],
+      onclick: function() {
+        Tilt.Console.alert("Tilt", Tilt.StringBundle.get("implement.info"));
+      }
+    });
+
+    htmlButton = new Tilt.Button(new Tilt.Sprite(t, [935, 200, 48, 38]), {
+      x: canvas.width - 337,
+      y: -5,
+      padding: [0, 0, 0, 5],
+      hidden: true,
+      onclick: function() {
+        this.visualization.setHtmlEditor();
+      }.bind(this)
+    });
+
+    cssButton = new Tilt.Button(new Tilt.Sprite(t, [935, 160, 36, 38]), {
+      x: canvas.width - 377,
+      y: -5,
+      padding: [0, 0, 0, 5],
+      hidden: true,
+      onclick: function() {
+        this.visualization.setCssEditor();
+      }.bind(this)
+    });
+
+    attrButton = new Tilt.Button(new Tilt.Sprite(t, [935, 240, 84, 38]), {
+      x: canvas.width - 465,
+      y: -5,
+      padding: [0, 0, 0, 5],
+      hidden: true,
+      onclick: function() {
+        this.visualization.setAttributesEditor();
+      }.bind(this)
+    });
+
+    eyeButton = new Tilt.Button(new Tilt.Sprite(t, [0, 147, 42, 42]), {
+      x: 0,
+      y: -5,
+      onclick: function() {
+        hideableElements.forEach(function(element) {
+          element.hidden ^= true;
+        });
+
+        domStripsContainer.view.hidden ^= true;
+
+        if (!helpPopup.hidden) {
+          helpPopup.hidden = true;
+        }
+        if (!colorAdjustPopup.hidden) {
+          colorAdjustPopup.hidden = true;
+        }
+      }
+    });
+
+    arcballSprite = new Tilt.Sprite(t, [0, 0, 145, 145], {
+      x: 0,
+      y: 0
+    });
+
+    arcballUpButton = new Tilt.Button(null, {
+      x: 50,
+      y: 4,
+      width: 45,
+      height: 30,
+      onmousedown: function() {
+        window.clearInterval(this.$arcballMove);
+        this.$arcballMove = window.setInterval(function() {
+          this.controller.translate(0, -5);
+
+          if (!ui.mousePressed) {
+            window.clearInterval(this.$arcballMove);
+          }
+        }.bind(this), 1000 / 60);
+      }.bind(this)
+    });
+
+    arcballDownButton = new Tilt.Button(null, {
+      x: 50,
+      y: 110,
+      width: 45,
+      height: 30,
+      onmousedown: function() {
+        window.clearInterval(this.$arcballMove);
+        this.$arcballMove = window.setInterval(function() {
+          this.controller.translate(0, 5);
+
+          if (!ui.mousePressed) {
+            window.clearInterval(this.$arcballMove);
+          }
+        }.bind(this), 1000 / 60);
+      }.bind(this)
+    });
+
+    arcballLeftButton = new Tilt.Button(null, {
+      x: 4,
+      y: 50,
+      width: 30,
+      height: 45,
+      onmousedown: function() {
+        window.clearInterval(this.$arcballMove);
+        this.$arcballMove = window.setInterval(function() {
+          this.controller.translate(-5, 0);
+
+          if (!ui.mousePressed) {
+            window.clearInterval(this.$arcballMove);
+          }
+        }.bind(this), 1000 / 60);
+      }.bind(this)
+    });
+
+    arcballRightButton = new Tilt.Button(null, {
+      x: 110,
+      y: 50,
+      width: 30,
+      height: 45,
+      onmousedown: function() {
+        window.clearInterval(this.$arcballMove);
+        this.$arcballMove = window.setInterval(function() {
+          this.controller.translate(5, 0);
+
+          if (!ui.mousePressed) {
+            window.clearInterval(this.$arcballMove);
+          }
+        }.bind(this), 1000 / 60);
+      }.bind(this)
+    });
+
+    resetButton = new Tilt.Button(new Tilt.Sprite(t, [0, 190, 42, 42]), {
+      x: 50,
+      y: 140,
+      onclick: function() {
+        this.controller.reset(0.95);
+      }.bind(this)
+    });
+
+    zoomInButton = new Tilt.Button(new Tilt.Sprite(t, [0, 234, 42, 42]), {
+      x: 90,
+      y: 140,
+      onclick: function() {
+        this.controller.zoom(200);
+      }.bind(this)
+    });
+
+    zoomOutButton = new Tilt.Button(new Tilt.Sprite(t, [0, 278, 42, 42]), {
+      x: 10,
+      y: 140,
+      onclick: function() {
+        this.controller.zoom(-200);
+      }.bind(this)
     });
 
     domStripsContainer = new Tilt.ScrollContainer({
@@ -160,170 +380,314 @@ TiltChrome.UI.Default = function() {
       })
     });
 
-    background = new Tilt.Sprite(t, [0, 1024 - 256, 256, 256], {
-      width: canvas.width,
-      height: canvas.height,
-      depthTest: true,
-      disabled: true
-    });
-
     domStripsLegend = new Tilt.Sprite(t, [1, 365, 69, 290], {
       x: 0,
       y: 302,
       disabled: true
     });
 
-    exitButton = new Tilt.Button(new Tilt.Sprite(t, [935, 120, 42, 38]), {
-      x: canvas.width - 50,
-      y: -5,
-      padding: [0, 0, 0, 5]
+    htmlStripButton = new Tilt.Button(null, {
+      x: 5,
+      y: 311,
+      width: 14,
+      height: 14,
+      fill: config.domStrips.htmlStripButton.fill,
+      onclick: function() {
+        showColorPicker(config.domStrips.htmlStripButton, htmlStripButton);
+      }
     });
 
-    helpButton = new Tilt.Button(new Tilt.Sprite(t, [935, 80, 46, 38]), {
-      x: canvas.width - 150,
-      y: -5,
-      padding: [0, 0, 0, 5]
+    headStripButton = new Tilt.Button(null, {
+      x: 5,
+      y: htmlStripButton.getY() + 20,
+      width: 14,
+      height: 14,
+      fill: config.domStrips.headStripButton.fill,
+      onclick: function() {
+        showColorPicker(config.domStrips.headStripButton, headStripButton);
+      }
     });
 
-    exportButton = new Tilt.Button(new Tilt.Sprite(t, [935, 40, 61, 38]), {
-      x: canvas.width - 215,
-      y: -5,
-      padding: [0, 0, 0, 5]
+    titleStripButton = new Tilt.Button(null, {
+      x: 5,
+      y: headStripButton.getY() + 20,
+      width: 14,
+      height: 14,
+      fill: config.domStrips.titleStripButton.fill,
+      onclick: function() {
+        showColorPicker(config.domStrips.titleStripButton, titleStripButton);
+      }
     });
 
-    optionsButton = new Tilt.Button(new Tilt.Sprite(t, [935, 0, 66, 38]), {
-      x: canvas.width - 285,
-      y: -5,
-      padding: [0, 0, 0, 5]
+    scriptStripButton = new Tilt.Button(null, {
+      x: 5,
+      y: titleStripButton.getY() + 20,
+      width: 14,
+      height: 14,
+      fill: config.domStrips.scriptStripButton.fill,
+      onclick: function() {
+        showColorPicker(
+          config.domStrips.scriptStripButton, scriptStripButton);
+      }
     });
 
-    htmlButton = new Tilt.Button(new Tilt.Sprite(t, [935, 200, 48, 38]), {
-      x: canvas.width - 337,
-      y: -5,
-      padding: [0, 0, 0, 5],
-      hidden: true
+    styleStripButton = new Tilt.Button(null, {
+      x: 5,
+      y: scriptStripButton.getY() + 20,
+      width: 14,
+      height: 14,
+      fill: config.domStrips.styleStripButton.fill,
+      onclick: function() {
+        showColorPicker(config.domStrips.styleStripButton, styleStripButton);
+      }
     });
 
-    cssButton = new Tilt.Button(new Tilt.Sprite(t, [935, 160, 36, 38]), {
-      x: canvas.width - 377,
-      y: -5,
-      padding: [0, 0, 0, 5],
-      hidden: true
+    divStripButton = new Tilt.Button(null, {
+      x: 5,
+      y: styleStripButton.getY() + 20,
+      width: 14,
+      height: 14,
+      fill: config.domStrips.divStripButton.fill,
+      onclick: function() {
+        showColorPicker(config.domStrips.divStripButton, divStripButton);
+      }
     });
 
-    attrButton = new Tilt.Button(new Tilt.Sprite(t, [935, 240, 84, 38]), {
-      x: canvas.width - 465,
-      y: -5,
-      padding: [0, 0, 0, 5],
-      hidden: true
+    spanStripButton = new Tilt.Button(null, {
+      x: 5,
+      y: divStripButton.getY() + 20,
+      width: 14,
+      height: 14,
+      fill: config.domStrips.spanStripButton.fill,
+      onclick: function() {
+        showColorPicker(config.domStrips.spanStripButton, spanStripButton);
+      }
     });
 
-    eyeButton = new Tilt.Button(new Tilt.Sprite(t, [0, 147, 42, 42]), {
-      x: 0,
-      y: -5
+    tableStripButton = new Tilt.Button(null, {
+      x: 5,
+      y: spanStripButton.getY() + 20,
+      width: 14,
+      height: 14,
+      fill: config.domStrips.tableStripButton.fill,
+      onclick: function() {
+        showColorPicker(config.domStrips.tableStripButton, tableStripButton);
+      }
     });
 
-    resetButton = new Tilt.Button(new Tilt.Sprite(t, [0, 190, 42, 42]), {
-      x: 50,
-      y: 140
+    trStripButton = new Tilt.Button(null, {
+      x: 5,
+      y: tableStripButton.getY() + 20,
+      width: 14,
+      height: 14,
+      fill: config.domStrips.trStripButton.fill,
+      onclick: function() {
+        showColorPicker(config.domStrips.trStripButton, trStripButton);
+      }
     });
 
-    zoomInButton = new Tilt.Button(new Tilt.Sprite(t, [0, 234, 42, 42]), {
-      x: 90,
-      y: 140
+    tdStripButton = new Tilt.Button(null, {
+      x: 5,
+      y: trStripButton.getY() + 20,
+      width: 14,
+      height: 14,
+      fill: config.domStrips.tdStripButton.fill,
+      onclick: function() {
+        showColorPicker(config.domStrips.tdStripButton, tdStripButton);
+      }
     });
 
-    zoomOutButton = new Tilt.Button(new Tilt.Sprite(t, [0, 278, 42, 42]), {
-      x: 10,
-      y: 140
+    pStripButton = new Tilt.Button(null, {
+      x: 5,
+      y: tdStripButton.getY() + 20,
+      width: 14,
+      height: 14,
+      fill: config.domStrips.pStripButton.fill,
+      onclick: function() {
+        showColorPicker(config.domStrips.pStripButton, pStripButton);
+      }
     });
 
-    arcballUpButton = new Tilt.Button(null, {
-      x: 50,
-      y: 4,
-      width: 45,
-      height: 30
+    aStripButton = new Tilt.Button(null, {
+      x: 5,
+      y: pStripButton.getY() + 20,
+      width: 14,
+      height: 14,
+      fill: config.domStrips.aStripButton.fill,
+      onclick: function() {
+        showColorPicker(config.domStrips.aStripButton, aStripButton);
+      }
     });
 
-    arcballDownButton = new Tilt.Button(null, {
-      x: 50,
-      y: 110,
-      width: 45,
-      height: 30
+    imgStripButton = new Tilt.Button(null, {
+      x: 5,
+      y: aStripButton.getY() + 20,
+      width: 14,
+      height: 14,
+      fill: config.domStrips.imgStripButton.fill,
+      onclick: function() {
+        showColorPicker(config.domStrips.imgStripButton, imgStripButton);
+      }
     });
 
-    arcballLeftButton = new Tilt.Button(null, {
-      x: 4,
-      y: 50,
-      width: 30,
-      height: 45
+    otherStripButton = new Tilt.Button(null, {
+      x: 5,
+      y: imgStripButton.getY() + 20,
+      width: 14,
+      height: 14,
+      fill: config.domStrips.otherStripButton.fill,
+      onclick: function() {
+        showColorPicker(config.domStrips.otherStripButton, otherStripButton);
+      }
     });
 
-    arcballRightButton = new Tilt.Button(null, {
-      x: 110,
-      y: 50,
-      width: 30,
-      height: 45
-    });
+    var showColorPicker = function(config, sender) {
+      this.$colorPickerConfig = config;
+      this.$colorPickerSender = sender;
 
-    arcballSprite = new Tilt.Sprite(t, [0, 0, 145, 145], {
-      x: 0,
-      y: 0
-    });
+      var rgb = Tilt.Math.hex2rgba(config.fill),
+        hsl = Tilt.Math.rgb2hsv(rgb[0] * 255, rgb[1] * 255, rgb[2] * 255);
+
+      document.getElementById("tilt-colorpicker-iframe").contentWindow
+        .refreshColorPicker(hsl[0] * 360, hsl[1] * 100, hsl[2] * 100);
+
+      TiltChrome.BrowserOverlay.colorPicker.openPopup(null, null,
+        220 + sender.getX(),
+        80 + sender.getY());
+    }.bind(this);
 
     var viewModeNormalSprite = new Tilt.Sprite(t, [438, 67, 66, 66]);
     var viewModeWireframeSprite = new Tilt.Sprite(t, [438, 0, 66, 66]);
     viewModeButton = new Tilt.Button(viewModeWireframeSprite, {
-      x: 40,
+      x: 39,
       y: 180,
-      padding: [12, 10, 12, 12]
+      padding: [12, 10, 12, 12],
+      onclick: function() {
+        if (viewModeButton.type !== 1) {
+          viewModeButton.type = 1;
+          viewModeButton.setSprite(viewModeNormalSprite);
+
+          var wireframe = config.viewMode.wireframe;
+          hueSlider.setValue(wireframe.hueSlider.value);
+          saturationSlider.setValue(wireframe.saturationSlider.value);
+          brightnessSlider.setValue(wireframe.brightnessSlider.value);
+          alphaSlider.setValue(wireframe.alphaSlider.value);
+          textureSlider.setValue(wireframe.textureSlider.value);
+          updateMeshColor();
+
+          this.visualization.setMeshWireframeColor(
+            wireframe.mesh.wireframeColor);
+        }
+        else {
+          viewModeButton.type = 0;
+          viewModeButton.setSprite(viewModeWireframeSprite);
+
+          var normal = config.viewMode.normal;
+          hueSlider.setValue(normal.hueSlider.value);
+          saturationSlider.setValue(normal.saturationSlider.value);
+          brightnessSlider.setValue(normal.brightnessSlider.value);
+          alphaSlider.setValue(normal.alphaSlider.value);
+          textureSlider.setValue(normal.textureSlider.value);
+          updateMeshColor();
+
+          this.visualization.setMeshWireframeColor(
+            normal.mesh.wireframeColor);
+        }
+      }.bind(this)
     });
 
     colorAdjustButton = new Tilt.Button(new Tilt.Sprite(t, [505, 0, 66, 66]),{
-      x: 40,
+      x: 39,
       y: 240,
-      padding: [12, 10, 14, 16]
+      padding: [12, 10, 14, 16],
+      onclick: function() {
+        colorAdjustPopup.hidden ^= true;
+      }.bind(this)
     });
 
     var handlerSprite = new Tilt.Sprite(t, [574, 131, 29, 29], {
       padding: [8, 8, 8, 8]
     });
+
     hueSlider = new Tilt.Slider(handlerSprite, {
       x: 64,
       y: 12,
       size: 120,
-      value: 50
+      value: config.viewMode.initial.hueSlider.value,
+      onmousedown: function() {
+        updateMeshColor();
+      }
     });
+
     saturationSlider = new Tilt.Slider(handlerSprite, {
       x: hueSlider.getX(),
       y: hueSlider.getY() + 19,
       size: 120,
-      value: 0
+      value: config.viewMode.initial.saturationSlider.value,
+      onmousedown: function() {
+        updateMeshColor();
+      }
     });
+
     brightnessSlider = new Tilt.Slider(handlerSprite, {
       x: hueSlider.getX(),
       y: saturationSlider.getY() + 18,
       size: 120,
-      value: 100
+      value: config.viewMode.initial.brightnessSlider.value,
+      onmousedown: function() {
+        updateMeshColor();
+      }
     });
+
     alphaSlider = new Tilt.Slider(handlerSprite, {
       x: hueSlider.getX(),
       y: brightnessSlider.getY() + 18,
       size: 120,
-      value: 90
+      value: config.viewMode.initial.alphaSlider.value,
+      onmousedown: function() {
+        updateMeshColor();
+      }
     });
+
     textureSlider = new Tilt.Slider(handlerSprite, {
       x: hueSlider.getX(),
       y: alphaSlider.getY() + 18,
       size: 120,
-      value: 100
+      value: config.viewMode.initial.textureSlider.value,
+      onmousedown: function() {
+        updateMeshColor();
+      }
     });
+
+    var updateMeshColor = function() {
+      window.clearInterval(this.$sliderMove);
+      this.$sliderMove = window.setInterval(function() {
+
+        var rgba = Tilt.Math.hsv2rgb(
+          hueSlider.getValue() / 100,
+          saturationSlider.getValue() / 100,
+          brightnessSlider.getValue() / 100),
+          textureAlpha = textureSlider.getValue() / 100;
+
+        rgba[0] /= 255;
+        rgba[1] /= 255;
+        rgba[2] /= 255;
+        rgba[3] = alphaSlider.getValue() / 100;
+
+        this.visualization.setMeshColor(rgba);
+        this.visualization.setMeshTextureAlpha(textureAlpha);
+
+        if (!ui.mousePressed) {
+          window.clearInterval(this.$sliderMove);
+        }
+      }.bind(this), 1000 / 60);
+    }.bind(this);
 
     var colorAdjustPopupSprite = new Tilt.Sprite(t, [572, 1, 231, 126], {
       disabled: true
     });
     colorAdjustPopup = new Tilt.Container({
-      x: 78,
+      x: 77,
       y: 239,
       hidden: true,
       elements: [
@@ -341,7 +705,10 @@ TiltChrome.UI.Default = function() {
 
     helpCloseButon = new Tilt.Button(null, {
       width: 30,
-      height: 30
+      height: 30,
+      onclick: function() {
+        ui.dismissModal(helpPopup);
+      }
     });
 
     helpPopup = new Tilt.Container({
@@ -349,145 +716,6 @@ TiltChrome.UI.Default = function() {
       background: "#0007",
       elements: [helpBoxSprite, helpCloseButon]
     });
-
-    exitButton.onclick = function() {
-      TiltChrome.BrowserOverlay.destroy(true, true);
-      TiltChrome.BrowserOverlay.href = null;
-    };
-
-    helpButton.onclick = function() {
-      var helpX = canvas.width / 2 - 305,
-        helpY = canvas.height / 2 - 305,
-        exitX = canvas.width / 2 + 197,
-        exitY = canvas.height / 2 - 218;
-
-      helpBoxSprite.setPosition(helpX, helpY);
-      helpCloseButon.setPosition(exitX, exitY);
-      ui.presentModal(helpPopup);
-    };
-
-    helpCloseButon.onclick = function() {
-      ui.dismissModal(helpPopup);
-    };
-
-    exportButton.onclick = function() {
-      Tilt.Console.alert("Tilt", Tilt.StringBundle.get("implement.info"));
-    };
-
-    optionsButton.onclick = function() {
-      Tilt.Console.alert("Tilt", Tilt.StringBundle.get("implement.info"));
-    };
-
-    htmlButton.onclick = function() {
-      this.visualization.setHtmlEditor();
-    }.bind(this);
-
-    cssButton.onclick = function() {
-      this.visualization.setCssEditor();
-    }.bind(this);
-
-    attrButton.onclick = function() {
-      this.visualization.setAttributesEditor();
-    }.bind(this);
-
-    eyeButton.onclick = function() {
-      hideableElements.forEach(function(element) {
-        element.hidden ^= true;
-      });
-
-      domStripsContainer.view.hidden ^= true;
-
-      if (!helpPopup.hidden) {
-        helpPopup.hidden = true;
-      }
-      if (!colorAdjustPopup.hidden) {
-        colorAdjustPopup.hidden = true;
-      }
-    };
-
-    resetButton.onclick = function() {
-      this.controller.reset(0.95);
-    }.bind(this);
-
-    zoomInButton.onclick = function() {
-      this.controller.zoom(200);
-    }.bind(this);
-
-    zoomOutButton.onclick = function() {
-      this.controller.zoom(-200);
-    }.bind(this);
-
-    arcballUpButton.onmousedown = function() {
-      this.$arcballMove = window.setInterval(function() {
-        this.controller.translate(0, -5);
-
-        if (!ui.mousePressed) {
-          window.clearInterval(this.$arcballMove);
-        }
-      }.bind(this), 1000 / 60);
-    }.bind(this);
-
-    arcballDownButton.onmousedown = function() {
-      this.$arcballMove = window.setInterval(function() {
-        this.controller.translate(0, 5);
-
-        if (!ui.mousePressed) {
-          window.clearInterval(this.$arcballMove);
-        }
-      }.bind(this), 1000 / 60);
-    }.bind(this);
-
-    arcballLeftButton.onmousedown = function() {
-      this.$arcballMove = window.setInterval(function() {
-        this.controller.translate(-5, 0);
-
-        if (!ui.mousePressed) {
-          window.clearInterval(this.$arcballMove);
-        }
-      }.bind(this), 1000 / 60);
-    }.bind(this);
-
-    arcballRightButton.onmousedown = function() {
-      this.$arcballMove = window.setInterval(function() {
-        this.controller.translate(5, 0);
-
-        if (!ui.mousePressed) {
-          window.clearInterval(this.$arcballMove);
-        }
-      }.bind(this), 1000 / 60);
-    }.bind(this);
-
-    viewModeButton.type = 0;
-    viewModeButton.onclick = function() {
-      if (viewModeButton.type === 0) {
-        viewModeButton.type = 1;
-        viewModeButton.setSprite(viewModeNormalSprite);
-
-        hueSlider.setValue(57.5);
-        saturationSlider.setValue(40);
-        brightnessSlider.setValue(100);
-        alphaSlider.setValue(7.5);
-        textureSlider.setValue(100);
-
-        this.visualization.setMeshWireframeColor([1, 1, 1, 0.7]);
-      }
-      else {
-        viewModeButton.type = 0;
-        viewModeButton.setSprite(viewModeWireframeSprite);
-
-        hueSlider.setValue(50);
-        saturationSlider.setValue(0);
-        brightnessSlider.setValue(100);
-        alphaSlider.setValue(100);
-        textureSlider.setValue(100);
-
-        this.visualization.setMeshWireframeColor([0, 0, 0, 0.25]);
-      }
-    }.bind(this);
-
-    colorAdjustButton.onclick = function() {
-      colorAdjustPopup.hidden ^= true;
-    }.bind(this);
 
     alwaysVisibleElements.push(
       background, exitButton, eyeButton);
@@ -497,9 +725,23 @@ TiltChrome.UI.Default = function() {
       resetButton, zoomInButton, zoomOutButton, arcballSprite, 
       arcballUpButton, arcballDownButton,
       arcballLeftButton, arcballRightButton,
-      viewModeButton, colorAdjustButton, domStripsLegend);
+      viewModeButton, colorAdjustButton, domStripsLegend,
+      htmlStripButton,
+      headStripButton,
+      titleStripButton,
+      scriptStripButton,
+      styleStripButton,
+      divStripButton,
+      spanStripButton,
+      tableStripButton,
+      trStripButton,
+      tdStripButton,
+      pStripButton,
+      aStripButton,
+      imgStripButton,
+      otherStripButton);
 
-    panelElements.push(
+    sourceEditorElements.push(
       htmlButton, cssButton, attrButton);
 
     alwaysVisibleElements.forEach(function(element) {
@@ -510,48 +752,63 @@ TiltChrome.UI.Default = function() {
       view.push(element);
     });
 
-    panelElements.forEach(function(element) {
+    sourceEditorElements.forEach(function(element) {
       view.push(element);
     });
   };
 
   /**
-   * Event handling the editor panel popup showing.
+   * Event handling the source editor panel popup showing.
    */
-  function ePopupShown() {
+  var eEditorShown = function() {
     htmlButton.hidden = false;
     cssButton.hidden = false;
     attrButton.hidden = false;
   };
 
   /**
-   * Event handling the editor panel popup hiding.
+   * Event handling the source editor panel popup hiding.
    */
-  function ePopupHidden() {
+  var eEditorHidden = function() {
     htmlButton.hidden = true;
     cssButton.hidden = true;
     attrButton.hidden = true;
+
+    window.QueryInterface(Ci.nsIInterfaceRequestor)
+      .getInterface(Ci.nsIDOMWindowUtils)
+      .garbageCollect();
   };
+
+  /**
+   * Event handling the color picker panel popup showing.
+   */
+  var ePickerShown = function() {
+  };
+
+  /**
+   * Event handling the color picker panel popup hiding.
+   */
+  var ePickerHidden = function() {
+    var iframe = document.getElementById("tilt-colorpicker-iframe"),
+      hex = iframe.contentDocument.colorPicked;
+
+    if ("undeifined" !== typeof hex) {
+      this.$colorPickerConfig.fill = hex;
+      this.$colorPickerSender.setFill(hex);
+      this.domVisualizationMeshReadyCallback();
+    }
+
+    window.QueryInterface(Ci.nsIInterfaceRequestor)
+      .getInterface(Ci.nsIDOMWindowUtils)
+      .garbageCollect();
+  }.bind(this);
 
   /**
    * Called automatically by the visualization after each frame in draw().
    * @param {Number} frameDelta: the delta time elapsed between frames
    */
   this.draw = function(frameDelta) {
-    ui.refresh();
-
-    var rgba = Tilt.Math.hsv2rgb(
-      hueSlider.getValue() / 100,
-      saturationSlider.getValue() / 100,
-      brightnessSlider.getValue() / 100);
-
-    rgba[0] /= 255;
-    rgba[1] /= 255;
-    rgba[2] /= 255;
-    rgba[3] = alphaSlider.getValue() / 100;
-
-    this.visualization.setMeshColor(rgba);
-    this.visualization.setMeshTextureAlpha(textureSlider.getValue() / 100);
+    ui.draw();
   };
 
   /**
@@ -580,7 +837,6 @@ TiltChrome.UI.Default = function() {
     clslength = Tilt.Math.clamp(node.localName.length, 3, 10),
     idlength = Tilt.Math.clamp(node.id.length, 3, 10),
 
-    // the general strip button, created in all cases
     clsx = x + namelength * 10 + 3,
     idx = clsx + clslength * 3 + 3;
 
@@ -590,7 +846,7 @@ TiltChrome.UI.Default = function() {
       width: namelength * 10,
       height: height,
       padding: [-1, -1, -1, -1],
-      stroke: "#fff3"
+      stroke: config.domStrips.prototypeStripButton.stroke
     });
 
     right = stripButton.getX() + stripButton.getWidth();
@@ -627,81 +883,9 @@ TiltChrome.UI.Default = function() {
       domStripsContainer.view.setWidth(right);
     }
 
-    if (node.localName === "html") {
-      stripButton.setFill("#FFFE");
-    }
-    else if (node.localName === "head") {
-      stripButton.setFill("#E667AFEE");
-    }
-    else if (node.localName === "title") {
-      stripButton.setFill("#CD0074EE");
-    }
-    else if (node.localName === "meta") {
-      stripButton.setFill("#BF713044");
-    }
-    else if (node.localName === "link") {
-      stripButton.setFill("#FFB27344");
-    }
-    else if (node.localName === "script" || node.localName === "noscript") {
-      stripButton.setFill("#A64B00EE");
-    }
-    else if (node.localName === "style") {
-      stripButton.setFill("#FF9640EE");
-    }
-    else if (node.localName === "body") {
-      stripButton.setFill("#E667AFEE");
-    }
-    else if (node.localName === "h1") {
-      stripButton.setFill("#FF0D");
-    }
-    else if (node.localName === "h2") {
-      stripButton.setFill("#EE0D");
-    }
-    else if (node.localName === "h3") {
-      stripButton.setFill("#DD0D");
-    }
-    else if (node.localName === "h4") {
-      stripButton.setFill("#CC0D");
-    }
-    else if (node.localName === "h5") {
-      stripButton.setFill("#BB0D");
-    }
-    else if (node.localName === "h6") {
-      stripButton.setFill("#AA0D");
-    }
-    else if (node.localName === "div") {
-      stripButton.setFill("#5DC8CDEE");
-    }
-    else if (node.localName === "span") {
-      stripButton.setFill("#67E46FEE");
-    }
-    else if (node.localName === "table") {
-      stripButton.setFill("#FF0700EE");
-    }
-    else if (node.localName === "tbody") {
-      stripButton.setFill("#FF070088");
-    }
-    else if (node.localName === "tr") {
-      stripButton.setFill("#FF4540EE");
-    }
-    else if (node.localName === "td") {
-      stripButton.setFill("#FF7673EE");
-    }
-    else if (node.localName === "p") {
-      stripButton.setFill("#888E");
-    }
-    else if (node.localName === "a") {
-      stripButton.setFill("#123EABEE");
-    }
-    else if (node.localName === "img") {
-      stripButton.setFill("#FFB473EE");
-    }
-    else {
-      stripButton.setFill("#444E");
-    }
-
     if (stripButton) {
       domStripsContainer.view.push(stripButton);
+      stripButton.type = node.localName;
 
       stripButton.onclick = function() {
         if (node.localName === "meta" ||
@@ -718,18 +902,22 @@ TiltChrome.UI.Default = function() {
         }
       }.bind(this);
     }
+
     if (stripClassButton) {
       domStripsContainer.view.push(stripClassButton);
       stripClassButton.setFill(stripButton.getFill());
+      stripClassButton.type = node.localName;
 
       stripClassButton.onclick = function() {
         this.visualization.setAttributesEditor();
         this.visualization.openEditor(uid);
       }.bind(this);
     }
+
     if (stripIdButton) {
       domStripsContainer.view.push(stripIdButton);
       stripIdButton.setFill(stripButton.getFill());
+      stripIdButton.type = node.localName;
 
       stripIdButton.onclick = function() {
         this.visualization.setAttributesEditor();
@@ -745,6 +933,80 @@ TiltChrome.UI.Default = function() {
    * @param {Number} totalNodes: the total nodes in the dom tree
    */
   this.domVisualizationMeshReadyCallback = function(maxDepth, totalNodes) {
+    domStripsContainer.view.forEach(function(element) {
+      if (element.type === "html") {
+        element.setFill(config.domStrips.htmlStripButton.fill);
+      }
+      else if (element.type === "head") {
+        element.setFill(config.domStrips.headStripButton.fill);
+      }
+      else if (element.type === "title") {
+        element.setFill(config.domStrips.titleStripButton.fill);
+      }
+      else if (element.type === "meta") {
+        element.setFill(config.domStrips.scriptStripButton.fill + "22");
+      }
+      else if (element.type === "link") {
+        element.setFill(config.domStrips.scriptStripButton.fill + "11");
+      }
+      else if (element.type === "script" || element.type === "noscript") {
+        element.setFill(config.domStrips.scriptStripButton.fill);
+      }
+      else if (element.type === "style") {
+        element.setFill(config.domStrips.styleStripButton.fill);
+      }
+      else if (element.type === "body") {
+        element.setFill(config.domStrips.headStripButton.fill);
+      }
+      else if (element.type === "div") {
+        element.setFill(config.domStrips.divStripButton.fill);
+      }
+      else if (element.type === "span") {
+        element.setFill(config.domStrips.spanStripButton.fill);
+      }
+      else if (element.type === "table") {
+        element.setFill(config.domStrips.tableStripButton.fill);
+      }
+      else if (element.type === "tbody") {
+        element.setFill(config.domStrips.tableStripButton.fill + "99");
+      }
+      else if (element.type === "tr") {
+        element.setFill(config.domStrips.trStripButton.fill);
+      }
+      else if (element.type === "td") {
+        element.setFill(config.domStrips.tdStripButton.fill);
+      }
+      else if (element.type === "p") {
+        element.setFill(config.domStrips.pStripButton.fill);
+      }
+      else if (element.type === "a") {
+        element.setFill(config.domStrips.aStripButton.fill);
+      }
+      else if (element.type === "img") {
+        element.setFill(config.domStrips.imgStripButton.fill);
+      }
+      else if (element.type === "h1") {
+        element.setFill("#FF0D");
+      }
+      else if (element.type === "h2") {
+        element.setFill("#EE0D");
+      }
+      else if (element.type === "h3") {
+        element.setFill("#DD0D");
+      }
+      else if (element.type === "h4") {
+        element.setFill("#CC0D");
+      }
+      else if (element.type === "h5") {
+        element.setFill("#BB0D");
+      }
+      else if (element.type === "h6") {
+        element.setFill("#AA0D");
+      }
+      else {
+        element.setFill(config.domStrips.otherStripButton.fill);
+      }
+    });
   };
 
   /**
@@ -773,15 +1035,27 @@ TiltChrome.UI.Default = function() {
    */
   this.destroy = function(canvas) {
     this.visualization = null;
+    ui = null;
+    config = null;
 
-    var panel = TiltChrome.BrowserOverlay.panel;
-    if (ePopupShown !== null) {
-      panel.removeEventListener("popupshown", ePopupShown, false);
-      ePopupShown = null;
+    var sourceEditor = TiltChrome.BrowserOverlay.sourceEditor;
+    if (eEditorShown !== null) {
+      sourceEditor.removeEventListener("popupshown", eEditorShown, false);
+      eEditorShown = null;
     }
-    if (ePopupHidden !== null) {
-      panel.removeEventListener("popuphidden", ePopupHidden, false);
-      ePopupHidden = null;
+    if (eEditorHidden !== null) {
+      sourceEditor.removeEventListener("popuphidden", eEditorHidden, false);
+      eEditorHidden = null;
+    }
+
+    var colorPicker = TiltChrome.BrowserOverlay.colorPicker;
+    if (ePickerShown !== null) {
+      colorPicker.removeEventListener("popupshown", ePickerShown, false);
+      ePickerShown = null;
+    }
+    if (ePickerHidden !== null) {
+      colorPicker.removeEventListener("popuphidden", ePickerHidden, false);
+      ePickerHidden = null;
     }
 
     if (view !== null) {
@@ -800,6 +1074,7 @@ TiltChrome.UI.Default = function() {
       domStripsContainer.destroy();
       domStripsContainer = null;
     }
+
     if (t !== null) {
       t.destroy();
       t = null;
@@ -808,22 +1083,73 @@ TiltChrome.UI.Default = function() {
       background.destroy();
       background = null;
     }
-    if (domStripsLegend !== null) {
-      domStripsLegend.destroy();
-      domStripsLegend = null;
+    if (alwaysVisibleElements !== null) {
+      alwaysVisibleElements.forEach(function(element) {
+        element.destroy();
+      });
+      alwaysVisibleElements = null;
     }
-    if (arcballSprite !== null) {
-      arcballSprite.destroy();
-      arcballSprite = null;
+    if (hideableElements !== null) {
+      hideableElements.forEach(function(element) {
+        element.destroy();
+      });
+      hideableElements = null;
     }
-    if (helpBoxSprite !== null) {
-      helpBoxSprite.destroy();
-      helpBoxSprite = null;
+    if (sourceEditorElements !== null) {
+      sourceEditorElements.forEach(function(element) {
+        element.destroy();
+      });
+      sourceEditorElements = null;
     }
 
-    alwaysVisibleElements = null;
-    hideableElements = null;
-    panelElements = null;
+    domStripsLegend = null;
+    htmlStripButton = null;
+    headStripButton = null;
+    titleStripButton = null;
+    scriptStripButton = null;
+    styleStripButton = null;
+    divStripButton = null;
+    spanStripButton = null;
+    tableStripButton = null;
+    trStripButton = null;
+    tdStripButton = null;
+    pStripButton = null;
+    aStripButton = null;
+    imgStripButton = null;
+    otherStripButton = null;
+
+    exitButton = null;
+    helpButton = null;
+    exportButton = null;
+    optionsButton = null;
+    attrButton = null;
+    htmlButton = null;
+    cssButton = null;
+
+    eyeButton = null;
+    arcballSprite = null;
+    arcballUpButton = null;
+    arcballDownButton = null;
+    arcballLeftButton = null;
+    arcballRightButton = null;
+    resetButton = null;
+    zoomInButton = null;
+    zoomOutButton = null;
+
+    viewModeButton = null;
+    colorAdjustButton = null;
+
+    hueSlider = null;
+    saturationSlider = null;
+    brightnessSlider = null;
+    alphaSlider = null;
+    textureSlider = null;
+
+    helpBoxSprite = null;
+    helpCloseButon = null;
+
+    sourceEditor = null;
+    colorPicker = null;
 
     Tilt.destroyObject(this);
   };
