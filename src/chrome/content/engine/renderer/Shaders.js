@@ -40,10 +40,10 @@ Tilt.Shaders = {};
 /**
  * A color shader. The only useful thing it does is set the gl_FragColor.
  *
- * @param {attribute} vertexPosition: the vertex position
- * @param {uniform} mvMatrix: the model view matrix
- * @param {uniform} projMatrix: the projection matrix
- * @param {uniform} color: the color to set the gl_FragColor to
+ * @param {Attribute} vertexPosition: the vertex position
+ * @param {Uniform} mvMatrix: the model view matrix
+ * @param {Uniform} projMatrix: the projection matrix
+ * @param {Uniform} color: the color to set the gl_FragColor to
  */  
 Tilt.Shaders.Color = {
 
@@ -80,11 +80,12 @@ Tilt.Shaders.Color = {
 /** 
  * A simple texture shader. It uses one sampler and a uniform color.
  *
- * @param {attribute} vertexPosition: the vertex position
- * @param {attribute} vertexTexCoord: texture coordinates used by the sampler
- * @param {uniform} mvMatrix: the model view matrix
- * @param {uniform} projMatrix: the projection matrix
- * @param {uniform} color: the color to multiply the sampled pixel with
+ * @param {Attribute} vertexPosition: the vertex position
+ * @param {Attribute} vertexTexCoord: texture coordinates used by the sampler
+ * @param {Uniform} mvMatrix: the model view matrix
+ * @param {Uniform} projMatrix: the projection matrix
+ * @param {Uniform} color: the color to multiply the sampled pixel with
+ * @param {Uniform} sampler: the texture sampler to fetch the pixels from
  */
 Tilt.Shaders.Texture = {
 
@@ -115,14 +116,13 @@ Tilt.Shaders.Texture = {
 "#endif",
 
 "uniform vec4 color;",
-"uniform float texalpha;",
 "uniform sampler2D sampler;",
 
 "varying vec2 texCoord;",
 
 "void main(void) {",
-"  vec4 tex = texture2D(sampler, vec2(texCoord.s, texCoord.t));",
-"  gl_FragColor = color * tex * texalpha + color * (1.0 - texalpha);",
+"  vec4 texture = texture2D(sampler, texCoord);",
+"  gl_FragColor = color * texture;",
 "}"
 ].join("\n")
 };
