@@ -33,6 +33,6 @@ scriptError.init;
 consoleService.logMessage;
 consoleService.logStringMessage;
 
-iframe.contentWindow.refreshEditor;
+iframe.contentWindow.refreshCodeEditor;
 iframe.contentWindow.refreshColorPicker;
 iframe.contentDocument.colorPicked;
