@@ -46,11 +46,6 @@ TiltChrome.BrowserOverlay = {
   href: null,
 
   /**
-   * The popup panel containing the Ace Cloud9 editor in an iframe.
-   */
-  panel: null,
-
-  /**
    * The canvas element used for rendering the visualization.
    */
   canvas: null,
@@ -59,6 +54,16 @@ TiltChrome.BrowserOverlay = {
    * Visualization logic and drawing loop.
    */
   visualization: null,
+
+  /**
+   * The popup panel containing the Ace Cloud9 editor in an iframe.
+   */
+  sourceEditor: null,
+
+  /**
+   * A popup panel containing a simple color picker.
+   */
+  colorPicker: null,
 
   /**
    * Initializes Tilt.
@@ -82,16 +87,17 @@ TiltChrome.BrowserOverlay = {
       var width = window.content.innerWidth;
       var height = window.content.innerHeight;
 
+      // retain the panels for future reference (used by the code editor)
+      this.sourceEditor = document.getElementById("tilt-sourceeditor");
+      this.colorPicker = document.getElementById("tilt-colorpicker");
+
       // get the iframe which will be used to create the canvas element
-      var iframe = document.getElementById("tilt-panel-iframe");
+      var iframe = document.getElementById("tilt-sourceeditor-iframe");
 
       // inside a chrome environment the default document and parent nodes
       // are different from an unprivileged html page, so change these
       Tilt.Document.currentContentDocument = iframe.contentDocument;
       Tilt.Document.currentParentNode = gBrowser.selectedBrowser.parentNode;
-
-      // retain the popup panel for future reference (used by the code editor)
-      this.panel = document.getElementById("tilt-panel");
 
       // initialize the canvas element used to draw the visualization
       this.canvas = Tilt.Document.initCanvas(width, height, true);
@@ -127,9 +133,13 @@ TiltChrome.BrowserOverlay = {
         this.visualization.destroy();
         this.visualization = null;
       }
-      if (this.panel !== null) {
-        this.panel.hidePopup();
-        this.panel = null;
+      if (this.sourceEditor !== null) {
+        this.sourceEditor.hidePopup();
+        this.sourceEditor = null;
+      }
+      if (this.colorPicker !== null) {
+        this.colorPicker.hidePopup();
+        this.colorPicker = null;
       }
 
       // if the build was in debug mode (profiling enabled), log some
@@ -986,7 +996,7 @@ var EXPORTED_SYMBOLS = [
   "Tilt.clearCache",
   "Tilt.destroyObject"];
 
-/* All cached variables begin with the $ sign, for easy spotting
+/* All cached variables begin with the $ sign, for easy spotting.
  * ------------------------------------------------------------------------ */
 
 /**
@@ -1348,6 +1358,7 @@ Tilt.Program = function(vertShaderSrc, fragShaderSrc) {
    * attributes and uniforms at runtime, when using the shader.
    */
   this.$cache = {};
+  this.$texcache = {};
 
   // if the sources are specified in the constructor, initialize directly
   if (arguments.length === 2) {
@@ -1425,6 +1436,7 @@ Tilt.Program.prototype = {
 
       // use the the program if it wasn't already set
       gl.useProgram(this.$ref);
+      this.clearTextureCache();
 
       // check if the required vertex attributes aren't already set
       if (Tilt.$enabledAttributes < this.$attributes.length) {
@@ -1521,7 +1533,7 @@ Tilt.Program.prototype = {
    * @param {Tilt.Texture} texture: the texture to be bound
    */
   bindTexture: function(sampler, texture, unit) {
-    var cache = this.$cache,
+    var cache = this.$texcache,
       id = texture.$id;
 
     // check the cache to see if this texture wasn't already set
@@ -1532,6 +1544,13 @@ Tilt.Program.prototype = {
       gl.bindTexture(gl.TEXTURE_2D, texture.$ref);
       gl.uniform1i(this.$uniforms[sampler], 0);
     }
+  },
+
+  /**
+   * Clears any bound uniforms from the cache.
+   */
+  clearTextureCache: function() {
+    this.$texcache = {};
   },
 
   /**
@@ -6523,21 +6542,22 @@ var EXPORTED_SYMBOLS = ["Tilt.Mesh"];
  *  @param {Tilt.VertexBuffer} normals: the normals buffer (m, n, p)
  *  @param {Tilt.IndexBuffer} indices: indices for the passed vertices buffer
  *  @param {String} color: the color to be used by the shader if required
- *  @param {Number} texalpha: the texture transparency
  *  @param {Tilt.Texture} texture: optional texture to be used by the shader
  *  @param {Number} drawMode: WebGL enum, like tilt.TRIANGLES
- * @param {Function} draw: optional function to handle custom drawing
+ *  @param {Function} draw: optional function to handle custom drawing
  */
-Tilt.Mesh = function(parameters, draw) {
+Tilt.Mesh = function(parameters) {
 
   // intercept this object using a profiler when building in debug mode
   Tilt.Profiler.intercept("Tilt.Mesh", this);
 
   /**
-   * Retain each parameters for easy access.
+   * Retain each parameter for easy access.
    */
   for (var i in parameters) {
-    this[i] = parameters[i];
+    if (this[i] !== "draw") {
+      this[i] = parameters[i];
+    }
   }
 
   // the color should be [r, g, b, a] array, check this now
@@ -6565,8 +6585,8 @@ Tilt.Mesh = function(parameters, draw) {
   }
 
   // if the draw call is specified in the constructor, overwrite directly
-  if ("function" === typeof draw) {
-    this.draw = draw;
+  if ("function" === typeof parameters.draw) {
+    this.draw = parameters.draw;
   }
 };
 
@@ -6578,10 +6598,6 @@ Tilt.Mesh.prototype = {
    * Overwrite this function to handle custom drawing.
    */
   draw: function() {
-    if (this.hidden === true) {
-      return;
-    }
-
     // cache some properties for easy access
     var tilt = Tilt.$renderer,
       vertices = this.vertices,
@@ -6589,13 +6605,12 @@ Tilt.Mesh.prototype = {
       normals = this.normals,
       indices = this.indices,
       color = this.color,
-      a = this.texalpha,
-      t = this.texture,
+      texture = this.texture,
       drawMode = this.drawMode;
 
     // use the necessary shader
-    if (t) {
-      tilt.useTextureShader(vertices, texCoord, color, a, t);
+    if (texture) {
+      tilt.useTextureShader(vertices, texCoord, color, texture);
     }
     else {
       tilt.useColorShader(vertices, color);
@@ -6610,10 +6625,6 @@ Tilt.Mesh.prototype = {
     }
 
     // TODO: use the normals buffer, add some lighting
-
-    // save the current model view and projection matrices
-    this.mvMatrix = mat4.create(tilt.mvMatrix);
-    this.projMatrix = mat4.create(tilt.projMatrix);
   },
 
   /**
@@ -6762,11 +6773,6 @@ Tilt.Renderer = function(canvas, failCallback, successCallback) {
    * Variable representing the current stroke weight.
    */
   this.$strokeWeightValue = 1;
-
-  /**
-   * The transparency of a sampled texture.
-   */
-  this.$textureAlphaValue = 1;
 
   /**
    * A shader useful for drawing vertices with only a color component.
@@ -7107,16 +7113,6 @@ Tilt.Renderer.prototype = {
   },
 
   /**
-   * Sets the current texture transparency.
-   * @param {Number} weight: the transparency, between 0 and 255
-   */
-  textureAlpha: function(value) {
-    if (this.$textureAlphaValue !== value / 255) {
-      this.$textureAlphaValue = value / 255;
-    }
-  },
-
-  /**
    * Sets blending, either "alpha" or "add" (additive blending).
    * Anything else disables blending.
    *
@@ -7166,7 +7162,6 @@ Tilt.Renderer.prototype = {
     this.fill("#fff");
     this.stroke("#000");
     this.strokeWeight(1);
-    this.textureAlpha(255);
     this.depthTest(depthTest || true);
     this.blendMode(blendMode || "alpha");
   },
@@ -7196,10 +7191,9 @@ Tilt.Renderer.prototype = {
    * @param {Tilt.VertexBuffer} verticesBuffer: a buffer of vertices positions
    * @param {Tilt.VertexBuffer} texCoordBuffer: a buffer of texture coords
    * @param {Array} color: the color used, as [r, g, b, a] with 0..1 range
-   * @param {Number} texalpha: the texture transparency
    * @param {Tilt.Texture} texture: the texture to be applied
    */
-  useTextureShader: function(vertices, texCoord, color, texalpha, texture) {
+  useTextureShader: function(vertices, texCoord, color, texture) {
     var program = this.textureShader;
 
     // use this program
@@ -7211,7 +7205,6 @@ Tilt.Renderer.prototype = {
     program.bindUniformMatrix("mvMatrix", this.mvMatrix);
     program.bindUniformMatrix("projMatrix", this.projMatrix);
     program.bindUniformVec4("color", color);
-    program.bindUniformFloat("texalpha", texalpha);
     program.bindTexture("sampler", texture);
   },
 
@@ -7315,30 +7308,28 @@ Tilt.Renderer.prototype = {
   /**
    * Draws an image using the specified parameters.
    *
-   * @param {Tilt.Texture} texture: the texture to be used
+   * @param {Tilt.Texture} tex: the texture to be used
    * @param {Number} x: the x position of the object
    * @param {Number} y: the y position of the object
    * @param {Number} width: the width of the object
    * @param {Number} height: the height of the object
    * @param {Tilt.VertexBuffer} texCoord: optional, custom texture coordinates
    */
-  image: function(texture, x, y, width, height, texCoord) {
-    if (!texture.loaded) {
+  image: function(tex, x, y, width, height, texCoord) {
+    if (!tex.loaded) {
       return;
     }
 
     var rectangle = this.$rectangle,
       tint = this.$tintColor,
       stroke = this.$strokeColor,
-      a = this.$textureAlphaValue,
-      t = texture,
       texCoordBuffer = texCoord || rectangle.texCoord;
 
     // if the width and height are not specified, we use the embedded
     // texture dimensions, from the source image or framebuffer
     if ("undefined" === typeof width || "undefined" === typeof height) {
-      width = t.width;
-      height = t.height;
+      width = tex.width;
+      height = tex.height;
     }
 
     // if imageMode is set to "center", we need to offset the origin
@@ -7356,7 +7347,7 @@ Tilt.Renderer.prototype = {
       this.scale(width, height, 1);
 
       // use the necessary shader and draw the vertices
-      this.useTextureShader(rectangle.vertices, texCoordBuffer, tint, a, t);
+      this.useTextureShader(rectangle.vertices, texCoordBuffer, tint, tex);
       this.drawVertices(this.TRIANGLE_STRIP, rectangle.vertices.numItems);
 
       this.popMatrix();
@@ -7369,27 +7360,25 @@ Tilt.Renderer.prototype = {
    * @param {Number} width: the width of the object
    * @param {Number} height: the height of the object
    * @param {Number} depth: the depth of the object
-   * @param {Tilt.Texture} texture: the texture to be used
+   * @param {Tilt.Texture} tex: the texture to be used
    */
-  box: function(width, height, depth, texture) {
+  box: function(width, height, depth, tex) {
     var cube = this.$cube,
       wireframe = this.$cubeWireframe,
       tint = this.$tintColor,
       fill = this.$fillColor,
-      stroke = this.$strokeColor,
-      a = this.$textureAlphaValue,
-      t = texture;
+      stroke = this.$strokeColor;
 
     // in memory, the box is represented as a simple perfect 1x1 cube, so
     // some transformations are applied to achieve the desired shape
     this.pushMatrix();
     this.scale(width, height, depth);
 
-    if (t) {
+    if (tex) {
       // draw the box only if the tint alpha channel is not transparent
       if (tint[3]) {
         // use the necessary shader and draw the vertices
-        this.useTextureShader(cube.vertices, cube.texCoord, tint, a, t);
+        this.useTextureShader(cube.vertices, cube.texCoord, tint, tex);
         this.drawIndexedVertices(this.TRIANGLES, cube.indices);
       }
     }
@@ -7592,10 +7581,10 @@ Tilt.Shaders = {};
 /**
  * A color shader. The only useful thing it does is set the gl_FragColor.
  *
- * @param {attribute} vertexPosition: the vertex position
- * @param {uniform} mvMatrix: the model view matrix
- * @param {uniform} projMatrix: the projection matrix
- * @param {uniform} color: the color to set the gl_FragColor to
+ * @param {Attribute} vertexPosition: the vertex position
+ * @param {Uniform} mvMatrix: the model view matrix
+ * @param {Uniform} projMatrix: the projection matrix
+ * @param {Uniform} color: the color to set the gl_FragColor to
  */  
 Tilt.Shaders.Color = {
 
@@ -7632,11 +7621,12 @@ Tilt.Shaders.Color = {
 /** 
  * A simple texture shader. It uses one sampler and a uniform color.
  *
- * @param {attribute} vertexPosition: the vertex position
- * @param {attribute} vertexTexCoord: texture coordinates used by the sampler
- * @param {uniform} mvMatrix: the model view matrix
- * @param {uniform} projMatrix: the projection matrix
- * @param {uniform} color: the color to multiply the sampled pixel with
+ * @param {Attribute} vertexPosition: the vertex position
+ * @param {Attribute} vertexTexCoord: texture coordinates used by the sampler
+ * @param {Uniform} mvMatrix: the model view matrix
+ * @param {Uniform} projMatrix: the projection matrix
+ * @param {Uniform} color: the color to multiply the sampled pixel with
+ * @param {Uniform} sampler: the texture sampler to fetch the pixels from
  */
 Tilt.Shaders.Texture = {
 
@@ -7667,14 +7657,13 @@ Tilt.Shaders.Texture = {
 "#endif",
 
 "uniform vec4 color;",
-"uniform float texalpha;",
 "uniform sampler2D sampler;",
 
 "varying vec2 texCoord;",
 
 "void main(void) {",
-"  vec4 tex = texture2D(sampler, vec2(texCoord.s, texCoord.t));",
-"  gl_FragColor = color * tex * texalpha + color * (1.0 - texalpha);",
+"  vec4 texture = texture2D(sampler, texCoord);",
+"  gl_FragColor = color * texture;",
 "}"
 ].join("\n")
 };
@@ -8107,6 +8096,7 @@ Tilt.ScrollContainer = function(properties) {
 
     this.$scrollTop = window.setInterval(function() {
       this.view.$offset[1] += 5;
+      ui.performRedraw();
 
       if (!ui.mousePressed) {
         ui = null;
@@ -8121,6 +8111,7 @@ Tilt.ScrollContainer = function(properties) {
 
     this.$scrollBottom = window.setInterval(function() {
       this.view.$offset[1] -= 5;
+      ui.performRedraw();
 
       if (!ui.mousePressed) {
         ui = null;
@@ -8130,8 +8121,11 @@ Tilt.ScrollContainer = function(properties) {
   }.bind(this);
 
   topResetButton.onmousedown = function() {
+    var ui = Tilt.UI;
+
     this.$scrollTopReset = window.setInterval(function() {
       this.view.$offset[1] /= 1.15;
+      ui.performRedraw();
 
       if (Math.abs(this.view.$offset[1]) < 0.1) {
         window.clearInterval(this.$scrollTopReset);
@@ -8226,6 +8220,9 @@ var EXPORTED_SYMBOLS = ["Tilt.Button"];
  *  @param {Array} padding: the inner padding offset for mouse events
  *  @param {String} fill: fill color for the rect bounding this object
  *  @param {String} stroke: stroke color for the rect bounding this object
+ *  @param {Function} onmousedown: function called when the event is triggered
+ *  @param {Function} onmouseup: function called when the event is triggered
+ *  @param {Function} onclick: function called when the event is triggered
  */
 Tilt.Button = function(sprite, properties) {
 
@@ -8244,6 +8241,13 @@ Tilt.Button = function(sprite, properties) {
    * Variable specifying if this object shouldn't be responsive to events.
    */
   this.disabled = properties.disabled || false;
+
+  /**
+   * Functions called when the specific event is triggered.
+   */
+  this.onmousedown = properties.onmousedown || undefined;
+  this.onmouseup = properties.onmouseup || undefined;
+  this.onclick = properties.onclick || undefined;
 
   /**
    * A sprite used as a background for this object.
@@ -8537,6 +8541,9 @@ var EXPORTED_SYMBOLS = ["Tilt.Slider"];
  *  @param {Number} size: the slider size
  *  @param {Number} value: number ranging from 0..100
  *  @param {Boolean} direction: 0 for horizontal, 1 for vertical
+ *  @param {Function} onmousedown: function called when the event is triggered
+ *  @param {Function} onmouseup: function called when the event is triggered
+ *  @param {Function} onclick: function called when the event is triggered
  */
 Tilt.Slider = function(sprite, properties) {
 
@@ -8555,6 +8562,13 @@ Tilt.Slider = function(sprite, properties) {
    * Variable specifying if this object shouldn't be responsive to events.
    */
   this.disabled = properties.disabled || false;
+
+  /**
+   * Functions called when the specific event is triggered.
+   */
+  this.onmousedown = properties.onmousedown || undefined;
+  this.onmouseup = properties.onmouseup || undefined;
+  this.onclick = properties.onclick || undefined;
 
   /**
    * A sprite used as a background for this object.
@@ -8835,6 +8849,9 @@ var EXPORTED_SYMBOLS = ["Tilt.Sprite"];
  *  @param {Array} padding: the inner padding offset for mouse events
  *  @param {String} tint: texture tinting expressed in hex or rgb() or rgba()
  *  @param {Boolean} depthTest: true to use depth testing
+ *  @param {Function} onmousedown: function called when the event is triggered
+ *  @param {Function} onmouseup: function called when the event is triggered
+ *  @param {Function} onclick: function called when the event is triggered
  */
 Tilt.Sprite = function(texture, region, properties) {
 
@@ -8853,6 +8870,13 @@ Tilt.Sprite = function(texture, region, properties) {
    * Variable specifying if this object shouldn't be responsive to events.
    */
   this.disabled = properties.disabled || false;
+
+  /**
+   * Functions called when the specific event is triggered.
+   */
+  this.onmousedown = properties.onmousedown || undefined;
+  this.onmouseup = properties.onmouseup || undefined;
+  this.onclick = properties.onclick || undefined;
 
   /**
    * A texture used as the pixel data for this object.
@@ -9118,7 +9142,7 @@ Tilt.UI.keyPressed = [];
  * Updates and draws each view handled by the UI.
  * @param {Number} frameDelta: the delta time elapsed between frames
  */
-Tilt.UI.refresh = function(frameDelta) {
+Tilt.UI.draw = function(frameDelta) {
   var tilt = Tilt.$renderer,
     i, len, container;
 
@@ -9855,9 +9879,8 @@ Tilt.Document = {
    */
   getNodeCoordinates: function(node) {
     try {
-      if (node.localName === "head" || 
-          node.localName === "body" || 
-          node.localName === "iframe") throw new Exception();
+      if (node.localName === "head" ||
+          node.localName === "body") throw new Exception();
 
       // this is the preferred way of getting the bounding client rectangle
       var clientRect = node.getBoundingClientRect();
@@ -11012,6 +11035,166 @@ Tilt.Xhr = {
 "use strict";
 
 var TiltChrome = TiltChrome || {};
+var EXPORTED_SYMBOLS = ["TiltChrome.Config.UI"];
+
+/**
+ * Configuration parameters regarding the user interface.
+ */
+TiltChrome.Config = {};
+TiltChrome.Config.UI = {
+
+  /**
+   * Properties defining how the visualization mesh is colored and drawn.
+   */
+  viewMode: {
+    initial: {
+      hueSlider: {
+        value: 50
+      },
+      saturationSlider: {
+        value: 0
+      },
+      brightnessSlider: {
+        value: 100
+      },
+      alphaSlider: {
+        value: 85.5
+      },
+      textureSlider: {
+        value: 100
+      },
+      mesh: {
+        wireframeColor: [0, 0, 0, 0.25]
+      }
+    },
+    normal: {
+      hueSlider: {
+        value: 50
+      },
+      saturationSlider: {
+        value: 0
+      },
+      brightnessSlider: {
+        value: 100
+      },
+      alphaSlider: {
+        value: 85.5
+      },
+      textureSlider: {
+        value: 100
+      },
+      mesh: {
+        wireframeColor: [0, 0, 0, 0.25]
+      }
+    },
+    wireframe: {
+      hueSlider: {
+        value: 57.5
+      },
+      saturationSlider: {
+        value: 50
+      },
+      brightnessSlider: {
+        value: 100
+      },
+      alphaSlider: {
+        value: 7.5
+      },
+      textureSlider: {
+        value: 100
+      },
+      mesh: {
+        wireframeColor: [1, 1, 1, 0.7]
+      }
+    }
+  },
+
+  /**
+   * Specific colors for each handled element in the dom strips.
+   */
+  domStrips: {
+    prototypeStripButton: {
+      stroke: "#fff3"
+    },
+    htmlStripButton: {
+      fill: "#FFF"
+    },
+    headStripButton: {
+      fill: "#E667AF"
+    },
+    titleStripButton: {
+      fill: "#CD0074"
+    },
+    scriptStripButton: {
+      fill: "#A64B00"
+    },
+    styleStripButton: {
+      fill: "#FF9640"
+    },
+    divStripButton: {
+      fill: "#5DC8CD"
+    },
+    spanStripButton: {
+      fill: "#67E46F"
+    },
+    tableStripButton: {
+      fill: "#FF0700"
+    },
+    trStripButton: {
+      fill: "#FF4540"
+    },
+    tdStripButton: {
+      fill: "#FF7673"
+    },
+    pStripButton: {
+      fill: "#888"
+    },
+    aStripButton: {
+      fill: "#123EAB"
+    },
+    imgStripButton: {
+      fill: "#FFB473"
+    },
+    otherStripButton: {
+      fill: "#444"
+    }
+  }
+};
+/***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is Tilt: A WebGL-based 3D visualization of a webpage.
+ *
+ * The Initial Developer of the Original Code is Victor Porof.
+ * Portions created by the Initial Developer are Copyright (C) 2011
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the LGPL or the GPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ ***** END LICENSE BLOCK *****/
+"use strict";
+
+var TiltChrome = TiltChrome || {};
 var EXPORTED_SYMBOLS = ["TiltChrome.Controller.MouseAndKeyboard"];
 
 /**
@@ -11042,7 +11225,7 @@ TiltChrome.Controller.MouseAndKeyboard = function() {
   this.init = function(canvas) {
     arcball = new Tilt.Arcball(canvas.width, canvas.height);
 
-    // bind some closures to easily handle the arcball
+    // bind some closures to more easily handle the arcball
     this.stop = arcball.stop.bind(arcball);
     this.translate = arcball.translate.bind(arcball);
     this.rotate = arcball.rotate.bind(arcball);
@@ -11082,11 +11265,16 @@ TiltChrome.Controller.MouseAndKeyboard = function() {
     e.preventDefault();
     e.stopPropagation();
 
+    // calculate x and y coordinates using using the client and target offset
     downX = e.clientX - e.target.offsetLeft;
     downY = e.clientY - e.target.offsetTop;
 
+    // let the ui handle the mouse down event
+    // this will update the mouseOver property, which specifies if the mouse
+    // was pressed over a widget, like a container view, button or slider
     ui.mouseDown(downX, downY, e.which);
 
+    // update the arcball rotation only if the mouse insn't over a ui element
     if (!ui.mouseOver) {
       arcball.mouseDown(downX, downY, e.which);
     }
@@ -11102,6 +11290,7 @@ TiltChrome.Controller.MouseAndKeyboard = function() {
     e.preventDefault();
     e.stopPropagation();
 
+    // calculate x and y coordinates using using the client and target offset
     var upX = e.clientX - e.target.offsetLeft;
     var upY = e.clientY - e.target.offsetTop;
     var button = e.which;
@@ -11117,10 +11306,13 @@ TiltChrome.Controller.MouseAndKeyboard = function() {
     e.preventDefault();
     e.stopPropagation();
 
+    // calculate x and y coordinates using using the client and target offset
     var clickX = e.clientX - e.target.offsetLeft;
     var clickY = e.clientY - e.target.offsetTop;
     var button = e.which;
 
+    // a click in Tilt is issued only when the mouse pointer stays in 
+    // relatively the same position
     if (Math.abs(downX - clickX) < 2 && 
         Math.abs(downY - clickY) < 2) {
 
@@ -11135,14 +11327,19 @@ TiltChrome.Controller.MouseAndKeyboard = function() {
     e.preventDefault();
     e.stopPropagation();
 
+    // calculate x and y coordinates using using the client and target offset
     var dblClickX = e.clientX - e.target.offsetLeft;
     var dblClickY = e.clientY - e.target.offsetTop;
     var button = e.which;
 
+    // a double click in Tilt is issued only when the mouse pointer stays in 
+    // relatively the same position
     if (Math.abs(downX - dblClickX) < 2 && 
         Math.abs(downY - dblClickY) < 2) {
 
       ui.doubleClick(dblClickX, dblClickY, button);
+
+      // double clicking is also the default action for visualization picking
       this.visualization.performMeshPick(dblClickX, dblClickY, button);
     }
   }.bind(this);
@@ -11154,6 +11351,7 @@ TiltChrome.Controller.MouseAndKeyboard = function() {
     e.preventDefault();
     e.stopPropagation();
 
+    // calculate x and y coordinates using using the client and target offset
     var moveX = e.clientX - e.target.offsetLeft;
     var moveY = e.clientY - e.target.offsetTop;
 
@@ -11190,7 +11388,7 @@ TiltChrome.Controller.MouseAndKeyboard = function() {
     var code = e.keyCode || e.which;
 
     // handle key events only if the html editor is not open
-    if ("open" === TiltChrome.BrowserOverlay.panel.state) {
+    if ("open" === TiltChrome.BrowserOverlay.sourceEditor.state) {
       return;
     }
 
@@ -11205,11 +11403,12 @@ TiltChrome.Controller.MouseAndKeyboard = function() {
     var code = e.keyCode || e.which;
 
     if (code === 27) {
-      // if the panel with the html editor was open, hide it now
-      if ("open" === TiltChrome.BrowserOverlay.panel.state) {
-        TiltChrome.BrowserOverlay.panel.hidePopup();
+      // if the panel with the source code editor was open, hide it now
+      if ("open" === TiltChrome.BrowserOverlay.sourceEditor.state) {
+        TiltChrome.BrowserOverlay.sourceEditor.hidePopup();
       }
       else {
+        // escape also closes the visualization if no other panel is open
         TiltChrome.BrowserOverlay.destroy(true, true);
         TiltChrome.BrowserOverlay.href = null;
       }
@@ -11225,6 +11424,7 @@ TiltChrome.Controller.MouseAndKeyboard = function() {
    */
   this.destroy = function(canvas) {
     this.visualization = null;
+    ui = null;
 
     if (mouseDown !== null) {
       canvas.removeEventListener("mousedown", mouseDown, false);
@@ -11262,6 +11462,7 @@ TiltChrome.Controller.MouseAndKeyboard = function() {
       window.removeEventListener("keyup", keyUp, false);
       keyUp = null;
     }
+
     if (arcball !== null) {
       arcball.destroy();
       arcball = null;
@@ -11323,6 +11524,11 @@ TiltChrome.UI.Default = function() {
   var ui = Tilt.UI,
 
   /**
+   * The configuration properties for the UI.
+   */
+  config = TiltChrome.Config.UI,
+
+  /**
    * The views containing all the UI elements.
    */
   view = null,
@@ -11341,9 +11547,23 @@ TiltChrome.UI.Default = function() {
   background = null,
 
   /**
-   *
+   * The "minidom" strips legend.
    */
   domStripsLegend = null,
+  htmlStripButton = null,
+  headStripButton = null,
+  titleStripButton = null,
+  scriptStripButton = null,
+  styleStripButton = null,
+  divStripButton = null,
+  spanStripButton = null,
+  tableStripButton = null,
+  trStripButton = null,
+  tdStripButton = null,
+  pStripButton = null,
+  aStripButton = null,
+  imgStripButton = null,
+  otherStripButton = null,
 
   /**
    * The top-right menu buttons.
@@ -11360,14 +11580,14 @@ TiltChrome.UI.Default = function() {
    * Top-left control items.
    */
   eyeButton = null,
-  resetButton = null,
-  zoomInButton = null,
-  zoomOutButton = null,
+  arcballSprite = null,
   arcballUpButton = null,
   arcballDownButton = null,
   arcballLeftButton = null,
   arcballRightButton = null,
-  arcballSprite = null,
+  resetButton = null,
+  zoomInButton = null,
+  zoomOutButton = null,
 
   /**
    * Middle-left control items.
@@ -11376,7 +11596,7 @@ TiltChrome.UI.Default = function() {
   colorAdjustButton = null,
 
   /**
-   * Sliders.
+   * Color adjustment sliders.
    */
   hueSlider = null,
   saturationSlider = null,
@@ -11385,7 +11605,7 @@ TiltChrome.UI.Default = function() {
   textureSlider = null,
 
   /**
-   * The controls information.
+   * The controls help information.
    */
   helpBoxSprite = null,
   helpCloseButon = null,
@@ -11395,7 +11615,7 @@ TiltChrome.UI.Default = function() {
    */
   alwaysVisibleElements = [],
   hideableElements = [],
-  panelElements = [],
+  sourceEditorElements = [],
 
   /**
    * Retain the position for the mouseDown event.
@@ -11407,16 +11627,222 @@ TiltChrome.UI.Default = function() {
    * @param {HTMLCanvasElement} canvas: the canvas element
    */
   this.init = function(canvas) {
-    var panel = TiltChrome.BrowserOverlay.panel;
-    panel.addEventListener("popupshown", ePopupShown, false);
-    panel.addEventListener("popuphidden", ePopupHidden, false);
+    var sourceEditor = TiltChrome.BrowserOverlay.sourceEditor;
+    sourceEditor.addEventListener("popupshown", eEditorShown, false);
+    sourceEditor.addEventListener("popuphidden", eEditorHidden, false);
+
+    var colorPicker = TiltChrome.BrowserOverlay.colorPicker;
+    colorPicker.addEventListener("popupshown", ePickerShown, false);
+    colorPicker.addEventListener("popuphidden", ePickerHidden, false);
 
     t = new Tilt.Texture("chrome://tilt/skin/tilt-ui.png", {
       minFilter: "nearest",
       magFilter: "nearest"
     });
 
+    t.onload = function() {
+      this.visualization.performRedraw();
+    }.bind(this);
+
     view = new Tilt.Container({
+    });
+
+    background = new Tilt.Sprite(t, [0, 1024 - 256, 256, 256], {
+      width: canvas.width,
+      height: canvas.height,
+      depthTest: true,
+      disabled: true
+    });
+
+    exitButton = new Tilt.Button(new Tilt.Sprite(t, [935, 120, 42, 38]), {
+      x: canvas.width - 50,
+      y: -5,
+      padding: [0, 0, 0, 5],
+      onclick: function() {
+        TiltChrome.BrowserOverlay.destroy(true, true);
+        TiltChrome.BrowserOverlay.href = null;
+      }
+    });
+
+    helpButton = new Tilt.Button(new Tilt.Sprite(t, [935, 80, 46, 38]), {
+      x: canvas.width - 150,
+      y: -5,
+      padding: [0, 0, 0, 5],
+      onclick: function() {
+        var helpX = canvas.width / 2 - 305,
+          helpY = canvas.height / 2 - 305,
+          exitX = canvas.width / 2 + 197,
+          exitY = canvas.height / 2 - 218;
+
+        helpBoxSprite.setPosition(helpX, helpY);
+        helpCloseButon.setPosition(exitX, exitY);
+        ui.presentModal(helpPopup);
+      }
+    });
+
+    exportButton = new Tilt.Button(new Tilt.Sprite(t, [935, 40, 61, 38]), {
+      x: canvas.width - 215,
+      y: -5,
+      padding: [0, 0, 0, 5],
+      onclick: function() {
+        Tilt.Console.alert("Tilt", Tilt.StringBundle.get("implement.info"));
+      }
+    });
+
+    optionsButton = new Tilt.Button(new Tilt.Sprite(t, [935, 0, 66, 38]), {
+      x: canvas.width - 285,
+      y: -5,
+      padding: [0, 0, 0, 5],
+      onclick: function() {
+        Tilt.Console.alert("Tilt", Tilt.StringBundle.get("implement.info"));
+      }
+    });
+
+    htmlButton = new Tilt.Button(new Tilt.Sprite(t, [935, 200, 48, 38]), {
+      x: canvas.width - 337,
+      y: -5,
+      padding: [0, 0, 0, 5],
+      hidden: true,
+      onclick: function() {
+        this.visualization.setHtmlEditor();
+      }.bind(this)
+    });
+
+    cssButton = new Tilt.Button(new Tilt.Sprite(t, [935, 160, 36, 38]), {
+      x: canvas.width - 377,
+      y: -5,
+      padding: [0, 0, 0, 5],
+      hidden: true,
+      onclick: function() {
+        this.visualization.setCssEditor();
+      }.bind(this)
+    });
+
+    attrButton = new Tilt.Button(new Tilt.Sprite(t, [935, 240, 84, 38]), {
+      x: canvas.width - 465,
+      y: -5,
+      padding: [0, 0, 0, 5],
+      hidden: true,
+      onclick: function() {
+        this.visualization.setAttributesEditor();
+      }.bind(this)
+    });
+
+    eyeButton = new Tilt.Button(new Tilt.Sprite(t, [0, 147, 42, 42]), {
+      x: 0,
+      y: -5,
+      onclick: function() {
+        hideableElements.forEach(function(element) {
+          element.hidden ^= true;
+        });
+
+        if (!helpPopup.hidden) {
+          helpPopup.hidden = true;
+        }
+        if (!colorAdjustPopup.hidden) {
+          colorAdjustPopup.hidden = true;
+        }
+
+        domStripsContainer.view.hidden ^= true;
+        this.visualization.performRedraw();
+      }
+    });
+
+    arcballSprite = new Tilt.Sprite(t, [0, 0, 145, 145], {
+      x: 0,
+      y: 0
+    });
+
+    arcballUpButton = new Tilt.Button(null, {
+      x: 50,
+      y: 4,
+      width: 45,
+      height: 30,
+      onmousedown: function() {
+        window.clearInterval(this.$arcballMove);
+        this.$arcballMove = window.setInterval(function() {
+          this.controller.translate(0, -5);
+
+          if (!ui.mousePressed) {
+            window.clearInterval(this.$arcballMove);
+          }
+        }.bind(this), 1000 / 60);
+      }.bind(this)
+    });
+
+    arcballDownButton = new Tilt.Button(null, {
+      x: 50,
+      y: 110,
+      width: 45,
+      height: 30,
+      onmousedown: function() {
+        window.clearInterval(this.$arcballMove);
+        this.$arcballMove = window.setInterval(function() {
+          this.controller.translate(0, 5);
+
+          if (!ui.mousePressed) {
+            window.clearInterval(this.$arcballMove);
+          }
+        }.bind(this), 1000 / 60);
+      }.bind(this)
+    });
+
+    arcballLeftButton = new Tilt.Button(null, {
+      x: 4,
+      y: 50,
+      width: 30,
+      height: 45,
+      onmousedown: function() {
+        window.clearInterval(this.$arcballMove);
+        this.$arcballMove = window.setInterval(function() {
+          this.controller.translate(-5, 0);
+
+          if (!ui.mousePressed) {
+            window.clearInterval(this.$arcballMove);
+          }
+        }.bind(this), 1000 / 60);
+      }.bind(this)
+    });
+
+    arcballRightButton = new Tilt.Button(null, {
+      x: 110,
+      y: 50,
+      width: 30,
+      height: 45,
+      onmousedown: function() {
+        window.clearInterval(this.$arcballMove);
+        this.$arcballMove = window.setInterval(function() {
+          this.controller.translate(5, 0);
+
+          if (!ui.mousePressed) {
+            window.clearInterval(this.$arcballMove);
+          }
+        }.bind(this), 1000 / 60);
+      }.bind(this)
+    });
+
+    resetButton = new Tilt.Button(new Tilt.Sprite(t, [0, 190, 42, 42]), {
+      x: 50,
+      y: 140,
+      onclick: function() {
+        this.controller.reset(0.95);
+      }.bind(this)
+    });
+
+    zoomInButton = new Tilt.Button(new Tilt.Sprite(t, [0, 234, 42, 42]), {
+      x: 90,
+      y: 140,
+      onclick: function() {
+        this.controller.zoom(200);
+      }.bind(this)
+    });
+
+    zoomOutButton = new Tilt.Button(new Tilt.Sprite(t, [0, 278, 42, 42]), {
+      x: 10,
+      y: 140,
+      onclick: function() {
+        this.controller.zoom(-200);
+      }.bind(this)
     });
 
     domStripsContainer = new Tilt.ScrollContainer({
@@ -11436,170 +11862,316 @@ TiltChrome.UI.Default = function() {
       })
     });
 
-    background = new Tilt.Sprite(t, [0, 1024 - 256, 256, 256], {
-      width: canvas.width,
-      height: canvas.height,
-      depthTest: true,
-      disabled: true
-    });
-
     domStripsLegend = new Tilt.Sprite(t, [1, 365, 69, 290], {
       x: 0,
       y: 302,
       disabled: true
     });
 
-    exitButton = new Tilt.Button(new Tilt.Sprite(t, [935, 120, 42, 38]), {
-      x: canvas.width - 50,
-      y: -5,
-      padding: [0, 0, 0, 5]
+    htmlStripButton = new Tilt.Button(null, {
+      x: 5,
+      y: 311,
+      width: 14,
+      height: 14,
+      fill: config.domStrips.htmlStripButton.fill,
+      onclick: function() {
+        showColorPicker(config.domStrips.htmlStripButton, htmlStripButton);
+      }
     });
 
-    helpButton = new Tilt.Button(new Tilt.Sprite(t, [935, 80, 46, 38]), {
-      x: canvas.width - 150,
-      y: -5,
-      padding: [0, 0, 0, 5]
+    headStripButton = new Tilt.Button(null, {
+      x: 5,
+      y: htmlStripButton.getY() + 20,
+      width: 14,
+      height: 14,
+      fill: config.domStrips.headStripButton.fill,
+      onclick: function() {
+        showColorPicker(config.domStrips.headStripButton, headStripButton);
+      }
     });
 
-    exportButton = new Tilt.Button(new Tilt.Sprite(t, [935, 40, 61, 38]), {
-      x: canvas.width - 215,
-      y: -5,
-      padding: [0, 0, 0, 5]
+    titleStripButton = new Tilt.Button(null, {
+      x: 5,
+      y: headStripButton.getY() + 20,
+      width: 14,
+      height: 14,
+      fill: config.domStrips.titleStripButton.fill,
+      onclick: function() {
+        showColorPicker(config.domStrips.titleStripButton, titleStripButton);
+      }
     });
 
-    optionsButton = new Tilt.Button(new Tilt.Sprite(t, [935, 0, 66, 38]), {
-      x: canvas.width - 285,
-      y: -5,
-      padding: [0, 0, 0, 5]
+    scriptStripButton = new Tilt.Button(null, {
+      x: 5,
+      y: titleStripButton.getY() + 20,
+      width: 14,
+      height: 14,
+      fill: config.domStrips.scriptStripButton.fill,
+      onclick: function() {
+        showColorPicker(
+          config.domStrips.scriptStripButton, scriptStripButton);
+      }
     });
 
-    htmlButton = new Tilt.Button(new Tilt.Sprite(t, [935, 200, 48, 38]), {
-      x: canvas.width - 337,
-      y: -5,
-      padding: [0, 0, 0, 5],
-      hidden: true
+    styleStripButton = new Tilt.Button(null, {
+      x: 5,
+      y: scriptStripButton.getY() + 20,
+      width: 14,
+      height: 14,
+      fill: config.domStrips.styleStripButton.fill,
+      onclick: function() {
+        showColorPicker(config.domStrips.styleStripButton, styleStripButton);
+      }
     });
 
-    cssButton = new Tilt.Button(new Tilt.Sprite(t, [935, 160, 36, 38]), {
-      x: canvas.width - 377,
-      y: -5,
-      padding: [0, 0, 0, 5],
-      hidden: true
+    divStripButton = new Tilt.Button(null, {
+      x: 5,
+      y: styleStripButton.getY() + 20,
+      width: 14,
+      height: 14,
+      fill: config.domStrips.divStripButton.fill,
+      onclick: function() {
+        showColorPicker(config.domStrips.divStripButton, divStripButton);
+      }
     });
 
-    attrButton = new Tilt.Button(new Tilt.Sprite(t, [935, 240, 84, 38]), {
-      x: canvas.width - 465,
-      y: -5,
-      padding: [0, 0, 0, 5],
-      hidden: true
+    spanStripButton = new Tilt.Button(null, {
+      x: 5,
+      y: divStripButton.getY() + 20,
+      width: 14,
+      height: 14,
+      fill: config.domStrips.spanStripButton.fill,
+      onclick: function() {
+        showColorPicker(config.domStrips.spanStripButton, spanStripButton);
+      }
     });
 
-    eyeButton = new Tilt.Button(new Tilt.Sprite(t, [0, 147, 42, 42]), {
-      x: 0,
-      y: -5
+    tableStripButton = new Tilt.Button(null, {
+      x: 5,
+      y: spanStripButton.getY() + 20,
+      width: 14,
+      height: 14,
+      fill: config.domStrips.tableStripButton.fill,
+      onclick: function() {
+        showColorPicker(config.domStrips.tableStripButton, tableStripButton);
+      }
     });
 
-    resetButton = new Tilt.Button(new Tilt.Sprite(t, [0, 190, 42, 42]), {
-      x: 50,
-      y: 140
+    trStripButton = new Tilt.Button(null, {
+      x: 5,
+      y: tableStripButton.getY() + 20,
+      width: 14,
+      height: 14,
+      fill: config.domStrips.trStripButton.fill,
+      onclick: function() {
+        showColorPicker(config.domStrips.trStripButton, trStripButton);
+      }
     });
 
-    zoomInButton = new Tilt.Button(new Tilt.Sprite(t, [0, 234, 42, 42]), {
-      x: 90,
-      y: 140
+    tdStripButton = new Tilt.Button(null, {
+      x: 5,
+      y: trStripButton.getY() + 20,
+      width: 14,
+      height: 14,
+      fill: config.domStrips.tdStripButton.fill,
+      onclick: function() {
+        showColorPicker(config.domStrips.tdStripButton, tdStripButton);
+      }
     });
 
-    zoomOutButton = new Tilt.Button(new Tilt.Sprite(t, [0, 278, 42, 42]), {
-      x: 10,
-      y: 140
+    pStripButton = new Tilt.Button(null, {
+      x: 5,
+      y: tdStripButton.getY() + 20,
+      width: 14,
+      height: 14,
+      fill: config.domStrips.pStripButton.fill,
+      onclick: function() {
+        showColorPicker(config.domStrips.pStripButton, pStripButton);
+      }
     });
 
-    arcballUpButton = new Tilt.Button(null, {
-      x: 50,
-      y: 4,
-      width: 45,
-      height: 30
+    aStripButton = new Tilt.Button(null, {
+      x: 5,
+      y: pStripButton.getY() + 20,
+      width: 14,
+      height: 14,
+      fill: config.domStrips.aStripButton.fill,
+      onclick: function() {
+        showColorPicker(config.domStrips.aStripButton, aStripButton);
+      }
     });
 
-    arcballDownButton = new Tilt.Button(null, {
-      x: 50,
-      y: 110,
-      width: 45,
-      height: 30
+    imgStripButton = new Tilt.Button(null, {
+      x: 5,
+      y: aStripButton.getY() + 20,
+      width: 14,
+      height: 14,
+      fill: config.domStrips.imgStripButton.fill,
+      onclick: function() {
+        showColorPicker(config.domStrips.imgStripButton, imgStripButton);
+      }
     });
 
-    arcballLeftButton = new Tilt.Button(null, {
-      x: 4,
-      y: 50,
-      width: 30,
-      height: 45
+    otherStripButton = new Tilt.Button(null, {
+      x: 5,
+      y: imgStripButton.getY() + 20,
+      width: 14,
+      height: 14,
+      fill: config.domStrips.otherStripButton.fill,
+      onclick: function() {
+        showColorPicker(config.domStrips.otherStripButton, otherStripButton);
+      }
     });
 
-    arcballRightButton = new Tilt.Button(null, {
-      x: 110,
-      y: 50,
-      width: 30,
-      height: 45
-    });
+    var showColorPicker = function(config, sender) {
+      this.$colorPickerConfig = config;
+      this.$colorPickerSender = sender;
 
-    arcballSprite = new Tilt.Sprite(t, [0, 0, 145, 145], {
-      x: 0,
-      y: 0
-    });
+      var rgb = Tilt.Math.hex2rgba(config.fill),
+        hsl = Tilt.Math.rgb2hsv(rgb[0] * 255, rgb[1] * 255, rgb[2] * 255);
+
+      document.getElementById("tilt-colorpicker-iframe").contentWindow
+        .refreshColorPicker(hsl[0] * 360, hsl[1] * 100, hsl[2] * 100);
+
+      TiltChrome.BrowserOverlay.colorPicker.openPopup(null, null,
+        200 + sender.getX(),
+        80 + sender.getY());
+    }.bind(this);
 
     var viewModeNormalSprite = new Tilt.Sprite(t, [438, 67, 66, 66]);
     var viewModeWireframeSprite = new Tilt.Sprite(t, [438, 0, 66, 66]);
     viewModeButton = new Tilt.Button(viewModeWireframeSprite, {
-      x: 40,
+      x: 39,
       y: 180,
-      padding: [12, 10, 12, 12]
+      padding: [12, 10, 12, 12],
+      onclick: function() {
+        if (viewModeButton.type !== 1) {
+          viewModeButton.type = 1;
+          viewModeButton.setSprite(viewModeNormalSprite);
+
+          var wireframe = config.viewMode.wireframe;
+          hueSlider.setValue(wireframe.hueSlider.value);
+          saturationSlider.setValue(wireframe.saturationSlider.value);
+          brightnessSlider.setValue(wireframe.brightnessSlider.value);
+          alphaSlider.setValue(wireframe.alphaSlider.value);
+          textureSlider.setValue(wireframe.textureSlider.value);
+          updateMeshColor();
+
+          this.visualization.setMeshWireframeColor(
+            wireframe.mesh.wireframeColor);
+        }
+        else {
+          viewModeButton.type = 0;
+          viewModeButton.setSprite(viewModeWireframeSprite);
+
+          var normal = config.viewMode.normal;
+          hueSlider.setValue(normal.hueSlider.value);
+          saturationSlider.setValue(normal.saturationSlider.value);
+          brightnessSlider.setValue(normal.brightnessSlider.value);
+          alphaSlider.setValue(normal.alphaSlider.value);
+          textureSlider.setValue(normal.textureSlider.value);
+          updateMeshColor();
+
+          this.visualization.setMeshWireframeColor(
+            normal.mesh.wireframeColor);
+        }
+      }.bind(this)
     });
 
     colorAdjustButton = new Tilt.Button(new Tilt.Sprite(t, [505, 0, 66, 66]),{
-      x: 40,
+      x: 39,
       y: 240,
-      padding: [12, 10, 14, 16]
+      padding: [12, 10, 14, 16],
+      onclick: function() {
+        colorAdjustPopup.hidden ^= true;
+        this.visualization.performRedraw();
+      }.bind(this)
     });
 
     var handlerSprite = new Tilt.Sprite(t, [574, 131, 29, 29], {
       padding: [8, 8, 8, 8]
     });
+
     hueSlider = new Tilt.Slider(handlerSprite, {
       x: 64,
       y: 12,
       size: 120,
-      value: 50
+      value: config.viewMode.initial.hueSlider.value,
+      onmousedown: function() {
+        updateMeshColor();
+      }
     });
+
     saturationSlider = new Tilt.Slider(handlerSprite, {
       x: hueSlider.getX(),
       y: hueSlider.getY() + 19,
       size: 120,
-      value: 0
+      value: config.viewMode.initial.saturationSlider.value,
+      onmousedown: function() {
+        updateMeshColor();
+      }
     });
+
     brightnessSlider = new Tilt.Slider(handlerSprite, {
       x: hueSlider.getX(),
       y: saturationSlider.getY() + 18,
       size: 120,
-      value: 100
+      value: config.viewMode.initial.brightnessSlider.value,
+      onmousedown: function() {
+        updateMeshColor();
+      }
     });
+
     alphaSlider = new Tilt.Slider(handlerSprite, {
       x: hueSlider.getX(),
       y: brightnessSlider.getY() + 18,
       size: 120,
-      value: 90
+      value: config.viewMode.initial.alphaSlider.value,
+      onmousedown: function() {
+        updateMeshColor();
+      }
     });
+
     textureSlider = new Tilt.Slider(handlerSprite, {
       x: hueSlider.getX(),
       y: alphaSlider.getY() + 18,
       size: 120,
-      value: 100
+      value: config.viewMode.initial.textureSlider.value,
+      onmousedown: function() {
+        updateMeshColor();
+      }
     });
+
+    var updateMeshColor = function() {
+      window.clearInterval(this.$sliderMove);
+      this.$sliderMove = window.setInterval(function() {
+
+        var rgba = Tilt.Math.hsv2rgb(
+          hueSlider.getValue() / 100,
+          saturationSlider.getValue() / 100,
+          brightnessSlider.getValue() / 100),
+          textureAlpha = textureSlider.getValue() / 100;
+
+        rgba[0] /= 255;
+        rgba[1] /= 255;
+        rgba[2] /= 255;
+        rgba[3] = alphaSlider.getValue() / 100;
+
+        this.visualization.setMeshColor(rgba);
+        this.visualization.setMeshTextureAlpha(textureAlpha);
+        this.visualization.performRedraw();
+
+        if (!ui.mousePressed) {
+          window.clearInterval(this.$sliderMove);
+        }
+      }.bind(this), 1000 / 60);
+    }.bind(this);
 
     var colorAdjustPopupSprite = new Tilt.Sprite(t, [572, 1, 231, 126], {
       disabled: true
     });
     colorAdjustPopup = new Tilt.Container({
-      x: 78,
+      x: 77,
       y: 239,
       hidden: true,
       elements: [
@@ -11617,7 +12189,10 @@ TiltChrome.UI.Default = function() {
 
     helpCloseButon = new Tilt.Button(null, {
       width: 30,
-      height: 30
+      height: 30,
+      onclick: function() {
+        ui.dismissModal(helpPopup);
+      }
     });
 
     helpPopup = new Tilt.Container({
@@ -11625,145 +12200,6 @@ TiltChrome.UI.Default = function() {
       background: "#0007",
       elements: [helpBoxSprite, helpCloseButon]
     });
-
-    exitButton.onclick = function() {
-      TiltChrome.BrowserOverlay.destroy(true, true);
-      TiltChrome.BrowserOverlay.href = null;
-    };
-
-    helpButton.onclick = function() {
-      var helpX = canvas.width / 2 - 305,
-        helpY = canvas.height / 2 - 305,
-        exitX = canvas.width / 2 + 197,
-        exitY = canvas.height / 2 - 218;
-
-      helpBoxSprite.setPosition(helpX, helpY);
-      helpCloseButon.setPosition(exitX, exitY);
-      ui.presentModal(helpPopup);
-    };
-
-    helpCloseButon.onclick = function() {
-      ui.dismissModal(helpPopup);
-    };
-
-    exportButton.onclick = function() {
-      Tilt.Console.alert("Tilt", Tilt.StringBundle.get("implement.info"));
-    };
-
-    optionsButton.onclick = function() {
-      Tilt.Console.alert("Tilt", Tilt.StringBundle.get("implement.info"));
-    };
-
-    htmlButton.onclick = function() {
-      this.visualization.setHtmlEditor();
-    }.bind(this);
-
-    cssButton.onclick = function() {
-      this.visualization.setCssEditor();
-    }.bind(this);
-
-    attrButton.onclick = function() {
-      this.visualization.setAttributesEditor();
-    }.bind(this);
-
-    eyeButton.onclick = function() {
-      hideableElements.forEach(function(element) {
-        element.hidden ^= true;
-      });
-
-      domStripsContainer.view.hidden ^= true;
-
-      if (!helpPopup.hidden) {
-        helpPopup.hidden = true;
-      }
-      if (!colorAdjustPopup.hidden) {
-        colorAdjustPopup.hidden = true;
-      }
-    };
-
-    resetButton.onclick = function() {
-      this.controller.reset(0.95);
-    }.bind(this);
-
-    zoomInButton.onclick = function() {
-      this.controller.zoom(200);
-    }.bind(this);
-
-    zoomOutButton.onclick = function() {
-      this.controller.zoom(-200);
-    }.bind(this);
-
-    arcballUpButton.onmousedown = function() {
-      this.$arcballMove = window.setInterval(function() {
-        this.controller.translate(0, -5);
-
-        if (!ui.mousePressed) {
-          window.clearInterval(this.$arcballMove);
-        }
-      }.bind(this), 1000 / 60);
-    }.bind(this);
-
-    arcballDownButton.onmousedown = function() {
-      this.$arcballMove = window.setInterval(function() {
-        this.controller.translate(0, 5);
-
-        if (!ui.mousePressed) {
-          window.clearInterval(this.$arcballMove);
-        }
-      }.bind(this), 1000 / 60);
-    }.bind(this);
-
-    arcballLeftButton.onmousedown = function() {
-      this.$arcballMove = window.setInterval(function() {
-        this.controller.translate(-5, 0);
-
-        if (!ui.mousePressed) {
-          window.clearInterval(this.$arcballMove);
-        }
-      }.bind(this), 1000 / 60);
-    }.bind(this);
-
-    arcballRightButton.onmousedown = function() {
-      this.$arcballMove = window.setInterval(function() {
-        this.controller.translate(5, 0);
-
-        if (!ui.mousePressed) {
-          window.clearInterval(this.$arcballMove);
-        }
-      }.bind(this), 1000 / 60);
-    }.bind(this);
-
-    viewModeButton.type = 0;
-    viewModeButton.onclick = function() {
-      if (viewModeButton.type === 0) {
-        viewModeButton.type = 1;
-        viewModeButton.setSprite(viewModeNormalSprite);
-
-        hueSlider.setValue(57.5);
-        saturationSlider.setValue(40);
-        brightnessSlider.setValue(100);
-        alphaSlider.setValue(7.5);
-        textureSlider.setValue(100);
-
-        this.visualization.setMeshWireframeColor([1, 1, 1, 0.7]);
-      }
-      else {
-        viewModeButton.type = 0;
-        viewModeButton.setSprite(viewModeWireframeSprite);
-
-        hueSlider.setValue(50);
-        saturationSlider.setValue(0);
-        brightnessSlider.setValue(100);
-        alphaSlider.setValue(100);
-        textureSlider.setValue(100);
-
-        this.visualization.setMeshWireframeColor([0, 0, 0, 0.25]);
-      }
-    }.bind(this);
-
-    colorAdjustButton.onclick = function() {
-      colorAdjustPopup.hidden ^= true;
-    }.bind(this);
 
     alwaysVisibleElements.push(
       background, exitButton, eyeButton);
@@ -11773,9 +12209,23 @@ TiltChrome.UI.Default = function() {
       resetButton, zoomInButton, zoomOutButton, arcballSprite, 
       arcballUpButton, arcballDownButton,
       arcballLeftButton, arcballRightButton,
-      viewModeButton, colorAdjustButton, domStripsLegend);
+      viewModeButton, colorAdjustButton, domStripsLegend,
+      htmlStripButton,
+      headStripButton,
+      titleStripButton,
+      scriptStripButton,
+      styleStripButton,
+      divStripButton,
+      spanStripButton,
+      tableStripButton,
+      trStripButton,
+      tdStripButton,
+      pStripButton,
+      aStripButton,
+      imgStripButton,
+      otherStripButton);
 
-    panelElements.push(
+    sourceEditorElements.push(
       htmlButton, cssButton, attrButton);
 
     alwaysVisibleElements.forEach(function(element) {
@@ -11786,48 +12236,67 @@ TiltChrome.UI.Default = function() {
       view.push(element);
     });
 
-    panelElements.forEach(function(element) {
+    sourceEditorElements.forEach(function(element) {
       view.push(element);
     });
   };
 
   /**
-   * Event handling the editor panel popup showing.
+   * Event handling the source editor panel popup showing.
    */
-  function ePopupShown() {
+  var eEditorShown = function() {
     htmlButton.hidden = false;
     cssButton.hidden = false;
     attrButton.hidden = false;
-  };
+    this.visualization.performRedraw();
+  }.bind(this);
 
   /**
-   * Event handling the editor panel popup hiding.
+   * Event handling the source editor panel popup hiding.
    */
-  function ePopupHidden() {
+  var eEditorHidden = function() {
     htmlButton.hidden = true;
     cssButton.hidden = true;
     attrButton.hidden = true;
-  };
+    this.visualization.performRedraw();
+
+    window.QueryInterface(Ci.nsIInterfaceRequestor)
+      .getInterface(Ci.nsIDOMWindowUtils)
+      .garbageCollect();
+  }.bind(this);
+
+  /**
+   * Event handling the color picker panel popup showing.
+   */
+  var ePickerShown = function() {
+    this.visualization.performRedraw();
+  }.bind(this);
+
+  /**
+   * Event handling the color picker panel popup hiding.
+   */
+  var ePickerHidden = function() {
+    var iframe = document.getElementById("tilt-colorpicker-iframe"),
+      hex = iframe.contentDocument.colorPicked;
+
+    if ("undeifined" !== typeof hex) {
+      this.$colorPickerConfig.fill = hex;
+      this.$colorPickerSender.setFill(hex);
+      this.domVisualizationMeshReadyCallback();
+      this.visualization.performRedraw();
+    }
+
+    window.QueryInterface(Ci.nsIInterfaceRequestor)
+      .getInterface(Ci.nsIDOMWindowUtils)
+      .garbageCollect();
+  }.bind(this);
 
   /**
    * Called automatically by the visualization after each frame in draw().
    * @param {Number} frameDelta: the delta time elapsed between frames
    */
   this.draw = function(frameDelta) {
-    ui.refresh();
-
-    var rgba = Tilt.Math.hsv2rgb(
-      hueSlider.getValue() / 100,
-      saturationSlider.getValue() / 100,
-      brightnessSlider.getValue() / 100);
-
-    rgba[0] /= 255;
-    rgba[1] /= 255;
-    rgba[2] /= 255;
-    rgba[3] = alphaSlider.getValue() / 100;
-
-    this.visualization.setMeshColor(rgba);
-    this.visualization.setMeshTextureAlpha(textureSlider.getValue() / 100);
+    ui.draw();
   };
 
   /**
@@ -11856,7 +12325,6 @@ TiltChrome.UI.Default = function() {
     clslength = Tilt.Math.clamp(node.localName.length, 3, 10),
     idlength = Tilt.Math.clamp(node.id.length, 3, 10),
 
-    // the general strip button, created in all cases
     clsx = x + namelength * 10 + 3,
     idx = clsx + clslength * 3 + 3;
 
@@ -11866,7 +12334,7 @@ TiltChrome.UI.Default = function() {
       width: namelength * 10,
       height: height,
       padding: [-1, -1, -1, -1],
-      stroke: "#fff3"
+      stroke: config.domStrips.prototypeStripButton.stroke
     });
 
     right = stripButton.getX() + stripButton.getWidth();
@@ -11903,81 +12371,9 @@ TiltChrome.UI.Default = function() {
       domStripsContainer.view.setWidth(right);
     }
 
-    if (node.localName === "html") {
-      stripButton.setFill("#FFFE");
-    }
-    else if (node.localName === "head") {
-      stripButton.setFill("#E667AFEE");
-    }
-    else if (node.localName === "title") {
-      stripButton.setFill("#CD0074EE");
-    }
-    else if (node.localName === "meta") {
-      stripButton.setFill("#BF713044");
-    }
-    else if (node.localName === "link") {
-      stripButton.setFill("#FFB27344");
-    }
-    else if (node.localName === "script" || node.localName === "noscript") {
-      stripButton.setFill("#A64B00EE");
-    }
-    else if (node.localName === "style") {
-      stripButton.setFill("#FF9640EE");
-    }
-    else if (node.localName === "body") {
-      stripButton.setFill("#E667AFEE");
-    }
-    else if (node.localName === "h1") {
-      stripButton.setFill("#FF0D");
-    }
-    else if (node.localName === "h2") {
-      stripButton.setFill("#EE0D");
-    }
-    else if (node.localName === "h3") {
-      stripButton.setFill("#DD0D");
-    }
-    else if (node.localName === "h4") {
-      stripButton.setFill("#CC0D");
-    }
-    else if (node.localName === "h5") {
-      stripButton.setFill("#BB0D");
-    }
-    else if (node.localName === "h6") {
-      stripButton.setFill("#AA0D");
-    }
-    else if (node.localName === "div") {
-      stripButton.setFill("#5DC8CDEE");
-    }
-    else if (node.localName === "span") {
-      stripButton.setFill("#67E46FEE");
-    }
-    else if (node.localName === "table") {
-      stripButton.setFill("#FF0700EE");
-    }
-    else if (node.localName === "tbody") {
-      stripButton.setFill("#FF070088");
-    }
-    else if (node.localName === "tr") {
-      stripButton.setFill("#FF4540EE");
-    }
-    else if (node.localName === "td") {
-      stripButton.setFill("#FF7673EE");
-    }
-    else if (node.localName === "p") {
-      stripButton.setFill("#888E");
-    }
-    else if (node.localName === "a") {
-      stripButton.setFill("#123EABEE");
-    }
-    else if (node.localName === "img") {
-      stripButton.setFill("#FFB473EE");
-    }
-    else {
-      stripButton.setFill("#444E");
-    }
-
     if (stripButton) {
       domStripsContainer.view.push(stripButton);
+      stripButton.type = node.localName;
 
       stripButton.onclick = function() {
         if (node.localName === "meta" ||
@@ -11994,18 +12390,22 @@ TiltChrome.UI.Default = function() {
         }
       }.bind(this);
     }
+
     if (stripClassButton) {
       domStripsContainer.view.push(stripClassButton);
       stripClassButton.setFill(stripButton.getFill());
+      stripClassButton.type = node.localName;
 
       stripClassButton.onclick = function() {
         this.visualization.setAttributesEditor();
         this.visualization.openEditor(uid);
       }.bind(this);
     }
+
     if (stripIdButton) {
       domStripsContainer.view.push(stripIdButton);
       stripIdButton.setFill(stripButton.getFill());
+      stripIdButton.type = node.localName;
 
       stripIdButton.onclick = function() {
         this.visualization.setAttributesEditor();
@@ -12021,6 +12421,80 @@ TiltChrome.UI.Default = function() {
    * @param {Number} totalNodes: the total nodes in the dom tree
    */
   this.domVisualizationMeshReadyCallback = function(maxDepth, totalNodes) {
+    domStripsContainer.view.forEach(function(element) {
+      if (element.type === "html") {
+        element.setFill(config.domStrips.htmlStripButton.fill);
+      }
+      else if (element.type === "head") {
+        element.setFill(config.domStrips.headStripButton.fill);
+      }
+      else if (element.type === "title") {
+        element.setFill(config.domStrips.titleStripButton.fill);
+      }
+      else if (element.type === "meta") {
+        element.setFill(config.domStrips.scriptStripButton.fill + "22");
+      }
+      else if (element.type === "link") {
+        element.setFill(config.domStrips.scriptStripButton.fill + "11");
+      }
+      else if (element.type === "script" || element.type === "noscript") {
+        element.setFill(config.domStrips.scriptStripButton.fill);
+      }
+      else if (element.type === "style") {
+        element.setFill(config.domStrips.styleStripButton.fill);
+      }
+      else if (element.type === "body") {
+        element.setFill(config.domStrips.headStripButton.fill);
+      }
+      else if (element.type === "div") {
+        element.setFill(config.domStrips.divStripButton.fill);
+      }
+      else if (element.type === "span") {
+        element.setFill(config.domStrips.spanStripButton.fill);
+      }
+      else if (element.type === "table") {
+        element.setFill(config.domStrips.tableStripButton.fill);
+      }
+      else if (element.type === "tbody") {
+        element.setFill(config.domStrips.tableStripButton.fill + "99");
+      }
+      else if (element.type === "tr") {
+        element.setFill(config.domStrips.trStripButton.fill);
+      }
+      else if (element.type === "td") {
+        element.setFill(config.domStrips.tdStripButton.fill);
+      }
+      else if (element.type === "p") {
+        element.setFill(config.domStrips.pStripButton.fill);
+      }
+      else if (element.type === "a") {
+        element.setFill(config.domStrips.aStripButton.fill);
+      }
+      else if (element.type === "img") {
+        element.setFill(config.domStrips.imgStripButton.fill);
+      }
+      else if (element.type === "h1") {
+        element.setFill("#FF0D");
+      }
+      else if (element.type === "h2") {
+        element.setFill("#EE0D");
+      }
+      else if (element.type === "h3") {
+        element.setFill("#DD0D");
+      }
+      else if (element.type === "h4") {
+        element.setFill("#CC0D");
+      }
+      else if (element.type === "h5") {
+        element.setFill("#BB0D");
+      }
+      else if (element.type === "h6") {
+        element.setFill("#AA0D");
+      }
+      else {
+        element.setFill(config.domStrips.otherStripButton.fill);
+      }
+    });
   };
 
   /**
@@ -12049,15 +12523,28 @@ TiltChrome.UI.Default = function() {
    */
   this.destroy = function(canvas) {
     this.visualization = null;
+    this.controller = null;
+    ui = null;
+    config = null;
 
-    var panel = TiltChrome.BrowserOverlay.panel;
-    if (ePopupShown !== null) {
-      panel.removeEventListener("popupshown", ePopupShown, false);
-      ePopupShown = null;
+    var sourceEditor = TiltChrome.BrowserOverlay.sourceEditor;
+    if (eEditorShown !== null) {
+      sourceEditor.removeEventListener("popupshown", eEditorShown, false);
+      eEditorShown = null;
     }
-    if (ePopupHidden !== null) {
-      panel.removeEventListener("popuphidden", ePopupHidden, false);
-      ePopupHidden = null;
+    if (eEditorHidden !== null) {
+      sourceEditor.removeEventListener("popuphidden", eEditorHidden, false);
+      eEditorHidden = null;
+    }
+
+    var colorPicker = TiltChrome.BrowserOverlay.colorPicker;
+    if (ePickerShown !== null) {
+      colorPicker.removeEventListener("popupshown", ePickerShown, false);
+      ePickerShown = null;
+    }
+    if (ePickerHidden !== null) {
+      colorPicker.removeEventListener("popuphidden", ePickerHidden, false);
+      ePickerHidden = null;
     }
 
     if (view !== null) {
@@ -12076,6 +12563,7 @@ TiltChrome.UI.Default = function() {
       domStripsContainer.destroy();
       domStripsContainer = null;
     }
+
     if (t !== null) {
       t.destroy();
       t = null;
@@ -12084,22 +12572,73 @@ TiltChrome.UI.Default = function() {
       background.destroy();
       background = null;
     }
-    if (domStripsLegend !== null) {
-      domStripsLegend.destroy();
-      domStripsLegend = null;
+    if (alwaysVisibleElements !== null) {
+      alwaysVisibleElements.forEach(function(element) {
+        element.destroy();
+      });
+      alwaysVisibleElements = null;
     }
-    if (arcballSprite !== null) {
-      arcballSprite.destroy();
-      arcballSprite = null;
+    if (hideableElements !== null) {
+      hideableElements.forEach(function(element) {
+        element.destroy();
+      });
+      hideableElements = null;
     }
-    if (helpBoxSprite !== null) {
-      helpBoxSprite.destroy();
-      helpBoxSprite = null;
+    if (sourceEditorElements !== null) {
+      sourceEditorElements.forEach(function(element) {
+        element.destroy();
+      });
+      sourceEditorElements = null;
     }
 
-    alwaysVisibleElements = null;
-    hideableElements = null;
-    panelElements = null;
+    domStripsLegend = null;
+    htmlStripButton = null;
+    headStripButton = null;
+    titleStripButton = null;
+    scriptStripButton = null;
+    styleStripButton = null;
+    divStripButton = null;
+    spanStripButton = null;
+    tableStripButton = null;
+    trStripButton = null;
+    tdStripButton = null;
+    pStripButton = null;
+    aStripButton = null;
+    imgStripButton = null;
+    otherStripButton = null;
+
+    exitButton = null;
+    helpButton = null;
+    exportButton = null;
+    optionsButton = null;
+    attrButton = null;
+    htmlButton = null;
+    cssButton = null;
+
+    eyeButton = null;
+    arcballSprite = null;
+    arcballUpButton = null;
+    arcballDownButton = null;
+    arcballLeftButton = null;
+    arcballRightButton = null;
+    resetButton = null;
+    zoomInButton = null;
+    zoomOutButton = null;
+
+    viewModeButton = null;
+    colorAdjustButton = null;
+
+    hueSlider = null;
+    saturationSlider = null;
+    brightnessSlider = null;
+    alphaSlider = null;
+    textureSlider = null;
+
+    helpBoxSprite = null;
+    helpCloseButon = null;
+
+    sourceEditor = null;
+    colorPicker = null;
 
     Tilt.destroyObject(this);
   };
@@ -12158,6 +12697,9 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
    * Create the renderer, containing useful functions for easy drawing.
    */
   var tilt = new Tilt.Renderer(canvas, function failCallback() {
+
+    // if initialization fails because WebGL context coulnd't be created,
+    // show a corresponding alert message and open a tab to troubleshooting
     TiltChrome.BrowserOverlay.destroy(true, true);
     TiltChrome.BrowserOverlay.href = null;
     Tilt.Console.alert("Firefox", Tilt.StringBundle.get("initWebGL.error"));
@@ -12165,12 +12707,6 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
     gBrowser.selectedTab =
       gBrowser.addTab("http://get.webgl.org/troubleshooting/");
   }),
-
-  /**
-   * Variable specifying if the scene should be redrawn.
-   * This happens, for example, when the visualization is rotated.
-   */
-  redraw = true,
 
   /**
    * Mesh initialization properties.
@@ -12185,13 +12721,24 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
   meshWireframe = null,
 
   /**
-   * Scene transformations, expressing translation, rotation etc.
+   * A custom shader used for drawing the visualization mesh.
+   */
+  visualizationShader = null,
+
+  /**
+   * Scene transformations, exposing translation, rotation etc.
    * Modified by events in the controller through delegate functions.
    */
   transforms = {
     translation: vec3.create(), // scene translation, on the [x, y, z] axis
     rotation: quat4.create()    // scene rotation, expressed as a quaternion
-  };
+  },
+
+  /**
+   * Variable specifying if the scene should be redrawn.
+   * This happens, for example, when the visualization is translated/rotated.
+   */
+  redraw = true;
 
   /**
    * The initialization logic.
@@ -12202,7 +12749,7 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
     }
 
     // use an extension to get the image representation of the document
-    // this will be removed once the MOZ_dom_element_texture WebGL extension
+    // this will be removed once the MOZ_window_region_texture WebGL extension
     // is finished; currently converting the document image to a texture
     var image = Tilt.Extensions.WebGL.initDocumentImage(window.content);
 
@@ -12211,7 +12758,13 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
       fill: "white", stroke: "#aaa", strokeWeight: 8
     });
 
-    // setup the visualization, browser event handlers and the controller
+    // create the visualization shaders and program to draw the stacks mesh
+    var v$vs = TiltChrome.Shaders.Visualization.vs;
+    var v$fs = TiltChrome.Shaders.Visualization.fs;
+    visualizationShader = new Tilt.Program(v$vs, v$fs);
+
+    // setup the controller, user interface, visualization mesh, and the 
+    // browser event handlers
     setupController.call(this);
     setupUI.call(this);
     setupVisualization.call(this);
@@ -12240,13 +12793,17 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
     }
 
     // prepare for the next frame of the animation loop
+    // behind the scenes, this issues a requestAnimFrame and updates some
+    // timing variables, frame count, frame rate etc.
     tilt.loop(draw);
 
-    // only update if we really have to
+    // only redraw if we really have to
     if (redraw) {
-      redraw = true;
+      redraw = false;
 
-      // clear the context and draw a background gradient
+      Tilt.Console.log(1);
+
+      // clear the context to an opaque black background
       tilt.clear(0, 0, 0, 1);
 
       // apply the preliminary transformations to the model view
@@ -12297,13 +12854,18 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
       visibleNodes = [],
       hiddenNodes = [];
 
-    // traverse the document
+    // traverse the document and issue a callback for each node in the dom
     Tilt.Document.traverse(function(node, depth, index, uid) {
+
       // call the node callback in the ui
+      // this is done (in the default implementation) to create a tree-like
+      // representation using color coded strips for each node in the dom
       if (ui && "function" === typeof ui.domVisualizationMeshNodeCallback) {
         ui.domVisualizationMeshNodeCallback(node, depth, index, uid);
       }
 
+      // save some information about each node in the dom
+      // this will be used when showing the source editor panel popup
       var info = {
         innerHTML: node.innerHTML,
         attributes: node.attributes,
@@ -12313,6 +12875,7 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
         uid: uid
       };
 
+      // if css style is available for the current node, compute it now
       try {
         info.style = window.getComputedStyle(node);
       }
@@ -12320,8 +12883,9 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
         info.style = "";
       }
 
-      if (node.nodeType === 3 ||
-          node.nodeType === 10 ||
+      // skip some nodes to avoid too bloated visualization meshes
+      if (node.nodeType === 3 ||  // TEXT_NODE
+          node.nodeType === 10 || // DOCUMENT_TYPE_NODE
           node.localName === "head" ||
           node.localName === "title" ||
           node.localName === "meta" ||
@@ -12336,6 +12900,8 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
           node.localName === "i" ||
           node.localName === "u") {
 
+        // information about these nodes should still be accessible, despite
+        // the fact that they're not rendered
         hiddenNodes.push(info);
         return;
       }
@@ -12343,7 +12909,7 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
       // get the x, y, width and height coordinates of a node
       var coord = Tilt.Document.getNodeCoordinates(node);
 
-      // use this node only if it actually has any dimensions
+      // use this node only if it actually has visible dimensions
       if (coord.width > 4 && coord.height > 4) {
         visibleNodes.push(info);
 
@@ -12416,11 +12982,15 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
       }
     }, function(maxDepth, totalNodes) {
       // call the ready callback in the ui
+      // this is done (in the default implementation) to create a tree-like
+      // representation using color coded strips for each node in the dom
       if (ui && "undefined" !== ui.domVisualizationMeshReadyCallback) {
         ui.domVisualizationMeshReadyCallback(maxDepth, totalNodes);
       }
     });
 
+    // create the visualization mesh using the vertices, texture coordinates
+    // and indices computed when traversing the dom
     mesh = new Tilt.Mesh({
       vertices: new Tilt.VertexBuffer(vertices, 3),
       texCoord: new Tilt.VertexBuffer(texCoord, 2),
@@ -12429,9 +12999,47 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
       texalpha: 255,
       texture: texture,
       visibleNodes: visibleNodes,
-      hiddenNodes: hiddenNodes
+      hiddenNodes: hiddenNodes,
+      draw: function() {
+        // cache some properties for easy access
+        var tilt = Tilt.$renderer,
+          vertices = this.vertices,
+          texCoord = this.texCoord,
+          indices = this.indices,
+          color = this.color,
+          texalpha = this.texalpha,
+          texture = this.texture,
+          drawMode = this.drawMode,
+          program = visualizationShader;
+
+        if (texalpha < 0.95) {
+          // use the custom visualization program
+          program.use();
+
+          // bind the attributes and uniforms as necessary
+          program.bindVertexBuffer("vertexPosition", vertices);
+          program.bindVertexBuffer("vertexTexCoord", texCoord);
+          program.bindUniformMatrix("mvMatrix", tilt.mvMatrix);
+          program.bindUniformMatrix("projMatrix", tilt.projMatrix);
+          program.bindUniformVec4("color", color);
+          program.bindUniformFloat("texalpha", texalpha);
+          program.bindTexture("sampler", texture);
+        }
+        else {
+          tilt.useTextureShader(vertices, texCoord, color, texture);
+        }
+
+        // use the necessary shader and draw the vertices as indexed elements
+        tilt.drawIndexedVertices(drawMode, indices);
+
+        // save the current model view and projection matrices
+        this.mvMatrix = mat4.create(tilt.mvMatrix);
+        this.projMatrix = mat4.create(tilt.projMatrix);
+      }
     });
 
+    // additionally, create a wireframe representation to make the 
+    // visualization a bit more pretty
     meshWireframe = new Tilt.Mesh({
       vertices: mesh.vertices,
       indices: new Tilt.IndexBuffer(wireframeIndices),
@@ -12441,7 +13049,7 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
   };
 
   /**
-   * Handle some browser events, when the tabs are selected or closed.
+   * Handle some browser events, e.g. when the tabs are selected or closed.
    */
   function setupBrowserEvents() {
     var tabContainer = gBrowser.tabContainer;
@@ -12457,6 +13065,8 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
    * Setup the controller, referencing this visualization.
    */
   function setupController() {
+    // we might have the controller undefined (not passed as a parameter in 
+    // the constructor, in which case the controller won't be used)
     if ("undefined" === typeof controller) {
       return;
     }
@@ -12474,13 +13084,18 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
    * Setup the user interface, referencing this visualization.
    */
   function setupUI() {
+    // we might have the interface undefined (not passed as a parameter in 
+    // the constructor, in which case the interface won't be used)
     if ("undefined" === typeof ui) {
       return;
     }
 
-    // set a reference in the user interface for this visualization
+    // set a reference in the ui for this visualization and the controller
     ui.visualization = this;
     ui.controller = controller;
+
+    // the top-level UI might need to force redraw
+    Tilt.UI.performRedraw = this.performRedraw;
 
     // call the init function on the user interface if available
     if ("function" === typeof ui.init) {
@@ -12506,6 +13121,7 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
     tilt.height = window.content.innerHeight;
     redraw = true;
 
+    // resize and update the controller and the user interface accordingly
     if (controller && "function" === typeof controller.resize) {
       controller.resize(tilt.width, tilt.height);
     }
@@ -12514,8 +13130,8 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
     }
 
     // hide the panel with the html editor (to avoid wrong positioning)
-    if ("open" === TiltChrome.BrowserOverlay.panel.state) {
-      TiltChrome.BrowserOverlay.panel.hidePopup();
+    if ("open" === TiltChrome.BrowserOverlay.sourceEditor.state) {
+      TiltChrome.BrowserOverlay.sourceEditor.hidePopup();
     }
   };
 
@@ -12525,15 +13141,22 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
   function gMouseOver() {
     redraw = true;
 
-    // happens after the browser window is resized
+    // this happens after the browser window is resized
     if (canvas.width !== tilt.width || canvas.height !== tilt.height) {
+
+      // we need to update the canvas width and height to use full resolution
+      // and avoid blurry rendering
       canvas.width = tilt.width;
       canvas.height = tilt.height;
 
+      // update the WebGL viewport and redraw the visualization now
       tilt.gl.viewport(0, 0, canvas.width, canvas.height);
       draw();
     }
   };
+
+/* The following are delegate functions used in the controller or the UI.
+ * ------------------------------------------------------------------------ */
 
   /**
    * Redraws the visualization once.
@@ -12544,7 +13167,8 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
   };
 
   /**
-   * Picks a stacked dom node at the x and y screen coordinates.
+   * Picks a stacked dom node at the x and y screen coordinates and opens up
+   * the source editor with the corresponding information.
    *
    * @param {Number} x: the current horizontal coordinate
    * @param {Number} y: the current vertical coordinate
@@ -12562,40 +13186,46 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
       vertices = mesh.vertices.components,
       i, len, v0, v1, v2;
 
+    // check each triangle in the visualization mesh for intersections with
+    // the mouse ray (using a simple ray picking algorithm)
     for (i = 0, len = indices.length; i < len; i += 3) {
+
+      // the first triangle vertex
       v0 = [vertices[indices[i    ] * 3    ],
             vertices[indices[i    ] * 3 + 1],
             vertices[indices[i    ] * 3 + 2]];
 
+      // the second triangle vertex
       v1 = [vertices[indices[i + 1] * 3    ],
             vertices[indices[i + 1] * 3 + 1],
             vertices[indices[i + 1] * 3 + 2]];
 
+      // the third triangle vertex
       v2 = [vertices[indices[i + 2] * 3    ],
             vertices[indices[i + 2] * 3 + 1],
             vertices[indices[i + 2] * 3 + 2]];
 
-      // for each triangle in the mesh, check to see if the mouse ray
-      // intersects the triangle
+      // for each triangle in the mesh, check for the exact intersections
       if (Tilt.Math.intersectRayTriangle(v0, v1, v2, ray, point) > 0) {
+
+        // if the ray-triangle intersection is greater than 0, continue and
         // save the intersection, along with the node information
         intersections.push({
           location: vec3.create(point),
           node: mesh.visibleNodes[Math.floor(i / 30)]
+          // each stack is composed of 30 vertices, so there's information
+          // about a node once in 30 iterations (to avoid duplication)
         });
       }
     }
 
-    // if there were any intersections, sort them by the distance towards the
-    // camera, and show a panel with the node information
+    // continue only if we actually clicked something
     if (intersections.length > 0) {
+
+      // if there were any intersections, sort them by the distance towards 
+      // the camera, and show a panel with the node information
       intersections.sort(function(a, b) {
-        if (a.location[2] < b.location[2]) {
-          return 1;
-        }
-        else {
-          return -1;
-        }
+        return a.location[2] < b.location[2] ? 1 : -1;
       });
 
       // use only the first intersection (closest to the camera)
@@ -12605,7 +13235,7 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
 
   /**
    * Opens the editor showing details about a specific node in the dom.
-   * @param {Number} uid: the unique id of the node
+   * @param {Number | Object} uid: the unique node id or the node itself
    */
   this.openEditor = function(uid) {
     if ("number" === typeof uid) {
@@ -12613,16 +13243,25 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
         hiddenNodes = mesh.hiddenNodes,
         node, i, len;
 
+      // first check all the visible nodes for the uid
+      // we're not using hashtables for this because it's not necessary, as
+      // this function is called very few times
       for (i = 0, len = visibleNodes.length; i < len; i++) {
         node = visibleNodes[i];
 
+        // if we found the searched node uid, open the editor with the node
         if (uid === node.uid) {
           return this.openEditor(node);
         }
       }
+
+      // second check all the hidden nodes for the uid
+      // this will happen when the editor needs to open information about a
+      // node that is not rendered (it isn't part of the visualization mesh)
       for (i = 0, len = hiddenNodes.length; i < len; i++) {
         node = hiddenNodes[i];
 
+        // if we found the searched node uid, open the editor with the node
         if (uid === node.uid) {
           return this.openEditor(node);
         }
@@ -12642,41 +13281,42 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
         .replace(/</g, "&lt;")
         .replace(/>/g, "&gt;")) + "\n",
 
-      // compute the custom css text from all the properties
+      // compute the custom css and attributes text from all the properties
       css = Tilt.Document.getModifiedCss(node.style),
       attr = Tilt.Document.getAttributesString(node.attributes),
 
       // get the elements used by the popup
-      label = document.getElementById("tilt-panel-label"),
-      iframe = document.getElementById("tilt-panel-iframe"),
-      editor = iframe.contentDocument.getElementById("editor");
+      label = document.getElementById("tilt-sourceeditor-label"),
+      iframe = document.getElementById("tilt-sourceeditor-iframe"),
+      code = iframe.contentDocument.getElementById("code");
 
       // set the title label of the popup panel
       label.value = "<" + node.localName +
         (node.className ? " class=\"" + node.className + "\"" : "") +
         (node.id ? " id=\"" + node.id + "\"" : "") + ">";
 
-      // show the popup panel containing the html editor iframe
-      TiltChrome.BrowserOverlay.panel.openPopup(null, "overlap",
+      // show the popup panel containing the source editor iframe
+      TiltChrome.BrowserOverlay.sourceEditor.openPopup(null, "overlap",
         window.innerWidth - iframe.width - 21,
         window.innerHeight - iframe.height - 77, false, false);
 
-      // get the content document containing the html editor, and add the html
-      editor.html = html;
-      editor.css = css;
-      editor.attr = attr;
+      // update the html, css and attributes for the source editor element
+      code.html = html;
+      code.css = css;
+      code.attr = attr;
 
-      if (editor.editorType === "attr") {
-        editor.innerHTML = attr;
-        iframe.contentWindow.refreshEditor("css");
+      // refresh the editor using specific syntax highlighting in each case
+      if (code.editorType === "attr") {
+        code.innerHTML = attr;
+        iframe.contentWindow.refreshCodeEditor("css");
       }
-      else if (editor.editorType === "css") {
-        editor.innerHTML = css;
-        iframe.contentWindow.refreshEditor("css");
+      else if (code.editorType === "css") {
+        code.innerHTML = css;
+        iframe.contentWindow.refreshCodeEditor("css");
       }
       else {
-        editor.innerHTML = html;
-        iframe.contentWindow.refreshEditor("html");
+        code.innerHTML = html;
+        iframe.contentWindow.refreshCodeEditor("html");
       }
     }
   };
@@ -12685,36 +13325,36 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
    * Show the inner html contents of a dom node in the editor if open.
    */
   this.setHtmlEditor = function() {
-    var iframe = document.getElementById("tilt-panel-iframe"),
-      editor = iframe.contentDocument.getElementById("editor");
+    var iframe = document.getElementById("tilt-sourceeditor-iframe"),
+      code = iframe.contentDocument.getElementById("code");
 
-    editor.innerHTML = editor.html;
-    editor.editorType = "html";
-    iframe.contentWindow.refreshEditor("html");
+    code.innerHTML = code.html;
+    code.editorType = "html";
+    iframe.contentWindow.refreshCodeEditor("html");
   };
 
   /**
    * Show the computed css contents of a dom node in the editor if open.
    */
   this.setCssEditor = function() {
-    var iframe = document.getElementById("tilt-panel-iframe"),
-      editor = iframe.contentDocument.getElementById("editor");
+    var iframe = document.getElementById("tilt-sourceeditor-iframe"),
+      code = iframe.contentDocument.getElementById("code");
 
-    editor.innerHTML = editor.css;
-    editor.editorType = "css";
-    iframe.contentWindow.refreshEditor("css");
+    code.innerHTML = code.css;
+    code.editorType = "css";
+    iframe.contentWindow.refreshCodeEditor("css");
   };
 
   /**
-   * Show the attributes for a dom node in the editor if open.
+   * Show the specific attributes for a dom node in the editor if open.
    */
   this.setAttributesEditor = function() {
-    var iframe = document.getElementById("tilt-panel-iframe"),
-      editor = iframe.contentDocument.getElementById("editor");
+    var iframe = document.getElementById("tilt-sourceeditor-iframe"),
+      code = iframe.contentDocument.getElementById("code");
 
-    editor.innerHTML = editor.attr;
-    editor.editorType = "attr";
-    iframe.contentWindow.refreshEditor("css");
+    code.innerHTML = code.attr;
+    code.editorType = "attr";
+    iframe.contentWindow.refreshCodeEditor("css");
   };
 
   /**
@@ -12726,6 +13366,7 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
       y = translation[1],
       z = translation[2];
 
+    // only update the translation if it's not already set
     if (transforms.translation[0] != x ||
         transforms.translation[1] != y ||
         transforms.translation[2] != z) {
@@ -12745,6 +13386,7 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
       z = quaternion[2],
       w = quaternion[3];
 
+    // only update the rotation if it's not already set
     if (transforms.rotation[0] != x ||
         transforms.rotation[1] != y ||
         transforms.rotation[2] != z ||
@@ -12796,25 +13438,6 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
   };
 
   /**
-   * Sets the current draw mode for the mesh.
-   * @param {String} mode: either 'fill', 'stroke' or 'both'
-   */
-  this.setMeshDrawMode = function(mode) {
-    if (mode === "fill") {
-      mesh.hidden = false;
-      meshWireframe.hidden = true;
-    }
-    else if (mode === "stroke") {
-      mesh.hidden = true;
-      meshWireframe.hidden = false;
-    }
-    else if (mode === "both") {
-      mesh.hidden = false;
-      meshWireframe.hidden = false;
-    }
-  };
-
-  /**
    * Destroys this object and sets all members to null.
    */
   this.destroy = function() {
@@ -12833,14 +13456,16 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
       gBrowser.removeEventListener("mouseover", gMouseOver, false);
       gMouseOver = null;
     }
-    if (controller !== null && "function" === typeof controller.destroy) {
+
+    if (controller && "function" === typeof controller.destroy) {
       controller.destroy(canvas);
       controller = null;
     }
-    if (ui !== null && "function" === typeof ui.destroy) {
+    if (ui && "function" === typeof ui.destroy) {
       ui.destroy(canvas);
       ui = null;
     }
+
     if (texture !== null) {
       texture.destroy();
       texture = null;
@@ -12853,14 +13478,14 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
       meshWireframe.destroy();
       meshWireframe = null;
     }
-    if (tilt !== null) {
-      tilt.destroy();
-      tilt = null;
-    }
     if (transforms !== null) {
       delete transforms.rotation;
       delete transforms.translation;
       transforms = null;
+    }
+    if (tilt !== null) {
+      tilt.destroy();
+      tilt = null;
     }
 
     canvas = null;
@@ -12870,6 +13495,7 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
     setupBrowserEvents = null;
     setupController = null;
     setupUI = null;
+    tabContainer = null;
 
     Tilt.destroyObject(this);
   };
@@ -12880,4 +13506,94 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
   // run the setup and draw functions
   setup.call(this);
   draw.call(this);
+};
+/***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is Tilt: A WebGL-based 3D visualization of a webpage.
+ *
+ * The Initial Developer of the Original Code is Victor Porof.
+ * Portions created by the Initial Developer are Copyright (C) 2011
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the LGPL or the GPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ ***** END LICENSE BLOCK *****/
+"use strict";
+
+var TiltChrome = TiltChrome || {};
+var EXPORTED_SYMBOLS = ["TiltChrome.Shaders"];
+
+TiltChrome.Shaders = {};
+
+/** 
+ * A custom visualization shader..
+ *
+ * @param {attribute} vertexPosition: the vertex position
+ * @param {attribute} vertexTexCoord: texture coordinates used by the sampler
+ * @param {uniform} mvMatrix: the model view matrix
+ * @param {uniform} projMatrix: the projection matrix
+ * @param {uniform} color: the color to multiply the sampled pixel with
+ * @param {Uniform} texalpha: the texture alpha color, blended with the color
+ * @param {Uniform} sampler: the texture sampler to fetch the pixels from
+ */
+TiltChrome.Shaders.Visualization = {
+
+  /**
+   * Vertex shader.
+   */
+  vs: [
+"attribute vec3 vertexPosition;",
+"attribute vec2 vertexTexCoord;",
+
+"uniform mat4 mvMatrix;",
+"uniform mat4 projMatrix;",
+
+"varying vec2 texCoord;",
+
+"void main(void) {",
+"  gl_Position = projMatrix * mvMatrix * vec4(vertexPosition, 1.0);",
+"  texCoord = vertexTexCoord;",
+"}"
+].join("\n"),
+
+  /**
+   * Fragment shader.
+   */
+  fs: [
+"#ifdef GL_ES",
+"precision highp float;",
+"#endif",
+
+"uniform vec4 color;",
+"uniform float texalpha;",
+"uniform sampler2D sampler;",
+
+"varying vec2 texCoord;",
+
+"void main(void) {",
+"  vec4 tex = texture2D(sampler, texCoord);",
+"  gl_FragColor = color * tex * texalpha + color * (1.0 - texalpha);",
+"}"
+].join("\n")
 };

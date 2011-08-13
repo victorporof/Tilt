@@ -827,7 +827,7 @@ var EXPORTED_SYMBOLS = [
   "Tilt.clearCache",
   "Tilt.destroyObject"];
 
-/* All cached variables begin with the $ sign, for easy spotting
+/* All cached variables begin with the $ sign, for easy spotting.
  * ------------------------------------------------------------------------ */
 
 /**
@@ -1189,6 +1189,7 @@ Tilt.Program = function(vertShaderSrc, fragShaderSrc) {
    * attributes and uniforms at runtime, when using the shader.
    */
   this.$cache = {};
+  this.$texcache = {};
 
   // if the sources are specified in the constructor, initialize directly
   if (arguments.length === 2) {
@@ -1266,6 +1267,7 @@ Tilt.Program.prototype = {
 
       // use the the program if it wasn't already set
       gl.useProgram(this.$ref);
+      this.clearTextureCache();
 
       // check if the required vertex attributes aren't already set
       if (Tilt.$enabledAttributes < this.$attributes.length) {
@@ -1362,7 +1364,7 @@ Tilt.Program.prototype = {
    * @param {Tilt.Texture} texture: the texture to be bound
    */
   bindTexture: function(sampler, texture, unit) {
-    var cache = this.$cache,
+    var cache = this.$texcache,
       id = texture.$id;
 
     // check the cache to see if this texture wasn't already set
@@ -1373,6 +1375,13 @@ Tilt.Program.prototype = {
       gl.bindTexture(gl.TEXTURE_2D, texture.$ref);
       gl.uniform1i(this.$uniforms[sampler], 0);
     }
+  },
+
+  /**
+   * Clears any bound uniforms from the cache.
+   */
+  clearTextureCache: function() {
+    this.$texcache = {};
   },
 
   /**
@@ -6364,21 +6373,22 @@ var EXPORTED_SYMBOLS = ["Tilt.Mesh"];
  *  @param {Tilt.VertexBuffer} normals: the normals buffer (m, n, p)
  *  @param {Tilt.IndexBuffer} indices: indices for the passed vertices buffer
  *  @param {String} color: the color to be used by the shader if required
- *  @param {Number} texalpha: the texture transparency
  *  @param {Tilt.Texture} texture: optional texture to be used by the shader
  *  @param {Number} drawMode: WebGL enum, like tilt.TRIANGLES
- * @param {Function} draw: optional function to handle custom drawing
+ *  @param {Function} draw: optional function to handle custom drawing
  */
-Tilt.Mesh = function(parameters, draw) {
+Tilt.Mesh = function(parameters) {
 
   // intercept this object using a profiler when building in debug mode
   Tilt.Profiler.intercept("Tilt.Mesh", this);
 
   /**
-   * Retain each parameters for easy access.
+   * Retain each parameter for easy access.
    */
   for (var i in parameters) {
-    this[i] = parameters[i];
+    if (this[i] !== "draw") {
+      this[i] = parameters[i];
+    }
   }
 
   // the color should be [r, g, b, a] array, check this now
@@ -6406,8 +6416,8 @@ Tilt.Mesh = function(parameters, draw) {
   }
 
   // if the draw call is specified in the constructor, overwrite directly
-  if ("function" === typeof draw) {
-    this.draw = draw;
+  if ("function" === typeof parameters.draw) {
+    this.draw = parameters.draw;
   }
 };
 
@@ -6419,10 +6429,6 @@ Tilt.Mesh.prototype = {
    * Overwrite this function to handle custom drawing.
    */
   draw: function() {
-    if (this.hidden === true) {
-      return;
-    }
-
     // cache some properties for easy access
     var tilt = Tilt.$renderer,
       vertices = this.vertices,
@@ -6430,13 +6436,12 @@ Tilt.Mesh.prototype = {
       normals = this.normals,
       indices = this.indices,
       color = this.color,
-      a = this.texalpha,
-      t = this.texture,
+      texture = this.texture,
       drawMode = this.drawMode;
 
     // use the necessary shader
-    if (t) {
-      tilt.useTextureShader(vertices, texCoord, color, a, t);
+    if (texture) {
+      tilt.useTextureShader(vertices, texCoord, color, texture);
     }
     else {
       tilt.useColorShader(vertices, color);
@@ -6451,10 +6456,6 @@ Tilt.Mesh.prototype = {
     }
 
     // TODO: use the normals buffer, add some lighting
-
-    // save the current model view and projection matrices
-    this.mvMatrix = mat4.create(tilt.mvMatrix);
-    this.projMatrix = mat4.create(tilt.projMatrix);
   },
 
   /**
@@ -6603,11 +6604,6 @@ Tilt.Renderer = function(canvas, failCallback, successCallback) {
    * Variable representing the current stroke weight.
    */
   this.$strokeWeightValue = 1;
-
-  /**
-   * The transparency of a sampled texture.
-   */
-  this.$textureAlphaValue = 1;
 
   /**
    * A shader useful for drawing vertices with only a color component.
@@ -6948,16 +6944,6 @@ Tilt.Renderer.prototype = {
   },
 
   /**
-   * Sets the current texture transparency.
-   * @param {Number} weight: the transparency, between 0 and 255
-   */
-  textureAlpha: function(value) {
-    if (this.$textureAlphaValue !== value / 255) {
-      this.$textureAlphaValue = value / 255;
-    }
-  },
-
-  /**
    * Sets blending, either "alpha" or "add" (additive blending).
    * Anything else disables blending.
    *
@@ -7007,7 +6993,6 @@ Tilt.Renderer.prototype = {
     this.fill("#fff");
     this.stroke("#000");
     this.strokeWeight(1);
-    this.textureAlpha(255);
     this.depthTest(depthTest || true);
     this.blendMode(blendMode || "alpha");
   },
@@ -7037,10 +7022,9 @@ Tilt.Renderer.prototype = {
    * @param {Tilt.VertexBuffer} verticesBuffer: a buffer of vertices positions
    * @param {Tilt.VertexBuffer} texCoordBuffer: a buffer of texture coords
    * @param {Array} color: the color used, as [r, g, b, a] with 0..1 range
-   * @param {Number} texalpha: the texture transparency
    * @param {Tilt.Texture} texture: the texture to be applied
    */
-  useTextureShader: function(vertices, texCoord, color, texalpha, texture) {
+  useTextureShader: function(vertices, texCoord, color, texture) {
     var program = this.textureShader;
 
     // use this program
@@ -7052,7 +7036,6 @@ Tilt.Renderer.prototype = {
     program.bindUniformMatrix("mvMatrix", this.mvMatrix);
     program.bindUniformMatrix("projMatrix", this.projMatrix);
     program.bindUniformVec4("color", color);
-    program.bindUniformFloat("texalpha", texalpha);
     program.bindTexture("sampler", texture);
   },
 
@@ -7156,30 +7139,28 @@ Tilt.Renderer.prototype = {
   /**
    * Draws an image using the specified parameters.
    *
-   * @param {Tilt.Texture} texture: the texture to be used
+   * @param {Tilt.Texture} tex: the texture to be used
    * @param {Number} x: the x position of the object
    * @param {Number} y: the y position of the object
    * @param {Number} width: the width of the object
    * @param {Number} height: the height of the object
    * @param {Tilt.VertexBuffer} texCoord: optional, custom texture coordinates
    */
-  image: function(texture, x, y, width, height, texCoord) {
-    if (!texture.loaded) {
+  image: function(tex, x, y, width, height, texCoord) {
+    if (!tex.loaded) {
       return;
     }
 
     var rectangle = this.$rectangle,
       tint = this.$tintColor,
       stroke = this.$strokeColor,
-      a = this.$textureAlphaValue,
-      t = texture,
       texCoordBuffer = texCoord || rectangle.texCoord;
 
     // if the width and height are not specified, we use the embedded
     // texture dimensions, from the source image or framebuffer
     if ("undefined" === typeof width || "undefined" === typeof height) {
-      width = t.width;
-      height = t.height;
+      width = tex.width;
+      height = tex.height;
     }
 
     // if imageMode is set to "center", we need to offset the origin
@@ -7197,7 +7178,7 @@ Tilt.Renderer.prototype = {
       this.scale(width, height, 1);
 
       // use the necessary shader and draw the vertices
-      this.useTextureShader(rectangle.vertices, texCoordBuffer, tint, a, t);
+      this.useTextureShader(rectangle.vertices, texCoordBuffer, tint, tex);
       this.drawVertices(this.TRIANGLE_STRIP, rectangle.vertices.numItems);
 
       this.popMatrix();
@@ -7210,27 +7191,25 @@ Tilt.Renderer.prototype = {
    * @param {Number} width: the width of the object
    * @param {Number} height: the height of the object
    * @param {Number} depth: the depth of the object
-   * @param {Tilt.Texture} texture: the texture to be used
+   * @param {Tilt.Texture} tex: the texture to be used
    */
-  box: function(width, height, depth, texture) {
+  box: function(width, height, depth, tex) {
     var cube = this.$cube,
       wireframe = this.$cubeWireframe,
       tint = this.$tintColor,
       fill = this.$fillColor,
-      stroke = this.$strokeColor,
-      a = this.$textureAlphaValue,
-      t = texture;
+      stroke = this.$strokeColor;
 
     // in memory, the box is represented as a simple perfect 1x1 cube, so
     // some transformations are applied to achieve the desired shape
     this.pushMatrix();
     this.scale(width, height, depth);
 
-    if (t) {
+    if (tex) {
       // draw the box only if the tint alpha channel is not transparent
       if (tint[3]) {
         // use the necessary shader and draw the vertices
-        this.useTextureShader(cube.vertices, cube.texCoord, tint, a, t);
+        this.useTextureShader(cube.vertices, cube.texCoord, tint, tex);
         this.drawIndexedVertices(this.TRIANGLES, cube.indices);
       }
     }
@@ -7433,10 +7412,10 @@ Tilt.Shaders = {};
 /**
  * A color shader. The only useful thing it does is set the gl_FragColor.
  *
- * @param {attribute} vertexPosition: the vertex position
- * @param {uniform} mvMatrix: the model view matrix
- * @param {uniform} projMatrix: the projection matrix
- * @param {uniform} color: the color to set the gl_FragColor to
+ * @param {Attribute} vertexPosition: the vertex position
+ * @param {Uniform} mvMatrix: the model view matrix
+ * @param {Uniform} projMatrix: the projection matrix
+ * @param {Uniform} color: the color to set the gl_FragColor to
  */  
 Tilt.Shaders.Color = {
 
@@ -7473,11 +7452,12 @@ Tilt.Shaders.Color = {
 /** 
  * A simple texture shader. It uses one sampler and a uniform color.
  *
- * @param {attribute} vertexPosition: the vertex position
- * @param {attribute} vertexTexCoord: texture coordinates used by the sampler
- * @param {uniform} mvMatrix: the model view matrix
- * @param {uniform} projMatrix: the projection matrix
- * @param {uniform} color: the color to multiply the sampled pixel with
+ * @param {Attribute} vertexPosition: the vertex position
+ * @param {Attribute} vertexTexCoord: texture coordinates used by the sampler
+ * @param {Uniform} mvMatrix: the model view matrix
+ * @param {Uniform} projMatrix: the projection matrix
+ * @param {Uniform} color: the color to multiply the sampled pixel with
+ * @param {Uniform} sampler: the texture sampler to fetch the pixels from
  */
 Tilt.Shaders.Texture = {
 
@@ -7508,14 +7488,13 @@ Tilt.Shaders.Texture = {
 "#endif",
 
 "uniform vec4 color;",
-"uniform float texalpha;",
 "uniform sampler2D sampler;",
 
 "varying vec2 texCoord;",
 
 "void main(void) {",
-"  vec4 tex = texture2D(sampler, vec2(texCoord.s, texCoord.t));",
-"  gl_FragColor = color * tex * texalpha + color * (1.0 - texalpha);",
+"  vec4 texture = texture2D(sampler, texCoord);",
+"  gl_FragColor = color * texture;",
 "}"
 ].join("\n")
 };
@@ -7948,6 +7927,7 @@ Tilt.ScrollContainer = function(properties) {
 
     this.$scrollTop = window.setInterval(function() {
       this.view.$offset[1] += 5;
+      ui.performRedraw();
 
       if (!ui.mousePressed) {
         ui = null;
@@ -7962,6 +7942,7 @@ Tilt.ScrollContainer = function(properties) {
 
     this.$scrollBottom = window.setInterval(function() {
       this.view.$offset[1] -= 5;
+      ui.performRedraw();
 
       if (!ui.mousePressed) {
         ui = null;
@@ -7971,8 +7952,11 @@ Tilt.ScrollContainer = function(properties) {
   }.bind(this);
 
   topResetButton.onmousedown = function() {
+    var ui = Tilt.UI;
+
     this.$scrollTopReset = window.setInterval(function() {
       this.view.$offset[1] /= 1.15;
+      ui.performRedraw();
 
       if (Math.abs(this.view.$offset[1]) < 0.1) {
         window.clearInterval(this.$scrollTopReset);
@@ -8067,6 +8051,9 @@ var EXPORTED_SYMBOLS = ["Tilt.Button"];
  *  @param {Array} padding: the inner padding offset for mouse events
  *  @param {String} fill: fill color for the rect bounding this object
  *  @param {String} stroke: stroke color for the rect bounding this object
+ *  @param {Function} onmousedown: function called when the event is triggered
+ *  @param {Function} onmouseup: function called when the event is triggered
+ *  @param {Function} onclick: function called when the event is triggered
  */
 Tilt.Button = function(sprite, properties) {
 
@@ -8085,6 +8072,13 @@ Tilt.Button = function(sprite, properties) {
    * Variable specifying if this object shouldn't be responsive to events.
    */
   this.disabled = properties.disabled || false;
+
+  /**
+   * Functions called when the specific event is triggered.
+   */
+  this.onmousedown = properties.onmousedown || undefined;
+  this.onmouseup = properties.onmouseup || undefined;
+  this.onclick = properties.onclick || undefined;
 
   /**
    * A sprite used as a background for this object.
@@ -8378,6 +8372,9 @@ var EXPORTED_SYMBOLS = ["Tilt.Slider"];
  *  @param {Number} size: the slider size
  *  @param {Number} value: number ranging from 0..100
  *  @param {Boolean} direction: 0 for horizontal, 1 for vertical
+ *  @param {Function} onmousedown: function called when the event is triggered
+ *  @param {Function} onmouseup: function called when the event is triggered
+ *  @param {Function} onclick: function called when the event is triggered
  */
 Tilt.Slider = function(sprite, properties) {
 
@@ -8396,6 +8393,13 @@ Tilt.Slider = function(sprite, properties) {
    * Variable specifying if this object shouldn't be responsive to events.
    */
   this.disabled = properties.disabled || false;
+
+  /**
+   * Functions called when the specific event is triggered.
+   */
+  this.onmousedown = properties.onmousedown || undefined;
+  this.onmouseup = properties.onmouseup || undefined;
+  this.onclick = properties.onclick || undefined;
 
   /**
    * A sprite used as a background for this object.
@@ -8676,6 +8680,9 @@ var EXPORTED_SYMBOLS = ["Tilt.Sprite"];
  *  @param {Array} padding: the inner padding offset for mouse events
  *  @param {String} tint: texture tinting expressed in hex or rgb() or rgba()
  *  @param {Boolean} depthTest: true to use depth testing
+ *  @param {Function} onmousedown: function called when the event is triggered
+ *  @param {Function} onmouseup: function called when the event is triggered
+ *  @param {Function} onclick: function called when the event is triggered
  */
 Tilt.Sprite = function(texture, region, properties) {
 
@@ -8694,6 +8701,13 @@ Tilt.Sprite = function(texture, region, properties) {
    * Variable specifying if this object shouldn't be responsive to events.
    */
   this.disabled = properties.disabled || false;
+
+  /**
+   * Functions called when the specific event is triggered.
+   */
+  this.onmousedown = properties.onmousedown || undefined;
+  this.onmouseup = properties.onmouseup || undefined;
+  this.onclick = properties.onclick || undefined;
 
   /**
    * A texture used as the pixel data for this object.
@@ -8959,7 +8973,7 @@ Tilt.UI.keyPressed = [];
  * Updates and draws each view handled by the UI.
  * @param {Number} frameDelta: the delta time elapsed between frames
  */
-Tilt.UI.refresh = function(frameDelta) {
+Tilt.UI.draw = function(frameDelta) {
   var tilt = Tilt.$renderer,
     i, len, container;
 
@@ -9696,9 +9710,8 @@ Tilt.Document = {
    */
   getNodeCoordinates: function(node) {
     try {
-      if (node.localName === "head" || 
-          node.localName === "body" || 
-          node.localName === "iframe") throw new Exception();
+      if (node.localName === "head" ||
+          node.localName === "body") throw new Exception();
 
       // this is the preferred way of getting the bounding client rectangle
       var clientRect = node.getBoundingClientRect();
