@@ -56,7 +56,7 @@ TiltChrome.Config.UI = {
         value: 100
       },
       alphaSlider: {
-        value: 100
+        value: 85.5
       },
       textureSlider: {
         value: 100
@@ -76,7 +76,7 @@ TiltChrome.Config.UI = {
         value: 100
       },
       alphaSlider: {
-        value: 100
+        value: 85.5
       },
       textureSlider: {
         value: 100
@@ -99,7 +99,7 @@ TiltChrome.Config.UI = {
         value: 7.5
       },
       textureSlider: {
-        value: 80
+        value: 100
       },
       mesh: {
         wireframeColor: [1, 1, 1, 0.7]
