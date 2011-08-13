@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Tilt Color Picker</title>
+    <link type="text/css" rel="stylesheet" href="src/picker.css"/>
+  </head>
+  <body>
+    <script type="text/javascript" src="src/picker.js"></script>
+    <script>
+      var picker;
+
+      window.refreshColorPicker = function(h, s, v) {
+        var divs = document.getElementsByTagName("div"),
+          canvases = document.getElementsByTagName("canvas"), e, i, len;
+
+        for (i = 0, len = divs.length; i < len; i++) {
+          e = divs[i];
+          if ("undefined" !== typeof e) {
+            e.parentNode.removeChild(e);
+          }
+        }
+        for (i = 0, len = canvases.length; i < len; i++) {
+          e = canvases[i];
+          if ("undefined" !== typeof e) {
+            e.parentNode.removeChild(e);
+          }
+        }
+
+      	picker = new Color.Picker({
+      	  hue: h || 0,
+      	  sat: s || 0,
+      	  val: v || 100,
+      		callback: function(hex) {
+      		  document.colorPicked = hex;
+      		}
+      	});
+
+      	picker.el.style.top = "1px";
+      	picker.el.style.left = "1px";
+      };
+    </script>
+  </body>
+</html>

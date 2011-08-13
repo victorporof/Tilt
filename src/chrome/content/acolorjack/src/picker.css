@@ -1,0 +1,56 @@
+#colorjack_square {
+	border: 1px solid rgba(0,0,0,0.5);
+	border-radius: 4px;
+	background: #0d0d0d;
+	background: -moz-linear-gradient(top, #333 0%, #000000 100%);
+	background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,#333), color-stop(100%,#000000));
+	box-shadow:0px 0px 1px rgba(0,0,0,1);
+	text-shadow: 1px 1px 1px #000;
+	color:#AAA;
+	cursor:default;
+	display:block;
+	font-family:arial,helvetica,sans-serif;
+	font-size:11px;
+	padding:7px 8px 7px;
+	position:absolute;
+	width:199px;
+	z-index:1;
+}
+
+#colorjack_square br {
+	clear:both;
+	margin:0;
+	padding:0;
+}
+
+#colorjack_square .hexString {
+	float:left;
+	color:#fff;
+	cursor: text;
+}
+
+#colorjack_square .hexBox {
+	border: 1px solid rgba(255,255,255,0.5);
+	border-radius: 2px;
+	background:#FFF;
+	float:left;
+	font-size:1px;
+	height:10px;
+	margin: 0 5px 0 2px;
+	width:10px;
+}
+
+#colorjack_square .hexClose {
+	color:#FFF;
+	cursor:pointer;
+	float:right;
+	padding: 0 5px;
+	margin:0 4px 3px;
+	user-select:none;
+	-khtml-user-select:none;
+	-moz-user-select:none;
+}
+
+#colorjack_square .hexClose:hover {
+	color:#FFD000;
+}
