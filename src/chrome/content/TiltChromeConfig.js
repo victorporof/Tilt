@@ -56,13 +56,13 @@ TiltChrome.Config.UI = {
         value: 100
       },
       alphaSlider: {
-        value: 85.5
+        value: 80
       },
       textureSlider: {
         value: 100
       },
       mesh: {
-        wireframeColor: [0, 0, 0, 0.25]
+        outline: [0, 0, 0, 0.25]
       }
     },
     normal: {
@@ -76,13 +76,13 @@ TiltChrome.Config.UI = {
         value: 100
       },
       alphaSlider: {
-        value: 85.5
+        value: 80
       },
       textureSlider: {
         value: 100
       },
       mesh: {
-        wireframeColor: [0, 0, 0, 0.25]
+        outline: [0, 0, 0, 0.25]
       }
     },
     wireframe: {
@@ -102,7 +102,7 @@ TiltChrome.Config.UI = {
         value: 100
       },
       mesh: {
-        wireframeColor: [1, 1, 1, 0.7]
+        outline: [1, 1, 1, 0.7]
       }
     }
   },
@@ -111,49 +111,55 @@ TiltChrome.Config.UI = {
    * Specific colors for each handled element in the dom strips.
    */
   domStrips: {
-    prototypeStripButton: {
+    stripButton: {
       stroke: "#fff3"
     },
-    htmlStripButton: {
+    "html": {
       fill: "#FFF"
     },
-    headStripButton: {
+    "head/body": {
       fill: "#E667AF"
     },
-    titleStripButton: {
+    "title": {
       fill: "#CD0074"
     },
-    scriptStripButton: {
+    "script": {
       fill: "#A64B00"
     },
-    styleStripButton: {
+    "style": {
       fill: "#FF9640"
     },
-    divStripButton: {
+    "div": {
       fill: "#5DC8CD"
     },
-    spanStripButton: {
+    "span": {
       fill: "#67E46F"
     },
-    tableStripButton: {
+    "table": {
       fill: "#FF0700"
     },
-    trStripButton: {
+    "tr": {
       fill: "#FF4540"
     },
-    tdStripButton: {
+    "td": {
       fill: "#FF7673"
     },
-    pStripButton: {
+    "ul": {
+      fill: "#4671D5"
+    },
+    "li": {
+      fill: "#6C8CD5"
+    },
+    "p": {
       fill: "#888"
     },
-    aStripButton: {
+    "a": {
       fill: "#123EAB"
     },
-    imgStripButton: {
+    "img": {
       fill: "#FFB473"
     },
-    otherStripButton: {
+    "other": {
       fill: "#444"
     }
   }
