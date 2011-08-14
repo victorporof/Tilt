@@ -70,17 +70,6 @@ Tilt.Mesh = function(parameters) {
     this.color = [1, 1, 1, 1];
   }
 
-  // the texture alpha should be a number between 0..1
-  if ("number" === typeof this.texalpha && this.texalpha > 1) {
-    this.texalpha /= 255;
-  }
-  else if ("number" === typeof this.texalpha && this.texalpha < 0) {
-    this.texalpha = 0;
-  }
-  else if ("undefined" === typeof this.texalpha) {
-    this.texalpha = 1;
-  }
-
   // the draw mode should be valid, default to TRIANGLES if unspecified
   if ("undefined" === typeof this.drawMode) {
     this.drawMode = Tilt.$renderer.TRIANGLES;
