@@ -41,7 +41,7 @@ var EXPORTED_SYMBOLS = ["Tilt.Texture"];
  * create a texture using a remote image, use initTextureAt.
  *
  * @param {Image} image: the texture source image or canvas
- * @param {Object} parameters: an object containing the following properties
+ * @param {Object} properties: an object containing the following properties
  *  @param {String} fill: optional, color to fill the transparent bits
  *  @param {String} stroke: optional, color to draw an outline
  *  @param {Number} strokeWeight: optional, the width of the outline
@@ -50,12 +50,15 @@ var EXPORTED_SYMBOLS = ["Tilt.Texture"];
  *  @param {Boolean} mipmap: true if should generate mipmap
  *  @param {String} wrapS: either "repeat" or "clamp"
  *  @param {String} wrapT: either "repeat" or "clamp"
- * @param {Function} readyCallback: function called when texture has loaded
+ *  @param {Function} onload: function function called when texture has loaded
  */
-Tilt.Texture = function(image, parameters, readyCallback) {
+Tilt.Texture = function(image, properties) {
 
   // intercept this object using a profiler when building in debug mode
   Tilt.Profiler.intercept("Tilt.Texture", this);
+
+  // make sure the properties parameter is a valid object
+  properties = properties || {};
 
   /**
    * A reference to the WebGL texture object.
@@ -83,14 +86,14 @@ Tilt.Texture = function(image, parameters, readyCallback) {
   /**
    * Function to be called when the texture has finished loading.
    */
-  this.onload = readyCallback;
+  this.onload = properties.onload;
 
   // if the image is specified in the constructor, initialize directly
   if ("object" === typeof image) {
-    this.initTexture(image, parameters);
+    this.initTexture(image, properties);
   }
   else if ("string" === typeof image) {
-    this.initTextureAt(image, parameters);
+    this.initTextureAt(image, properties);
   }
   else {
     Tilt.Console.error(Tilt.StringBundle.get("initTexture.source.error"));
@@ -98,7 +101,7 @@ Tilt.Texture = function(image, parameters, readyCallback) {
 
   // cleanup
   image = null;
-  parameters = null;
+  properties = null;
 };
 
 Tilt.Texture.prototype = {
