@@ -88,7 +88,7 @@ this.visualization =
   new TiltChrome.UI.Default());
 ```
 
-The current mouse and keyboard implementation is in [TiltChromeController.js](https://github.com/victorporof/Tilt/blob/master/src/chrome/content/TiltChromeController.js). You can implement your own controller by creating a new object respecting a predefined interface. Each controller should have the `init`, `loop`, `resize` and `destroy` functions, and you can access the public delegate methods in the visualization by `this.visualization.publicMethod`. Generally, you should need to handle only the following events:
+The current mouse and keyboard implementation is in [TiltChromeController.js](https://github.com/victorporof/Tilt/blob/master/src/chrome/content/TiltChromeController.js). You can implement your own controller by creating a new object respecting a predefined interface. Each controller should have the `init`, `update`, `resize` and `destroy` functions, and you can access the public delegate methods in the visualization using `this.visualization`. Generally, you should need to handle only the following events:
 
 * `this.visualization.setTranslation(translation)`
 * `this.visualization.setRotation(quaternion)`
@@ -111,7 +111,7 @@ TiltChrome.Controller.MyCustomController = function() {
    * Function called automatically by the visualization each frame in draw().
    * @param {Number} frameDelta: the delta time elapsed between frames
    */
-  this.loop = function(frameDelta) {
+  this.update = function(frameDelta) {
     // access the visualization using this.visualization
     // manipulate the current model view transformation using
     //  this.visualization.setTranslation(translation) and
