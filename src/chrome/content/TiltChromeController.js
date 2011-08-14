@@ -87,7 +87,7 @@ TiltChrome.Controller.MouseAndKeyboard = function() {
    * Function called automatically by the visualization each frame in draw().
    * @param {Number} frameDelta: the delta time elapsed between frames
    */
-  this.loop = function(frameDelta) {
+  this.update = function(frameDelta) {
     var vis = this.visualization,
       coord = arcball.loop(frameDelta);
 
@@ -240,7 +240,7 @@ TiltChrome.Controller.MouseAndKeyboard = function() {
   var keyUp = function(e) {
     var code = e.keyCode || e.which;
 
-    if (code === 27) {
+    if (code === 27) { // escape
       // if the panel with the source code editor was open, hide it now
       if ("open" === TiltChrome.BrowserOverlay.sourceEditor.state) {
         TiltChrome.BrowserOverlay.sourceEditor.hidePopup();
