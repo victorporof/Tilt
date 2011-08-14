@@ -162,9 +162,10 @@ Tilt.Document = {
    *
    * @param {Function} nodeCallback: the function to call for each node
    * @param {Function} readyCallback: called when no more nodes are found
+   * @param {Boolean} traverseChildIframes: true if 'we need to go deeper'
    * @param {HTMLDocument} dom: the document object model to traverse
    */
-  traverse: function(nodeCallback, readyCallback, dom) {
+  traverse: function(nodeCallback, readyCallback, traverseChildIframes, dom) {
     if ("undefined" === typeof this.uid) {
       this.uid = 0;
     }
@@ -174,11 +175,11 @@ Tilt.Document = {
       totalNodes = 0;
 
     // used internally for recursively traversing a document object model
-    var recursive = function(nodeCallback, dom, depth) {
+    var recursive = function(parent, depth) {
       var i, len, child;
 
-      for (i = 0, len = dom.childNodes.length; i < len; i++) {
-        child = dom.childNodes[i];
+      for (i = 0, len = parent.childNodes.length; i < len; i++) {
+        child = parent.childNodes[i];
 
         if (depth > maxDepth) {
           maxDepth = depth;
@@ -189,20 +190,18 @@ Tilt.Document = {
         // run the node callback function for each node, pass the depth, and
         // also continue the recursion with all the children
         nodeCallback(child, depth, totalNodes, this.uid);
-        recursive(nodeCallback, child, depth + 1);
+        recursive(child, depth + 1);
 
-        if (child.localName === "iframe") {
-          recursive(nodeCallback, child.contentDocument, depth + 1);
+        if (traverseChildIframes && child.localName === "iframe") {
+          recursive(child.contentDocument, depth + 1);
         }
       }
     }.bind(this);
 
     try {
       if ("function" === typeof nodeCallback) {
-        recursive(nodeCallback, dom || window.content.document, 0);
+        recursive(dom || window.content.document, 0);
       }
-
-      // once we traversed all the dom nodes, run a callback
       if ("function" === typeof readyCallback) {
         readyCallback(maxDepth, totalNodes);
       }
