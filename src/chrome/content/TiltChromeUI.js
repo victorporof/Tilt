@@ -57,7 +57,7 @@ TiltChrome.UI.Default = function() {
   view = null,
   helpPopup = null,
   colorAdjustPopup = null,
-  domStripsContainer = null,
+  minidomContainer = null,
 
   /**
    * The texture containing all the interface elements.
@@ -257,9 +257,22 @@ TiltChrome.UI.Default = function() {
       y: -5,
       padding: [6, 6, 6, 6],
       onclick: function() {
+        window.clearInterval(this.$arcballMove);
+        this.$arcballTranslation = 0;
+        this.$arcballMove = window.setInterval(function() {
+          this.$arcballTranslation++;
+          this.controller.translate(minidomContainer.view.hidden ? -5: 5, 0);
+
+          if (this.$arcballTranslation >= 20) {
+            window.clearInterval(this.$arcballMove);
+          }
+        }.bind(this), 1000 / 60);
+
         hideableElements.forEach(function(element) {
           element.hidden ^= true;
         });
+
+        minidomContainer.view.hidden ^= true;
 
         if (!helpPopup.hidden) {
           helpPopup.hidden = true;
@@ -267,9 +280,6 @@ TiltChrome.UI.Default = function() {
         if (!colorAdjustPopup.hidden) {
           colorAdjustPopup.hidden = true;
         }
-
-        domStripsContainer.view.hidden ^= true;
-        this.visualization.requestRedraw();
       }.bind(this)
     });
 
@@ -379,7 +389,7 @@ TiltChrome.UI.Default = function() {
       disabled: true
     });
 
-    domStripsContainer = new Tilt.ScrollContainer({
+    minidomContainer = new Tilt.ScrollContainer({
       x: 85,
       y: 300,
       width: 130,
@@ -915,12 +925,12 @@ TiltChrome.UI.Default = function() {
         stripIdButton.getX() + stripIdButton.getWidth());
     }
 
-    if (right > domStripsContainer.view.getWidth()) {
-      domStripsContainer.view.setWidth(right);
+    if (right > minidomContainer.view.getWidth()) {
+      minidomContainer.view.setWidth(right);
     }
 
     if (stripButton) {
-      domStripsContainer.view.push(stripButton);
+      minidomContainer.view.push(stripButton);
       stripButton.localName = node.localName;
 
       stripButton.onclick = function() {
@@ -940,7 +950,7 @@ TiltChrome.UI.Default = function() {
     }
 
     if (stripClassButton) {
-      domStripsContainer.view.push(stripClassButton);
+      minidomContainer.view.push(stripClassButton);
       stripClassButton.setFill(stripButton.getFill());
       stripClassButton.localName = node.localName;
 
@@ -951,7 +961,7 @@ TiltChrome.UI.Default = function() {
     }
 
     if (stripIdButton) {
-      domStripsContainer.view.push(stripIdButton);
+      minidomContainer.view.push(stripIdButton);
       stripIdButton.setFill(stripButton.getFill());
       stripIdButton.localName = node.localName;
 
@@ -973,7 +983,7 @@ TiltChrome.UI.Default = function() {
 
     // for each element in the dom strips container, update it's fill to match
     // the strip color code for the correspoding dom element
-    domStripsContainer.view.forEach(function(element) {
+    minidomContainer.view.forEach(function(element) {
 
       // the head and body use an identical color code by default
       var name = (element.localName !== "head" &&
@@ -996,7 +1006,7 @@ TiltChrome.UI.Default = function() {
    */
   this.resize = function(width, height) {
     background.setSize(width, height);
-    domStripsContainer.view.setHeight(height - 310);
+    minidomContainer.view.setHeight(height - 310);
 
     exitButton.setX(width - 50);
     helpButton.setX(width - 150);
@@ -1048,9 +1058,9 @@ TiltChrome.UI.Default = function() {
       colorAdjustPopup.destroy();
       colorAdjustPopup = null;
     }
-    if (domStripsContainer !== null) {
-      domStripsContainer.destroy();
-      domStripsContainer = null;
+    if (minidomContainer !== null) {
+      minidomContainer.destroy();
+      minidomContainer = null;
     }
 
     if (t !== null) {
