@@ -39,14 +39,18 @@ var EXPORTED_SYMBOLS = ["Tilt.Renderer"];
  * Tilt.Renderer constructor.
  *
  * @param {HTMLCanvasElement} canvas: the canvas element used for rendering
- * @param {Function} successCallback: to be called if gl initialization worked
- * @param {Function} failCallback: to be called if gl initialization failed
+ * @param {Object} properties: additional properties for this object
+ *  @param {Function} success: to be called if initialization worked
+ *  @param {Function} fail: to be called if initialization failed
  * @return {Tilt.Renderer} the newly created object
  */
-Tilt.Renderer = function(canvas, failCallback, successCallback) {
+Tilt.Renderer = function(canvas, properties) {
 
   // intercept this object using a profiler when building in debug mode
   Tilt.Profiler.intercept("Tilt.Renderer", this);
+
+  // make sure the properties parameter is a valid object
+  properties = properties || {};
 
   /**
    * The WebGL context obtained from the canvas element, used for drawing.
@@ -75,16 +79,16 @@ Tilt.Renderer = function(canvas, failCallback, successCallback) {
     this.STENCIL_BUFFER_BIT = this.gl.STENCIL_BUFFER_BIT;
 
     // if successful, run a success callback function if available
-    if ("function" === typeof successCallback) {
-      successCallback();
+    if ("function" === typeof properties.success) {
+      properties.success();
     }
   }
   else {
     // if unsuccessful, log the error and run a fail callback if available
     Tilt.Console.log(Tilt.StringBundle.get("initWebGL.error"));
 
-    if ("function" === typeof failCallback) {
-      failCallback();
+    if ("function" === typeof properties.fail) {
+      properties.fail();
       return;
     }
   }
@@ -202,8 +206,7 @@ Tilt.Renderer = function(canvas, failCallback, successCallback) {
 
   // cleanup
   canvas = null;
-  failCallback = null;
-  successCallback = null;
+  properties = null;
   color$vs = null;
   color$fs = null;
   texture$vs = null;
