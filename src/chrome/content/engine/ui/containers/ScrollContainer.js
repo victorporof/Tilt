@@ -47,6 +47,7 @@ var EXPORTED_SYMBOLS = ["Tilt.Scrollview"];
  *  @param {Array} elements: an array of elements to be initially added
  *  @param {Tilt.Sprite} top: a sprite for the slider top button
  *  @param {Tilt.Sprite} bottom: a sprite for the slider bottom button
+ *  @param {Tilt.Sprite} reset: a sprite for the slider reset button
  */
 Tilt.ScrollContainer = function(properties) {
 
@@ -84,13 +85,13 @@ Tilt.ScrollContainer = function(properties) {
     padding: properties.bottom ? properties.bottom.$padding : [0, 0, 0, 0]
   });
 
-  var topResetButton = new Tilt.Button(properties.topReset, {
+  var resetButton = new Tilt.Button(properties.reset, {
     x: this.view.$x - 25,
-    y: this.view.$y + 12.5,
+    y: this.view.$y + this.view.$height - 50,
     width: 32,
     height: 30,
-    fill: properties.topReset ? null : "#0f0b",
-    padding: properties.topReset ? properties.topReset.$padding : [0, 0, 0, 0]
+    fill: properties.reset ? null : "#0f0b",
+    padding: properties.reset ? properties.reset.$padding : [0, 0, 0, 0]
   });
 
   topButton.onmousedown = function() {
@@ -99,7 +100,7 @@ Tilt.ScrollContainer = function(properties) {
 
     this.$scrollTop = window.setInterval(function() {
       this.view.$offset[1] += 5;
-      ui.performRedraw();
+      ui.requestRedraw();
 
       if (!ui.mousePressed) {
         ui = null;
@@ -114,7 +115,7 @@ Tilt.ScrollContainer = function(properties) {
 
     this.$scrollBottom = window.setInterval(function() {
       this.view.$offset[1] -= 5;
-      ui.performRedraw();
+      ui.requestRedraw();
 
       if (!ui.mousePressed) {
         ui = null;
@@ -123,12 +124,12 @@ Tilt.ScrollContainer = function(properties) {
     }.bind(this), 1000 / 60);
   }.bind(this);
 
-  topResetButton.onmousedown = function() {
+  resetButton.onmousedown = function() {
     var ui = Tilt.UI;
 
     this.$scrollTopReset = window.setInterval(function() {
       this.view.$offset[1] /= 1.15;
-      ui.performRedraw();
+      ui.requestRedraw();
 
       if (Math.abs(this.view.$offset[1]) < 0.1) {
         window.clearInterval(this.$scrollTopReset);
@@ -136,7 +137,7 @@ Tilt.ScrollContainer = function(properties) {
     }.bind(this), 1000 / 60);
   }.bind(this);
 
-  this.scrollbars.push(topButton, topResetButton, bottomButton);
+  this.scrollbars.push(topButton, bottomButton, resetButton);
 
   topButton = null;
   bottomButton = null;
