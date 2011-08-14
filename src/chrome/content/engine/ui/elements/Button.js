@@ -56,7 +56,7 @@ var EXPORTED_SYMBOLS = ["Tilt.Button"];
 Tilt.Button = function(sprite, properties) {
 
   // intercept this object using a profiler when building in debug mode
-  Tilt.Profiler.intercept("Tilt.Button", this);  
+  Tilt.Profiler.intercept("Tilt.Button", this);
 
   // make sure the properties parameter is a valid object
   properties = properties || {};
