@@ -38,14 +38,15 @@ var EXPORTED_SYMBOLS = ["TiltChrome.Shaders"];
 TiltChrome.Shaders = {};
 
 /** 
- * A custom visualization shader..
+ * A custom visualization shader.
  *
- * @param {attribute} vertexPosition: the vertex position
- * @param {attribute} vertexTexCoord: texture coordinates used by the sampler
- * @param {uniform} mvMatrix: the model view matrix
- * @param {uniform} projMatrix: the projection matrix
- * @param {uniform} color: the color to multiply the sampled pixel with
- * @param {Uniform} texalpha: the texture alpha color, blended with the color
+ * @param {Attribute} vertexPosition: the vertex position
+ * @param {Attribute} vertexTexCoord: texture coordinates used by the sampler
+ * @param {Attribute} vertexColor: specific [r, g, b] color for each vertex
+ * @param {Uniform} mvMatrix: the model view matrix
+ * @param {Uniform} projMatrix: the projection matrix
+ * @param {Uniform} tint: the color to multiply the sampled pixel with
+ * @param {Uniform} alpha: the texture alpha color, blended with the tint
  * @param {Uniform} sampler: the texture sampler to fetch the pixels from
  */
 TiltChrome.Shaders.Visualization = {
@@ -56,15 +57,18 @@ TiltChrome.Shaders.Visualization = {
   vs: [
 "attribute vec3 vertexPosition;",
 "attribute vec2 vertexTexCoord;",
+"attribute vec3 vertexColor;",
 
 "uniform mat4 mvMatrix;",
 "uniform mat4 projMatrix;",
 
 "varying vec2 texCoord;",
+"varying vec3 color;",
 
 "void main(void) {",
 "  gl_Position = projMatrix * mvMatrix * vec4(vertexPosition, 1.0);",
 "  texCoord = vertexTexCoord;",
+"  color = vertexColor;",
 "}"
 ].join("\n"),
 
@@ -73,18 +77,25 @@ TiltChrome.Shaders.Visualization = {
    */
   fs: [
 "#ifdef GL_ES",
-"precision highp float;",
+"precision lowp float;",
 "#endif",
 
-"uniform vec4 color;",
-"uniform float texalpha;",
+"uniform vec4 tint;",
+"uniform float alpha;",
 "uniform sampler2D sampler;",
 
 "varying vec2 texCoord;",
+"varying vec3 color;",
 
 "void main(void) {",
-"  vec4 tex = texture2D(sampler, texCoord);",
-"  gl_FragColor = color * tex * texalpha + color * (1.0 - texalpha);",
+"  if (texCoord.s < 0.0) {",
+"    float a = clamp(tint.a * 5.0, 0.0, 1.0) - 0.1;",
+"    gl_FragColor = vec4(color.r, color.g, color.b, a);",
+"  }",
+"  else {",
+"    vec4 texture = texture2D(sampler, texCoord);",
+"    gl_FragColor = tint * texture * alpha + tint * (1.0 - alpha);",
+"  }",
 "}"
 ].join("\n")
 };
