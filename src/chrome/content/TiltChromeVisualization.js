@@ -48,16 +48,17 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
   /**
    * Create the renderer, containing useful functions for easy drawing.
    */
-  var tilt = new Tilt.Renderer(canvas, function failCallback() {
-
+  var tilt = new Tilt.Renderer(canvas, {
     // if initialization fails because WebGL context coulnd't be created,
     // show a corresponding alert message and open a tab to troubleshooting
-    TiltChrome.BrowserOverlay.destroy(true, true);
-    TiltChrome.BrowserOverlay.href = null;
-    Tilt.Console.alert("Firefox", Tilt.StringBundle.get("initWebGL.error"));
+    fail: function() {
+      TiltChrome.BrowserOverlay.destroy(true, true);
+      TiltChrome.BrowserOverlay.href = null;
+      Tilt.Console.alert("Firefox", Tilt.StringBundle.get("initWebGL.error"));
 
-    gBrowser.selectedTab =
-      gBrowser.addTab("http://get.webgl.org/troubleshooting/");
+      gBrowser.selectedTab =
+        gBrowser.addTab("http://get.webgl.org/troubleshooting/");
+    }
   }),
 
   /**
@@ -96,7 +97,7 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
    * The initialization logic.
    */
   function setup() {
-    if (tilt === null || tilt.gl === null || "undefined" === typeof tilt.gl) {
+    if (!tilt || !tilt.gl) {
       return;
     }
 
@@ -111,16 +112,16 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
     });
 
     // create the visualization shaders and program to draw the stacks mesh
-    var v$vs = TiltChrome.Shaders.Visualization.vs;
-    var v$fs = TiltChrome.Shaders.Visualization.fs;
-    visualizationShader = new Tilt.Program(v$vs, v$fs);
+    visualizationShader = new Tilt.Program(
+      TiltChrome.Shaders.Visualization.vs,
+      TiltChrome.Shaders.Visualization.fs);
 
     // setup the controller, user interface, visualization mesh, and the 
     // browser event handlers
-    setupController.call(this);
-    setupUI.call(this);
-    setupVisualization.call(this);
-    setupBrowserEvents.call(this);
+    setupController();
+    setupUI();
+    setupVisualization();
+    setupBrowserEvents();
 
     // set the transformations at initialization
     transforms.translation = [0, 0, 0];
@@ -140,12 +141,12 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
    */
   function draw() {
     // if the visualization was destroyed, don't continue rendering
-    if (tilt === null || tilt.gl === null || "undefined" === typeof tilt.gl) {
+    if (!tilt || !tilt.gl) {
       return;
     }
 
     // prepare for the next frame of the animation loop
-    // behind the scenes, this issues a requestAnimFrame and updates some
+    // behind the scenes, this issues a requestAnimFrame call and updates some
     // timing variables, frame count, frame rate etc.
     tilt.loop(draw);
 
@@ -174,12 +175,14 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
       meshWireframe.draw();
 
       // draw the ui on top of the visualization
-      ui ? ui.draw(tilt.frameDelta) : 0;
+      if (ui && "function" === typeof ui.draw) {
+        ui.draw(tilt.frameDelta);
+      }
     }
 
-    // when rendering is finished, call a loop function in the controller
-    if (controller && "function" === typeof controller.loop) {
-      controller.loop(tilt.frameDelta);
+    // when rendering is finished, call an update function in the controller
+    if (controller && "function" === typeof controller.update) {
+      controller.update(tilt.frameDelta);
     }
 
     // every once in a while, do a garbage collect
@@ -195,8 +198,7 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
    * Create the combined mesh representing the document visualization by
    * traversing the document & adding a stack for each node that is drawable.
    */
-  function setupVisualization() {
-    // reset the mesh arrays
+  var setupVisualization = function() {
     var vertices = [],
       texCoord = [],
       indices = [],
@@ -234,21 +236,16 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
       }
 
       // skip some nodes to avoid too bloated visualization meshes
-      if (node.nodeType === 3 ||  // TEXT_NODE
-          node.nodeType === 10 || // DOCUMENT_TYPE_NODE
+      if (node.nodeType !== 1 ||
           node.localName === "head" ||
           node.localName === "title" ||
           node.localName === "meta" ||
+          node.localName === "link" ||
+          node.localName === "style" ||
           node.localName === "script" ||
           node.localName === "noscript" ||
-          node.localName === "style" ||
-          node.localName === "link" ||
           node.localName === "span" ||
-          node.localName === "option" ||
-          node.localName === "a" ||
-          node.localName === "b" ||
-          node.localName === "i" ||
-          node.localName === "u") {
+          node.localName === "option") {
 
         // information about these nodes should still be accessible, despite
         // the fact that they're not rendered
@@ -263,72 +260,63 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
       if (coord.width > 4 && coord.height > 4) {
         visibleNodes.push(info);
 
-        // the entire mesh's pivot is the screen center
-        var x = coord.x - tilt.width / 2 + Math.random() / 10,
-         y = coord.y - tilt.height / 2 + Math.random() / 10,
-         z = depth * thickness + Math.random() / 10,
-         w = coord.width,
-         h = coord.height;
-
         // number of vertex points, used for creating the indices array
-        var i = vertices.length / 3; // a vertex has 3 coords: x, y & z
+        var i = vertices.length / 3, // a vertex has 3 coords: x, y & z
+
+        // the entire mesh's pivot is the screen center
+        z = depth * thickness + Math.random() / 10,
+        x = coord.x - tilt.width / 2 + Math.random() / 10,
+        y = coord.y - tilt.height / 2 + Math.random() / 10,
+        w = coord.width,
+        h = coord.height;
 
         // compute the vertices
-        vertices.push(x,     y,     z);                   /* front */ // 0
-        vertices.push(x + w, y,     z);                               // 1
-        vertices.push(x + w, y + h, z);                               // 2
-        vertices.push(x,     y + h, z);                               // 3
+        vertices.push(x,     y,     z,                    /* front */ // 0
+                      x + w, y,     z,                                // 1
+                      x + w, y + h, z,                                // 2
+                      x,     y + h, z,                                // 3
 
         // we don't duplicate vertices for the left and right faces, because
         // they can be reused from the bottom and top faces; we do, however,
         // duplicate some vertices from front face, because it has custom
         // texture coordinates which are not shared by the other faces
-        vertices.push(x,     y + h, z - thickness);      /* top */    // 4
-        vertices.push(x + w, y + h, z - thickness);                   // 5
-        vertices.push(x + w, y + h, z);                               // 6
-        vertices.push(x,     y + h, z);                               // 7
-        vertices.push(x,     y,     z);                  /* bottom */ // 8
-        vertices.push(x + w, y,     z);                               // 9
-        vertices.push(x + w, y,     z - thickness);                   // 10
-        vertices.push(x,     y,     z - thickness);                   // 11
+                      x,     y + h, z - thickness,       /* top */    // 4
+                      x + w, y + h, z - thickness,                    // 5
+                      x + w, y + h, z,                                // 6
+                      x,     y + h, z,                                // 7
+                      x,     y,     z,                   /* bottom */ // 8
+                      x + w, y,     z,                                // 9
+                      x + w, y,     z - thickness,                    // 10
+                      x,     y,     z - thickness);                   // 11
 
         // compute the texture coordinates
-        texCoord.push(
-          (x + tilt.width  / 2    ) / texture.width,
-          (y + tilt.height / 2    ) / texture.height,
-          (x + tilt.width  / 2 + w) / texture.width,
-          (y + tilt.height / 2    ) / texture.height,
-          (x + tilt.width  / 2 + w) / texture.width,
-          (y + tilt.height / 2 + h) / texture.height,
-          (x + tilt.width  / 2    ) / texture.width,
-          (y + tilt.height / 2 + h) / texture.height);
-
-        // the stack margins should not be textured
-        for (var k = 0; k < 2; k++) {
-          texCoord.push(0, 0, 0, 0, 0, 0, 0, 0);
-        }
+        texCoord.push((x + tilt.width  / 2    ) / texture.width,
+                      (y + tilt.height / 2    ) / texture.height,
+                      (x + tilt.width  / 2 + w) / texture.width,
+                      (y + tilt.height / 2    ) / texture.height,
+                      (x + tilt.width  / 2 + w) / texture.width,
+                      (y + tilt.height / 2 + h) / texture.height,
+                      (x + tilt.width  / 2    ) / texture.width,
+                      (y + tilt.height / 2 + h) / texture.height,
+                      -1, -1, -1, -1, -1, -1, -1, -1,
+                      -1, -1, -1, -1, -1, -1, -1, -1);
 
         // compute the indices
-        indices.push(i + 0,  i + 1,  i + 2,  i + 0,  i + 2,  i + 3);
-        indices.push(i + 4,  i + 5,  i + 6,  i + 4,  i + 6,  i + 7);
-        indices.push(i + 8,  i + 9,  i + 10, i + 8,  i + 10, i + 11);
-        indices.push(i + 10, i + 9,  i + 6,  i + 10, i + 6,  i + 5);
-        indices.push(i + 8,  i + 11, i + 4,  i + 8,  i + 4,  i + 7);
-
-        // close the stack adding a back face if it's the first layer
-        // if (depth === 0) {
-        //   indices.push(11, 10, 5, 11, 5, 4);
-        // }
+        indices.push(i + 0,  i + 1,  i + 2,  i + 0,  i + 2,  i + 3,
+                     i + 4,  i + 5,  i + 6,  i + 4,  i + 6,  i + 7,
+                     i + 8,  i + 9,  i + 10, i + 8,  i + 10, i + 11,
+                     i + 10, i + 9,  i + 6,  i + 10, i + 6,  i + 5,
+                     i + 8,  i + 11, i + 4,  i + 8,  i + 4,  i + 7);
 
         // compute the wireframe indices
-        wireframeIndices.push(
-          i + 0,  i + 1,  i + 1,  i + 2,  i + 2,  i + 3,  i + 3,  i + 0);
-        wireframeIndices.push(
-          i + 4,  i + 5,  i + 5,  i + 6,  i + 6,  i + 7,  i + 7,  i + 4);
-        wireframeIndices.push(
-          i + 8,  i + 9,  i + 9,  i + 10, i + 10, i + 11, i + 11, i + 8);
-        wireframeIndices.push(
-          i + 10, i + 9,  i + 9,  i + 6,  i + 6,  i + 5,  i + 5,  i + 10);
+        wireframeIndices.push(i + 0,  i + 1,  i + 1,  i + 2,  
+                              i + 2,  i + 3,  i + 3,  i + 0,
+                              i + 4,  i + 5,  i + 5,  i + 6,  
+                              i + 6,  i + 7,  i + 7,  i + 4,
+                              i + 8,  i + 9,  i + 9,  i + 10, 
+                              i + 10, i + 11, i + 11, i + 8,
+                              i + 10, i + 9,  i + 9,  i + 6,  
+                              i + 6,  i + 5,  i + 5,  i + 10);
       }
     }, function(maxDepth, totalNodes) {
       // call the ready callback in the ui
@@ -337,7 +325,7 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
       if (ui && "undefined" !== ui.domVisualizationMeshReadyCallback) {
         ui.domVisualizationMeshReadyCallback(maxDepth, totalNodes);
       }
-    });
+    }.bind(this));
 
     // create the visualization mesh using the vertices, texture coordinates
     // and indices computed when traversing the dom
@@ -345,39 +333,40 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
       vertices: new Tilt.VertexBuffer(vertices, 3),
       texCoord: new Tilt.VertexBuffer(texCoord, 2),
       indices: new Tilt.IndexBuffer(indices),
-      color: "#fffd",
-      texalpha: 255,
+      tint: [1, 1, 1, 0.85],
+      alpha: 1,
       texture: texture,
       visibleNodes: visibleNodes,
       hiddenNodes: hiddenNodes,
+
+      // override the default mesh draw function to use our custom 
+      // visualization shader, textures and colors
       draw: function() {
+
         // cache some properties for easy access
         var tilt = Tilt.$renderer,
           vertices = this.vertices,
           texCoord = this.texCoord,
-          indices = this.indices,
           color = this.color,
-          texalpha = this.texalpha,
+          indices = this.indices,
+          tint = this.tint,
+          alpha = this.alpha,
           texture = this.texture,
           drawMode = this.drawMode,
           program = visualizationShader;
 
-        if (texalpha < 0.95) {
-          // use the custom visualization program
-          program.use();
+        // use the custom visualization program
+        program.use();
 
-          // bind the attributes and uniforms as necessary
-          program.bindVertexBuffer("vertexPosition", vertices);
-          program.bindVertexBuffer("vertexTexCoord", texCoord);
-          program.bindUniformMatrix("mvMatrix", tilt.mvMatrix);
-          program.bindUniformMatrix("projMatrix", tilt.projMatrix);
-          program.bindUniformVec4("color", color);
-          program.bindUniformFloat("texalpha", texalpha);
-          program.bindTexture("sampler", texture);
-        }
-        else {
-          tilt.useTextureShader(vertices, texCoord, color, texture);
-        }
+        // bind the attributes and uniforms as necessary
+        program.bindVertexBuffer("vertexPosition", vertices);
+        program.bindVertexBuffer("vertexTexCoord", texCoord);
+        program.bindVertexBuffer("vertexColor", color);
+        program.bindUniformMatrix("mvMatrix", tilt.mvMatrix);
+        program.bindUniformMatrix("projMatrix", tilt.projMatrix);
+        program.bindUniformVec4("tint", tint);
+        program.bindUniformFloat("alpha", alpha);
+        program.bindTexture("sampler", texture);
 
         // use the necessary shader and draw the vertices as indexed elements
         tilt.drawIndexedVertices(drawMode, indices);
@@ -396,12 +385,15 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
       color: "#0004",
       drawMode: tilt.LINES
     });
-  };
+
+    // call any necessary additional mesh initialization functions
+    this.performMeshColorbufferRefresh();
+  }.bind(this);
 
   /**
    * Handle some browser events, e.g. when the tabs are selected or closed.
    */
-  function setupBrowserEvents() {
+  var setupBrowserEvents = function() {
     var tabContainer = gBrowser.tabContainer;
 
     // when the tab is closed or the url changes, destroy visualization
@@ -409,12 +401,12 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
     tabContainer.addEventListener("TabAttrModified", gClose, false);
     gBrowser.contentWindow.addEventListener("resize", gResize, false);
     gBrowser.addEventListener("mouseover", gMouseOver, false);
-  };
+  }.bind(this);
 
   /**
    * Setup the controller, referencing this visualization.
    */
-  function setupController() {
+  var setupController = function() {
     // we might have the controller undefined (not passed as a parameter in 
     // the constructor, in which case the controller won't be used)
     if ("undefined" === typeof controller) {
@@ -428,12 +420,12 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
     if ("function" === typeof controller.init) {
       controller.init(canvas);
     }
-  };
+  }.bind(this);
 
   /**
    * Setup the user interface, referencing this visualization.
    */
-  function setupUI() {
+  var setupUI = function() {
     // we might have the interface undefined (not passed as a parameter in 
     // the constructor, in which case the interface won't be used)
     if ("undefined" === typeof ui) {
@@ -444,32 +436,32 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
     ui.visualization = this;
     ui.controller = controller;
 
-    // the top-level UI might need to force redraw
-    Tilt.UI.performRedraw = this.performRedraw;
+    // the top-level UI might need to force redraw, teach it how to do that
+    Tilt.UI.requestRedraw = this.requestRedraw;
 
     // call the init function on the user interface if available
     if ("function" === typeof ui.init) {
       ui.init(canvas);
     }
-  };
+  }.bind(this);
 
   /**
    * Event method called when the tab container of the current browser closes.
    */
-  function gClose(e) {
+  var gClose = function(e) {
     if (TiltChrome.BrowserOverlay.href !== window.content.location.href) {
       TiltChrome.BrowserOverlay.href = null;
       TiltChrome.BrowserOverlay.destroy(true, true);
     }
-  };
+  }.bind(this);
 
   /**
    * Event method called when the content of the current browser is resized.
    */
-  function gResize(e) {
+  var gResize = function(e) {
+    this.requestRedraw();
     tilt.width = window.content.innerWidth;
     tilt.height = window.content.innerHeight;
-    redraw = true;
 
     // resize and update the controller and the user interface accordingly
     if (controller && "function" === typeof controller.resize) {
@@ -483,13 +475,13 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
     if ("open" === TiltChrome.BrowserOverlay.sourceEditor.state) {
       TiltChrome.BrowserOverlay.sourceEditor.hidePopup();
     }
-  };
+  }.bind(this);
 
   /**
    * Event method called when the mouse comes over the current browser.
    */
-  function gMouseOver() {
-    redraw = true;
+  var gMouseOver = function() {
+    this.requestRedraw();
 
     // this happens after the browser window is resized
     if (canvas.width !== tilt.width || canvas.height !== tilt.height) {
@@ -503,7 +495,7 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
       tilt.gl.viewport(0, 0, canvas.width, canvas.height);
       draw();
     }
-  };
+  }.bind(this);
 
 /* The following are delegate functions used in the controller or the UI.
  * ------------------------------------------------------------------------ */
@@ -512,8 +504,57 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
    * Redraws the visualization once.
    * Call this from the controller or ui to update rendering.
    */
-  this.performRedraw = function() {
+  this.requestRedraw = function() {
     redraw = true;
+  };
+
+  /**
+   * Refreshes the visualization with the new custom global configuration
+   * regarding the color codes for specified html nodes.
+   */
+  this.performMeshColorbufferRefresh = function() {
+    this.requestRedraw();
+
+    var config = TiltChrome.Config.UI,
+      indices = mesh.indices.components,
+      nodes = mesh.visibleNodes,
+      color = [];
+
+    // each stack is composed of 30 vertices, so there's information
+    // about a node once in 30 iterations (to avoid duplication)
+    for (var i = 0, len = indices.length; i < len; i += 30) {
+
+      // get the node and the name to decide how to color code the node
+      var node = nodes[Math.floor(i / 30)],
+
+      // the head and body use an identical color code by default
+      name = (node.localName !== "head" &&
+              node.localName !== "body") ? 
+              node.localName : "head/body",
+
+      // the color settings may or not be specified for the current node name 
+      settings = config.domStrips[name] ||
+                 config.domStrips["other"],
+
+      // create a gradient using the current node color code
+      hex = Tilt.Math.hex2rgba(settings.fill),
+      g1 = [hex[0] * 0.6, hex[1] * 0.6, hex[2] * 0.6],
+      g2 = [hex[0] * 1.0, hex[1] * 1.0, hex[2] * 1.0];
+
+      // compute the colors for each vertex in the mesh
+      color.push(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                 g1[0], g1[1], g1[2],
+                 g1[0], g1[1], g1[2],
+                 g2[0], g2[1], g2[2],
+                 g2[0], g2[1], g2[2],
+                 g2[0], g2[1], g2[2],
+                 g2[0], g2[1], g2[2],
+                 g1[0], g1[1], g1[2],
+                 g1[0], g1[1], g1[2]);
+    }
+
+    // create the buffer using the previously computed color array
+    mesh.color = new Tilt.VertexBuffer(color, 3);
   };
 
   /**
@@ -530,15 +571,16 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
                                   [0, 0, tilt.width, tilt.height],
                                   mesh.mvMatrix,
                                   mesh.projMatrix),
-      point = vec3.create(),
-      intersections = [],
-      indices = mesh.indices.components,
-      vertices = mesh.vertices.components,
-      i, len, v0, v1, v2;
+
+    // cache some variables to help with calculating the ray intersections
+    intersections = [],
+    point = vec3.create(),
+    indices = mesh.indices.components,
+    vertices = mesh.vertices.components;
 
     // check each triangle in the visualization mesh for intersections with
     // the mouse ray (using a simple ray picking algorithm)
-    for (i = 0, len = indices.length; i < len; i += 3) {
+    for (var i = 0, len = indices.length, v0, v1, v2; i < len; i += 3) {
 
       // the first triangle vertex
       v0 = [vertices[indices[i    ] * 3    ],
@@ -561,10 +603,11 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
         // if the ray-triangle intersection is greater than 0, continue and
         // save the intersection, along with the node information
         intersections.push({
-          location: vec3.create(point),
-          node: mesh.visibleNodes[Math.floor(i / 30)]
+
           // each stack is composed of 30 vertices, so there's information
           // about a node once in 30 iterations (to avoid duplication)
+          node: mesh.visibleNodes[Math.floor(i / 30)],
+          location: vec3.create(point)
         });
       }
     }
@@ -590,39 +633,38 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
   this.openEditor = function(uid) {
     if ("number" === typeof uid) {
       var visibleNodes = mesh.visibleNodes,
-        hiddenNodes = mesh.hiddenNodes,
-        node, i, len;
+        hiddenNodes = mesh.hiddenNodes;
 
       // first check all the visible nodes for the uid
       // we're not using hashtables for this because it's not necessary, as
       // this function is called very few times
-      for (i = 0, len = visibleNodes.length; i < len; i++) {
-        node = visibleNodes[i];
+      for (var i = 0, len = visibleNodes.length; i < len; i++) {
+        var visibleNode = visibleNodes[i];
 
         // if we found the searched node uid, open the editor with the node
-        if (uid === node.uid) {
-          return this.openEditor(node);
+        if (uid === visibleNode.uid) {
+          return this.openEditor(visibleNode);
         }
       }
 
       // second check all the hidden nodes for the uid
       // this will happen when the editor needs to open information about a
       // node that is not rendered (it isn't part of the visualization mesh)
-      for (i = 0, len = hiddenNodes.length; i < len; i++) {
-        node = hiddenNodes[i];
+      for (var j = 0, len2 = hiddenNodes.length; j < len2; j++) {
+        var hiddenNode = hiddenNodes[j];
 
         // if we found the searched node uid, open the editor with the node
-        if (uid === node.uid) {
-          return this.openEditor(node);
+        if (uid === hiddenNode.uid) {
+          return this.openEditor(hiddenNode);
         }
       }
     }
     else if ("object" === typeof uid) {
-      var node = uid,
+      var sourceEditor = TiltChrome.BrowserOverlay.sourceEditor,
+        node = uid,
 
       // get and format the inner html text from the node
-      html = Tilt.String.trim(
-        style_html(node.innerHTML, {
+      html = Tilt.String.trim(style_html(node.innerHTML, {
           'indent_size': 2,
           'indent_char': ' ',
           'max_char': 78,
@@ -646,7 +688,7 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
         (node.id ? " id=\"" + node.id + "\"" : "") + ">";
 
       // show the popup panel containing the source editor iframe
-      TiltChrome.BrowserOverlay.sourceEditor.openPopup(null, "overlap",
+      sourceEditor.openPopup(null, "overlap",
         window.innerWidth - iframe.width - 21,
         window.innerHeight - iframe.height - 77, false, false);
 
@@ -722,7 +764,7 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
         transforms.translation[2] != z) {
 
       vec3.set(translation, transforms.translation);
-      redraw = true;
+      this.requestRedraw();
     }
   };
 
@@ -743,7 +785,7 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
         transforms.rotation[3] != w) {
 
       quat4.set(quaternion, transforms.rotation);
-      redraw = true;
+      this.requestRedraw();
     }
   };
 
@@ -753,6 +795,7 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
    */
   this.setMeshWireframeColor = function(color) {
     meshWireframe.color = color;
+    this.requestRedraw();
   };
 
   /**
@@ -761,6 +804,7 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
    */
   this.setMeshWireframeAlpha = function(alpha) {
     meshWireframe.color[3] = alpha;
+    this.requestRedraw();
   };
 
   /**
@@ -768,7 +812,8 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
    * @param {Array} color: the color expressed as [r, g, b, a] between 0..1
    */
   this.setMeshColor = function(color) {
-    mesh.color = color;
+    mesh.tint = color;
+    this.requestRedraw();
   };
 
   /**
@@ -776,7 +821,8 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
    * @param {Number} alpha: the alpha expressed as number between 0..1
    */
   this.setMeshAlpha = function(alpha) {
-    mesh.color[3] = alpha;
+    mesh.tint[3] = alpha;
+    this.requestRedraw();
   };
 
   /**
@@ -784,7 +830,8 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
    * @param {Number} alpha: the alpha expressed as number between 0..1
    */
   this.setMeshTextureAlpha = function(alpha) {
-    mesh.texalpha = alpha;
+    mesh.alpha = alpha;
+    this.requestRedraw();
   };
 
   /**
