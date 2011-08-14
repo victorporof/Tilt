@@ -44,6 +44,7 @@ Tilt.UI.mouseY = 0;
 Tilt.UI.mousePressed = false;
 Tilt.UI.mouseScrollAmmount = 0;
 Tilt.UI.keyPressed = [];
+Tilt.UI.requestRedraw = function() {};
 
 /**
  * Updates and draws each view handled by the UI.
@@ -89,6 +90,7 @@ Tilt.UI.presentModal = function(container) {
   container.modal = true;
   container.hidden = false;
   container.disabled = false;
+  this.requestRedraw();
 };
 
 /**
@@ -110,6 +112,7 @@ Tilt.UI.dismissModal = function(container) {
   container.modal = false;
   container.hidden = true;
   container.disabled = true;
+  this.requestRedraw();
 };
 
 /**
