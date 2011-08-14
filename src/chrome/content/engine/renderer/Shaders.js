@@ -66,7 +66,7 @@ Tilt.Shaders.Color = {
    */
   fs: [
 "#ifdef GL_ES",
-"precision highp float;",
+"precision lowp float;",
 "#endif",
 
 "uniform vec4 color;",
@@ -112,7 +112,7 @@ Tilt.Shaders.Texture = {
    */
   fs: [
 "#ifdef GL_ES",
-"precision highp float;",
+"precision lowp float;",
 "#endif",
 
 "uniform vec4 color;",
