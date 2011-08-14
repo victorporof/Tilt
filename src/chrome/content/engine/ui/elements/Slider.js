@@ -174,7 +174,7 @@ Tilt.Slider.prototype = {
       direction = this.$direction, p;
 
     // first, make sure the passed value is in 0..100 range
-    this.$value = Tilt.Math.clamp(value, 0, 100);
+    this.$value = Tilt.Math.clamp(value + 0.001, 0, 100);
 
     // depending on the direction, move the handler along the x or y axis
     if (direction === 0) {
