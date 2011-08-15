@@ -71,19 +71,20 @@
         <hbox align="center">
           <label id="tilt-sourceeditor-label"
             crop="center"
-            width="380"/>
+            width="350"/>
 
           <spacer flex="1"/>
 
           <button id="tilt-sourceeditor-close"
             label="Close"
-            oncommand="document.getElementById('tilt-sourceeditor').hidePopup();"/>
+            oncommand="document.getElementById('tilt-sourceeditor') 
+                      .hidePopup();"/>
         </hbox>
 
         <iframe id="tilt-sourceeditor-iframe"
           src="chrome://tilt/content/ace/editor.html"
-          width="480"
-          height="320"/>
+          width="450"
+          height="300"/>
       </vbox>
     </panel>
 
