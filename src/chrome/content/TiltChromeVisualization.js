@@ -269,7 +269,7 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
       hiddenNodes = [];
 
     // traverse the document and issue a callback for each node in the dom
-    Tilt.Document.traverse(function(node, depth, index, uid) {
+    Tilt.Document.traverse(function(node, depth, index, uid, left, top) {
 
       // call the node callback in the ui
       // this is done (in the default implementation) to create a tree-like
@@ -322,7 +322,6 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
 
       // use this node only if it actually has visible dimensions
       if (coord.width > 4 && coord.height > 4) {
-
         info.index = visibleNodes.length;
         visibleNodes.push(info);
 
@@ -331,8 +330,8 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
 
         // the entire mesh's pivot is the screen center
         z = depth * thickness + Math.random() / 10,
-        x = coord.x - tilt.width / 2 + Math.random() / 10,
-        y = coord.y - tilt.height / 2 + Math.random() / 10,
+        x = coord.x - tilt.width / 2 + Math.random() / 10 + left,
+        y = coord.y - tilt.height / 2 + Math.random() / 10 + top,
         w = coord.width,
         h = coord.height;
 
@@ -388,14 +387,14 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
         info.index = -1;
         hiddenNodes.push(info);
       }
-    }, function(maxDepth, totalNodes) {
+    }.bind(this), function(maxDepth, totalNodes) {
       // call the ready callback in the ui
       // this is done (in the default implementation) to create a tree-like
       // representation using color coded strips for each node in the dom
       if (ui && "undefined" !== ui.domVisualizationMeshReadyCallback) {
         ui.domVisualizationMeshReadyCallback(maxDepth, totalNodes);
       }
-    }.bind(this));
+    }.bind(this), true);
 
     // create the visualization mesh using the vertices, texture coordinates
     // and indices computed when traversing the dom
@@ -819,11 +818,13 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
       settings = config.domStrips[name] ||
                  config.domStrips["other"];
 
-      highlightQuad.index = index;
-      highlightQuad.fill = settings.fill + "55";
-      highlightQuad.stroke = settings.fill + "AA";
+      if (name !== "html") {
+        highlightQuad.index = index;
+        highlightQuad.fill = settings.fill + "55";
+        highlightQuad.stroke = settings.fill + "AA";
 
-      this.requestRedraw();
+        this.requestRedraw();
+      }
     }
   };
 
