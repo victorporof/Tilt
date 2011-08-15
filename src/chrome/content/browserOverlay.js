@@ -83,16 +83,24 @@ TiltChrome.BrowserOverlay = {
       // remember the current tab location
       this.href = window.content.location.href;
 
-      // set the width and height to mach the content window dimensions
-      var width = window.content.innerWidth;
-      var height = window.content.innerHeight;
-
       // retain the panels for future reference (used by the code editor)
-      this.sourceEditor = document.getElementById("tilt-sourceeditor");
-      this.colorPicker = document.getElementById("tilt-colorpicker");
+      this.sourceEditor = {
+        panel: document.getElementById("tilt-sourceeditor"),
+        title: document.getElementById("tilt-sourceeditor-title"),
+        iframe: document.getElementById("tilt-sourceeditor-iframe")
+      };
+
+      this.colorPicker = {
+        panel: document.getElementById("tilt-colorpicker"),
+        iframe: document.getElementById("tilt-colorpicker-iframe")
+      };
 
       // get the iframe which will be used to create the canvas element
-      var iframe = document.getElementById("tilt-iframe");
+      var iframe = document.getElementById("tilt-iframe"),
+
+      // set the width and height to mach the content window dimensions
+      width = window.content.innerWidth,
+      height = window.content.innerHeight;
 
       // inside a chrome environment the default document and parent nodes
       // are different from an unprivileged html page, so change these
@@ -128,17 +136,22 @@ TiltChrome.BrowserOverlay = {
     }
 
     // remove any remaining traces of popups and the visualization
-    function finish() {
+    var finish = function() {
       if (this.visualization !== null) {
         this.visualization.destroy();
         this.visualization = null;
       }
-      if (this.sourceEditor !== null) {
-        this.sourceEditor.hidePopup();
-        this.sourceEditor = null;
+      if (this.sourceEditor !== null) {      
+        this.sourceEditor.panel.hidePopup();
+        this.sourceEditor.panel = null;
+        this.sourceEditor.title = null;
+        this.sourceEditor.iframe = null;
+        this.soruceEditor = null;
       }
       if (this.colorPicker !== null) {
-        this.colorPicker.hidePopup();
+        this.colorPicker.panel.hidePopup();
+        this.colorPicker.panel = null;
+        this.colorPicker.iframe = null;
         this.colorPicker = null;
       }
 
@@ -150,20 +163,20 @@ TiltChrome.BrowserOverlay = {
       // if specified, do a garbage collect when everything is over
       if (gc) {
         window.setTimeout(function() {
-          window.QueryInterface(Ci.nsIInterfaceRequestor)
-            .getInterface(Ci.nsIDOMWindowUtils)
-            .garbageCollect();
+          window.QueryInterface(Ci.nsIInterfaceRequestor).
+            getInterface(Ci.nsIDOMWindowUtils).
+            garbageCollect();
         }, 100);
       }
-    }
+    }.bind(this);
 
     // finishing the cleanup may take some time, so set a small timeout
     if (timeout) {
-      window.setTimeout(finish.bind(this), 100);
+      window.setTimeout(finish, 100);
     }
     else {
       // the finish timeout wasn't explicitly requested, continue normally
-      finish.call(this);
+      finish();
     }
   }
 };
