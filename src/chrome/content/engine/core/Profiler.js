@@ -66,13 +66,15 @@ Tilt.Profiler = {
    * @param {Function} duringCall: optional, custom logic for interception
    */
   intercept: function(ns, object, name, beforeCall, afterCall, duringCall) {
+    var method, index, i;
+
     if (!this.enabled) {
       return;
     }
 
     // if the function name is falsy, intercept all the object functions
     if (!name) {
-      for (var i in object) {
+      for (i in object) {
         // if an object member is a function, automatically intercept it
         if ("function" === typeof object[i]) {
           this.intercept(ns, object, i, beforeCall, afterCall, duringCall);
@@ -93,10 +95,10 @@ Tilt.Profiler = {
     }
 
     // get the function from the object
-    var method = object[name];
+    method = object[name];
 
     if ("function" === typeof method) {
-      var index = this.functions.length;
+      index = this.functions.length;
 
       // save some information about this function in an array for profiling
       this.functions[index] = {
@@ -173,8 +175,7 @@ Tilt.Profiler = {
    * Logs information about the currently profiled functions.
    */
   log: function() {
-    var functions = this.functions.slice(0), // duplicate the functions array
-      f, f2, i, j, len;
+    var functions = this.functions.slice(0); // duplicate the functions array
 
     // once everything is finished, logging can be done by sorting all the 
     // recorded function calls, timing and other information by a key
@@ -186,16 +187,16 @@ Tilt.Profiler = {
     });
 
     // browse through each intercepted function information
-    for (i = 0; i < functions.length; i++) {
-      f = functions[i];
+    for (var i = 0; i < functions.length; i++) {
+      var f = functions[i];
 
       // because some functions inside objects can be duplicated when creating 
       // object via var foo = new MyObject(), that is, when they are declared 
       // inside the constructor function and not the object prototype, we need 
       // to check for duplicates and recalculate the number of calls, longest 
       // time, total time, average time for these situations.
-      for (j = i + 1; j < functions.length; j++) {
-        f2 = functions[j];
+      for (var j = i + 1; j < functions.length; j++) {
+        var f2 = functions[j];
 
         if (f.name === f2.name) {
           f.calls += f2.calls;
