@@ -69,7 +69,7 @@
 
       <vbox>
         <hbox align="center">
-          <label id="tilt-sourceeditor-label"
+          <label id="tilt-sourceeditor-title"
             crop="center"
             width="350"/>
 
