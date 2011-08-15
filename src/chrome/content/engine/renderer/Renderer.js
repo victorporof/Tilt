@@ -56,7 +56,10 @@ Tilt.Renderer = function(canvas, properties) {
    * The WebGL context obtained from the canvas element, used for drawing.
    */
   this.canvas = canvas;
-  this.gl = this.create3DContext(canvas);
+  this.gl = this.create3DContext(canvas, {
+    antialias: true,
+    stencil: true
+  });
 
   // first, clear the cache
   Tilt.clearCache();
@@ -77,6 +80,10 @@ Tilt.Renderer = function(canvas, properties) {
     this.COLOR_BUFFER_BIT = this.gl.COLOR_BUFFER_BIT;
     this.DEPTH_BUFFER_BIT = this.gl.DEPTH_BUFFER_BIT;
     this.STENCIL_BUFFER_BIT = this.gl.STENCIL_BUFFER_BIT;
+
+    this.gl.clearColor(0, 0, 0, 1);
+    this.gl.clearDepth(1);
+    this.gl.clearStencil(0);
 
     // if successful, run a success callback function if available
     if ("function" === typeof properties.success) {
@@ -246,7 +253,9 @@ Tilt.Renderer.prototype = {
     }
 
     // clear the color and depth buffers
-    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+    gl.clear(gl.COLOR_BUFFER_BIT |
+             gl.DEPTH_BUFFER_BIT |
+             gl.STENCIL_BUFFER_BIT);
   },
 
   /**
@@ -290,12 +299,13 @@ Tilt.Renderer.prototype = {
       y = h / 2,
       z = y / Math.tan(Tilt.Math.radians(45) / 2),
       znear = z / 10,
-      zfar = z * 100,
+      zfar = z * 10,
       aspect = w / h;
 
     mat4.perspective(fov, aspect, znear, zfar, this.projMatrix, true);
-    mat4.translate(this.projMatrix, [-x, -y, -z]);
     mat4.identity(this.mvMatrix);
+    mat4.translate(this.mvMatrix, [-x, -y, -z]);
+    this.depthTest(true);
   },
 
   /**
@@ -303,9 +313,11 @@ Tilt.Renderer.prototype = {
    */
   ortho: function() {
     var clip = 1000000;
+
     mat4.ortho(0, this.width, this.height, 0, -clip, clip, this.projMatrix);
-    mat4.translate(this.projMatrix, [0, 0, -clip + 1]);
     mat4.identity(this.mvMatrix);
+    mat4.translate(this.mvMatrix, [0, 0, -clip + 1]);
+    this.depthTest(false);
   },
 
   /**
@@ -505,12 +517,12 @@ Tilt.Renderer.prototype = {
    * Sets if depth testing should be enabled or not.
    * Disabling could be useful when handling transparency (for example).
    *
-   * @param {Boolean} mode: true if depth testing should be enabled
+   * @param {Boolean} enabled: true if depth testing should be enabled
    */
-  depthTest: function(mode) {
+  depthTest: function(enabled) {
     var gl = this.gl;
 
-    if (mode) {
+    if (enabled) {
       gl.enable(gl.DEPTH_TEST);
     }
     else {
@@ -519,18 +531,31 @@ Tilt.Renderer.prototype = {
   },
 
   /**
+   * Sets if stencil testing should be enabled or not.
+   * @param {Boolean} enabled: true if stencil testing should be enabled
+   */
+  stencilTest: function(enabled) {
+    var gl = this.gl;
+
+    if (enabled) {
+      gl.enable(gl.STENCIL_TEST);
+    }
+    else {
+      gl.disable(gl.STENCIL_TEST);
+    }
+  },
+
+  /**
    * Resets the drawing style to default.
-   *
-   * @param {Boolean} depthTest: optional, override the default depth testing
-   * @param {String} blendMode: optional, override the default blend mode
    */
   defaults: function(depthTest, blendMode) {
     this.tint("#fff");
     this.fill("#fff");
     this.stroke("#000");
     this.strokeWeight(1);
-    this.depthTest(depthTest || true);
-    this.blendMode(blendMode || "alpha");
+    this.depthTest(true);
+    this.stencilTest(false);
+    this.blendMode("alpha");
   },
 
   /**
@@ -600,6 +625,90 @@ Tilt.Renderer.prototype = {
       // use the necessary shader and draw the vertices
       this.useColorShader(vertices, stroke);
       this.drawVertices(this.LINE_LOOP, vertices.numItems);
+    }
+  },
+
+  /**
+   * Draw a quad composed of four vertices.
+   * Vertices must be in clockwise order, or else drawing will be distorted.
+   *
+   * @param {Array} v0: the [x, y, z] position of the first triangle point
+   * @param {Array} v1: the [x, y, z] position of the second triangle point
+   * @param {Array} v2: the [x, y, z] position of the third triangle point
+   * @param {Array} v3: the [x, y, z] position of the fourth triangle point
+   */
+  quad: function(v0, v1, v2, v3) {
+    var fill = this.$fillColor,
+      stroke = this.$strokeColor,
+      vertices = new Tilt.VertexBuffer([v0[0], v0[1], v0[2],
+                                        v1[0], v1[1], v1[2],
+                                        v2[0], v2[1], v2[2],
+                                        v3[0], v3[1], v3[2]], 3);
+
+    // draw the quad only if the fill alpha channel is not transparent
+    if (fill[3]) {
+      // use the necessary shader and draw the vertices
+      this.useColorShader(vertices, fill);
+      this.drawVertices(this.TRIANGLE_FAN, vertices.numItems);
+    }
+
+    // draw the outline only if the stroke alpha channel is not transparent
+    if (stroke[3]) {
+      // use the necessary shader and draw the vertices
+      this.useColorShader(vertices, stroke);
+      this.drawVertices(this.LINE_LOOP, vertices.numItems);
+    }
+  },
+
+  /**
+   * Draw an inversed screen quad composed of four vertices.
+   * Vertices must be in clockwise order, or else drawing will be distorted.
+   *
+   * @param {Array} v0: the [x, y, z] position of the first triangle point
+   * @param {Array} v1: the [x, y, z] position of the second triangle point
+   * @param {Array} v2: the [x, y, z] position of the third triangle point
+   * @param {Array} v3: the [x, y, z] position of the fourth triangle point
+   */
+  invquad: function(v0, v1, v2, v3) {
+    var gl = this.gl,
+      width = this.width,
+      height = this.height,
+      fill = this.$fillColor,
+      stroke = this.$strokeColor,
+      prevStrokeAlpha = stroke[3],
+      outline = new Tilt.VertexBuffer([v0[0], v0[1],
+                                       v1[0], v1[1],
+                                       v2[0], v2[1],
+                                       v3[0], v3[1]], 2);
+
+    // if (v0[1] > 0 && v1[1] > 0 && v2[1] < height && v3[1] < height) {
+      // now, time for some stencil buffer magic!
+      gl.enable(gl.STENCIL_TEST);
+      gl.enable(gl.CULL_FACE);
+      gl.cullFace(gl.FRONT);
+
+      gl.colorMask(0, 0, 0, 0);
+      gl.stencilFunc(gl.NOTEQUAL, 1, 1);
+      gl.stencilOp(gl.KEEP, gl.KEEP, gl.REPLACE);
+      this.quad(v0, v1, v2, v3);
+
+      gl.colorMask(1, 1, 1, 1);
+      gl.stencilFunc(gl.NOTEQUAL, 1, 1);
+      gl.stencilOp(gl.KEEP, gl.KEEP, gl.KEEP);
+      stroke[3] = 0;
+      this.rect(0, 0, width, height);
+      stroke[3] = prevStrokeAlpha;
+
+      gl.cullFace(gl.BACK);
+      gl.disable(gl.CULL_FACE);
+      gl.disable(gl.STENCIL_TEST);
+
+      // draw the outline only if the stroke alpha channel is not transparent
+      if (stroke[3]) {
+        // use the necessary shader and draw the vertices
+        this.useColorShader(outline, stroke);
+        this.drawVertices(this.LINE_LOOP, outline.numItems);
+      // }
     }
   },
 
