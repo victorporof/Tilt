@@ -626,8 +626,14 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
 
       // create a gradient using the current node color code
       hex = Tilt.Math.hex2rgba(settings.fill),
-      g1 = [hex[0] * 0.6, hex[1] * 0.6, hex[2] * 0.6],
-      g2 = [hex[0] * 1.0, hex[1] * 1.0, hex[2] * 1.0];
+      f1 = 0.6,
+      f2 = 1.0,
+      g1 = [Tilt.Math.clamp(hex[0] * f1, 0, 1),
+            Tilt.Math.clamp(hex[1] * f1, 0, 1),
+            Tilt.Math.clamp(hex[2] * f1, 0, 1)],
+      g2 = [Tilt.Math.clamp(hex[0] * f2, 0, 1),
+            Tilt.Math.clamp(hex[1] * f2, 0, 1),
+            Tilt.Math.clamp(hex[2] * f2, 0, 1)];
 
       // compute the colors for each vertex in the mesh
       color.push(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
