@@ -45,8 +45,8 @@ TiltChrome.EntryPoint = {
    */
   includeScripts: function() {
     // the script loader responsible with loading each Javascript file
-    var scriptLoader = Cc["@mozilla.org/moz/jssubscript-loader;1"]
-      .getService(Ci.mozIJSSubScriptLoader);
+    var scriptLoader = Cc["@mozilla.org/moz/jssubscript-loader;1"].
+      getService(Ci.mozIJSSubScriptLoader);
 
     // the 'Tilt-extension.js' source file is created at build time, and it's
     // not part of the project; no other js files will be copied/archived in
