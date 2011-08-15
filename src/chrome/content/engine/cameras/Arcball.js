@@ -48,6 +48,9 @@ var EXPORTED_SYMBOLS = ["Tilt.Arcball"];
  */
 Tilt.Arcball = function(width, height, radius) {
 
+  // intercept this object using a profiler when building in debug mode
+  Tilt.Profiler.intercept("Tilt.Arcball", this);
+
   /**
    * Values retaining the current horizontal and vertical mouse coordinates.
    */
@@ -123,7 +126,8 @@ Tilt.Arcball.prototype = {
     }
 
     // cache some variables for easier access
-    var radius = this.$radius,
+    var x, y,
+      radius = this.$radius,
       width = this.$width,
       height = this.$height,
 
@@ -133,7 +137,6 @@ Tilt.Arcball.prototype = {
       mouseLerp = this.$mouseLerp,
       mouseButton = this.$mouseButton,
       scrollValue = this.$scrollValue,
-
       keyCode = this.$keyCode,
 
       startVec = this.$startVec,
@@ -158,8 +161,8 @@ Tilt.Arcball.prototype = {
     mouseLerp[1] += (mouseMove[1] - mouseLerp[1]) * frameDelta;
 
     // cache the interpolated mouse coordinates
-    var x = mouseLerp[0],
-      y = mouseLerp[1];
+    x = mouseLerp[0];
+    y = mouseLerp[1];
 
     // the smoothed arcball rotation may not be finished when the mouse is
     // pressed again, so cancel the rotation if other events occur or the 
@@ -395,8 +398,8 @@ Tilt.Arcball.prototype = {
     y = (y - height / 2) / radius;
 
     // compute the square length of the vector to the point from the center
-    var sqlength = x * x + y * y,
-      normal = 0;
+    var normal = 0,
+      sqlength = x * x + y * y;
 
     // if the point is mapped outside of the sphere
     if (sqlength > 1) {
@@ -476,7 +479,8 @@ Tilt.Arcball.prototype = {
    * @param {Number} factor: the reset interpolation factor between frames
    */
   reset: function(factor) {
-    var scrollValue = this.$scrollValue,
+    var inverse,
+      scrollValue = this.$scrollValue,
       lastRot = this.$lastRot,
       deltaRot = this.$deltaRot,
       currentRot = this.$currentRot,
@@ -486,54 +490,37 @@ Tilt.Arcball.prototype = {
       addKeyRot = this.$addKeyRot,
       addKeyTrans = this.$addKeyTrans;
 
-    // if the interpolation is not specified, reset everything immediately
-    if (!factor) {
-      quat4.set([0, 0, 0, 1], lastRot);
-      quat4.set([0, 0, 0, 1], deltaRot);
-      quat4.set([0, 0, 0, 1], currentRot);
-      vec3.set([0, 0, 0], lastTrans);
-      vec3.set([0, 0, 0], deltaTrans);
-      vec3.set([0, 0, 0], currentTrans);
+    // create an interval and smoothly reset all the values to identity
+    this.$setInterval(function() {
+      inverse = quat4.inverse(lastRot);
 
-      addKeyRot[0] = 0;
-      addKeyRot[1] = 0;
-      addKeyTrans[0] = 0;
-      addKeyTrans[1] = 0;
-    }
-    else {
-      // create an interval and smoothly reset all the values to identity
-      this.$setInterval(function() {
-        var inverse = quat4.inverse(lastRot);
+      // reset the rotation quaternion and translation vector
+      quat4.slerp(lastRot, inverse, 1 - factor);
+      quat4.slerp(deltaRot, inverse, 1 - factor);
+      quat4.slerp(currentRot, inverse, 1 - factor);
+      vec3.scale(lastTrans, factor);
+      vec3.scale(deltaTrans, factor);
+      vec3.scale(currentTrans, factor);
 
-        // reset the rotation quaternion and translation vector
-        quat4.slerp(lastRot, inverse, 1 - factor);
-        quat4.slerp(deltaRot, inverse, 1 - factor);
-        quat4.slerp(currentRot, inverse, 1 - factor);
-        vec3.scale(lastTrans, factor);
-        vec3.scale(deltaTrans, factor);
-        vec3.scale(currentTrans, factor);
+      // reset any additional transforms by the keyboard or mouse
+      addKeyRot[0] *= factor;
+      addKeyRot[1] *= factor;
+      addKeyTrans[0] *= factor;
+      addKeyTrans[1] *= factor;
+      this.$scrollValue *= factor;
 
-        // reset any additional transforms by the keyboard or mouse
-        addKeyRot[0] *= factor;
-        addKeyRot[1] *= factor;
-        addKeyTrans[0] *= factor;
-        addKeyTrans[1] *= factor;
-        this.$scrollValue *= factor;
-
-        // clear the loop if the all values are very close to zero
-        if (vec3.length(lastRot) < 0.0001 &&
-            vec3.length(deltaRot) < 0.0001 &&
-            vec3.length(currentRot) < 0.0001 &&
-            vec3.length(lastTrans) < 0.01 &&
-            vec3.length(deltaTrans) < 0.01 &&
-            vec3.length(currentTrans) < 0.01 &&
-            vec3.length([addKeyRot[0], addKeyRot[1], scrollValue]) < 0.01 &&
-            vec3.length([addKeyTrans[0], addKeyTrans[1], scrollValue]) < 0.01)
-        {
-          this.$clearInterval();
-        }
-      }.bind(this), 1000 / 60);
-    }
+      // clear the loop if the all values are very close to zero
+      if (vec3.length(lastRot) < 0.0001 &&
+          vec3.length(deltaRot) < 0.0001 &&
+          vec3.length(currentRot) < 0.0001 &&
+          vec3.length(lastTrans) < 0.01 &&
+          vec3.length(deltaTrans) < 0.01 &&
+          vec3.length(currentTrans) < 0.01 &&
+          vec3.length([addKeyRot[0], addKeyRot[1], scrollValue]) < 0.01 &&
+          vec3.length([addKeyTrans[0], addKeyTrans[1], scrollValue]) < 0.01) {
+        this.$clearInterval();
+      }
+    }.bind(this), 1000 / 60);
   },
 
   /**
@@ -559,11 +546,12 @@ Tilt.Arcball.prototype = {
    * Saves the current arcball state, typically after mouse or resize events.
    */
   $save: function() {
-    var x = this.$mousePress[0],
-      y = this.$mousePress[1],
+    var mousePress = this.$mousePress,
       mouseMove = this.$mouseMove,
       mouseRelease = this.$mouseRelease,
-      mouseLerp = this.$mouseLerp;
+      mouseLerp = this.$mouseLerp,
+      x = this.$mousePress[0],
+      y = this.$mousePress[1];
 
     mouseMove[0] = x;
     mouseMove[1] = y;
@@ -577,6 +565,7 @@ Tilt.Arcball.prototype = {
    * Destroys this object and deletes all members.
    */
   destroy: function() {
+    this.stop();
     Tilt.destroyObject(this);
   }
 };
