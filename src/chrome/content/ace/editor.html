@@ -25,7 +25,6 @@
       window.refreshCodeEditor = function(type) {
         var editor = ace.edit("code");
         editor.setTheme("ace/theme/dawn");
-        editor.renderer.setHScrollBarAlwaysVisible(false);
 
         if (type === "html") {
           var HTMLMode = require("ace/mode/html").Mode;
