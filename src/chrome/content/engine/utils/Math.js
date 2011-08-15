@@ -191,22 +191,35 @@ Tilt.Math = {
    * @return {Array} the projected coordinates
    */
   project: function(p, viewport, mvMatrix, projMatrix, out) {
-    var mvpMatrix = mat4.create(), coordinates = quat4.create();
+    var mvpMatrix, coordinates = quat4.create();
 
     // compute model view projection matrix
-    mat4.multiply(projMatrix, mvMatrix, mvpMatrix);
+    if (projMatrix) {
+      mat4.multiply(projMatrix, mvMatrix, mvpMatrix = mat4.create());
+    }
+    else {
+      mvpMatrix = mvMatrix;
+    }
 
     // now transform that vector into screen coordinates
     p[3] = 1; // remember the homogenous w coordinate!
     mat4.multiplyVec4(mvpMatrix, p, coordinates);
 
-    // transform the homogenous coordinates into screen space
-    out[0]  =  coordinates[0] / coordinates[3];
-    out[1]  =  coordinates[1] / coordinates[3];
-    out[0] *=  viewport[2] / 2;
-    out[1] *= -viewport[3] / 2;
-    out[0] +=  viewport[2] / 2;
-    out[1] +=  viewport[3] / 2;
+    if (projMatrix) {
+      // transform the homogenous coordinates into screen space
+      out[0]  =  coordinates[0] / coordinates[3];
+      out[1]  =  coordinates[1] / coordinates[3];
+      out[0] *=  viewport[2] / 2;
+      out[1] *= -viewport[3] / 2;
+      out[0] +=  viewport[2] / 2;
+      out[1] +=  viewport[3] / 2;
+      out[2]  =  0;
+    }
+    else {
+      out[0] = coordinates[0];
+      out[1] = coordinates[1];
+      out[2] = coordinates[2];
+    }
 
     return out;
   },
