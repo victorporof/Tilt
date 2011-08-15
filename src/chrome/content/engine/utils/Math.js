@@ -181,6 +181,37 @@ Tilt.Math = {
   },
 
   /**
+   * Projects a 3D point on a 2D plane.
+   *
+   * @param {Array} p: the [x, y, z] coordinates of the point to project
+   * @param {Array} viewport: the viewport [x, y, width, height] coordinates
+   * @param {Array} mvMatrix: the model view matrix
+   * @param {Array} projMatrix: the projection matrix
+   * @param {Array} out: optional parameter, the array to write the values to
+   * @return {Array} the projected coordinates
+   */
+  project: function(p, viewport, mvMatrix, projMatrix, out) {
+    var mvpMatrix = mat4.create(), coordinates = quat4.create();
+
+    // compute model view projection matrix
+    mat4.multiply(projMatrix, mvMatrix, mvpMatrix);
+
+    // now transform that vector into screen coordinates
+    p[3] = 1; // remember the homogenous w coordinate!
+    mat4.multiplyVec4(mvpMatrix, p, coordinates);
+
+    // transform the homogenous coordinates into screen space
+    out[0]  =  coordinates[0] / coordinates[3];
+    out[1]  =  coordinates[1] / coordinates[3];
+    out[0] *=  viewport[2] / 2;
+    out[1] *= -viewport[3] / 2;
+    out[0] +=  viewport[2] / 2;
+    out[1] +=  viewport[3] / 2;
+
+    return out;
+  },
+
+  /**
    * Port of gluUnProject.
    *
    * @param {Array} p: the [x, y, z] coordinates of the point to unproject;
@@ -194,7 +225,7 @@ Tilt.Math = {
   unproject: function(p, viewport, mvMatrix, projMatrix, out) {
     var mvpMatrix = mat4.create(), coordinates = out || quat4.create();
 
-    // compute the inverse of the perspective x model-view matrix
+    // compute the inverse of the perspective x model view matrix
     mat4.multiply(projMatrix, mvMatrix, mvpMatrix);
     mat4.inverse(mvpMatrix);
 
@@ -494,7 +525,7 @@ Tilt.Math = {
       hex = [cr, cr, cg, cg, cb, cb, "ff"].join('');
     }
     // e.g. "f008"
-    else if (hex.length === 4) {
+    else if (hex.length === 4 || hex.length === 5) {
       cr = hex.charAt(0);
       cg = hex.charAt(1);
       cb = hex.charAt(2);
