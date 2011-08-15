@@ -92,7 +92,7 @@ TiltChrome.BrowserOverlay = {
       this.colorPicker = document.getElementById("tilt-colorpicker");
 
       // get the iframe which will be used to create the canvas element
-      var iframe = document.getElementById("tilt-sourceeditor-iframe");
+      var iframe = document.getElementById("tilt-iframe");
 
       // inside a chrome environment the default document and parent nodes
       // are different from an unprivileged html page, so change these
