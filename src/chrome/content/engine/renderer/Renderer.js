@@ -40,8 +40,8 @@ var EXPORTED_SYMBOLS = ["Tilt.Renderer"];
  *
  * @param {HTMLCanvasElement} canvas: the canvas element used for rendering
  * @param {Object} properties: additional properties for this object
- *  @param {Function} success: to be called if initialization worked
- *  @param {Function} fail: to be called if initialization failed
+ *  @param {Function} onsuccess: to be called if initialization worked
+ *  @param {Function} onfail: to be called if initialization failed
  * @return {Tilt.Renderer} the newly created object
  */
 Tilt.Renderer = function(canvas, properties) {
@@ -85,12 +85,9 @@ Tilt.Renderer = function(canvas, properties) {
     this.gl.clearDepth(1);
     this.gl.clearStencil(0);
 
-    this.gl.enable(this.gl.LINE_SMOOTH);
-    this.gl.hint(this.gl.LINE_SMOOTH_HINT, this.gl.NICEST);
-
     // if successful, run a success callback function if available
     if ("function" === typeof properties.success) {
-      properties.success();
+      properties.onsuccess();
     }
   }
   else {
@@ -98,7 +95,7 @@ Tilt.Renderer = function(canvas, properties) {
     Tilt.Console.log(Tilt.StringBundle.get("initWebGL.error"));
 
     if ("function" === typeof properties.fail) {
-      properties.fail();
+      properties.onfail();
       return;
     }
   }
@@ -155,17 +152,15 @@ Tilt.Renderer = function(canvas, properties) {
   /**
    * A shader useful for drawing vertices with only a color component.
    */
-  var color$vs = Tilt.Shaders.Color.vs;
-  var color$fs = Tilt.Shaders.Color.fs;
-  this.colorShader = new Tilt.Program(color$vs, color$fs);
+  this.colorShader = new Tilt.Program(
+    Tilt.Shaders.Color.vs, Tilt.Shaders.Color.fs);
 
   /**
    * A shader useful for drawing vertices with both a color component and
    * texture coordinates.
    */
-  var texture$vs = Tilt.Shaders.Texture.vs;
-  var texture$fs = Tilt.Shaders.Texture.fs;
-  this.textureShader = new Tilt.Program(texture$vs, texture$fs);
+  this.textureShader = new Tilt.Program(
+    Tilt.Shaders.Texture.vs, Tilt.Shaders.Texture.fs);
 
   /**
    * Vertices buffer representing the corners of a rectangle.
@@ -217,10 +212,6 @@ Tilt.Renderer = function(canvas, properties) {
   // cleanup
   canvas = null;
   properties = null;
-  color$vs = null;
-  color$fs = null;
-  texture$vs = null;
-  texture$fs = null;
 };
 
 Tilt.Renderer.prototype = {
@@ -629,6 +620,9 @@ Tilt.Renderer.prototype = {
       this.useColorShader(vertices, stroke);
       this.drawVertices(this.LINE_LOOP, vertices.numItems);
     }
+
+    vertices.destroy();
+    vertices = null;
   },
 
   /**
@@ -661,56 +655,9 @@ Tilt.Renderer.prototype = {
       this.useColorShader(vertices, stroke);
       this.drawVertices(this.LINE_LOOP, vertices.numItems);
     }
-  },
 
-  /**
-   * Draw an inversed screen quad composed of four vertices.
-   * Vertices must be in clockwise order, or else drawing will be distorted.
-   *
-   * @param {Array} v0: the [x, y] position of the first triangle point
-   * @param {Array} v1: the [x, y] position of the second triangle point
-   * @param {Array} v2: the [x, y position of the third triangle point
-   * @param {Array} v3: the [x, y] position of the fourth triangle point
-   */
-  invquad: function(v0, v1, v2, v3) {
-    var gl = this.gl,
-      width = this.width,
-      height = this.height,
-      fill = this.$fillColor,
-      stroke = this.$strokeColor,
-      prevStrokeAlpha = stroke[3],
-      outline = new Tilt.VertexBuffer([v0[0], v0[1],
-                                       v1[0], v1[1],
-                                       v2[0], v2[1],
-                                       v3[0], v3[1]], 2);
-
-    // now, time for some stencil buffer magic!
-    gl.enable(gl.STENCIL_TEST);
-    gl.enable(gl.CULL_FACE);
-    gl.cullFace(gl.FRONT);
-
-    gl.colorMask(0, 0, 0, 0);
-    gl.stencilFunc(gl.NOTEQUAL, 1, 1);
-    gl.stencilOp(gl.KEEP, gl.KEEP, gl.REPLACE);
-    this.quad(v0, v1, v2, v3);
-
-    gl.colorMask(1, 1, 1, 1);
-    gl.stencilFunc(gl.NOTEQUAL, 1, 1);
-    gl.stencilOp(gl.KEEP, gl.KEEP, gl.KEEP);
-    stroke[3] = 0;
-    this.rect(0, 0, width, height);
-    stroke[3] = prevStrokeAlpha;
-
-    gl.cullFace(gl.BACK);
-    gl.disable(gl.CULL_FACE);
-    gl.disable(gl.STENCIL_TEST);
-
-    // draw the outline only if the stroke alpha channel is not transparent
-    if (stroke[3]) {
-      // use the necessary shader and draw the vertices
-      this.useColorShader(outline, stroke);
-      this.drawVertices(this.LINE_LOOP, outline.numItems);
-    }
+    vertices.destroy();
+    vertices = null;
   },
 
   /**
