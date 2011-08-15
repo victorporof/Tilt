@@ -55,9 +55,8 @@ Tilt.UI.draw = function(frameDelta) {
     i, len, container;
 
   // before drawing, make sure we're in an orthographic default environment 
-  tilt.ortho();
   tilt.defaults();
-  tilt.depthTest(false);
+  tilt.ortho();
 
   for (i = 0, len = this.length; i < len; i++) {
     container = this[i];
