@@ -88,12 +88,12 @@ TiltChrome.Controller.MouseAndKeyboard = function() {
    * @param {Number} frameDelta: the delta time elapsed between frames
    */
   this.update = function(frameDelta) {
-    var vis = this.visualization,
+    var visualization = this.visualization,
       coord = arcball.loop(frameDelta);
 
     // update the visualization
-    vis.setRotation(coord.rotation);
-    vis.setTranslation(coord.translation);
+    visualization.setRotation(coord.rotation);
+    visualization.setTranslation(coord.translation);
   };
 
   /**
@@ -154,9 +154,14 @@ TiltChrome.Controller.MouseAndKeyboard = function() {
     if (Math.abs(downX - clickX) < 2 && 
         Math.abs(downY - clickY) < 2) {
 
+      if (!ui.mouseOver) {
+        // clicking is also the default action for visualization highlighting
+        this.visualization.performMeshPickHighlight(clickX, clickY);
+      }
+
       ui.click(clickX, clickY, button);
     }
-  };
+  }.bind(this);
 
   /**
    * Called every time a mouse button is double clicked.
@@ -175,10 +180,12 @@ TiltChrome.Controller.MouseAndKeyboard = function() {
     if (Math.abs(downX - dblClickX) < 2 && 
         Math.abs(downY - dblClickY) < 2) {
 
-      ui.doubleClick(dblClickX, dblClickY, button);
+      if (!ui.mouseOver) {
+        // double clicking is also the default action for source editing
+        this.visualization.performMeshPickEdit(dblClickX, dblClickY);
+      }
 
-      // double clicking is also the default action for visualization picking
-      this.visualization.performMeshPick(dblClickX, dblClickY, button);
+      ui.doubleClick(dblClickX, dblClickY, button);
     }
   }.bind(this);
 
@@ -225,8 +232,8 @@ TiltChrome.Controller.MouseAndKeyboard = function() {
   var keyDown = function(e) {
     var code = e.keyCode || e.which;
 
-    // handle key events only if the html editor is not open
-    if ("open" === TiltChrome.BrowserOverlay.sourceEditor.state) {
+    // handle key events only if the source editor is not open
+    if ("open" === TiltChrome.BrowserOverlay.sourceEditor.panel.state) {
       return;
     }
 
@@ -241,9 +248,9 @@ TiltChrome.Controller.MouseAndKeyboard = function() {
     var code = e.keyCode || e.which;
 
     if (code === 27) { // escape
-      // if the panel with the source code editor was open, hide it now
-      if ("open" === TiltChrome.BrowserOverlay.sourceEditor.state) {
-        TiltChrome.BrowserOverlay.sourceEditor.hidePopup();
+      // if the panel with the source source editor was open, hide it now
+      if ("open" === TiltChrome.BrowserOverlay.sourceEditor.panel.state) {
+        TiltChrome.BrowserOverlay.sourceEditor.panel.hidePopup();
       }
       else {
         // escape also closes the visualization if no other panel is open
