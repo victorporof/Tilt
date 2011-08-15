@@ -58,7 +58,7 @@ Tilt.TextureUtils = {
 
     // make sure the image is power of two before binding to a texture
     var gl = Tilt.$gl,
-      pott = Tilt.TextureUtils.resizeImageToPowerOfTwo(image, parameters),
+      resz = Tilt.TextureUtils.resizeImageToPowerOfTwo(image, parameters),
       prev = gl.getParameter(gl.TEXTURE_BINDING_2D),
       width = image.width,
       height = image.height,
@@ -68,7 +68,7 @@ Tilt.TextureUtils = {
 
     // attach the image data to the newly create texture
     gl.bindTexture(gl.TEXTURE_2D, texture);
-    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, pott);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, resz);
 
     // remember the width and the height
     texture.width = width;
@@ -88,7 +88,7 @@ Tilt.TextureUtils = {
 
     // cleanup
     gl = null;
-    pott = null;
+    resz = null;
     prev = null;
     image = null;
     parameters = null;
@@ -175,8 +175,7 @@ Tilt.TextureUtils = {
   resizeImageToPowerOfTwo: function(image, parameters) {
     var isChromePath = (image.src || "").indexOf("chrome://"),
       isPowerOfTwoWidth = Tilt.Math.isPowerOfTwo(image.width),
-      isPowerOfTwoHeight = Tilt.Math.isPowerOfTwo(image.height),
-      width, height, canvas, context;
+      isPowerOfTwoHeight = Tilt.Math.isPowerOfTwo(image.height);
 
     // first check if the image is not already power of two
     if (isPowerOfTwoWidth && isPowerOfTwoHeight && isChromePath === -1) {
@@ -187,11 +186,11 @@ Tilt.TextureUtils = {
     parameters = parameters || {};
 
     // calculate the power of two dimensions for the npot image
-    width = Tilt.Math.nextPowerOfTwo(image.width);
-    height = Tilt.Math.nextPowerOfTwo(image.height);
+    var width = Tilt.Math.nextPowerOfTwo(image.width),
+      height = Tilt.Math.nextPowerOfTwo(image.height),
 
     // create a canvas, then we will use a 2d context to scale the image
-    canvas = Tilt.Document.initCanvas(width, height);
+    canvas = Tilt.Document.initCanvas(width, height),
 
     // do some 2d context magic
     context = canvas.getContext("2d");
