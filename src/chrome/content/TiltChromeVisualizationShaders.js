@@ -89,8 +89,7 @@ TiltChrome.Shaders.Visualization = {
 
 "void main(void) {",
 "  if (texCoord.s < 0.0) {",
-"    float a = clamp(tint.a * 5.0, 0.0, 1.0) - 0.1;",
-"    gl_FragColor = vec4(color.r, color.g, color.b, a);",
+"    gl_FragColor = vec4(color.r, color.g, color.b, tint.a);",
 "  }",
 "  else {",
 "    vec4 texture = texture2D(sampler, texCoord);",
