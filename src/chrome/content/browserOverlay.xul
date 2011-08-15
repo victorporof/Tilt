@@ -94,5 +94,7 @@
         width="219"
         height="203"/>
     </panel>
+
+    <iframe id="tilt-iframe" style="visibility: collapse;"/>
   </window>  
 </overlay>
