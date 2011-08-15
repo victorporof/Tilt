@@ -51,7 +51,7 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
   var tilt = new Tilt.Renderer(canvas, {
     // if initialization fails because WebGL context coulnd't be created,
     // show a corresponding alert message and open a tab to troubleshooting
-    fail: function() {
+    onfail: function() {
       TiltChrome.BrowserOverlay.destroy(true, true);
       TiltChrome.BrowserOverlay.href = null;
       Tilt.Console.alert("Firefox", Tilt.StringBundle.get("initWebGL.error"));
@@ -148,7 +148,7 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
       gResize();
       gMouseOver();
     }.bind(this), 100); 
-  };
+  }
 
   /**
    * The rendering animation logic and loop.
@@ -194,9 +194,7 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
         // project the node corners and draw an inverted quad to darken
         // everything that's not inside the quad
         var project = Tilt.Math.project,
-          viewport = [0, 0, tilt.width, tilt.height],
           mvMatrix = mesh.mvMatrix,
-          projMatrix = mesh.projMatrix,
           vertices = mesh.vertices.components,
           indices = mesh.indices.components,
           i = highlightQuad.index * 30,
@@ -221,10 +219,10 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
               vertices[indices[i + 5] * 3 + 1],
               vertices[indices[i + 5] * 3 + 2]];
 
-        project(v0, viewport, mvMatrix, null, highlightQuad.v0);
-        project(v1, viewport, mvMatrix, null, highlightQuad.v1);
-        project(v2, viewport, mvMatrix, null, highlightQuad.v2);
-        project(v3, viewport, mvMatrix, null, highlightQuad.v3);
+        project(v0, null, mvMatrix, null, highlightQuad.v0);
+        project(v1, null, mvMatrix, null, highlightQuad.v1);
+        project(v2, null, mvMatrix, null, highlightQuad.v2);
+        project(v3, null, mvMatrix, null, highlightQuad.v3);
 
         tilt.perspective();
         tilt.depthTest(false);
@@ -251,11 +249,11 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
     // every once in a while, do a garbage collect
     // this is not vital, but it's good to keep things in control
     if ((tilt.frameCount + 1) % 1000 === 0) {
-      window.QueryInterface(Ci.nsIInterfaceRequestor)
-        .getInterface(Ci.nsIDOMWindowUtils)
-        .garbageCollect();
+      window.QueryInterface(Ci.nsIInterfaceRequestor).
+        getInterface(Ci.nsIDOMWindowUtils).
+        garbageCollect();
     }
-  };
+  }
 
   /**
    * Create the combined mesh representing the document visualization by
@@ -275,8 +273,8 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
       // call the node callback in the ui
       // this is done (in the default implementation) to create a tree-like
       // representation using color coded strips for each node in the dom
-      if (ui && "function" === typeof ui.domVisualizationMeshNodeCallback) {
-        ui.domVisualizationMeshNodeCallback(node, depth, index, uid);
+      if (ui && "function" === typeof ui.meshNodeCallback) {
+        ui.meshNodeCallback(node, depth, index, uid);
       }
 
       // save some information about each node in the dom
@@ -323,6 +321,8 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
 
       // use this node only if it actually has visible dimensions
       if (coord.width > 4 && coord.height > 4) {
+
+        // information about these nodes should still be accessible
         info.index = visibleNodes.length;
         visibleNodes.push(info);
 
@@ -385,6 +385,8 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
                               i + 6,  i + 5,  i + 5,  i + 10);
       }
       else {        
+        // information about these nodes should still be accessible, despite
+        // the fact that they're not rendered
         info.index = -1;
         hiddenNodes.push(info);
       }
@@ -392,8 +394,8 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
       // call the ready callback in the ui
       // this is done (in the default implementation) to create a tree-like
       // representation using color coded strips for each node in the dom
-      if (ui && "undefined" !== ui.domVisualizationMeshReadyCallback) {
-        ui.domVisualizationMeshReadyCallback(maxDepth, totalNodes);
+      if (ui && "undefined" !== ui.meshReadyCallback) {
+        ui.meshReadyCallback(maxDepth, totalNodes);
       }
     }.bind(this), true);
 
@@ -465,7 +467,8 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
    */
   var setupBrowserEvents = function() {
     var tabContainer = gBrowser.tabContainer,
-      sourceEditor = TiltChrome.BrowserOverlay.sourceEditor;
+      sourceEditor = TiltChrome.BrowserOverlay.sourceEditor.panel,
+      colorPicker = TiltChrome.BrowserOverlay.colorPicker.panel;
 
     // when the tab is closed or the url changes, destroy visualization
     tabContainer.addEventListener("TabClose", gClose, false);
@@ -475,6 +478,8 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
 
     sourceEditor.addEventListener("popupshown", eEditorShown, false);
     sourceEditor.addEventListener("popuphidden", eEditorHidden, false);
+    colorPicker.addEventListener("popupshown", ePickerShown, false);
+    colorPicker.addEventListener("popuphidden", ePickerHidden, false);
   }.bind(this);
 
   /**
@@ -523,13 +528,53 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
    * Event handling the source editor panel popup showing.
    */
   var eEditorShown = function() {
+    if ("function" === typeof ui.panelEditorShown) {
+      ui.panelEditorShown();
+    }
+
+    this.requestRedraw();
   }.bind(this);
 
   /**
    * Event handling the source editor panel popup hiding.
    */
   var eEditorHidden = function() {
+    if ("function" === typeof ui.panelEditorHidden) {
+      ui.panelEditorHidden();
+    }
+
     highlightQuad.index = -1;
+
+    window.QueryInterface(Ci.nsIInterfaceRequestor).
+      getInterface(Ci.nsIDOMWindowUtils).
+      garbageCollect();
+
+    this.requestRedraw();
+  }.bind(this);
+
+  /**
+   * Event handling the color picker panel popup showing.
+   */
+  var ePickerShown = function() {
+    if ("function" === typeof ui.panelPickerShown) {
+      ui.panelPickerShown();
+    }
+
+    this.requestRedraw();
+  }.bind(this);
+
+  /**
+   * Event handling the color picker panel popup hiding.
+   */
+  var ePickerHidden = function() {
+    if ("function" === typeof ui.panelPickerHidden) {
+      ui.panelPickerHidden();
+    }
+
+    window.QueryInterface(Ci.nsIInterfaceRequestor).
+      getInterface(Ci.nsIDOMWindowUtils).
+      garbageCollect();
+
     this.requestRedraw();
   }.bind(this);
 
@@ -560,8 +605,8 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
     }
 
     // hide the panel with the html editor (to avoid wrong positioning)
-    if ("open" === TiltChrome.BrowserOverlay.sourceEditor.state) {
-      TiltChrome.BrowserOverlay.sourceEditor.hidePopup();
+    if ("open" === TiltChrome.BrowserOverlay.sourceEditor.panel.state) {
+      TiltChrome.BrowserOverlay.sourceEditor.panel.hidePopup();
     }
   }.bind(this);
 
@@ -584,6 +629,7 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
       draw();
     }
   }.bind(this);
+
 
 /* The following are delegate functions used in the controller or the UI.
  * ------------------------------------------------------------------------ */
@@ -652,13 +698,80 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
   };
 
   /**
+   * Picks a stacked dom node at the x and y screen coordinates and highlights
+   * the selected node in the mesh.
+   */
+  this.performMeshPickHighlight = function(x, y) {
+    this.performMeshPick(x, y, {
+
+      onpick: function(intersections) {
+        if ("open" === TiltChrome.BrowserOverlay.sourceEditor.panel.state) {
+          TiltChrome.BrowserOverlay.sourceEditor.panel.hidePopup();
+        }
+
+        var config = TiltChrome.Config.UI,
+          node = intersections[0].node,
+          index = node.index,
+
+        // the head and body use an identical color code by default
+        name = (node.localName !== "head" &&
+                node.localName !== "body") ? 
+                node.localName : "head/body",
+
+        // the color settings may not be specified for the current node name 
+        settings = config.domStrips[name] ||
+                   config.domStrips["other"];
+
+        if (name !== "html") {
+          highlightQuad.index = index;
+          highlightQuad.fill = settings.fill + "55";
+          highlightQuad.stroke = settings.fill + "AA";
+        }
+      }.bind(this),
+
+      onfail: function() {
+        if ("open" === TiltChrome.BrowserOverlay.sourceEditor.panel.state) {
+          TiltChrome.BrowserOverlay.sourceEditor.panel.hidePopup();
+        }
+
+        highlightQuad.index = -1;      
+      }
+    });
+  };
+
+  /**
    * Picks a stacked dom node at the x and y screen coordinates and opens up
    * the source editor with the corresponding information.
+   */
+  this.performMeshPickEdit = function(x, y) {
+    this.performMeshPick(x, y, {
+      
+      onpick: function(intersections) {
+        this.openEditor(intersections[0].node);
+      }.bind(this),
+
+      onfail: function() {
+        if ("open" === TiltChrome.BrowserOverlay.sourceEditor.panel.state) {
+          TiltChrome.BrowserOverlay.sourceEditor.panel.hidePopup();
+        }
+      }
+    });
+  };
+
+  /**
+   * Picks a stacked dom node at the x and y screen coordinates and issues
+   * a callback functions with the found intersections
    *
    * @param {Number} x: the current horizontal coordinate
    * @param {Number} y: the current vertical coordinate
+   * @param {Object} properties: additional properties for this object
+   *  @param {Function} onpick: function to be called at intersection
+   *  @param {Function} onfail: function to be called if no intersections
    */
-  this.performMeshPick = function(x, y) {
+  this.performMeshPick = function(x, y, properties) {
+    // make sure the properties parameter is a valid object
+    properties = properties || {};
+
     // create a ray following the mouse direction from the near clipping plane
     // to the far clipping plane, to check for intersections with the mesh
     var ray = Tilt.Math.createRay([x, y, 0], [x, y, 1],
@@ -714,13 +827,17 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
         return a.location[2] < b.location[2] ? 1 : -1;
       });
 
-      this.openEditor(intersections[0].node);
-      this.requestRedraw();
+      if ("function" === typeof properties.onpick) {
+        properties.onpick(intersections);
+      }
     }
     else {
-      highlightQuad.index = -1;
-      this.requestRedraw();
+      if ("function" === typeof properties.onfail) {
+        properties.onfail();
+      }
     }
+
+    this.requestRedraw();
   };
 
   /**
@@ -740,7 +857,8 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
 
         // if we found the searched node uid, open the editor with the node
         if (uid === visibleNode.uid) {
-          return this.openEditor(visibleNode);
+          this.openEditor(visibleNode);
+          return;
         }
       }
 
@@ -752,12 +870,13 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
 
         // if we found the searched node uid, open the editor with the node
         if (uid === hiddenNode.uid) {
-          return this.openEditor(hiddenNode);
+          this.openEditor(hiddenNode);
+          return;
         }
       }
     }
     else if ("object" === typeof uid) {
-      var sourceEditor = TiltChrome.BrowserOverlay.sourceEditor,
+      var sourceEditor = TiltChrome.BrowserOverlay.sourceEditor.panel,
         node = uid,
 
       // get and format the inner html text from the node
@@ -766,16 +885,16 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
           'indent_char': ' ',
           'max_char': 78,
           'brace_style': 'collapse'
-        })
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;")) + "\n",
+        }).
+        replace(/</g, "&lt;").
+        replace(/>/g, "&gt;")) + "\n",
 
       // compute the custom css and attributes text from all the properties
       css = Tilt.Document.getModifiedCss(node.style),
       attr = Tilt.Document.getAttributesString(node.attributes),
 
       // get the elements used by the popup
-      label = document.getElementById("tilt-sourceeditor-label"),
+      label = document.getElementById("tilt-sourceeditor-title"),
       iframe = document.getElementById("tilt-sourceeditor-iframe"),
       code = iframe.contentDocument.getElementById("code");
 
@@ -798,6 +917,7 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
       if (node.localName === "img" ||
           node.localName === "input" ||
           node.localName === "button" ||
+          node.localName === "iframe" ||
           code.editorType === "attr") {
 
         code.innerHTML = attr;
@@ -812,7 +932,6 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
         iframe.contentWindow.refreshCodeEditor("html");
       }
 
-      // use only the first intersection (closest to the camera)
       var config = TiltChrome.Config.UI,
         index = node.index,
 
@@ -961,8 +1080,8 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
    */
   this.destroy = function() {
     var tabContainer = gBrowser.tabContainer,
-      sourceEditor = TiltChrome.BrowserOverlay.sourceEditor;
-
+      sourceEditor = TiltChrome.BrowserOverlay.sourceEditor.panel,
+      colorPicker = TiltChrome.BrowserOverlay.colorPicker.panel;
 
     if (gClose !== null) {
       tabContainer.removeEventListener("TabClose", gClose, false);
@@ -977,6 +1096,7 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
       gBrowser.removeEventListener("mouseover", gMouseOver, false);
       gMouseOver = null;
     }
+
     if (eEditorShown !== null) {
       sourceEditor.removeEventListener("popupshown", eEditorShown, false);
       eEditorShown = null;
@@ -984,6 +1104,14 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
     if (eEditorHidden !== null) {
       sourceEditor.removeEventListener("popuphidden", eEditorHidden, false);
       eEditorHidden = null;
+    }
+    if (ePickerShown !== null) {
+      colorPicker.removeEventListener("popupshown", ePickerShown, false);
+      ePickerShown = null;
+    }
+    if (ePickerHidden !== null) {
+      colorPicker.removeEventListener("popuphidden", ePickerHidden, false);
+      ePickerHidden = null;
     }
 
     if (controller && "function" === typeof controller.destroy) {
@@ -1008,8 +1136,8 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
       meshWireframe = null;
     }
     if (transforms !== null) {
-      delete transforms.rotation;
-      delete transforms.translation;
+      transforms.rotation = null;
+      transforms.translation = null;
       transforms = null;
     }
     if (tilt !== null) {
