@@ -756,7 +756,7 @@ TiltChrome.UI.Default = function() {
 
     helpPopup = new Tilt.Container({
       hidden: true,
-      background: "#0007",
+      background: "#0107",
       elements: [helpBoxSprite, helpCloseButon]
     });
 
@@ -934,10 +934,14 @@ TiltChrome.UI.Default = function() {
       stripButton.localName = node.localName;
 
       stripButton.onclick = function() {
-        if (node.localName === "meta" ||
+        if (node.localName === "img" ||
+            node.localName === "input" ||
+            node.localName === "button" ||
+            node.localName === "meta" ||
             node.localName === "link" ||
-            node.localName === "script" || node.localName === "noscript" ||
-            node.localName === "style") {
+            node.localName === "style" ||
+            node.localName === "script" ||
+            node.localName === "noscript") {
 
           this.visualization.setAttributesEditor();
           this.visualization.openEditor(uid);
