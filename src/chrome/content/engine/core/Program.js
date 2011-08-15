@@ -125,7 +125,6 @@ Tilt.Program.prototype = {
       // we obtain the sources for both the fragment and vertex shader, so
       // continue initialization as usual
       this.initProgram(xhr[0].responseText, xhr[1].responseText);
-      xhr = null;
 
       if ("function" === typeof readyCallback) {
         readyCallback();
@@ -140,15 +139,18 @@ Tilt.Program.prototype = {
    * could take quite a lot of time.
    */
   use: function() {
+    var id = this.$id;
+    
     // check if the program wasn't already active
-    if (Tilt.$activeShader !== this.$id) {
-      Tilt.$activeShader = this.$id;
+    if (Tilt.$activeShader !== id) {
+      Tilt.$activeShader = id;
 
       // cache the WebGL context variable
-      var gl = Tilt.$gl;
-
       // use the the program if it wasn't already set
+      var gl = Tilt.$gl;
       gl.useProgram(this.$ref);
+
+      // the texture cache needs to be cleared each time a program is used
       this.clearTextureCache();
 
       // check if the required vertex attributes aren't already set
