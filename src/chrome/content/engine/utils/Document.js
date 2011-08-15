@@ -166,9 +166,9 @@ Tilt.Document = {
    * @param {HTMLDocument} dom: the document object model to traverse
    */
   traverse: function(nodeCallback, readyCallback, traverseChildIframes, dom) {
-    if ("undefined" === typeof this.uid) {
-      this.uid = 0;
-    }
+    this.uid = 0;
+    this.left = 0;
+    this.top = 0;
 
     // used to calculate the maximum depth of a dom node
     var maxDepth = 0,
@@ -189,11 +189,17 @@ Tilt.Document = {
 
         // run the node callback function for each node, pass the depth, and
         // also continue the recursion with all the children
-        nodeCallback(child, depth, totalNodes, this.uid);
+        nodeCallback(child, depth, totalNodes, this.uid, this.left, this.top);
         recursive(child, depth + 1);
 
         if (traverseChildIframes && child.localName === "iframe") {
+          var coord = Tilt.Document.getNodeCoordinates(child);
+
+          this.left += coord.x;
+          this.top += coord.y;
           recursive(child.contentDocument, depth + 1);
+          this.left -= coord.x;
+          this.top -= coord.y;
         }
       }
     }.bind(this);
@@ -244,12 +250,14 @@ Tilt.Document = {
           node.localName === "body") throw new Exception();
 
       // this is the preferred way of getting the bounding client rectangle
-      var clientRect = node.getBoundingClientRect();
+      var clientRect = node.getBoundingClientRect(),
+        contentLeft = window.content.pageXOffset,
+        contentRight = window.content.pageYOffset;
 
       // a bit more verbose than a simple array
       return {
-        x: clientRect.left + window.content.pageXOffset,
-        y: clientRect.top + window.content.pageYOffset,
+        x: clientRect.left + contentLeft,
+        y: clientRect.top + contentRight,
         width: clientRect.width,
         height: clientRect.height
       };
