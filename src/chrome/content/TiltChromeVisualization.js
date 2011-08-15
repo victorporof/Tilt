@@ -221,12 +221,13 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
               vertices[indices[i + 5] * 3 + 1],
               vertices[indices[i + 5] * 3 + 2]];
 
-        project(v0, viewport, mvMatrix, projMatrix, highlightQuad.v0);
-        project(v1, viewport, mvMatrix, projMatrix, highlightQuad.v1);
-        project(v2, viewport, mvMatrix, projMatrix, highlightQuad.v2);
-        project(v3, viewport, mvMatrix, projMatrix, highlightQuad.v3);
+        project(v0, viewport, mvMatrix, null, highlightQuad.v0);
+        project(v1, viewport, mvMatrix, null, highlightQuad.v1);
+        project(v2, viewport, mvMatrix, null, highlightQuad.v2);
+        project(v3, viewport, mvMatrix, null, highlightQuad.v3);
 
-        tilt.ortho();
+        tilt.perspective();
+        tilt.depthTest(false);
         tilt.fill(highlightQuad.fill);
         tilt.stroke(highlightQuad.stroke);
         tilt.strokeWeight(highlightQuad.strokeWeight);
