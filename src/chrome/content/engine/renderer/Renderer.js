@@ -306,8 +306,8 @@ Tilt.Renderer.prototype = {
       aspect = w / h;
 
     mat4.perspective(fov, aspect, znear, zfar, this.projMatrix, true);
+    mat4.translate(this.projMatrix, [-x, -y, -z]);
     mat4.identity(this.mvMatrix);
-    mat4.translate(this.mvMatrix, [-x, -y, -z]);
     this.depthTest(true);
   },
 
@@ -318,8 +318,8 @@ Tilt.Renderer.prototype = {
     var clip = 1000000;
 
     mat4.ortho(0, this.width, this.height, 0, -clip, clip, this.projMatrix);
+    mat4.translate(this.projMatrix, [0, 0, -clip + 1]);
     mat4.identity(this.mvMatrix);
-    mat4.translate(this.mvMatrix, [0, 0, -clip + 1]);
     this.depthTest(false);
   },
 
@@ -667,10 +667,10 @@ Tilt.Renderer.prototype = {
    * Draw an inversed screen quad composed of four vertices.
    * Vertices must be in clockwise order, or else drawing will be distorted.
    *
-   * @param {Array} v0: the [x, y, z] position of the first triangle point
-   * @param {Array} v1: the [x, y, z] position of the second triangle point
-   * @param {Array} v2: the [x, y, z] position of the third triangle point
-   * @param {Array} v3: the [x, y, z] position of the fourth triangle point
+   * @param {Array} v0: the [x, y] position of the first triangle point
+   * @param {Array} v1: the [x, y] position of the second triangle point
+   * @param {Array} v2: the [x, y position of the third triangle point
+   * @param {Array} v3: the [x, y] position of the fourth triangle point
    */
   invquad: function(v0, v1, v2, v3) {
     var gl = this.gl,
