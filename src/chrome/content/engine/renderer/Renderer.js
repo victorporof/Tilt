@@ -85,6 +85,9 @@ Tilt.Renderer = function(canvas, properties) {
     this.gl.clearDepth(1);
     this.gl.clearStencil(0);
 
+    this.gl.enable(this.gl.LINE_SMOOTH);
+    this.gl.hint(this.gl.LINE_SMOOTH_HINT, this.gl.NICEST);
+
     // if successful, run a success callback function if available
     if ("function" === typeof properties.success) {
       properties.success();
@@ -681,34 +684,32 @@ Tilt.Renderer.prototype = {
                                        v2[0], v2[1],
                                        v3[0], v3[1]], 2);
 
-    // if (v0[1] > 0 && v1[1] > 0 && v2[1] < height && v3[1] < height) {
-      // now, time for some stencil buffer magic!
-      gl.enable(gl.STENCIL_TEST);
-      gl.enable(gl.CULL_FACE);
-      gl.cullFace(gl.FRONT);
+    // now, time for some stencil buffer magic!
+    gl.enable(gl.STENCIL_TEST);
+    gl.enable(gl.CULL_FACE);
+    gl.cullFace(gl.FRONT);
 
-      gl.colorMask(0, 0, 0, 0);
-      gl.stencilFunc(gl.NOTEQUAL, 1, 1);
-      gl.stencilOp(gl.KEEP, gl.KEEP, gl.REPLACE);
-      this.quad(v0, v1, v2, v3);
+    gl.colorMask(0, 0, 0, 0);
+    gl.stencilFunc(gl.NOTEQUAL, 1, 1);
+    gl.stencilOp(gl.KEEP, gl.KEEP, gl.REPLACE);
+    this.quad(v0, v1, v2, v3);
 
-      gl.colorMask(1, 1, 1, 1);
-      gl.stencilFunc(gl.NOTEQUAL, 1, 1);
-      gl.stencilOp(gl.KEEP, gl.KEEP, gl.KEEP);
-      stroke[3] = 0;
-      this.rect(0, 0, width, height);
-      stroke[3] = prevStrokeAlpha;
+    gl.colorMask(1, 1, 1, 1);
+    gl.stencilFunc(gl.NOTEQUAL, 1, 1);
+    gl.stencilOp(gl.KEEP, gl.KEEP, gl.KEEP);
+    stroke[3] = 0;
+    this.rect(0, 0, width, height);
+    stroke[3] = prevStrokeAlpha;
 
-      gl.cullFace(gl.BACK);
-      gl.disable(gl.CULL_FACE);
-      gl.disable(gl.STENCIL_TEST);
+    gl.cullFace(gl.BACK);
+    gl.disable(gl.CULL_FACE);
+    gl.disable(gl.STENCIL_TEST);
 
-      // draw the outline only if the stroke alpha channel is not transparent
-      if (stroke[3]) {
-        // use the necessary shader and draw the vertices
-        this.useColorShader(outline, stroke);
-        this.drawVertices(this.LINE_LOOP, outline.numItems);
-      // }
+    // draw the outline only if the stroke alpha channel is not transparent
+    if (stroke[3]) {
+      // use the necessary shader and draw the vertices
+      this.useColorShader(outline, stroke);
+      this.drawVertices(this.LINE_LOOP, outline.numItems);
     }
   },
 
