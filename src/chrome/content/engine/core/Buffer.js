@@ -47,7 +47,7 @@ var EXPORTED_SYMBOLS = ["Tilt.VertexBuffer", "Tilt.IndexBuffer"];
 Tilt.VertexBuffer = function(elementsArray, itemSize, numItems) {
 
   // intercept this object using a profiler when building in debug mode
-  Tilt.Profiler.intercept("Tilt.VertexBuffer", this, null);
+  Tilt.Profiler.intercept("Tilt.VertexBuffer", this);
 
   /**
    * The array buffer.
@@ -85,6 +85,8 @@ Tilt.VertexBuffer.prototype = {
    * @param {Number} numItems: optional, how many items to use from the array
    */
   initBuffer: function(elementsArray, itemSize, numItems) {
+    var gl = Tilt.$gl;
+
     // the numItems parameter is optional, we can compute it if not specified
     if ("undefined" === typeof numItems) {
       numItems = elementsArray.length / itemSize;
@@ -92,9 +94,6 @@ Tilt.VertexBuffer.prototype = {
 
     // create the Float32Array using the elements array
     this.components = new Float32Array(elementsArray);
-
-    var gl = Tilt.$gl,
-      i, len;
 
     // create an array buffer and bind the elements as a Float32Array
     this.$ref = gl.createBuffer();
@@ -167,6 +166,8 @@ Tilt.IndexBuffer.prototype = {
    * @param {Number} numItems: how many items to use from the array
    */
   initBuffer: function(elementsArray, numItems) {
+    var gl = Tilt.$gl;
+
     // the numItems parameter is optional, we can compute it if not specified
     if ("undefined" === typeof numItems) {
       numItems = elementsArray.length;
@@ -174,9 +175,6 @@ Tilt.IndexBuffer.prototype = {
 
     // create the Uint16Array using the elements array
     this.components = new Uint16Array(elementsArray);
-
-    var gl = Tilt.$gl,
-      i, len;
 
     // create an array buffer and bind the elements as a Uint16Array
     this.$ref = gl.createBuffer();
