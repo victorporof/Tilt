@@ -79,6 +79,20 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
   visualizationShader = null,
 
   /**
+   * A highlight quad drawn over a stacked dom node.
+   */
+  highlightQuad = {
+    index: -1,
+    fill: "#fff",
+    stroke: "000",
+    strokeWeight: 3,
+    v0: vec3.create(),
+    v1: vec3.create(),
+    v2: vec3.create(),
+    v3: vec3.create()
+  },
+
+  /**
    * Scene transformations, exposing translation, rotation etc.
    * Modified by events in the controller through delegate functions.
    */
@@ -169,10 +183,58 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
       tilt.transform(quat4.toMat4(transforms.rotation));
 
       // draw the visualization mesh
-      tilt.depthTest(true);
+      tilt.blendMode("alpha");
       tilt.strokeWeight(2);
       mesh.draw();
       meshWireframe.draw();
+
+      // check if there's anything to highlight (i.e any node is selected)
+      if (highlightQuad.index !== -1) {
+
+        // project the node corners and draw an inverted quad to darken
+        // everything that's not inside the quad
+        var project = Tilt.Math.project,
+          viewport = [0, 0, tilt.width, tilt.height],
+          mvMatrix = mesh.mvMatrix,
+          projMatrix = mesh.projMatrix,
+          vertices = mesh.vertices.components,
+          indices = mesh.indices.components,
+          i = highlightQuad.index * 30,
+
+        // the first triangle vertex
+        v0 = [vertices[indices[i    ] * 3    ],
+              vertices[indices[i    ] * 3 + 1],
+              vertices[indices[i    ] * 3 + 2]],
+
+        // the second triangle vertex
+        v1 = [vertices[indices[i + 1] * 3    ],
+              vertices[indices[i + 1] * 3 + 1],
+              vertices[indices[i + 1] * 3 + 2]],
+
+        // the third triangle vertex
+        v2 = [vertices[indices[i + 2] * 3    ],
+              vertices[indices[i + 2] * 3 + 1],
+              vertices[indices[i + 2] * 3 + 2]],
+
+        // the fourth triangle vertex
+        v3 = [vertices[indices[i + 5] * 3    ],
+              vertices[indices[i + 5] * 3 + 1],
+              vertices[indices[i + 5] * 3 + 2]];
+
+        project(v0, viewport, mvMatrix, projMatrix, highlightQuad.v0);
+        project(v1, viewport, mvMatrix, projMatrix, highlightQuad.v1);
+        project(v2, viewport, mvMatrix, projMatrix, highlightQuad.v2);
+        project(v3, viewport, mvMatrix, projMatrix, highlightQuad.v3);
+
+        tilt.ortho();
+        tilt.fill(highlightQuad.fill);
+        tilt.stroke(highlightQuad.stroke);
+        tilt.strokeWeight(highlightQuad.strokeWeight);
+        tilt.quad(highlightQuad.v0,
+                  highlightQuad.v1,
+                  highlightQuad.v2,
+                  highlightQuad.v3);
+      }
 
       // draw the ui on top of the visualization
       if (ui && "function" === typeof ui.draw) {
@@ -249,7 +311,9 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
 
         // information about these nodes should still be accessible, despite
         // the fact that they're not rendered
+        info.index = -1;
         hiddenNodes.push(info);
+
         return;
       }
 
@@ -258,6 +322,8 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
 
       // use this node only if it actually has visible dimensions
       if (coord.width > 4 && coord.height > 4) {
+
+        info.index = visibleNodes.length;
         visibleNodes.push(info);
 
         // number of vertex points, used for creating the indices array
@@ -317,6 +383,10 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
                               i + 10, i + 11, i + 11, i + 8,
                               i + 10, i + 9,  i + 9,  i + 6,  
                               i + 6,  i + 5,  i + 5,  i + 10);
+      }
+      else {        
+        info.index = -1;
+        hiddenNodes.push(info);
       }
     }, function(maxDepth, totalNodes) {
       // call the ready callback in the ui
@@ -394,13 +464,17 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
    * Handle some browser events, e.g. when the tabs are selected or closed.
    */
   var setupBrowserEvents = function() {
-    var tabContainer = gBrowser.tabContainer;
+    var tabContainer = gBrowser.tabContainer,
+      sourceEditor = TiltChrome.BrowserOverlay.sourceEditor;
 
     // when the tab is closed or the url changes, destroy visualization
     tabContainer.addEventListener("TabClose", gClose, false);
     tabContainer.addEventListener("TabAttrModified", gClose, false);
     gBrowser.contentWindow.addEventListener("resize", gResize, false);
     gBrowser.addEventListener("mouseover", gMouseOver, false);
+
+    sourceEditor.addEventListener("popupshown", eEditorShown, false);
+    sourceEditor.addEventListener("popuphidden", eEditorHidden, false);
   }.bind(this);
 
   /**
@@ -443,6 +517,20 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
     if ("function" === typeof ui.init) {
       ui.init(canvas);
     }
+  }.bind(this);
+
+  /**
+   * Event handling the source editor panel popup showing.
+   */
+  var eEditorShown = function() {
+  }.bind(this);
+
+  /**
+   * Event handling the source editor panel popup hiding.
+   */
+  var eEditorHidden = function() {
+    highlightQuad.index = -1;
+    this.requestRedraw();
   }.bind(this);
 
   /**
@@ -603,11 +691,10 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
         // if the ray-triangle intersection is greater than 0, continue and
         // save the intersection, along with the node information
         intersections.push({
-
-          // each stack is composed of 30 vertices, so there's information
-          // about a node once in 30 iterations (to avoid duplication)
           node: mesh.visibleNodes[Math.floor(i / 30)],
           location: vec3.create(point)
+          // each stack is composed of 30 vertices, so there's information
+          // about a node once in 30 iterations (to avoid duplication)
         });
       }
     }
@@ -621,8 +708,12 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
         return a.location[2] < b.location[2] ? 1 : -1;
       });
 
-      // use only the first intersection (closest to the camera)
       this.openEditor(intersections[0].node);
+      this.requestRedraw();
+    }
+    else {
+      highlightQuad.index = -1;
+      this.requestRedraw();
     }
   };
 
@@ -698,7 +789,11 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
       code.attr = attr;
 
       // refresh the editor using specific syntax highlighting in each case
-      if (code.editorType === "attr") {
+      if (node.localName === "img" ||
+          node.localName === "input" ||
+          node.localName === "button" ||
+          code.editorType === "attr") {
+
         code.innerHTML = attr;
         iframe.contentWindow.refreshCodeEditor("css");
       }
@@ -710,6 +805,25 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
         code.innerHTML = html;
         iframe.contentWindow.refreshCodeEditor("html");
       }
+
+      // use only the first intersection (closest to the camera)
+      var config = TiltChrome.Config.UI,
+        index = node.index,
+
+      // the head and body use an identical color code by default
+      name = (node.localName !== "head" &&
+              node.localName !== "body") ? 
+              node.localName : "head/body",
+
+      // the color settings may or not be specified for the current node name 
+      settings = config.domStrips[name] ||
+                 config.domStrips["other"];
+
+      highlightQuad.index = index;
+      highlightQuad.fill = settings.fill + "55";
+      highlightQuad.stroke = settings.fill + "AA";
+
+      this.requestRedraw();
     }
   };
 
@@ -838,7 +952,9 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
    * Destroys this object and sets all members to null.
    */
   this.destroy = function() {
-    var tabContainer = gBrowser.tabContainer;
+    var tabContainer = gBrowser.tabContainer,
+      sourceEditor = TiltChrome.BrowserOverlay.sourceEditor;
+
 
     if (gClose !== null) {
       tabContainer.removeEventListener("TabClose", gClose, false);
@@ -852,6 +968,14 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
     if (gMouseOver !== null) {
       gBrowser.removeEventListener("mouseover", gMouseOver, false);
       gMouseOver = null;
+    }
+    if (eEditorShown !== null) {
+      sourceEditor.removeEventListener("popupshown", eEditorShown, false);
+      eEditorShown = null;
+    }
+    if (eEditorHidden !== null) {
+      sourceEditor.removeEventListener("popuphidden", eEditorHidden, false);
+      eEditorHidden = null;
     }
 
     if (controller && "function" === typeof controller.destroy) {
