@@ -55,8 +55,8 @@ TiltChrome.UI.Default = function() {
    * The views containing all the UI elements.
    */
   view = null,
-  helpPopup = null,
-  colorAdjustPopup = null,
+  helpContainer = null,
+  colorAdjustContainer = null,
   minidomContainer = null,
 
   /**
@@ -152,14 +152,6 @@ TiltChrome.UI.Default = function() {
    * @param {HTMLCanvasElement} canvas: the canvas element
    */
   this.init = function(canvas) {
-    var sourceEditor = TiltChrome.BrowserOverlay.sourceEditor,
-      colorPicker = TiltChrome.BrowserOverlay.colorPicker;
-
-    sourceEditor.addEventListener("popupshown", eEditorShown, false);
-    sourceEditor.addEventListener("popuphidden", eEditorHidden, false);
-    colorPicker.addEventListener("popupshown", ePickerShown, false);
-    colorPicker.addEventListener("popuphidden", ePickerHidden, false);
-
     t = new Tilt.Texture("chrome://tilt/skin/tilt-ui.png", {
       minFilter: "nearest",
       magFilter: "nearest",
@@ -200,7 +192,7 @@ TiltChrome.UI.Default = function() {
 
         helpBoxSprite.setPosition(helpX, helpY);
         helpCloseButon.setPosition(exitX, exitY);
-        ui.presentModal(helpPopup);
+        ui.presentModal(helpContainer);
       }.bind(this)
     });
 
@@ -274,11 +266,11 @@ TiltChrome.UI.Default = function() {
 
         minidomContainer.view.hidden ^= true;
 
-        if (!helpPopup.hidden) {
-          helpPopup.hidden = true;
+        if (!helpContainer.hidden) {
+          helpContainer.hidden = true;
         }
-        if (!colorAdjustPopup.hidden) {
-          colorAdjustPopup.hidden = true;
+        if (!colorAdjustContainer.hidden) {
+          colorAdjustContainer.hidden = true;
         }
       }.bind(this)
     });
@@ -584,7 +576,7 @@ TiltChrome.UI.Default = function() {
 
     var showColorPicker = function(config, sender) {
       this.$colorPickerConfig = config;
-      this.$colorPickerSender = sender;
+      this.$colorPickerButton = sender;
 
       var colorPicker = TiltChrome.BrowserOverlay.colorPicker,
         rgb = Tilt.Math.hex2rgba(config.fill),
@@ -592,10 +584,10 @@ TiltChrome.UI.Default = function() {
                                 rgb[1] * 255,
                                 rgb[2] * 255);
 
-      document.getElementById("tilt-colorpicker-iframe")
-        .contentWindow.refreshColorPicker(hsl[0] * 360,
-                                          hsl[1] * 100,
-                                          hsl[2] * 100);
+      document.getElementById("tilt-colorpicker-iframe").
+        contentWindow.refreshColorPicker(hsl[0] * 360,
+                                         hsl[1] * 100,
+                                         hsl[2] * 100);
       colorPicker.openPopup(null, null,
         200 + sender.getX(),
         80 + sender.getY());
@@ -644,7 +636,7 @@ TiltChrome.UI.Default = function() {
       y: 230,
       padding: [12, 10, 14, 16],
       onclick: function() {
-        colorAdjustPopup.hidden ^= true;
+        colorAdjustContainer.hidden ^= true;
         this.visualization.requestRedraw();
       }.bind(this)
     });
@@ -726,15 +718,15 @@ TiltChrome.UI.Default = function() {
       }.bind(this), 1000 / 60);
     }.bind(this);
 
-    var colorAdjustPopupSprite = new Tilt.Sprite(t, [572, 1, 231, 126], {
+    var colorAdjustContainerSprite = new Tilt.Sprite(t, [572, 1, 231, 126], {
       disabled: true
     });
-    colorAdjustPopup = new Tilt.Container({
+    colorAdjustContainer = new Tilt.Container({
       x: 77,
       y: 239,
       hidden: true,
       elements: [
-        colorAdjustPopupSprite,
+        colorAdjustContainerSprite,
         hueSlider,
         saturationSlider,
         brightnessSlider,
@@ -750,11 +742,11 @@ TiltChrome.UI.Default = function() {
       width: 30,
       height: 30,
       onclick: function() {
-        ui.dismissModal(helpPopup);
+        ui.dismissModal(helpContainer);
       }.bind(this)
     });
 
-    helpPopup = new Tilt.Container({
+    helpContainer = new Tilt.Container({
       hidden: true,
       background: "#0107",
       elements: [helpBoxSprite, helpCloseButon]
@@ -803,58 +795,48 @@ TiltChrome.UI.Default = function() {
   };
 
   /**
-   * Event handling the source editor panel popup showing.
-   */
-  var eEditorShown = function() {
-    htmlButton.hidden = false;
-    cssButton.hidden = false;
-    attrButton.hidden = false;
-    this.visualization.requestRedraw();
-  }.bind(this);
-
-  /**
-   * Event handling the source editor panel popup hiding.
-   */
-  var eEditorHidden = function() {
-    htmlButton.hidden = true;
-    cssButton.hidden = true;
-    attrButton.hidden = true;
-    this.visualization.requestRedraw();
-
-    window.QueryInterface(Ci.nsIInterfaceRequestor)
-      .getInterface(Ci.nsIDOMWindowUtils)
-      .garbageCollect();
-  }.bind(this);
-
-  /**
-   * Event handling the color picker panel popup showing.
-   */
-  var ePickerShown = function() {
-  }.bind(this);
-
-  /**
-   * Event handling the color picker panel popup hiding.
-   */
-  var ePickerHidden = function() {
-    var iframe = document.getElementById("tilt-colorpicker-iframe"),
-      hex = iframe.contentDocument.colorPicked;
-
-    this.$colorPickerConfig.fill = hex;
-    this.$colorPickerSender.setFill(hex);
-    this.domVisualizationMeshReadyCallback();
-    this.visualization.performMeshColorbufferRefresh();
-
-    window.QueryInterface(Ci.nsIInterfaceRequestor)
-      .getInterface(Ci.nsIDOMWindowUtils)
-      .garbageCollect();
-  }.bind(this);
-
-  /**
    * Called automatically by the visualization after each frame in draw().
    * @param {Number} frameDelta: the delta time elapsed between frames
    */
   this.draw = function(frameDelta) {
     ui.draw();
+  };
+
+  /**
+   * Function called automatically when the source editor panel popup showing.
+   */
+  this.panelEditorShown = function() {
+    htmlButton.hidden = false;
+    cssButton.hidden = false;
+    attrButton.hidden = false;
+  };
+
+  /**
+   * Function called automatically when the source editor panel popup hiding.
+   */
+  this.panelEditorHidden = function() {
+    htmlButton.hidden = true;
+    cssButton.hidden = true;
+    attrButton.hidden = true;
+  };
+
+  /**
+   * Function called automatically when the color picker panel popup showing.
+   */
+  this.panelPickerShown = function() {
+  };
+
+  /**
+   * EFunction called automatically when the color picker panel popup hiding.
+   */
+  this.panelPickerHidden = function() {
+    var iframe = document.getElementById("tilt-colorpicker-iframe"),
+      hex = iframe.contentDocument.colorPicked;
+
+    this.$colorPickerConfig.fill = hex;
+    this.$colorPickerButton.setFill(hex);
+    this.domVisualizationMeshReadyCallback();
+    this.visualization.performMeshColorbufferRefresh();
   };
 
   /**
@@ -865,7 +847,7 @@ TiltChrome.UI.Default = function() {
    * @param {Number} index: the index of the node in the dom tree
    * @param {Number} uid: a unique id for the node
    */
-  this.domVisualizationMeshNodeCallback = function(node, depth, index, uid) {
+  this.meshNodeCallback = function(node, depth, index, uid) {
     if ("undefined" === typeof this.stripNo) {
       this.stripNo = 0;
     }
@@ -982,7 +964,7 @@ TiltChrome.UI.Default = function() {
    * @param {Number} maxDepth: the maximum depth of the dom tree
    * @param {Number} totalNodes: the total nodes in the dom tree
    */
-  this.domVisualizationMeshReadyCallback = function(maxDepth, totalNodes) {
+  this.meshReadyCallback = function(maxDepth, totalNodes) {
     var name, domColor;
 
     // for each element in the dom strips container, update it's fill to match
@@ -1030,37 +1012,17 @@ TiltChrome.UI.Default = function() {
     ui = null;
     config = null;
 
-    var sourceEditor = TiltChrome.BrowserOverlay.sourceEditor;
-    if (eEditorShown !== null) {
-      sourceEditor.removeEventListener("popupshown", eEditorShown, false);
-      eEditorShown = null;
-    }
-    if (eEditorHidden !== null) {
-      sourceEditor.removeEventListener("popuphidden", eEditorHidden, false);
-      eEditorHidden = null;
-    }
-
-    var colorPicker = TiltChrome.BrowserOverlay.colorPicker;
-    if (ePickerShown !== null) {
-      colorPicker.removeEventListener("popupshown", ePickerShown, false);
-      ePickerShown = null;
-    }
-    if (ePickerHidden !== null) {
-      colorPicker.removeEventListener("popuphidden", ePickerHidden, false);
-      ePickerHidden = null;
-    }
-
     if (view !== null) {
       view.destroy();
       view = null;
     }
-    if (helpPopup !== null) {
-      helpPopup.destroy();
-      helpPopup = null;
+    if (helpContainer !== null) {
+      helpContainer.destroy();
+      helpContainer = null;
     }
-    if (colorAdjustPopup !== null) {
-      colorAdjustPopup.destroy();
-      colorAdjustPopup = null;
+    if (colorAdjustContainer !== null) {
+      colorAdjustContainer.destroy();
+      colorAdjustContainer = null;
     }
     if (minidomContainer !== null) {
       minidomContainer.destroy();
@@ -1139,9 +1101,6 @@ TiltChrome.UI.Default = function() {
 
     helpBoxSprite = null;
     helpCloseButon = null;
-
-    sourceEditor = null;
-    colorPicker = null;
 
     Tilt.destroyObject(this);
   };
