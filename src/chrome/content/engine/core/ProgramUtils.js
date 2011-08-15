@@ -214,6 +214,7 @@ Tilt.GLSL = {
     program.attributes = {};
     program.attributes.length = 0;
     program.uniforms = {};
+    program.uniforms.length = 0;
 
     // pass through each element in the variables array
     for (i = 0, len = variables.length; i < len; i++) {
@@ -235,6 +236,7 @@ Tilt.GLSL = {
         // bind the new parameter only if it was not already defined
         if ("undefined" === typeof program.uniforms[param]) {
           program.uniforms[param] = io;
+          program.uniforms.length++;
         }
       }
     }
