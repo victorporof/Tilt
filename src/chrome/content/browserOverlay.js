@@ -95,6 +95,13 @@ TiltChrome.BrowserOverlay = {
         iframe: document.getElementById("tilt-colorpicker-iframe")
       };
 
+      // remember the refresh functions from the panels iframes
+      this.sourceEditor.refresh = 
+        this.sourceEditor.iframe.contentWindow.refreshCodeEditor;
+
+      this.colorPicker.refresh = 
+        this.colorPicker.iframe.contentWindow.refreshColorPicker;
+
       // get the iframe which will be used to create the canvas element
       var iframe = document.getElementById("tilt-iframe"),
 
@@ -146,7 +153,7 @@ TiltChrome.BrowserOverlay = {
         this.sourceEditor.panel = null;
         this.sourceEditor.title = null;
         this.sourceEditor.iframe = null;
-        this.soruceEditor = null;
+        this.sourceEditor = null;
       }
       if (this.colorPicker !== null) {
         this.colorPicker.panel.hidePopup();
@@ -160,13 +167,9 @@ TiltChrome.BrowserOverlay = {
       Tilt.Profiler.log();
       Tilt.Profiler.reset();
 
-      // if specified, do a garbage collect when everything is over
+      // if specified, do a garbage collection when everything is over
       if (gc) {
-        window.setTimeout(function() {
-          window.QueryInterface(Ci.nsIInterfaceRequestor).
-            getInterface(Ci.nsIDOMWindowUtils).
-            garbageCollect();
-        }, 100);
+        window.setTimeout(this.performGC, 100);
       }
     }.bind(this);
 
@@ -178,5 +181,14 @@ TiltChrome.BrowserOverlay = {
       // the finish timeout wasn't explicitly requested, continue normally
       finish();
     }
+  },
+
+  /**
+   * Forces a garbage collection.
+   */
+  performGC: function() {
+    window.QueryInterface(Ci.nsIInterfaceRequestor).
+      getInterface(Ci.nsIDOMWindowUtils).
+      garbageCollect();
   }
 };
