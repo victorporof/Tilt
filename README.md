@@ -140,7 +140,7 @@ TiltChrome.Controller.MyCustomController = function() {
 ## Implement a custom UI
 Just like the controller, the user interface is initialized when constructing the visualization. The current <b>work in progress</b> implementation is in [TiltChromeUI.js](https://github.com/victorporof/Tilt/blob/master/src/chrome/content/TiltChromeUI.js). You can implement your own user interface by creating a new object respecting a predefined interface. 
 
-Each UI should have the `init`, `draw`, `resize` and `destroy` functions. Moreover, you can specify events like `domVisualizationMeshNodeCallback` or `domVisualizationMeshReadyCallback`, handled automatically by the visualization.
+Each UI should have the `init`, `draw`, `resize` and `destroy` functions. Moreover, you can specify events like `domVisualizationMeshNodeCallback` or `meshNodeCallback`, or `meshReadyCallback` handled automatically by the visualization.
 
 The UI pattern is:
 
