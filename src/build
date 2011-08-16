@@ -17,6 +17,7 @@ if [[ $# > 0 && $1 == "extension" || $1 == "all" ]];
     if [[ $# > 1 && $2 == "minify" ]];
       then
         java -jar ../bin/google-closure/compiler.jar --language_in ECMASCRIPT5_STRICT --compilation_level ADVANCED_OPTIMIZATIONS --warning_level QUIET --externs ../bin/google-closure/tilt-externs.jsext --js ../bin/Tilt-extension.js --js_output_file chrome/content/Tilt-extension.js
+        cp chrome/content/Tilt-extension.js ../bin/Tilt-extension-min.js
     else
         cp ../bin/Tilt-extension.js chrome/content/Tilt-extension.js
     fi
