@@ -8162,6 +8162,7 @@ Tilt.ScrollContainer = function(properties) {
 
   topButton.onmousedown = function() {
     window.clearInterval(this.$scrollTopReset);
+    window.clearInterval(this.$scrollTop);
     var ui = Tilt.UI;
 
     this.$scrollTop = window.setInterval(function() {
@@ -8177,6 +8178,7 @@ Tilt.ScrollContainer = function(properties) {
 
   bottomButton.onmousedown = function() {
     window.clearInterval(this.$scrollTopReset);
+    window.clearInterval(this.$scrollBottom);
     var ui = Tilt.UI;
 
     this.$scrollBottom = window.setInterval(function() {
@@ -8191,6 +8193,7 @@ Tilt.ScrollContainer = function(properties) {
   }.bind(this);
 
   resetButton.onmousedown = function() {
+    window.clearInterval(this.$scrollTopReset);
     var ui = Tilt.UI;
 
     this.$scrollTopReset = window.setInterval(function() {
@@ -9957,7 +9960,9 @@ Tilt.Document = {
   getNodeCoordinates: function(node) {
     try {
       if (node.localName === "head" ||
-          node.localName === "body") throw new Exception();
+          node.localName === "body") {
+            throw new Exception();
+      }
 
       // this is the preferred way of getting the bounding client rectangle
       var clientRect = node.getBoundingClientRect(),
