@@ -249,11 +249,51 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
     // every once in a while, do a garbage collect
     // this is not vital, but it's good to keep things in control
     if ((tilt.frameCount + 1) % 1000 === 0) {
-      window.QueryInterface(Ci.nsIInterfaceRequestor).
-        getInterface(Ci.nsIDOMWindowUtils).
-        garbageCollect();
+      TiltChrome.BrowserOverlay.performGC();
     }
   }
+
+  /**
+   * Setup the controller, referencing this visualization.
+   */
+  var setupController = function() {
+    // we might have the controller undefined (not passed as a parameter in 
+    // the constructor, in which case the controller won't be used)
+    if ("undefined" === typeof controller) {
+      return;
+    }
+
+    // set a reference in the controller for this visualization
+    controller.visualization = this;
+
+    // call the init function on the controller if available
+    if ("function" === typeof controller.init) {
+      controller.init(canvas);
+    }
+  }.bind(this);
+
+  /**
+   * Setup the user interface, referencing this visualization.
+   */
+  var setupUI = function() {
+    // we might have the interface undefined (not passed as a parameter in 
+    // the constructor, in which case the interface won't be used)
+    if ("undefined" === typeof ui) {
+      return;
+    }
+
+    // set a reference in the ui for this visualization and the controller
+    ui.visualization = this;
+    ui.controller = controller;
+
+    // the top-level UI might need to force redraw, teach it how to do that
+    Tilt.UI.requestRedraw = this.requestRedraw;
+
+    // call the init function on the user interface if available
+    if ("function" === typeof ui.init) {
+      ui.init(canvas);
+    }
+  }.bind(this);
 
   /**
    * Create the combined mesh representing the document visualization by
@@ -483,48 +523,6 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
   }.bind(this);
 
   /**
-   * Setup the controller, referencing this visualization.
-   */
-  var setupController = function() {
-    // we might have the controller undefined (not passed as a parameter in 
-    // the constructor, in which case the controller won't be used)
-    if ("undefined" === typeof controller) {
-      return;
-    }
-
-    // set a reference in the controller for this visualization
-    controller.visualization = this;
-
-    // call the init function on the controller if available
-    if ("function" === typeof controller.init) {
-      controller.init(canvas);
-    }
-  }.bind(this);
-
-  /**
-   * Setup the user interface, referencing this visualization.
-   */
-  var setupUI = function() {
-    // we might have the interface undefined (not passed as a parameter in 
-    // the constructor, in which case the interface won't be used)
-    if ("undefined" === typeof ui) {
-      return;
-    }
-
-    // set a reference in the ui for this visualization and the controller
-    ui.visualization = this;
-    ui.controller = controller;
-
-    // the top-level UI might need to force redraw, teach it how to do that
-    Tilt.UI.requestRedraw = this.requestRedraw;
-
-    // call the init function on the user interface if available
-    if ("function" === typeof ui.init) {
-      ui.init(canvas);
-    }
-  }.bind(this);
-
-  /**
    * Event handling the source editor panel popup showing.
    */
   var eEditorShown = function() {
@@ -544,10 +542,7 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
     }
 
     highlightQuad.index = -1;
-
-    window.QueryInterface(Ci.nsIInterfaceRequestor).
-      getInterface(Ci.nsIDOMWindowUtils).
-      garbageCollect();
+    TiltChrome.BrowserOverlay.performGC();
 
     this.requestRedraw();
   }.bind(this);
@@ -571,9 +566,8 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
       ui.panelPickerHidden();
     }
 
-    window.QueryInterface(Ci.nsIInterfaceRequestor).
-      getInterface(Ci.nsIDOMWindowUtils).
-      garbageCollect();
+    highlightQuad.index = -1;
+    TiltChrome.BrowserOverlay.performGC();
 
     this.requestRedraw();
   }.bind(this);
@@ -604,9 +598,12 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
       ui.resize(tilt.width, tilt.height);
     }
 
-    // hide the panel with the html editor (to avoid wrong positioning)
+    // hide the panel with the editor & picker (to avoid wrong positioning)
     if ("open" === TiltChrome.BrowserOverlay.sourceEditor.panel.state) {
       TiltChrome.BrowserOverlay.sourceEditor.panel.hidePopup();
+    }
+    if ("open" === TiltChrome.BrowserOverlay.colorPicker.panel.state) {
+      TiltChrome.BrowserOverlay.colorPicker.panel.hidePopup();
     }
   }.bind(this);
 
