@@ -54,7 +54,8 @@ TiltChrome.UI.Default = function() {
   /**
    * The views containing all the UI elements.
    */
-  view = null,
+  alwaysVisibleElements = null,
+  hideableElements = null,
   helpContainer = null,
   colorAdjustContainer = null,
   minidomContainer = null,
@@ -133,19 +134,7 @@ TiltChrome.UI.Default = function() {
    * The controls help information.
    */
   helpBoxSprite = null,
-  helpCloseButon = null,
-
-  /**
-   * Arrays holding groups of objects.
-   */
-  alwaysVisibleElements = [],
-  hideableElements = [],
-  sourceEditorElements = [],
-
-  /**
-   * Retain the position for the mouseDown event.
-   */
-  downX = 0, downY = 0;
+  helpCloseButon = null;
 
   /**
    * Function called automatically by the visualization at the setup().
@@ -160,8 +149,8 @@ TiltChrome.UI.Default = function() {
       }.bind(this)
     });
 
-    view = new Tilt.Container({
-    });
+    alwaysVisibleElements = new Tilt.Container();
+    hideableElements = new Tilt.Container();
 
     background = new Tilt.Sprite(t, [0, 1024 - 256, 256, 256], {
       width: canvas.width,
@@ -260,10 +249,7 @@ TiltChrome.UI.Default = function() {
           }
         }.bind(this), 1000 / 60);
 
-        hideableElements.forEach(function(element) {
-          element.hidden ^= true;
-        });
-
+        hideableElements.hidden ^= true;
         minidomContainer.view.hidden ^= true;
 
         if (!helpContainer.hidden) {
@@ -578,19 +564,12 @@ TiltChrome.UI.Default = function() {
       this.$colorPickerConfig = config;
       this.$colorPickerButton = sender;
 
-      var colorPicker = TiltChrome.BrowserOverlay.colorPicker,
+      var cp = TiltChrome.BrowserOverlay.colorPicker,
         rgb = Tilt.Math.hex2rgba(config.fill),
-        hsl = Tilt.Math.rgb2hsv(rgb[0] * 255,
-                                rgb[1] * 255,
-                                rgb[2] * 255);
+        hsl = Tilt.Math.rgb2hsv(rgb[0] * 255, rgb[1] * 255, rgb[2] * 255);
 
-      document.getElementById("tilt-colorpicker-iframe").
-        contentWindow.refreshColorPicker(hsl[0] * 360,
-                                         hsl[1] * 100,
-                                         hsl[2] * 100);
-      colorPicker.openPopup(null, null,
-        200 + sender.getX(),
-        80 + sender.getY());
+      cp.refresh(hsl[0] * 360, hsl[1] * 100, hsl[2] * 100);
+      cp.panel.openPopup(null, null, 200 + sender.getX(), 80 + sender.getY());
     }.bind(this);
 
     var viewModeNormalSprite = new Tilt.Sprite(t, [438, 67, 66, 66]);
@@ -757,6 +736,7 @@ TiltChrome.UI.Default = function() {
 
     hideableElements.push(
       helpButton, exportButton, optionsButton,
+      htmlButton, cssButton, attrButton,
       resetButton, zoomInButton, zoomOutButton, arcballSprite, 
       arcballUpButton, arcballDownButton,
       arcballLeftButton, arcballRightButton,
@@ -777,21 +757,6 @@ TiltChrome.UI.Default = function() {
       aStripButton,
       imgStripButton,
       otherStripButton);
-
-    sourceEditorElements.push(
-      htmlButton, cssButton, attrButton);
-
-    alwaysVisibleElements.forEach(function(element) {
-      view.push(element);
-    });
-
-    hideableElements.forEach(function(element) {
-      view.push(element);
-    });
-
-    sourceEditorElements.forEach(function(element) {
-      view.push(element);
-    });
   };
 
   /**
@@ -830,12 +795,13 @@ TiltChrome.UI.Default = function() {
    * EFunction called automatically when the color picker panel popup hiding.
    */
   this.panelPickerHidden = function() {
-    var iframe = document.getElementById("tilt-colorpicker-iframe"),
-      hex = iframe.contentDocument.colorPicked;
+    var hex = TiltChrome.BrowserOverlay.colorPicker.
+      iframe.contentDocument.colorPicked;
 
     this.$colorPickerConfig.fill = hex;
     this.$colorPickerButton.setFill(hex);
-    this.domVisualizationMeshReadyCallback();
+
+    this.meshReadyCallback();
     this.visualization.performMeshColorbufferRefresh();
   };
 
@@ -1010,11 +976,14 @@ TiltChrome.UI.Default = function() {
     this.visualization = null;
     this.controller = null;
     ui = null;
-    config = null;
 
-    if (view !== null) {
-      view.destroy();
-      view = null;
+    if (alwaysVisibleElements !== null) {
+      alwaysVisibleElements.destroy();
+      alwaysVisibleElements = null;
+    }
+    if (hideableElements !== null) {
+      hideableElements.destroy();
+      hideableElements = null;
     }
     if (helpContainer !== null) {
       helpContainer.destroy();
@@ -1036,24 +1005,6 @@ TiltChrome.UI.Default = function() {
     if (background !== null) {
       background.destroy();
       background = null;
-    }
-    if (alwaysVisibleElements !== null) {
-      alwaysVisibleElements.forEach(function(element) {
-        element.destroy();
-      });
-      alwaysVisibleElements = null;
-    }
-    if (hideableElements !== null) {
-      hideableElements.forEach(function(element) {
-        element.destroy();
-      });
-      hideableElements = null;
-    }
-    if (sourceEditorElements !== null) {
-      sourceEditorElements.forEach(function(element) {
-        element.destroy();
-      });
-      sourceEditorElements = null;
     }
 
     domStripsLegend = null;

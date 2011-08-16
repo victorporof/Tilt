@@ -89,11 +89,11 @@ TiltChrome.Controller.MouseAndKeyboard = function() {
    */
   this.update = function(frameDelta) {
     var visualization = this.visualization,
-      coord = arcball.loop(frameDelta);
+      coordinates = arcball.loop(frameDelta);
 
     // update the visualization
-    visualization.setRotation(coord.rotation);
-    visualization.setTranslation(coord.translation);
+    visualization.setRotation(coordinates.rotation);
+    visualization.setTranslation(coordinates.translation);
   };
 
   /**
@@ -154,12 +154,12 @@ TiltChrome.Controller.MouseAndKeyboard = function() {
     if (Math.abs(downX - clickX) < 2 && 
         Math.abs(downY - clickY) < 2) {
 
+      ui.click(clickX, clickY, button);
+
+      // clicking is also the default action for visualization highlighting
       if (!ui.mouseOver) {
-        // clicking is also the default action for visualization highlighting
         this.visualization.performMeshPickHighlight(clickX, clickY);
       }
-
-      ui.click(clickX, clickY, button);
     }
   }.bind(this);
 
@@ -180,12 +180,12 @@ TiltChrome.Controller.MouseAndKeyboard = function() {
     if (Math.abs(downX - dblClickX) < 2 && 
         Math.abs(downY - dblClickY) < 2) {
 
+      ui.doubleClick(dblClickX, dblClickY, button);
+
+      // double clicking is also the default action for source editing
       if (!ui.mouseOver) {
-        // double clicking is also the default action for source editing
         this.visualization.performMeshPickEdit(dblClickX, dblClickY);
       }
-
-      ui.doubleClick(dblClickX, dblClickY, button);
     }
   }.bind(this);
 
@@ -247,13 +247,12 @@ TiltChrome.Controller.MouseAndKeyboard = function() {
   var keyUp = function(e) {
     var code = e.keyCode || e.which;
 
-    if (code === 27) { // escape
-      // if the panel with the source source editor was open, hide it now
+    if (code === 27) { // escape keyCode
       if ("open" === TiltChrome.BrowserOverlay.sourceEditor.panel.state) {
         TiltChrome.BrowserOverlay.sourceEditor.panel.hidePopup();
       }
       else {
-        // escape also closes the visualization if no other panel is open
+        // escape key also closes the visualization if no other panel is open
         TiltChrome.BrowserOverlay.destroy(true, true);
         TiltChrome.BrowserOverlay.href = null;
       }
