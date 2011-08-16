@@ -96,6 +96,7 @@ Tilt.ScrollContainer = function(properties) {
 
   topButton.onmousedown = function() {
     window.clearInterval(this.$scrollTopReset);
+    window.clearInterval(this.$scrollTop);
     var ui = Tilt.UI;
 
     this.$scrollTop = window.setInterval(function() {
@@ -111,6 +112,7 @@ Tilt.ScrollContainer = function(properties) {
 
   bottomButton.onmousedown = function() {
     window.clearInterval(this.$scrollTopReset);
+    window.clearInterval(this.$scrollBottom);
     var ui = Tilt.UI;
 
     this.$scrollBottom = window.setInterval(function() {
@@ -125,6 +127,7 @@ Tilt.ScrollContainer = function(properties) {
   }.bind(this);
 
   resetButton.onmousedown = function() {
+    window.clearInterval(this.$scrollTopReset);
     var ui = Tilt.UI;
 
     this.$scrollTopReset = window.setInterval(function() {
