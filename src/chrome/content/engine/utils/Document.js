@@ -247,7 +247,9 @@ Tilt.Document = {
   getNodeCoordinates: function(node) {
     try {
       if (node.localName === "head" ||
-          node.localName === "body") throw new Exception();
+          node.localName === "body") {
+            throw new Exception();
+      }
 
       // this is the preferred way of getting the bounding client rectangle
       var clientRect = node.getBoundingClientRect(),
