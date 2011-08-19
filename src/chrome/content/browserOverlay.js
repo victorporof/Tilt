@@ -187,7 +187,7 @@ TiltChrome.BrowserOverlay = {
    * Forces a garbage collection.
    */
   performGC: function() {
-    window.QueryInterface(Ci.nsIInterfaceRequestor).
+    QueryInterface(Ci.nsIInterfaceRequestor).
       getInterface(Ci.nsIDOMWindowUtils).
       garbageCollect();
   }
