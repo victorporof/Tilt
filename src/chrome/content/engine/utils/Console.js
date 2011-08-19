@@ -53,8 +53,8 @@ Tilt.Console = {
       message = "undefined";
     }
     try {
-      prompt = Components.classes["@mozilla.org/embedcomp/prompt-service;1"]
-        .getService(Components.interfaces.nsIPromptService);
+      prompt = Cc["@mozilla.org/embedcomp/prompt-service;1"].
+        getService(Ci.nsIPromptService);
 
       prompt.alert(null, title, message);
     }
@@ -78,8 +78,8 @@ Tilt.Console = {
     }
     try {
       // get the console service
-      consoleService = Components.classes["@mozilla.org/consoleservice;1"]
-        .getService(Components.interfaces.nsIConsoleService);
+      consoleService = Cc["@mozilla.org/consoleservice;1"].
+        getService(Ci.nsIConsoleService);
 
       // log the message
       consoleService.logStringMessage(message);
@@ -125,12 +125,12 @@ Tilt.Console = {
     }
     try {
       // get the console service
-      consoleService = Components.classes["@mozilla.org/consoleservice;1"]
-        .getService(Components.interfaces.nsIConsoleService);
+      consoleService = Cc["@mozilla.org/consoleservice;1"].
+        getService(Ci.nsIConsoleService);
 
       // also the script error service
-      scriptError = Components.classes["@mozilla.org/scripterror;1"]
-        .createInstance(Components.interfaces.nsIScriptError);
+      scriptError = Cc["@mozilla.org/scripterror;1"].
+        createInstance(Ci.nsIScriptError);
 
       // initialize a script error
       scriptError.init(message, sourceName, sourceLine,
