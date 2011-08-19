@@ -1156,6 +1156,7 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
       tilt = null;
     }
 
+    image = null;
     canvas = null;
     setup = null;
     draw = null;
