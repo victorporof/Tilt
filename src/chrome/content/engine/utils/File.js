@@ -119,5 +119,15 @@ Tilt.File = {
       PERSIST_FLAGS_AUTODETECT_APPLY_CONVERSION;
 
     persist.saveURI(source, null, null, null, null, file);
-  }
+  },
+
+  /**
+   * The file path separator, different on each platform.
+   */
+  separator: (function() {
+    if (navigator.appVersion.indexOf("Win") !== -1) { return "\\"; }
+    else if (navigator.appVersion.indexOf("Mac") !== -1) { return "/"; }
+    else if (navigator.appVersion.indexOf("X11") !== -1) { return "/"; }
+    else if (navigator.appVersion.indexOf("Linux") !== -1) { return "/"; }
+  })()
 };
