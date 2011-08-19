@@ -86,7 +86,7 @@ Tilt.Renderer = function(canvas, properties) {
     this.gl.clearStencil(0);
 
     // if successful, run a success callback function if available
-    if ("function" === typeof properties.success) {
+    if ("function" === typeof properties.onsuccess) {
       properties.onsuccess();
     }
   }
@@ -94,7 +94,7 @@ Tilt.Renderer = function(canvas, properties) {
     // if unsuccessful, log the error and run a fail callback if available
     Tilt.Console.log(Tilt.StringBundle.get("initWebGL.error"));
 
-    if ("function" === typeof properties.fail) {
+    if ("function" === typeof properties.onfail) {
       properties.onfail();
       return;
     }
