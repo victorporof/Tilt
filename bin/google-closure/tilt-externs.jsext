@@ -9,29 +9,81 @@ gBrowser.selectedBrowser["parentNode"] = gBrowser.selectedBrowser.parentNode;
 window["TiltChrome"] = TiltChrome;
 TiltChrome["BrowserOverlay"] = TiltChrome.BrowserOverlay;
 TiltChrome.BrowserOverlay["initialize"] = TiltChrome.BrowserOverlay.initialize;
-TiltChrome.BrowserOverlay["panel"] = TiltChrome.BrowserOverlay.panel;
-TiltChrome.BrowserOverlay.panel["openPopup"] = TiltChrome.BrowserOverlay.panel.openPopup;
-TiltChrome.BrowserOverlay.panel["hidePopup"] = TiltChrome.BrowserOverlay.panel.hidePopup;
 
+
+window["Components"] = Components;
+window["Cc"] = Cc;
+window["Ci"] = Ci;
+window["Cu"] = Cu;
+Components["classes"] = Components.classes;
+Components["interfaces"] = Components.interfaces;
+Components["utils"] = Components.utils;
+Components["isSuccessCode"] = Components.isSuccessCode;
+
+
+Cu["import"] = Cu.import;
+
+
+Ci["nsIPromptService"] = Ci.nsIPromptService;
+Ci["nsIConsoleService"] = Ci.nsIConsoleService;
+Ci["nsIScriptError"] = Ci.nsIScriptError;
+
+Cc["@mozilla.org/embedcomp/prompt-service;1"]["getService"] = Cc["@mozilla.org/embedcomp/prompt-service;1"].getService;
+Cc["@mozilla.org/consoleservice;1"]["getService"] = Cc["@mozilla.org/consoleservice;1"].getService;
+Cc["@mozilla.org/scripterror;1"]["createInstance"] = Cc["@mozilla.org/scripterror;1"].createInstance;
+
+Cc["@mozilla.org/embedcomp/prompt-service;1"].getService(Ci.nsIPromptService)["alert"] = Cc["@mozilla.org/embedcomp/prompt-service;1"].getService(Ci.nsIPromptService).alert;
+Cc["@mozilla.org/scripterror;1"].createInstance(Ci.nsIScriptError)["init"] = Cc["@mozilla.org/scripterror;1"].createInstance(Ci.nsIScriptError).init;
+Cc["@mozilla.org/consoleservice;1"].getService(Ci.nsIConsoleService)["logMessage"] = Cc["@mozilla.org/consoleservice;1"].getService(Ci.nsIConsoleService).logMessage;
+Cc["@mozilla.org/consoleservice;1"].getService(Ci.nsIConsoleService)["logStringMessage"] = Cc["@mozilla.org/consoleservice;1"].getService(Ci.nsIConsoleService).logStringMessage;
+
+
+Ci["nsIFilePicker"] = Ci.nsIFilePicker;
+Ci.nsIFilePicker["modeGetFolder"] = Ci.nsIFilePicker.modeGetFolder;
+Ci.nsIFilePicker["returnOK"] = Ci.nsIFilePicker.returnOK;
+
+Ci["nsILocalFile"] = Ci.nsILocalFile;
+Ci["nsIIOService"] = Ci.nsIIOService;
+Ci["nsIScriptableUnicodeConverter"] = Ci.nsIScriptableUnicodeConverter;
+Ci["nsIWebBrowserPersist"] = Ci.nsIWebBrowserPersist;
+Ci["nsIWebBrowserPersist"].PERSIST_FLAGS_REPLACE_EXISTING_FILES = Ci.nsIWebBrowserPersist.PERSIST_FLAGS_REPLACE_EXISTING_FILES;
+Ci["nsIWebBrowserPersist"].PERSIST_FLAGS_AUTODETECT_APPLY_CONVERSION = Ci.nsIWebBrowserPersist.PERSIST_FLAGS_AUTODETECT_APPLY_CONVERSION;
+
+Cc["@mozilla.org/filepicker;1"]["createInstance"] = Cc["@mozilla.org/filepicker;1"].createInstance;
+Cc["@mozilla.org/file/local;1"]["createInstance"] = Cc["@mozilla.org/file/local;1"].createInstance;
+Cc["@mozilla.org/intl/scriptableunicodeconverter"]["createInstance"] = Cc["@mozilla.org/intl/scriptableunicodeconverter"].createInstance;
+Cc["@mozilla.org/embedding/browser/nsWebBrowserPersist;1"]["createInstance"] = Cc["@mozilla.org/embedding/browser/nsWebBrowserPersist;1"].createInstance;
+Cc["@mozilla.org/network/io-service;1"]["getService"] = Cc["@mozilla.org/network/io-service;1"].getService;
+
+Cc["@mozilla.org/filepicker;1"].createInstance(Ci.nsIFilePicker)["init"] = Cc["@mozilla.org/filepicker;1"].createInstance(Ci.nsIFilePicker).init;
+Cc["@mozilla.org/filepicker;1"].createInstance(Ci.nsIFilePicker)["show"] = Cc["@mozilla.org/filepicker;1"].createInstance(Ci.nsIFilePicker).show;
+Cc["@mozilla.org/filepicker;1"].createInstance(Ci.nsIFilePicker)["file"] = Cc["@mozilla.org/filepicker;1"].createInstance(Ci.nsIFilePicker).file;
+Cc["@mozilla.org/filepicker;1"].createInstance(Ci.nsIFilePicker).file["reveal"] = Cc["@mozilla.org/filepicker;1"].createInstance(Ci.nsIFilePicker).file.reveal;
+Cc["@mozilla.org/filepicker;1"].createInstance(Ci.nsIFilePicker).file["path"] = Cc["@mozilla.org/filepicker;1"].createInstance(Ci.nsIFilePicker).file.path;
+Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsILocalFile)["initWithPath"] = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsILocalFile).initWithPath;
+Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService)["newURI"] = Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService).newURI;
+Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService)["newFileURI"] = Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService).newFileURI;
+Cc["@mozilla.org/intl/scriptableunicodeconverter"].createInstance(Ci.nsIScriptableUnicodeConverter)["convertToInputStream"] = Cc["@mozilla.org/intl/scriptableunicodeconverter"].createInstance(Ci.nsIScriptableUnicodeConverter).convertToInputStream;
+Cc["@mozilla.org/embedding/browser/nsWebBrowserPersist;1"].createInstance(Ci.nsIWebBrowserPersist)["persistFlags"] = Cc["@mozilla.org/embedding/browser/nsWebBrowserPersist;1"].createInstance(Ci.nsIWebBrowserPersist).persistFlags;
+Cc["@mozilla.org/embedding/browser/nsWebBrowserPersist;1"].createInstance(Ci.nsIWebBrowserPersist)["saveURI"] = Cc["@mozilla.org/embedding/browser/nsWebBrowserPersist;1"].createInstance(Ci.nsIWebBrowserPersist).saveURI;
+
+
+window["FileUtils"] = FileUtils;
+FileUtils["openSafeFileOutputStream"] = FileUtils.openSafeFileOutputStream;
+
+window["NetUtil"] = NetUtil;
+NetUtil["asyncCopy"] = NetUtil.asyncCopy;
+
+
+window["QueryInterface"] = QueryInterface;
+Ci["nsIInterfaceRequestor"] = Ci.nsIInterfaceRequestor;
+Ci["nsIDOMWindowUtils"] = Ci.nsIDOMWindowUtils;
+QueryInterface(Ci.nsIInterfaceRequestor)["getInterface"] = QueryInterface(Ci.nsIInterfaceRequestor).getInterface;
+QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils)["garbageCollect"] = QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils).garbageCollect;
+
+panel.openPopup;
+panel.hidePopup;
 canvas.getContext("2d").drawWindow;
-
-window.QueryInterface(Ci.nsIInterfaceRequestor)
-  .getInterface(Ci.nsIDOMWindowUtils)
-  .garbageCollect();
-
-Components.classes["@mozilla.org/embedcomp/prompt-service;1"]
-  .getService(Components.interfaces.nsIPromptService);
-      
-Components.classes["@mozilla.org/consoleservice;1"]
-  .getService(Components.interfaces.nsIConsoleService);
-
-Components.classes["@mozilla.org/scripterror;1"]
-  .createInstance(Components.interfaces.nsIScriptError);
-
-prompt.alert;
-scriptError.init;
-consoleService.logMessage;
-consoleService.logStringMessage;
 
 iframe.contentWindow.refreshCodeEditor;
 iframe.contentWindow.refreshColorPicker;
