@@ -76,6 +76,8 @@ Tilt.Mesh.prototype.save = function(directory, name) {
                        (f[i + 2] + 1) + "/" + (f[i + 2] + 1));
   }
 
-  Tilt.File.save(output.join("\n"), directory + "/" + name + ".obj");
-  Tilt.File.save(material.join("\n"), directory + "/" + name + ".mtl");
+  var s = Tilt.File.separator;
+
+  Tilt.File.save(output.join("\n"), directory + s + name + ".obj");
+  Tilt.File.save(material.join("\n"), directory + s + name + ".mtl");
 };

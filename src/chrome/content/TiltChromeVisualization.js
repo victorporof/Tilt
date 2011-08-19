@@ -647,7 +647,9 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
    * @param {String} name: the mesh name
    */
   this.performMeshSave = function(directory, name) {
-    Tilt.File.saveImage(image, directory + "/" + name + ".png");
+    var s = Tilt.File.separator;
+
+    Tilt.File.saveImage(image, directory + s + name + ".png");
     mesh.save(directory, name);
   };
 
