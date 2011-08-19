@@ -64,6 +64,7 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
   /**
    * Mesh initialization properties.
    */
+  image = null,
   texture = null,
   thickness = 15,
 
@@ -118,7 +119,7 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
     // use an extension to get the image representation of the document
     // this will be removed once the MOZ_window_region_texture WebGL extension
     // is finished; currently converting the document image to a texture
-    var image = Tilt.Extensions.WebGL.initDocumentImage(window.content);
+    image = Tilt.Extensions.WebGL.initDocumentImage(window.content);
 
     // create a static texture using the previously created document image
     texture = new Tilt.Texture(image, {
@@ -637,6 +638,17 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
    */
   this.requestRedraw = function() {
     redraw = true;
+  };
+
+  /**
+   * Saves the mesh to a .obj file to be used with an external editor.
+   *
+   * @param {String} directory: the directory to save the mesh into
+   * @param {String} name: the mesh name
+   */
+  this.performMeshSave = function(directory, name) {
+    Tilt.File.saveImage(image, directory + "/" + name + ".png");
+    mesh.save(directory, name);
   };
 
   /**
