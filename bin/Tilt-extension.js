@@ -187,7 +187,7 @@ TiltChrome.BrowserOverlay = {
    * Forces a garbage collection.
    */
   performGC: function() {
-    window.QueryInterface(Ci.nsIInterfaceRequestor).
+    QueryInterface(Ci.nsIInterfaceRequestor).
       getInterface(Ci.nsIDOMWindowUtils).
       garbageCollect();
   }
@@ -6678,6 +6678,89 @@ Tilt.Mesh.prototype = {
 "use strict";
 
 var Tilt = Tilt || {};
+var EXPORTED_SYMBOLS = ["Tilt.Mesh"];
+
+/**
+ * Saves the mesh as a .obj file to be used with an external editor.
+ *
+ * @param {String} directory: the directory to save the mesh into
+ * @param {String} name: the mesh name
+ */
+Tilt.Mesh.prototype.save = function(directory, name) {
+  var output = [],
+    material = [],
+    v = this.vertices.components,
+    t = this.texCoord.components,
+    f = this.indices.components,
+    i, j, k, len, str;
+
+  output.push("mtllib " + name + ".mtl",
+              "usemtl webpage");
+
+  material.push("newmtl webpage",
+                "illum 2",
+                "Ka 1.000 1.000 1.000",
+                "Kd 1.000 1.000 1.000",
+                "Ks 0.000 0.000 0.000",
+                "map_Ka " + name + ".png",
+                "map_Kd " + name + ".png",
+                "map_Ks " + name + ".png");
+
+  for (i = 0, len = v.length; i < len; i += 3) {
+    output.push("v " + (v[i    ] / +100) + " " + 
+                       (v[i + 1] / -100) + " " +
+                       (v[i + 2] / +100));
+  }
+  for (i = 0, len = t.length; i < len; i += 2) {
+    output.push("vt " + (    t[i    ]) + " " +
+                        (1 - t[i + 1]));
+  }
+  for (i = 0, len = f.length; i < len; i += 3) {
+    output.push("f " + (f[i    ] + 1) + "/" + (f[i    ] + 1) + " " +
+                       (f[i + 1] + 1) + "/" + (f[i + 1] + 1) + " " +
+                       (f[i + 2] + 1) + "/" + (f[i + 2] + 1));
+  }
+
+  var s = Tilt.File.separator;
+
+  Tilt.File.save(output.join("\n"), directory + s + name + ".obj");
+  Tilt.File.save(material.join("\n"), directory + s + name + ".mtl");
+};
+/***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is Tilt: A WebGL-based 3D visualization of a webpage.
+ *
+ * The Initial Developer of the Original Code is Victor Porof.
+ * Portions created by the Initial Developer are Copyright (C) 2011
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the LGPL or the GPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ ***** END LICENSE BLOCK *****/
+"use strict";
+
+var Tilt = Tilt || {};
 var EXPORTED_SYMBOLS = ["Tilt.Renderer"];
 
 /**
@@ -7608,7 +7691,8 @@ window.requestAnimFrame = (function() {
          function(callback, element) {
            window.setTimeout(callback, 1000 / 60);
          };
-})();/***** BEGIN LICENSE BLOCK *****
+})();
+/***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
  * The contents of this file are subject to the Mozilla Public License Version
@@ -9542,8 +9626,8 @@ Tilt.Console = {
       message = "undefined";
     }
     try {
-      prompt = Components.classes["@mozilla.org/embedcomp/prompt-service;1"]
-        .getService(Components.interfaces.nsIPromptService);
+      prompt = Cc["@mozilla.org/embedcomp/prompt-service;1"].
+        getService(Ci.nsIPromptService);
 
       prompt.alert(null, title, message);
     }
@@ -9567,8 +9651,8 @@ Tilt.Console = {
     }
     try {
       // get the console service
-      consoleService = Components.classes["@mozilla.org/consoleservice;1"]
-        .getService(Components.interfaces.nsIConsoleService);
+      consoleService = Cc["@mozilla.org/consoleservice;1"].
+        getService(Ci.nsIConsoleService);
 
       // log the message
       consoleService.logStringMessage(message);
@@ -9614,12 +9698,12 @@ Tilt.Console = {
     }
     try {
       // get the console service
-      consoleService = Components.classes["@mozilla.org/consoleservice;1"]
-        .getService(Components.interfaces.nsIConsoleService);
+      consoleService = Cc["@mozilla.org/consoleservice;1"].
+        getService(Ci.nsIConsoleService);
 
       // also the script error service
-      scriptError = Components.classes["@mozilla.org/scripterror;1"]
-        .createInstance(Components.interfaces.nsIScriptError);
+      scriptError = Cc["@mozilla.org/scripterror;1"].
+        createInstance(Ci.nsIScriptError);
 
       // initialize a script error
       scriptError.init(message, sourceName, sourceLine,
@@ -9958,6 +10042,15 @@ Tilt.Document = {
    * @return {Object} an object containing the x, y, width and height coords
    */
   getNodeCoordinates: function(node) {
+    if (node.nodeType !== 1) {
+      return {
+        x: 0,
+        y: 0,
+        width: 0,
+        height: 0
+      };
+    }
+
     try {
       if (node.localName === "head" ||
           node.localName === "body") {
@@ -10290,6 +10383,139 @@ text-rendering: auto;';
 
     return cssText.join("\n") + "\n";
   }
+};
+/***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is Tilt: A WebGL-based 3D visualization of a webpage.
+ *
+ * The Initial Developer of the Original Code is Victor Porof.
+ * Portions created by the Initial Developer are Copyright (C) 2011
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the LGPL or the GPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ ***** END LICENSE BLOCK *****/
+"use strict";
+
+var Tilt = Tilt || {};
+var EXPORTED_SYMBOLS = ["Tilt.File"];
+
+Tilt.File = {
+
+  /**
+   * Shows a file picker and returns the result.
+   *
+   * @param {String} type: either "file" or "folder"
+   * @return {Object} the picked file if the returned OK, null otherwise
+   */
+  showPicker: function(type) {
+    var fp, res, folder;
+
+    fp = Cc["@mozilla.org/filepicker;1"].createInstance(Ci.nsIFilePicker);
+    fp.init(window, "Select the folder to save the 3D webpage", 
+      type === "folder" ? Ci.nsIFilePicker.modeGetFolder :
+                          Ci.nsIFilePicker.modeOpen);
+
+    if ((res = fp.show()) == Ci.nsIFilePicker.returnOK) {
+      return fp.file;
+    }
+    else {
+      return null;
+    }
+  },
+
+  /**
+   * Saves data into a file placed on the desktop.
+   *
+   * @param {String} data: the contents
+   * @param {String} path: the path of the file
+   */
+  save: function(data, path) {
+    var file, ostream, istream, converter;
+
+    Cu["import"]("resource://gre/modules/FileUtils.jsm");
+    Cu["import"]("resource://gre/modules/NetUtil.jsm");
+
+    file = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsILocalFile);
+    file.initWithPath(path);
+
+    ostream = FileUtils.openSafeFileOutputStream(file);
+
+    converter = Cc["@mozilla.org/intl/scriptableunicodeconverter"].
+      createInstance(Ci.nsIScriptableUnicodeConverter);
+  
+    converter.charset = "UTF-8";
+    istream = converter.convertToInputStream(data);
+
+    NetUtil.asyncCopy(istream, ostream, function(status) {
+      if (!Components.isSuccessCode(status)) {
+        return;
+      }
+    });  
+  },
+
+  /**
+   * Saves an image into a file placed on the desktop.
+   *
+   * @param {String} canvas: the contents
+   * @param {String} path: the path of the file
+   */
+  saveImage: function(canvas, path) {
+    var file, io, source, target, persist;
+
+    Cu["import"]("resource://gre/modules/FileUtils.jsm");
+    Cu["import"]("resource://gre/modules/NetUtil.jsm");
+
+    file = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsILocalFile);
+    file.initWithPath(path);
+
+    io = Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService);
+
+    source = io.newURI(canvas.toDataURL("image/png", ""), "UTF8", null);
+    target = io.newFileURI(file);
+
+    persist = Cc["@mozilla.org/embedding/browser/nsWebBrowserPersist;1"].
+      createInstance(Ci.nsIWebBrowserPersist);
+
+    persist.persistFlags = Ci.nsIWebBrowserPersist.
+      PERSIST_FLAGS_REPLACE_EXISTING_FILES;
+
+    persist.persistFlags |= Ci.nsIWebBrowserPersist.
+      PERSIST_FLAGS_AUTODETECT_APPLY_CONVERSION;
+
+    persist.saveURI(source, null, null, null, null, file);
+  },
+
+  /**
+   * The file path separator, different on each platform.
+   */
+  separator: (function() {
+    if (navigator.appVersion.indexOf("Win") !== -1) { return "\\"; }
+    else if (navigator.appVersion.indexOf("Mac") !== -1) { return "/"; }
+    else if (navigator.appVersion.indexOf("X11") !== -1) { return "/"; }
+    else if (navigator.appVersion.indexOf("Linux") !== -1) { return "/"; }
+  })()
 };
 /***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
@@ -11807,8 +12033,13 @@ TiltChrome.UI.Default = function() {
       y: -5,
       padding: [0, 0, 0, 5],
       onclick: function() {
-        Tilt.Console.alert("Tilt", Tilt.StringBundle.get("implement.info"));
-      }
+        var folder = Tilt.File.showPicker("folder");
+
+        if (folder) {
+          folder.reveal();
+          this.visualization.performMeshSave(folder.path, "webpage");
+        }
+      }.bind(this)
     });
 
     optionsButton = new Tilt.Button(new Tilt.Sprite(t, [935, 0, 66, 38]), {
@@ -11817,7 +12048,7 @@ TiltChrome.UI.Default = function() {
       padding: [0, 0, 0, 5],
       onclick: function() {
         Tilt.Console.alert("Tilt", Tilt.StringBundle.get("implement.info"));
-      }
+      }.bind(this)
     });
 
     htmlButton = new Tilt.Button(new Tilt.Sprite(t, [935, 200, 48, 38]), {
@@ -12742,6 +12973,7 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
   /**
    * Mesh initialization properties.
    */
+  image = null,
   texture = null,
   thickness = 15,
 
@@ -12796,7 +13028,7 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
     // use an extension to get the image representation of the document
     // this will be removed once the MOZ_window_region_texture WebGL extension
     // is finished; currently converting the document image to a texture
-    var image = Tilt.Extensions.WebGL.initDocumentImage(window.content);
+    image = Tilt.Extensions.WebGL.initDocumentImage(window.content);
 
     // create a static texture using the previously created document image
     texture = new Tilt.Texture(image, {
@@ -13315,6 +13547,19 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
    */
   this.requestRedraw = function() {
     redraw = true;
+  };
+
+  /**
+   * Saves the mesh to a .obj file to be used with an external editor.
+   *
+   * @param {String} directory: the directory to save the mesh into
+   * @param {String} name: the mesh name
+   */
+  this.performMeshSave = function(directory, name) {
+    var s = Tilt.File.separator;
+
+    Tilt.File.saveImage(image, directory + s + name + ".png");
+    mesh.save(directory, name);
   };
 
   /**
