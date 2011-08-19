@@ -38,6 +38,28 @@ var EXPORTED_SYMBOLS = ["Tilt.File"];
 Tilt.File = {
 
   /**
+   * Shows a file picker and returns the result.
+   *
+   * @param {String} type: either "file" or "folder"
+   * @return {Object} the picked file if the returned OK, null otherwise
+   */
+  showPicker: function(type) {
+    var fp, res, folder;
+
+    fp = Cc["@mozilla.org/filepicker;1"].createInstance(Ci.nsIFilePicker);
+    fp.init(window, "Select the folder to save the 3D webpage", 
+      type === "folder" ? Ci.nsIFilePicker.modeGetFolder :
+                          Ci.nsIFilePicker.modeOpen);
+
+    if ((res = fp.show()) == Ci.nsIFilePicker.returnOK) {
+      return fp.file;
+    }
+    else {
+      return null;
+    }
+  },
+
+  /**
    * Saves data into a file placed on the desktop.
    *
    * @param {String} data: the contents
