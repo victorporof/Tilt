@@ -190,8 +190,13 @@ TiltChrome.UI.Default = function() {
       y: -5,
       padding: [0, 0, 0, 5],
       onclick: function() {
-        Tilt.Console.alert("Tilt", Tilt.StringBundle.get("implement.info"));
-      }
+        var folder = Tilt.File.showPicker("folder");
+
+        if (folder) {
+          folder.reveal();
+          this.visualization.performMeshSave(folder.path, "webpage");
+        }
+      }.bind(this)
     });
 
     optionsButton = new Tilt.Button(new Tilt.Sprite(t, [935, 0, 66, 38]), {
@@ -200,7 +205,7 @@ TiltChrome.UI.Default = function() {
       padding: [0, 0, 0, 5],
       onclick: function() {
         Tilt.Console.alert("Tilt", Tilt.StringBundle.get("implement.info"));
-      }
+      }.bind(this)
     });
 
     htmlButton = new Tilt.Button(new Tilt.Sprite(t, [935, 200, 48, 38]), {
