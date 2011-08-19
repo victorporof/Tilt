@@ -245,6 +245,15 @@ Tilt.Document = {
    * @return {Object} an object containing the x, y, width and height coords
    */
   getNodeCoordinates: function(node) {
+    if (node.nodeType !== 1) {
+      return {
+        x: 0,
+        y: 0,
+        width: 0,
+        height: 0
+      };
+    }
+
     try {
       if (node.localName === "head" ||
           node.localName === "body") {
