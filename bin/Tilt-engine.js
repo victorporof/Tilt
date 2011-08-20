@@ -35,6 +35,8 @@
 var Tilt = Tilt || {};
 var EXPORTED_SYMBOLS = ["Tilt.Arcball"];
 
+/*global vec3, mat3, mat4, quat4 */
+
 /**
  * Arcball constructor.
  * This is a general purpose 3D rotation controller described by Ken Shoemake
@@ -165,7 +167,7 @@ Tilt.Arcball.prototype = {
     y = mouseLerp[1];
 
     // the smoothed arcball rotation may not be finished when the mouse is
-    // pressed again, so cancel the rotation if other events occur or the 
+    // pressed again, so cancel the rotation if other events occur or the
     // animation finishes
     if (mouseButton === 3 || x === mouseRelease[0] && y === mouseRelease[1]) {
       this.$rotating = false;
@@ -810,9 +812,7 @@ var EXPORTED_SYMBOLS = [
   "Tilt.$activeShader",
   "Tilt.$enabledAttributes",
   "Tilt.$loadedTextures",
-  "Tilt.$ui",
-  "Tilt.clearCache",
-  "Tilt.destroyObject"];
+  "Tilt.clearCache"];
 
 /* All cached variables begin with the $ sign, for easy spotting.
  * ------------------------------------------------------------------------ */
@@ -855,6 +855,44 @@ Tilt.clearCache = function() {
   Tilt.GLSL.$count = 0;
   Tilt.TextureUtils.$count = 0;
 };
+/***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is Tilt: A WebGL-based 3D visualization of a webpage.
+ *
+ * The Initial Developer of the Original Code is Victor Porof.
+ * Portions created by the Initial Developer are Copyright (C) 2011
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the LGPL or the GPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ ***** END LICENSE BLOCK *****/
+"use strict";
+
+var Tilt = Tilt || {};
+var EXPORTED_SYMBOLS = ["Tilt.destroyObject"];
+
+/*jshint forin: false */
 
 /**
  * Destroys an object and deletes all members.
@@ -909,6 +947,8 @@ Tilt.destroyObject = function(scope) {
 
 var Tilt = Tilt || {};
 var EXPORTED_SYMBOLS = ["Tilt.Profiler"];
+
+/*jshint evil: true */
 
 /**
  * Handy way of profiling functions in Tilt.
@@ -986,8 +1026,8 @@ Tilt.Profiler = {
 
       // overwrite the function to handle before, after and during calls
       object[name] = function() {
-        // a tricky issue can appear when an overwritten function needs to 
-        // return a value; in this case, the afterCall still needs to be 
+        // a tricky issue can appear when an overwritten function needs to
+        // return a value; in this case, the afterCall still needs to be
         // executed after the function returns
         try {
           beforeCall(index);
@@ -1036,9 +1076,9 @@ Tilt.Profiler = {
       return method.call(object);
     }
 
-    // since most of the times the overwritten function has one or more 
-    // arguments, simply passing the arguments property inside the function 
-    // isn’t enough; we need to construct the parameters directly, separated 
+    // since most of the times the overwritten function has one or more
+    // arguments, simply passing the arguments property inside the function
+    // isn't enough; we need to construct the parameters directly, separated
     // by commas, just like a normal call would be executed
     for (var i = 0, len = args.length, $ = ""; i < len; i++) {
       $ += "arguments[2][" + i + "]" + ((i !== len - 1) ? "," : "");
@@ -1050,28 +1090,29 @@ Tilt.Profiler = {
    * Logs information about the currently profiled functions.
    */
   log: function() {
-    var functions = this.functions.slice(0); // duplicate the functions array
+    var functions = this.functions.slice(0), // duplicate the functions array
+      i, j, f, f2;
 
-    // once everything is finished, logging can be done by sorting all the 
+    // once everything is finished, logging can be done by sorting all the
     // recorded function calls, timing and other information by a key
 
-    // with Tilt, the most useful data was received when sorting by the total 
+    // with Tilt, the most useful data was received when sorting by the total
     // time necessary for a function to be executed
     functions.sort(function(a, b) {
       return a.totalTime < b.totalTime ? 1 : -1;
     });
 
     // browse through each intercepted function information
-    for (var i = 0; i < functions.length; i++) {
-      var f = functions[i];
+    for (i = 0; i < functions.length; i++) {
+      f = functions[i];
 
-      // because some functions inside objects can be duplicated when creating 
-      // object via var foo = new MyObject(), that is, when they are declared 
-      // inside the constructor function and not the object prototype, we need 
-      // to check for duplicates and recalculate the number of calls, longest 
+      // because some functions inside objects can be duplicated when creating
+      // object via var foo = new MyObject(), that is, when they are declared
+      // inside the constructor function and not the object prototype, we need
+      // to check for duplicates and recalculate the number of calls, longest
       // time, total time, average time for these situations.
-      for (var j = i + 1; j < functions.length; j++) {
-        var f2 = functions[j];
+      for (j = i + 1; j < functions.length; j++) {
+        f2 = functions[j];
 
         if (f.name === f2.name) {
           f.calls += f2.calls;
@@ -1246,15 +1287,16 @@ Tilt.Program.prototype = {
    * could take quite a lot of time.
    */
   use: function() {
-    var id = this.$id;
-    
+    var id = this.$id,
+      gl, i;
+
     // check if the program wasn't already active
     if (Tilt.$activeShader !== id) {
       Tilt.$activeShader = id;
 
       // cache the WebGL context variable
       // use the the program if it wasn't already set
-      var gl = Tilt.$gl;
+      gl = Tilt.$gl;
       gl.useProgram(this.$ref);
 
       // the texture cache needs to be cleared each time a program is used
@@ -1265,7 +1307,7 @@ Tilt.Program.prototype = {
         Tilt.$enabledAttributes = this.$attributes.length;
 
         // enable any necessary vertex attributes using the cache
-        for (var i in this.$attributes) {
+        for (i in this.$attributes) {
           if (this.$attributes.hasOwnProperty(i) && i !== "length") {
             gl.enableVertexAttribArray(this.$attributes[i]);
           }
@@ -1356,13 +1398,14 @@ Tilt.Program.prototype = {
    */
   bindTexture: function(sampler, texture, unit) {
     var cache = this.$texcache,
-      id = texture.$id;
+      id = texture.$id,
+      gl;
 
     // check the cache to see if this texture wasn't already set
     if (cache[sampler] !== id) {
       cache[sampler] = id;
 
-      var gl = Tilt.$gl;
+      gl = Tilt.$gl;
       gl.bindTexture(gl.TEXTURE_2D, texture.$ref);
       gl.uniform1i(this.$uniforms[sampler], 0);
     }
@@ -1614,8 +1657,8 @@ Tilt.GLSL = {
       param = variables[i];
       io = this.shaderIO(program, param);
 
-      // if we get an attribute location, store it
       if ("number" === typeof io) {
+        // if we get an attribute location, store it
         // bind the new parameter only if it was not already defined
         if ("undefined" === typeof program.attributes[param]) {
           program.attributes[param] = io;
@@ -1623,8 +1666,9 @@ Tilt.GLSL = {
         }
       }
 
-      // if we get a WebGL uniform object, store it
+      /*global WebGLUniformLocation */
       if (("object" === typeof io && io instanceof WebGLUniformLocation)) {
+        // if we get a WebGL uniform object, store it
         // bind the new parameter only if it was not already defined
         if ("undefined" === typeof program.uniforms[param]) {
           program.uniforms[param] = io;
@@ -1765,7 +1809,7 @@ Tilt.Texture.prototype = {
     this.loaded = true;
 
     // if the onload event function is specified, call it now
-    if ("undefined" !== typeof this.onload) {
+    if ("function" === typeof this.onload) {
       this.onload();
     }
 
@@ -1983,22 +2027,29 @@ Tilt.TextureUtils = {
   resizeImageToPowerOfTwo: function(image, parameters) {
     var isChromePath = (image.src || "").indexOf("chrome://"),
       isPowerOfTwoWidth = Tilt.Math.isPowerOfTwo(image.width),
-      isPowerOfTwoHeight = Tilt.Math.isPowerOfTwo(image.height);
+      isPowerOfTwoHeight = Tilt.Math.isPowerOfTwo(image.height),
+      width, height, canvas, context;
 
     // first check if the image is not already power of two
     if (isPowerOfTwoWidth && isPowerOfTwoHeight && isChromePath === -1) {
-      return image;
+      try {
+        return image;
+      }
+      finally {
+        image = null;
+        parameters = null;
+      }
     }
 
     // make sure the parameters argument is an object
     parameters = parameters || {};
 
     // calculate the power of two dimensions for the npot image
-    var width = Tilt.Math.nextPowerOfTwo(image.width),
-      height = Tilt.Math.nextPowerOfTwo(image.height),
+    width = Tilt.Math.nextPowerOfTwo(image.width);
+    height = Tilt.Math.nextPowerOfTwo(image.height);
 
     // create a canvas, then we will use a 2d context to scale the image
-    canvas = Tilt.Document.initCanvas(width, height),
+    canvas = Tilt.Document.initCanvas(width, height);
 
     // do some 2d context magic
     context = canvas.getContext("2d");
@@ -6041,7 +6092,7 @@ var EXPORTED_SYMBOLS = ["Tilt.Cube"];
 Tilt.Cube = function(width, height, depth) {
 
   // intercept this object using a profiler when building in debug mode
-  Tilt.Profiler.intercept("Tilt.Cube", this);  
+  Tilt.Profiler.intercept("Tilt.Cube", this);
 
   // make sure the width, height and depth are valid number values
   width = width || 1;
@@ -6157,7 +6208,7 @@ var EXPORTED_SYMBOLS = ["Tilt.CubeWireframe"];
 Tilt.CubeWireframe = function(width, height, depth) {
 
   // intercept this object using a profiler when building in debug mode
-  Tilt.Profiler.intercept("Tilt.CubeWireframe", this);  
+  Tilt.Profiler.intercept("Tilt.CubeWireframe", this);
 
   // make sure the width, height and depth are valid number values
   width = width || 1;
@@ -6240,7 +6291,7 @@ var EXPORTED_SYMBOLS = ["Tilt.Rectangle"];
 Tilt.Rectangle = function(width, height, depth) {
 
   // intercept this object using a profiler when building in debug mode
-  Tilt.Profiler.intercept("Tilt.Rectangle", this);  
+  Tilt.Profiler.intercept("Tilt.Rectangle", this);
 
   /**
    * Buffer of 2-component vertices (x, y) as the corners of a rectangle.
@@ -6305,7 +6356,7 @@ var EXPORTED_SYMBOLS = ["Tilt.RectangleWireframe"];
 Tilt.RectangleWireframe = function() {
 
   // intercept this object using a profiler when building in debug mode
-  Tilt.Profiler.intercept("Tilt.RectangleWireframe", this);  
+  Tilt.Profiler.intercept("Tilt.RectangleWireframe", this);
 
   /**
    * Buffer of 2-component vertices (x, y) as the outline of a rectangle.
@@ -6498,7 +6549,7 @@ Tilt.Mesh.prototype.save = function(directory, name) {
     v = this.vertices.components,
     t = this.texCoord.components,
     f = this.indices.components,
-    i, j, k, len, str;
+    i, j, k, len, str, s;
 
   output.push("mtllib " + name + ".mtl",
               "usemtl webpage");
@@ -6513,7 +6564,7 @@ Tilt.Mesh.prototype.save = function(directory, name) {
                 "map_Ks " + name + ".png");
 
   for (i = 0, len = v.length; i < len; i += 3) {
-    output.push("v " + (v[i    ] / +100) + " " + 
+    output.push("v " + (v[i    ] / +100) + " " +
                        (v[i + 1] / -100) + " " +
                        (v[i + 2] / +100));
   }
@@ -6527,8 +6578,7 @@ Tilt.Mesh.prototype.save = function(directory, name) {
                        (f[i + 2] + 1) + "/" + (f[i + 2] + 1));
   }
 
-  var s = Tilt.File.separator;
-
+  s = Tilt.File.separator;
   Tilt.File.save(output.join("\n"), directory + s + name + ".obj");
   Tilt.File.save(material.join("\n"), directory + s + name + ".mtl");
 };
@@ -6568,6 +6618,8 @@ Tilt.Mesh.prototype.save = function(directory, name) {
 
 var Tilt = Tilt || {};
 var EXPORTED_SYMBOLS = ["Tilt.Renderer"];
+
+/*global vec3, mat3, mat4, quat4 */
 
 /**
  * Tilt.Renderer constructor.
@@ -7390,8 +7442,8 @@ Tilt.Renderer.prototype = {
    * @param {Object} opt_attribs: optional attributes used for initialization
    */
   create3DContext: function(canvas, opt_attribs) {
-    var names = ["experimental-webgl", "webgl", "webkit-3d", "moz-webgl"];
-    var context, i, len;
+    var names = ["experimental-webgl", "webgl", "webkit-3d", "moz-webgl"],
+      context, i, len;
 
     for (i = 0, len = names.length; i < len; ++i) {
       try {
@@ -7450,8 +7502,8 @@ Tilt.Renderer.prototype = {
    * Clears the Tilt cache, destroys this object and deletes all members.
    */
   destroy: function() {
-    Tilt.destroyObject(this);
     Tilt.clearCache();
+    Tilt.destroyObject(this);
   }
 };
 /***** BEGIN LICENSE BLOCK *****
@@ -7544,7 +7596,7 @@ Tilt.Shaders = {};
  * @param {Uniform} mvMatrix: the model view matrix
  * @param {Uniform} projMatrix: the projection matrix
  * @param {Uniform} color: the color to set the gl_FragColor to
- */  
+ */
 Tilt.Shaders.Color = {
 
   /**
@@ -7577,7 +7629,7 @@ Tilt.Shaders.Color = {
 ].join("\n")
 };
 
-/** 
+/**
  * A simple texture shader. It uses one sampler and a uniform color.
  *
  * @param {Attribute} vertexPosition: the vertex position
@@ -7680,7 +7732,7 @@ var EXPORTED_SYMBOLS = ["Tilt.Container"];
 Tilt.Container = function(properties) {
 
   // intercept this object using a profiler when building in debug mode
-  Tilt.Profiler.intercept("Tilt.Container", this); 
+  Tilt.Profiler.intercept("Tilt.Container", this);
 
   // make sure the properties parameter is a valid object
   properties = properties || {};
@@ -8008,7 +8060,7 @@ var EXPORTED_SYMBOLS = ["Tilt.Scrollview"];
 Tilt.ScrollContainer = function(properties) {
 
   // intercept this object using a profiler when building in debug mode
-  Tilt.Profiler.intercept("Tilt.ScrollContainer", this); 
+  Tilt.Profiler.intercept("Tilt.ScrollContainer", this);
 
   // add this view to the top level UI handler.
   Tilt.UI.push(this);
@@ -8029,77 +8081,74 @@ Tilt.ScrollContainer = function(properties) {
     width: 32,
     height: 30,
     fill: properties.top ? null : "#f00a",
-    padding: properties.top ? properties.top.$padding : [0, 0, 0, 0]
-  });
+    padding: properties.top ? properties.top.$padding : [0, 0, 0, 0],
+    onmousedown: function() {
+      window.clearInterval(this.$scrollTopReset);
+      window.clearInterval(this.$scrollTop);
+      var ui = Tilt.UI;
 
-  var bottomButton = new Tilt.Button(properties.bottom, {
+      this.$scrollTop = window.setInterval(function() {
+        this.view.$offset[1] += 5;
+        ui.requestRedraw();
+
+        if (!ui.mousePressed) {
+          ui = null;
+          window.clearInterval(this.$scrollTop);
+        }
+      }.bind(this), 1000 / 60);
+    }.bind(this)
+  }),
+
+  bottomButton = new Tilt.Button(properties.bottom, {
     x: this.view.$x - 25,
     y: this.view.$y + this.view.$height - 25,
     width: 32,
     height: 30,
     fill: properties.bottom ? null : "#0f0a",
-    padding: properties.bottom ? properties.bottom.$padding : [0, 0, 0, 0]
-  });
+    padding: properties.bottom ? properties.bottom.$padding : [0, 0, 0, 0],
+    onmousedown: function() {
+      window.clearInterval(this.$scrollTopReset);
+      window.clearInterval(this.$scrollBottom);
+      var ui = Tilt.UI;
 
-  var resetButton = new Tilt.Button(properties.reset, {
+      this.$scrollBottom = window.setInterval(function() {
+        this.view.$offset[1] -= 5;
+        ui.requestRedraw();
+
+        if (!ui.mousePressed) {
+          ui = null;
+          window.clearInterval(this.$scrollBottom);
+        }
+      }.bind(this), 1000 / 60);
+    }.bind(this)
+  }),
+
+  resetButton = new Tilt.Button(properties.reset, {
     x: this.view.$x - 25,
     y: this.view.$y + this.view.$height - 50,
     width: 32,
     height: 30,
     fill: properties.reset ? null : "#0f0b",
-    padding: properties.reset ? properties.reset.$padding : [0, 0, 0, 0]
+    padding: properties.reset ? properties.reset.$padding : [0, 0, 0, 0],
+    onmousedown: function() {
+      window.clearInterval(this.$scrollTopReset);
+      var ui = Tilt.UI;
+
+      this.$scrollTopReset = window.setInterval(function() {
+        this.view.$offset[1] /= 1.15;
+        ui.requestRedraw();
+
+        if (Math.abs(this.view.$offset[1]) < 0.1) {
+          window.clearInterval(this.$scrollTopReset);
+        }
+      }.bind(this), 1000 / 60);
+    }.bind(this)
   });
 
-  topButton.onmousedown = function() {
-    window.clearInterval(this.$scrollTopReset);
-    window.clearInterval(this.$scrollTop);
-    var ui = Tilt.UI;
-
-    this.$scrollTop = window.setInterval(function() {
-      this.view.$offset[1] += 5;
-      ui.requestRedraw();
-
-      if (!ui.mousePressed) {
-        ui = null;
-        window.clearInterval(this.$scrollTop);
-      }
-    }.bind(this), 1000 / 60);
-  }.bind(this);
-
-  bottomButton.onmousedown = function() {
-    window.clearInterval(this.$scrollTopReset);
-    window.clearInterval(this.$scrollBottom);
-    var ui = Tilt.UI;
-
-    this.$scrollBottom = window.setInterval(function() {
-      this.view.$offset[1] -= 5;
-      ui.requestRedraw();
-
-      if (!ui.mousePressed) {
-        ui = null;
-        window.clearInterval(this.$scrollBottom);
-      }
-    }.bind(this), 1000 / 60);
-  }.bind(this);
-
-  resetButton.onmousedown = function() {
-    window.clearInterval(this.$scrollTopReset);
-    var ui = Tilt.UI;
-
-    this.$scrollTopReset = window.setInterval(function() {
-      this.view.$offset[1] /= 1.15;
-      ui.requestRedraw();
-
-      if (Math.abs(this.view.$offset[1]) < 0.1) {
-        window.clearInterval(this.$scrollTopReset);
-      }
-    }.bind(this), 1000 / 60);
-  }.bind(this);
-
   this.scrollbars.push(topButton, bottomButton, resetButton);
-
   topButton = null;
   bottomButton = null;
+  resetButton = null;
 };
 
 Tilt.ScrollContainer.prototype = {
@@ -8691,7 +8740,8 @@ Tilt.Slider.prototype = {
    * @param {Tilt.Renderer} tilt: optional, a reference to a Tilt.Renderer
    */
   update: function(frameDelta, tilt) {
-    var ui = Tilt.UI;
+    var ui = Tilt.UI,
+      sprite, px, py, x, y, size, direction, xps, yps, p, pmpx, pmpy;
 
     // if the mouse was pressed over the handler, begin sliding
     if (this.mousePressed) {
@@ -8704,13 +8754,13 @@ Tilt.Slider.prototype = {
 
     // if we're currently sliding, update this object's internal params
     if (this.$sliding) {
-      var sprite = this.$sprite,
-        px = this.$parentX,
-        py = this.$parentY,
-        x = this.$x,
-        y = this.$y,
-        size = this.$size,
-        direction = this.$direction, xps, yps, p, pmpx;
+      sprite = this.$sprite;
+      px = this.$parentX;
+      py = this.$parentY;
+      x = this.$x;
+      y = this.$y;
+      size = this.$size;
+      direction = this.$direction;
 
       // depending on the direction, move the handler along the x or y axis
       if (direction === 0) {
@@ -9027,11 +9077,7 @@ Tilt.Sprite.prototype = {
 
     // if tinting was specified, default back to the original values
     if (tint !== null) {
-      var $tint = tilt.$tintColor;
-      $tint[0] = 1;
-      $tint[1] = 1;
-      $tint[2] = 1;
-      $tint[3] = 1;
+      tilt.tint("#fff");
     }
 
     if (Tilt.UI.debug) {
@@ -9110,7 +9156,7 @@ Tilt.UI.draw = function(frameDelta) {
   var tilt = Tilt.$renderer,
     i, len, container;
 
-  // before drawing, make sure we're in an orthographic default environment 
+  // before drawing, make sure we're in an orthographic default environment
   tilt.defaults();
   tilt.ortho();
 
@@ -9414,6 +9460,8 @@ Tilt.Profiler.intercept("Tilt.UI", Tilt.UI);
 var Tilt = Tilt || {};
 var EXPORTED_SYMBOLS = ["Tilt.Console", "Tilt.StringBundle"];
 
+/*global Cc, Ci, Cu */
+
 /**
  * Various console functions required by the engine.
  */
@@ -9439,7 +9487,7 @@ Tilt.Console = {
     }
     catch(e) {
       // running from an unprivileged environment
-      alert(message);
+      window.alert(message);
     }
   },
 
@@ -9465,7 +9513,7 @@ Tilt.Console = {
     }
     catch(e) {
       // running from an unprivileged environment
-      alert(message);
+      window.alert(message);
     }
   },
 
@@ -9520,7 +9568,7 @@ Tilt.Console = {
     }
     catch(e) {
       // running from an unprivileged environment
-      alert(message);
+      window.alert(message);
     }
   }
 };
@@ -9579,6 +9627,7 @@ Tilt.StringBundle = {
     if ("undefined" === typeof string) {
       return "undefined";
     }
+
     // undesired, you should always pass arguments when formatting strings
     if ("undefined" === typeof args) {
       return string;
@@ -9637,6 +9686,8 @@ Tilt.StringBundle = {
 
 var Tilt = Tilt || {};
 var EXPORTED_SYMBOLS = ["Tilt.Document"];
+
+/*global Exception */
 
 /**
  * Utilities for accessing and manipulating a document.
@@ -9775,11 +9826,11 @@ Tilt.Document = {
 
     // used to calculate the maximum depth of a dom node
     var maxDepth = 0,
-      totalNodes = 0;
+      totalNodes = 0,
 
     // used internally for recursively traversing a document object model
-    var recursive = function(parent, depth) {
-      var i, len, child;
+    recursive = function(parent, depth) {
+      var i, len, child, coord;
 
       for (i = 0, len = parent.childNodes.length; i < len; i++) {
         child = parent.childNodes[i];
@@ -9796,7 +9847,7 @@ Tilt.Document = {
         recursive(child, depth + 1);
 
         if (traverseChildIframes && child.localName === "iframe") {
-          var coord = Tilt.Document.getNodeCoordinates(child);
+          coord = Tilt.Document.getNodeCoordinates(child);
 
           this.left += coord.x;
           this.top += coord.y;
@@ -9857,6 +9908,8 @@ Tilt.Document = {
       };
     }
 
+    var x, y, w, h, clientRect;
+
     try {
       if (node.localName === "head" ||
           node.localName === "body") {
@@ -9864,20 +9917,23 @@ Tilt.Document = {
       }
 
       // this is the preferred way of getting the bounding client rectangle
-      var clientRect = node.getBoundingClientRect(),
-        contentLeft = window.content.pageXOffset,
-        contentRight = window.content.pageYOffset;
+      clientRect = node.getBoundingClientRect();
+      x = window.content.pageXOffset;
+      y = window.content.pageYOffset;
 
       // a bit more verbose than a simple array
       return {
-        x: clientRect.left + contentLeft,
-        y: clientRect.top + contentRight,
+        x: clientRect.left + x,
+        y: clientRect.top + y,
         width: clientRect.width,
         height: clientRect.height
       };
     }
     catch (e) {
-      var x = 0, y = 0, w = node.clientWidth, h = node.clientHeight;
+      x = 0;
+      y = 0;
+      w = node.clientWidth;
+      h = node.clientHeight;
 
       // if the node isn't the parent of everything
       if (node.offsetParent) {
@@ -9989,200 +10045,200 @@ Tilt.Document = {
    */
   getModifiedCss: function(style) {
     var cssText = [], n, v, t, i,
-      defaults = '\
-background-attachment: scroll;\
-background-clip: border-box;\
-background-color: transparent;\
-background-image: none;\
-background-origin: padding-box;\
-background-position: 0% 0%;\
-background-repeat: repeat;\
-background-size: auto auto;\
-border-bottom-color: rgb(0, 0, 0);\
-border-bottom-left-radius: 0px;\
-border-bottom-right-radius: 0px;\
-border-bottom-style: none;\
-border-bottom-width: 0px;\
-border-collapse: separate;\
-border-left-color: rgb(0, 0, 0);\
-border-left-style: none;\
-border-left-width: 0px;\
-border-right-color: rgb(0, 0, 0);\
-border-right-style: none;\
-border-right-width: 0px;\
-border-spacing: 0px 0px;\
-border-top-color: rgb(0, 0, 0);\
-border-top-left-radius: 0px;\
-border-top-right-radius: 0px;\
-border-top-style: none;\
-border-top-width: 0px;\
-bottom: auto;\
-box-shadow: none;\
-caption-side: top;\
-clear: none;\
-clip: auto;\
-color: rgb(0, 0, 0);\
-content: none;\
-counter-increment: none;\
-counter-reset: none;\
-cursor: auto;\
-direction: ltr;\
-display: block;\
-empty-cells: -moz-show-background;\
-float: none;\
-font-family: serif;\
-font-size: 16px;\
-font-size-adjust: none;\
-font-stretch: normal;\
-font-style: normal;\
-font-variant: normal;\
-font-weight: 400;\
-height: 0px;\
-ime-mode: auto;\
-left: auto;\
-letter-spacing: normal;\
-line-height: 19.2px;\
-list-style-image: none;\
-list-style-position: outside;\
-list-style-type: disc;\
-margin-bottom: 8px;\
-margin-left: 8px;\
-margin-right: 8px;\
-margin-top: 8px;\
-marker-offset: auto;\
-max-height: none;\
-max-width: none;\
-min-height: 0px;\
-min-width: 0px;\
-opacity: 1;\
-outline-color: rgb(0, 0, 0);\
-outline-offset: 0px;\
-outline-style: none;\
-outline-width: 0px;\
-overflow: visible;\
-overflow-x: visible;\
-overflow-y: visible;\
-padding-bottom: 0px;\
-padding-left: 0px;\
-padding-right: 0px;\
-padding-top: 0px;\
-page-break-after: auto;\
-page-break-before: auto;\
-pointer-events: auto;\
-position: static;\
-quotes: "“" "”" "‘" "’";\
-resize: none;\
-right: auto;\
-table-layout: auto;\
-text-align: start;\
-text-decoration: none;\
-text-indent: 0px;\
-text-overflow: clip;\
-text-shadow: none;\
-text-transform: none;\
-top: auto;\
-unicode-bidi: embed;\
-vertical-align: baseline;\
-visibility: visible;\
-white-space: normal;\
-width: 1157px;\
-word-spacing: 0px;\
-word-wrap: normal;\
-z-index: auto;\
--moz-animation-delay: 0s;\
--moz-animation-direction: normal;\
--moz-animation-duration: 0s;\
--moz-animation-fill-mode: none;\
--moz-animation-iteration-count: 1;\
--moz-animation-name: none;\
--moz-animation-play-state: running;\
--moz-animation-timing-function: cubic-bezier(0.25, 0.1, 0.25, 1);\
--moz-appearance: none;\
--moz-background-inline-policy: continuous;\
--moz-binding: none;\
--moz-border-bottom-colors: none;\
--moz-border-image: none;\
--moz-border-left-colors: none;\
--moz-border-right-colors: none;\
--moz-border-top-colors: none;\
--moz-box-align: stretch;\
--moz-box-direction: normal;\
--moz-box-flex: 0;\
--moz-box-ordinal-group: 1;\
--moz-box-orient: horizontal;\
--moz-box-pack: start;\
--moz-box-sizing: content-box;\
--moz-column-count: auto;\
--moz-column-gap: 16px;\
--moz-column-rule-color: rgb(0, 0, 0);\
--moz-column-rule-style: none;\
--moz-column-rule-width: 0px;\
--moz-column-width: auto;\
--moz-float-edge: content-box;\
--moz-font-feature-settings: normal;\
--moz-font-language-override: normal;\
--moz-force-broken-image-icon: 0;\
--moz-hyphens: manual;\
--moz-image-region: auto;\
--moz-orient: horizontal;\
--moz-outline-radius-bottomleft: 0px;\
--moz-outline-radius-bottomright: 0px;\
--moz-outline-radius-topleft: 0px;\
--moz-outline-radius-topright: 0px;\
--moz-stack-sizing: stretch-to-fit;\
--moz-tab-size: 8;\
--moz-text-blink: none;\
--moz-text-decoration-color: rgb(0, 0, 0);\
--moz-text-decoration-line: none;\
--moz-text-decoration-style: solid;\
--moz-transform: none;\
--moz-transform-origin: 50% 50%;\
--moz-transition-delay: 0s;\
--moz-transition-duration: 0s;\
--moz-transition-property: all;\
--moz-transition-timing-function: cubic-bezier(0.25, 0.1, 0.25, 1);\
--moz-user-focus: none;\
--moz-user-input: auto;\
--moz-user-modify: read-only;\
--moz-user-select: auto;\
--moz-window-shadow: default;\
-clip-path: none;\
-clip-rule: nonzero;\
-color-interpolation: srgb;\
-color-interpolation-filters: linearrgb;\
-dominant-baseline: auto;\
-fill: rgb(0, 0, 0);\
-fill-opacity: 1;\
-fill-rule: nonzero;\
-filter: none;\
-flood-color: rgb(0, 0, 0);\
-flood-opacity: 1;\
-image-rendering: auto;\
-lighting-color: rgb(255, 255, 255);\
-marker-end: none;\
-marker-mid: none;\
-marker-start: none;\
-mask: none;\
-shape-rendering: auto;\
-stop-color: rgb(0, 0, 0);\
-stop-opacity: 1;\
-stroke: none;\
-stroke-dasharray: none;\
-stroke-dashoffset: 0px;\
-stroke-linecap: butt;\
-stroke-linejoin: miter;\
-stroke-miterlimit: 4;\
-stroke-opacity: 1;\
-stroke-width: 1px;\
-text-anchor: start;\
-text-rendering: auto;';
+      defaults = [
+"background-attachment: scroll;",
+"background-clip: border-box;",
+"background-color: transparent;",
+"background-image: none;",
+"background-origin: padding-box;",
+"background-position: 0% 0%;",
+"background-repeat: repeat;",
+"background-size: auto auto;",
+"border-bottom-color: rgb(0, 0, 0);",
+"border-bottom-left-radius: 0px;",
+"border-bottom-right-radius: 0px;",
+"border-bottom-style: none;",
+"border-bottom-width: 0px;",
+"border-collapse: separate;",
+"border-left-color: rgb(0, 0, 0);",
+"border-left-style: none;",
+"border-left-width: 0px;",
+"border-right-color: rgb(0, 0, 0);",
+"border-right-style: none;",
+"border-right-width: 0px;",
+"border-spacing: 0px 0px;",
+"border-top-color: rgb(0, 0, 0);",
+"border-top-left-radius: 0px;",
+"border-top-right-radius: 0px;",
+"border-top-style: none;",
+"border-top-width: 0px;",
+"bottom: auto;",
+"box-shadow: none;",
+"caption-side: top;",
+"clear: none;",
+"clip: auto;",
+"color: rgb(0, 0, 0);",
+"content: none;",
+"counter-increment: none;",
+"counter-reset: none;",
+"cursor: auto;",
+"direction: ltr;",
+"display: block;",
+"empty-cells: -moz-show-background;",
+"float: none;",
+"font-family: serif;",
+"font-size: 16px;",
+"font-size-adjust: none;",
+"font-stretch: normal;",
+"font-style: normal;",
+"font-variant: normal;",
+"font-weight: 400;",
+"height: 0px;",
+"ime-mode: auto;",
+"left: auto;",
+"letter-spacing: normal;",
+"line-height: 19.2px;",
+"list-style-image: none;",
+"list-style-position: outside;",
+"list-style-type: disc;",
+"margin-bottom: 8px;",
+"margin-left: 8px;",
+"margin-right: 8px;",
+"margin-top: 8px;",
+"marker-offset: auto;",
+"max-height: none;",
+"max-width: none;",
+"min-height: 0px;",
+"min-width: 0px;",
+"opacity: 1;",
+"outline-color: rgb(0, 0, 0);",
+"outline-offset: 0px;",
+"outline-style: none;",
+"outline-width: 0px;",
+"overflow: visible;",
+"overflow-x: visible;",
+"overflow-y: visible;",
+"padding-bottom: 0px;",
+"padding-left: 0px;",
+"padding-right: 0px;",
+"padding-top: 0px;",
+"page-break-after: auto;",
+"page-break-before: auto;",
+"pointer-events: auto;",
+"position: static;",
+"quotes: \"“\" \"”\" \"‘\" \"’\";",
+"resize: none;",
+"right: auto;",
+"table-layout: auto;",
+"text-align: start;",
+"text-decoration: none;",
+"text-indent: 0px;",
+"text-overflow: clip;",
+"text-shadow: none;",
+"text-transform: none;",
+"top: auto;",
+"unicode-bidi: embed;",
+"vertical-align: baseline;",
+"visibility: visible;",
+"white-space: normal;",
+"width: 1157px;",
+"word-spacing: 0px;",
+"word-wrap: normal;",
+"z-index: auto;",
+"-moz-animation-delay: 0s;",
+"-moz-animation-direction: normal;",
+"-moz-animation-duration: 0s;",
+"-moz-animation-fill-mode: none;",
+"-moz-animation-iteration-count: 1;",
+"-moz-animation-name: none;",
+"-moz-animation-play-state: running;",
+"-moz-animation-timing-function: cubic-bezier(0.25, 0.1, 0.25, 1);",
+"-moz-appearance: none;",
+"-moz-background-inline-policy: continuous;",
+"-moz-binding: none;",
+"-moz-border-bottom-colors: none;",
+"-moz-border-image: none;",
+"-moz-border-left-colors: none;",
+"-moz-border-right-colors: none;",
+"-moz-border-top-colors: none;",
+"-moz-box-align: stretch;",
+"-moz-box-direction: normal;",
+"-moz-box-flex: 0;",
+"-moz-box-ordinal-group: 1;",
+"-moz-box-orient: horizontal;",
+"-moz-box-pack: start;",
+"-moz-box-sizing: content-box;",
+"-moz-column-count: auto;",
+"-moz-column-gap: 16px;",
+"-moz-column-rule-color: rgb(0, 0, 0);",
+"-moz-column-rule-style: none;",
+"-moz-column-rule-width: 0px;",
+"-moz-column-width: auto;",
+"-moz-float-edge: content-box;",
+"-moz-font-feature-settings: normal;",
+"-moz-font-language-override: normal;",
+"-moz-force-broken-image-icon: 0;",
+"-moz-hyphens: manual;",
+"-moz-image-region: auto;",
+"-moz-orient: horizontal;",
+"-moz-outline-radius-bottomleft: 0px;",
+"-moz-outline-radius-bottomright: 0px;",
+"-moz-outline-radius-topleft: 0px;",
+"-moz-outline-radius-topright: 0px;",
+"-moz-stack-sizing: stretch-to-fit;",
+"-moz-tab-size: 8;",
+"-moz-text-blink: none;",
+"-moz-text-decoration-color: rgb(0, 0, 0);",
+"-moz-text-decoration-line: none;",
+"-moz-text-decoration-style: solid;",
+"-moz-transform: none;",
+"-moz-transform-origin: 50% 50%;",
+"-moz-transition-delay: 0s;",
+"-moz-transition-duration: 0s;",
+"-moz-transition-property: all;",
+"-moz-transition-timing-function: cubic-bezier(0.25, 0.1, 0.25, 1);",
+"-moz-user-focus: none;",
+"-moz-user-input: auto;",
+"-moz-user-modify: read-only;",
+"-moz-user-select: auto;",
+"-moz-window-shadow: default;",
+"clip-path: none;",
+"clip-rule: nonzero;",
+"color-interpolation: srgb;",
+"color-interpolation-filters: linearrgb;",
+"dominant-baseline: auto;",
+"fill: rgb(0, 0, 0);",
+"fill-opacity: 1;",
+"fill-rule: nonzero;",
+"filter: none;",
+"flood-color: rgb(0, 0, 0);",
+"flood-opacity: 1;",
+"image-rendering: auto;",
+"lighting-color: rgb(255, 255, 255);",
+"marker-end: none;",
+"marker-mid: none;",
+"marker-start: none;",
+"mask: none;",
+"shape-rendering: auto;",
+"stop-color: rgb(0, 0, 0);",
+"stop-opacity: 1;",
+"stroke: none;",
+"stroke-dasharray: none;",
+"stroke-dashoffset: 0px;",
+"stroke-linecap: butt;",
+"stroke-linejoin: miter;",
+"stroke-miterlimit: 4;",
+"stroke-opacity: 1;",
+"stroke-width: 1px;",
+"text-anchor: start;",
+"text-rendering: auto;"].join("\n");
 
     for (i = 0; i < style.length; i++) {
       n = style[i];
       v = style.getPropertyValue(n);
       t = n + ": " + v + ";";
 
-      if (defaults.indexOf(t) === -1 && n !== "quotes") {
+      if (defaults.indexOf(t) === -1) {
         cssText.push(t);
       }
     }
@@ -10227,21 +10283,25 @@ text-rendering: auto;';
 var Tilt = Tilt || {};
 var EXPORTED_SYMBOLS = ["Tilt.File"];
 
+/*global Cc, Ci, Cu, Components, FileUtils, NetUtil */
+
 Tilt.File = {
 
   /**
    * Shows a file picker and returns the result.
    *
+   * @param {String} message: the title for the picker
    * @param {String} type: either "file" or "folder"
    * @return {Object} the picked file if the returned OK, null otherwise
    */
-  showPicker: function(type) {
+  showPicker: function(message, type) {
     var fp, res, folder;
 
     fp = Cc["@mozilla.org/filepicker;1"].createInstance(Ci.nsIFilePicker);
-    fp.init(window, "Select the folder to save the 3D webpage", 
-      type === "folder" ? Ci.nsIFilePicker.modeGetFolder :
-                          Ci.nsIFilePicker.modeOpen);
+
+    fp.init(window, message, type === "folder" ? 
+      Ci.nsIFilePicker.modeGetFolder :
+      Ci.nsIFilePicker.modeOpen);
 
     if ((res = fp.show()) == Ci.nsIFilePicker.returnOK) {
       return fp.file;
@@ -10260,8 +10320,8 @@ Tilt.File = {
   save: function(data, path) {
     var file, ostream, istream, converter;
 
-    Cu["import"]("resource://gre/modules/FileUtils.jsm");
-    Cu["import"]("resource://gre/modules/NetUtil.jsm");
+    Cu.import("resource://gre/modules/FileUtils.jsm");
+    Cu.import("resource://gre/modules/NetUtil.jsm");
 
     file = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsILocalFile);
     file.initWithPath(path);
@@ -10278,7 +10338,7 @@ Tilt.File = {
       if (!Components.isSuccessCode(status)) {
         return;
       }
-    });  
+    });
   },
 
   /**
@@ -10290,8 +10350,8 @@ Tilt.File = {
   saveImage: function(canvas, path) {
     var file, io, source, target, persist;
 
-    Cu["import"]("resource://gre/modules/FileUtils.jsm");
-    Cu["import"]("resource://gre/modules/NetUtil.jsm");
+    Cu.import("resource://gre/modules/FileUtils.jsm");
+    Cu.import("resource://gre/modules/NetUtil.jsm");
 
     file = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsILocalFile);
     file.initWithPath(path);
@@ -10321,6 +10381,7 @@ Tilt.File = {
     else if (navigator.appVersion.indexOf("Mac") !== -1) { return "/"; }
     else if (navigator.appVersion.indexOf("X11") !== -1) { return "/"; }
     else if (navigator.appVersion.indexOf("Linux") !== -1) { return "/"; }
+    else { return "/"; }
   })()
 };
 /***** BEGIN LICENSE BLOCK *****
@@ -10359,6 +10420,8 @@ Tilt.File = {
 
 var Tilt = Tilt || {};
 var EXPORTED_SYMBOLS = ["Tilt.Math"];
+
+/*global vec3, mat3, mat4, quat4 */
 
 /**
  * Various math functions required by the engine.
@@ -10649,9 +10712,10 @@ Tilt.Math = {
     b = +vec3.dot(n, dir);
 
     if (Math.abs(b) < 0.0001) { // ray is parallel to triangle plane
-      if (a == 0) {
+      if (a === 0) {
         return 2; // ray lies in triangle plane
-      } else {
+      }
+      else {
         return 0; // ray disjoint from plane
       }
     }
@@ -10698,11 +10762,11 @@ Tilt.Math = {
    * @param {Number} t: the third argument
    */
   hue2rgb: function(p, q, t) {
-    if (t < 0) t += 1;
-    if (t > 1) t -= 1;
-    if (t < 1 / 6) return p + (q - p) * 6 * t;
-    if (t < 1 / 2) return q;
-    if (t < 2 / 3) return p + (q - p) * (2 / 3 - t) * 6;
+    if (t < 0) { t += 1; }
+    if (t > 1) { t -= 1; }
+    if (t < 1 / 6) { return p + (q - p) * 6 * t; }
+    if (t < 1 / 2) { return q; }
+    if (t < 2 / 3) { return p + (q - p) * (2 / 3 - t) * 6; }
 
     return p;
   },
@@ -10725,18 +10789,20 @@ Tilt.Math = {
 
     var max = Math.max(r, g, b),
       min = Math.min(r, g, b),
-      h, s, l = (max + min) / 2;
+      d, h, s, l = (max + min) / 2;
 
     if (max === min) {
       h = s = 0; // achromatic
-    } else {
-      var d = max - min;
+    }
+    else {
+      d = max - min;
       s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
 
       switch (max) {
         case r: h = (g - b) / d + (g < b ? 6 : 0); break;
         case g: h = (b - r) / d + 2; break;
         case b: h = (r - g) / d + 4; break;
+        default: break;
       }
       h /= 6;
     }
@@ -10756,13 +10822,14 @@ Tilt.Math = {
    * @return {Array} the RGB representation
    */
   hsl2rgb: function(h, s, l) {
-    var r, g, b;
+    var r, g, b, q, p;
 
     if (s === 0) {
       r = g = b = l; // achromatic
-    } else {
-      var q = l < 0.5 ? l * (1 + s) : l + s - l * s;
-      var p = 2 * l - q;
+    }
+    else {
+      q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+      p = 2 * l - q;
 
       r = this.hue2rgb(p, q, h + 1 / 3);
       g = this.hue2rgb(p, q, h);
@@ -10790,18 +10857,20 @@ Tilt.Math = {
 
     var max = Math.max(r, g, b),
       min = Math.min(r, g, b),
-      h, s, v = max;
+      d, h, s, v = max;
 
-    var d = max - min;
+    d = max - min;
     s = max === 0 ? 0 : d / max;
 
     if (max === min) {
       h = 0; // achromatic
-    } else {
+    }
+    else {
       switch(max) {
         case r: h = (g - b) / d + (g < b ? 6 : 0); break;
         case g: h = (b - r) / d + 2; break;
         case b: h = (r - g) / d + 4; break;
+        default: break;
       }
       h /= 6;
     }
@@ -10835,6 +10904,7 @@ Tilt.Math = {
       case 3: r = p; g = q; b = v; break;
       case 4: r = t; g = p; b = v; break;
       case 5: r = v; g = p; b = q; break;
+      default: break;
     }
 
     return [r * 255, g * 255, b * 255];
@@ -11099,7 +11169,7 @@ Tilt.Extensions.WebGL = {
 var Tilt = Tilt || {};
 var EXPORTED_SYMBOLS = ["Tilt.Xhr"];
 
-/** 
+/**
  * XMLHttpRequest utilities.
  */
 Tilt.Xhr = {
