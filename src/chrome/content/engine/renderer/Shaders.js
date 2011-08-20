@@ -44,7 +44,7 @@ Tilt.Shaders = {};
  * @param {Uniform} mvMatrix: the model view matrix
  * @param {Uniform} projMatrix: the projection matrix
  * @param {Uniform} color: the color to set the gl_FragColor to
- */  
+ */
 Tilt.Shaders.Color = {
 
   /**
@@ -77,7 +77,7 @@ Tilt.Shaders.Color = {
 ].join("\n")
 };
 
-/** 
+/**
  * A simple texture shader. It uses one sampler and a uniform color.
  *
  * @param {Attribute} vertexPosition: the vertex position
