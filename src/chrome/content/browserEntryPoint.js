@@ -32,6 +32,8 @@
  ***** END LICENSE BLOCK *****/
 "use strict";
 
+/*global Cc, Ci, Cu */
+
 var TiltChrome = TiltChrome || {};
 var EXPORTED_SYMBOLS = ["TiltChrome.EntryPoint"];
 
@@ -44,7 +46,7 @@ TiltChrome.EntryPoint = {
    * Function called automatically at browser initialization.
    */
   includeScripts: function() {
-    // the script loader responsible with loading each Javascript file
+    // the script loader responsible with loading a Javascript file
     var scriptLoader = Cc["@mozilla.org/moz/jssubscript-loader;1"].
       getService(Ci.mozIJSSubScriptLoader);
 
