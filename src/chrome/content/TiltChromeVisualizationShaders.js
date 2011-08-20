@@ -37,7 +37,7 @@ var EXPORTED_SYMBOLS = ["TiltChrome.Shaders"];
 
 TiltChrome.Shaders = {};
 
-/** 
+/**
  * A custom visualization shader.
  *
  * @param {Attribute} vertexPosition: the vertex position
