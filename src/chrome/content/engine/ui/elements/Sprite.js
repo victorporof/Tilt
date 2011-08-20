@@ -265,11 +265,7 @@ Tilt.Sprite.prototype = {
 
     // if tinting was specified, default back to the original values
     if (tint !== null) {
-      var $tint = tilt.$tintColor;
-      $tint[0] = 1;
-      $tint[1] = 1;
-      $tint[2] = 1;
-      $tint[3] = 1;
+      tilt.tint("#fff");
     }
 
     if (Tilt.UI.debug) {
