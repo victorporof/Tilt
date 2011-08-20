@@ -35,6 +35,8 @@
 var Tilt = Tilt || {};
 var EXPORTED_SYMBOLS = ["Tilt.Math"];
 
+/*global vec3, mat3, mat4, quat4 */
+
 /**
  * Various math functions required by the engine.
  */
@@ -324,9 +326,10 @@ Tilt.Math = {
     b = +vec3.dot(n, dir);
 
     if (Math.abs(b) < 0.0001) { // ray is parallel to triangle plane
-      if (a == 0) {
+      if (a === 0) {
         return 2; // ray lies in triangle plane
-      } else {
+      }
+      else {
         return 0; // ray disjoint from plane
       }
     }
@@ -373,11 +376,11 @@ Tilt.Math = {
    * @param {Number} t: the third argument
    */
   hue2rgb: function(p, q, t) {
-    if (t < 0) t += 1;
-    if (t > 1) t -= 1;
-    if (t < 1 / 6) return p + (q - p) * 6 * t;
-    if (t < 1 / 2) return q;
-    if (t < 2 / 3) return p + (q - p) * (2 / 3 - t) * 6;
+    if (t < 0) { t += 1; }
+    if (t > 1) { t -= 1; }
+    if (t < 1 / 6) { return p + (q - p) * 6 * t; }
+    if (t < 1 / 2) { return q; }
+    if (t < 2 / 3) { return p + (q - p) * (2 / 3 - t) * 6; }
 
     return p;
   },
@@ -400,18 +403,20 @@ Tilt.Math = {
 
     var max = Math.max(r, g, b),
       min = Math.min(r, g, b),
-      h, s, l = (max + min) / 2;
+      d, h, s, l = (max + min) / 2;
 
     if (max === min) {
       h = s = 0; // achromatic
-    } else {
-      var d = max - min;
+    }
+    else {
+      d = max - min;
       s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
 
       switch (max) {
         case r: h = (g - b) / d + (g < b ? 6 : 0); break;
         case g: h = (b - r) / d + 2; break;
         case b: h = (r - g) / d + 4; break;
+        default: break;
       }
       h /= 6;
     }
@@ -431,13 +436,14 @@ Tilt.Math = {
    * @return {Array} the RGB representation
    */
   hsl2rgb: function(h, s, l) {
-    var r, g, b;
+    var r, g, b, q, p;
 
     if (s === 0) {
       r = g = b = l; // achromatic
-    } else {
-      var q = l < 0.5 ? l * (1 + s) : l + s - l * s;
-      var p = 2 * l - q;
+    }
+    else {
+      q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+      p = 2 * l - q;
 
       r = this.hue2rgb(p, q, h + 1 / 3);
       g = this.hue2rgb(p, q, h);
@@ -465,18 +471,20 @@ Tilt.Math = {
 
     var max = Math.max(r, g, b),
       min = Math.min(r, g, b),
-      h, s, v = max;
+      d, h, s, v = max;
 
-    var d = max - min;
+    d = max - min;
     s = max === 0 ? 0 : d / max;
 
     if (max === min) {
       h = 0; // achromatic
-    } else {
+    }
+    else {
       switch(max) {
         case r: h = (g - b) / d + (g < b ? 6 : 0); break;
         case g: h = (b - r) / d + 2; break;
         case b: h = (r - g) / d + 4; break;
+        default: break;
       }
       h /= 6;
     }
@@ -510,6 +518,7 @@ Tilt.Math = {
       case 3: r = p; g = q; b = v; break;
       case 4: r = t; g = p; b = v; break;
       case 5: r = v; g = p; b = q; break;
+      default: break;
     }
 
     return [r * 255, g * 255, b * 255];
