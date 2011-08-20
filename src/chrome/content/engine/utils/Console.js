@@ -35,6 +35,8 @@
 var Tilt = Tilt || {};
 var EXPORTED_SYMBOLS = ["Tilt.Console", "Tilt.StringBundle"];
 
+/*global Cc, Ci, Cu */
+
 /**
  * Various console functions required by the engine.
  */
@@ -60,7 +62,7 @@ Tilt.Console = {
     }
     catch(e) {
       // running from an unprivileged environment
-      alert(message);
+      window.alert(message);
     }
   },
 
@@ -86,7 +88,7 @@ Tilt.Console = {
     }
     catch(e) {
       // running from an unprivileged environment
-      alert(message);
+      window.alert(message);
     }
   },
 
@@ -141,7 +143,7 @@ Tilt.Console = {
     }
     catch(e) {
       // running from an unprivileged environment
-      alert(message);
+      window.alert(message);
     }
   }
 };
@@ -200,6 +202,7 @@ Tilt.StringBundle = {
     if ("undefined" === typeof string) {
       return "undefined";
     }
+
     // undesired, you should always pass arguments when formatting strings
     if ("undefined" === typeof args) {
       return string;
