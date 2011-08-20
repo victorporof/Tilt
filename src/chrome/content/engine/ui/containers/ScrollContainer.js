@@ -52,7 +52,7 @@ var EXPORTED_SYMBOLS = ["Tilt.Scrollview"];
 Tilt.ScrollContainer = function(properties) {
 
   // intercept this object using a profiler when building in debug mode
-  Tilt.Profiler.intercept("Tilt.ScrollContainer", this); 
+  Tilt.Profiler.intercept("Tilt.ScrollContainer", this);
 
   // add this view to the top level UI handler.
   Tilt.UI.push(this);
@@ -73,77 +73,74 @@ Tilt.ScrollContainer = function(properties) {
     width: 32,
     height: 30,
     fill: properties.top ? null : "#f00a",
-    padding: properties.top ? properties.top.$padding : [0, 0, 0, 0]
-  });
+    padding: properties.top ? properties.top.$padding : [0, 0, 0, 0],
+    onmousedown: function() {
+      window.clearInterval(this.$scrollTopReset);
+      window.clearInterval(this.$scrollTop);
+      var ui = Tilt.UI;
 
-  var bottomButton = new Tilt.Button(properties.bottom, {
+      this.$scrollTop = window.setInterval(function() {
+        this.view.$offset[1] += 5;
+        ui.requestRedraw();
+
+        if (!ui.mousePressed) {
+          ui = null;
+          window.clearInterval(this.$scrollTop);
+        }
+      }.bind(this), 1000 / 60);
+    }.bind(this)
+  }),
+
+  bottomButton = new Tilt.Button(properties.bottom, {
     x: this.view.$x - 25,
     y: this.view.$y + this.view.$height - 25,
     width: 32,
     height: 30,
     fill: properties.bottom ? null : "#0f0a",
-    padding: properties.bottom ? properties.bottom.$padding : [0, 0, 0, 0]
-  });
+    padding: properties.bottom ? properties.bottom.$padding : [0, 0, 0, 0],
+    onmousedown: function() {
+      window.clearInterval(this.$scrollTopReset);
+      window.clearInterval(this.$scrollBottom);
+      var ui = Tilt.UI;
 
-  var resetButton = new Tilt.Button(properties.reset, {
+      this.$scrollBottom = window.setInterval(function() {
+        this.view.$offset[1] -= 5;
+        ui.requestRedraw();
+
+        if (!ui.mousePressed) {
+          ui = null;
+          window.clearInterval(this.$scrollBottom);
+        }
+      }.bind(this), 1000 / 60);
+    }.bind(this)
+  }),
+
+  resetButton = new Tilt.Button(properties.reset, {
     x: this.view.$x - 25,
     y: this.view.$y + this.view.$height - 50,
     width: 32,
     height: 30,
     fill: properties.reset ? null : "#0f0b",
-    padding: properties.reset ? properties.reset.$padding : [0, 0, 0, 0]
+    padding: properties.reset ? properties.reset.$padding : [0, 0, 0, 0],
+    onmousedown: function() {
+      window.clearInterval(this.$scrollTopReset);
+      var ui = Tilt.UI;
+
+      this.$scrollTopReset = window.setInterval(function() {
+        this.view.$offset[1] /= 1.15;
+        ui.requestRedraw();
+
+        if (Math.abs(this.view.$offset[1]) < 0.1) {
+          window.clearInterval(this.$scrollTopReset);
+        }
+      }.bind(this), 1000 / 60);
+    }.bind(this)
   });
 
-  topButton.onmousedown = function() {
-    window.clearInterval(this.$scrollTopReset);
-    window.clearInterval(this.$scrollTop);
-    var ui = Tilt.UI;
-
-    this.$scrollTop = window.setInterval(function() {
-      this.view.$offset[1] += 5;
-      ui.requestRedraw();
-
-      if (!ui.mousePressed) {
-        ui = null;
-        window.clearInterval(this.$scrollTop);
-      }
-    }.bind(this), 1000 / 60);
-  }.bind(this);
-
-  bottomButton.onmousedown = function() {
-    window.clearInterval(this.$scrollTopReset);
-    window.clearInterval(this.$scrollBottom);
-    var ui = Tilt.UI;
-
-    this.$scrollBottom = window.setInterval(function() {
-      this.view.$offset[1] -= 5;
-      ui.requestRedraw();
-
-      if (!ui.mousePressed) {
-        ui = null;
-        window.clearInterval(this.$scrollBottom);
-      }
-    }.bind(this), 1000 / 60);
-  }.bind(this);
-
-  resetButton.onmousedown = function() {
-    window.clearInterval(this.$scrollTopReset);
-    var ui = Tilt.UI;
-
-    this.$scrollTopReset = window.setInterval(function() {
-      this.view.$offset[1] /= 1.15;
-      ui.requestRedraw();
-
-      if (Math.abs(this.view.$offset[1]) < 0.1) {
-        window.clearInterval(this.$scrollTopReset);
-      }
-    }.bind(this), 1000 / 60);
-  }.bind(this);
-
   this.scrollbars.push(topButton, bottomButton, resetButton);
-
   topButton = null;
   bottomButton = null;
+  resetButton = null;
 };
 
 Tilt.ScrollContainer.prototype = {
