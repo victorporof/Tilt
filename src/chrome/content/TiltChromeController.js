@@ -35,6 +35,8 @@
 var TiltChrome = TiltChrome || {};
 var EXPORTED_SYMBOLS = ["TiltChrome.Controller.MouseAndKeyboard"];
 
+/*global Tilt */
+
 /**
  * A mouse and keyboard implementation.
  */
@@ -54,7 +56,13 @@ TiltChrome.Controller.MouseAndKeyboard = function() {
   /**
    * Retain the position for the mouseDown event.
    */
-  downX = 0, downY = 0;
+  downX = 0, downY = 0,
+
+  /**
+   * Event functions, defined later.
+   */
+  mouseDown, mouseUp, click, doubleClick, mouseMove, mouseOut, mouseScroll,
+  keyDown, keyUp;
 
   /**
    * Function called automatically by the visualization at the setup().
@@ -99,7 +107,7 @@ TiltChrome.Controller.MouseAndKeyboard = function() {
   /**
    * Called once after every time a mouse button is pressed.
    */
-  var mouseDown = function(e) {
+  mouseDown = function(e) {
     e.preventDefault();
     e.stopPropagation();
 
@@ -124,14 +132,14 @@ TiltChrome.Controller.MouseAndKeyboard = function() {
   /**
    * Called every time a mouse button is released.
    */
-  var mouseUp = function(e) {
+  mouseUp = function(e) {
     e.preventDefault();
     e.stopPropagation();
 
     // calculate x and y coordinates using using the client and target offset
-    var upX = e.clientX - e.target.offsetLeft;
-    var upY = e.clientY - e.target.offsetTop;
-    var button = e.which;
+    var button = e.which,
+      upX = e.clientX - e.target.offsetLeft,
+      upY = e.clientY - e.target.offsetTop;
 
     ui.mouseUp(upX, upY, button);
     arcball.mouseUp(upX, upY, button);
@@ -140,18 +148,18 @@ TiltChrome.Controller.MouseAndKeyboard = function() {
   /**
    * Called every time a mouse button is clicked.
    */
-  var click = function(e) {
+  click = function(e) {
     e.preventDefault();
     e.stopPropagation();
 
     // calculate x and y coordinates using using the client and target offset
-    var clickX = e.clientX - e.target.offsetLeft;
-    var clickY = e.clientY - e.target.offsetTop;
-    var button = e.which;
+    var button = e.which,
+      clickX = e.clientX - e.target.offsetLeft,
+      clickY = e.clientY - e.target.offsetTop;
 
-    // a click in Tilt is issued only when the mouse pointer stays in 
+    // a click in Tilt is issued only when the mouse pointer stays in
     // relatively the same position
-    if (Math.abs(downX - clickX) < 2 && 
+    if (Math.abs(downX - clickX) < 2 &&
         Math.abs(downY - clickY) < 2) {
 
       ui.click(clickX, clickY, button);
@@ -166,18 +174,18 @@ TiltChrome.Controller.MouseAndKeyboard = function() {
   /**
    * Called every time a mouse button is double clicked.
    */
-  var doubleClick = function(e) {
+  doubleClick = function(e) {
     e.preventDefault();
     e.stopPropagation();
 
     // calculate x and y coordinates using using the client and target offset
-    var dblClickX = e.clientX - e.target.offsetLeft;
-    var dblClickY = e.clientY - e.target.offsetTop;
-    var button = e.which;
+    var button = e.which,
+      dblClickX = e.clientX - e.target.offsetLeft,
+      dblClickY = e.clientY - e.target.offsetTop;
 
-    // a double click in Tilt is issued only when the mouse pointer stays in 
+    // a double click in Tilt is issued only when the mouse pointer stays in
     // relatively the same position
-    if (Math.abs(downX - dblClickX) < 2 && 
+    if (Math.abs(downX - dblClickX) < 2 &&
         Math.abs(downY - dblClickY) < 2) {
 
       ui.doubleClick(dblClickX, dblClickY, button);
@@ -192,13 +200,13 @@ TiltChrome.Controller.MouseAndKeyboard = function() {
   /**
    * Called every time the mouse moves.
    */
-  var mouseMove = function(e) {
+  mouseMove = function(e) {
     e.preventDefault();
     e.stopPropagation();
 
     // calculate x and y coordinates using using the client and target offset
-    var moveX = e.clientX - e.target.offsetLeft;
-    var moveY = e.clientY - e.target.offsetTop;
+    var moveX = e.clientX - e.target.offsetLeft,
+      moveY = e.clientY - e.target.offsetTop;
 
     ui.mouseMove(moveX, moveY);
     arcball.mouseMove(moveX, moveY);
@@ -207,7 +215,7 @@ TiltChrome.Controller.MouseAndKeyboard = function() {
   /**
    * Called when the the mouse leaves the visualization bounds.
    */
-  var mouseOut = function(e) {
+  mouseOut = function(e) {
     e.preventDefault();
     e.stopPropagation();
 
@@ -218,7 +226,7 @@ TiltChrome.Controller.MouseAndKeyboard = function() {
   /**
    * Called when the the mouse wheel is used.
    */
-  var mouseScroll = function(e) {
+  mouseScroll = function(e) {
     e.preventDefault();
     e.stopPropagation();
 
@@ -229,7 +237,7 @@ TiltChrome.Controller.MouseAndKeyboard = function() {
   /**
    * Called when a key is pressed.
    */
-  var keyDown = function(e) {
+  keyDown = function(e) {
     var code = e.keyCode || e.which;
 
     // handle key events only if the source editor is not open
@@ -244,7 +252,7 @@ TiltChrome.Controller.MouseAndKeyboard = function() {
   /**
    * Called when a key is released.
    */
-  var keyUp = function(e) {
+  keyUp = function(e) {
     var code = e.keyCode || e.which;
 
     if (code === 27) { // escape keyCode
