@@ -47,7 +47,7 @@ Tilt.Mesh.prototype.save = function(directory, name) {
     v = this.vertices.components,
     t = this.texCoord.components,
     f = this.indices.components,
-    i, j, k, len, str;
+    i, j, k, len, str, s;
 
   output.push("mtllib " + name + ".mtl",
               "usemtl webpage");
@@ -62,7 +62,7 @@ Tilt.Mesh.prototype.save = function(directory, name) {
                 "map_Ks " + name + ".png");
 
   for (i = 0, len = v.length; i < len; i += 3) {
-    output.push("v " + (v[i    ] / +100) + " " + 
+    output.push("v " + (v[i    ] / +100) + " " +
                        (v[i + 1] / -100) + " " +
                        (v[i + 2] / +100));
   }
@@ -76,8 +76,7 @@ Tilt.Mesh.prototype.save = function(directory, name) {
                        (f[i + 2] + 1) + "/" + (f[i + 2] + 1));
   }
 
-  var s = Tilt.File.separator;
-
+  s = Tilt.File.separator;
   Tilt.File.save(output.join("\n"), directory + s + name + ".obj");
   Tilt.File.save(material.join("\n"), directory + s + name + ".mtl");
 };
