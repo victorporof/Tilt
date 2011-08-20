@@ -122,7 +122,7 @@ Tilt.Texture.prototype = {
     this.loaded = true;
 
     // if the onload event function is specified, call it now
-    if ("undefined" !== typeof this.onload) {
+    if ("function" === typeof this.onload) {
       this.onload();
     }
 
