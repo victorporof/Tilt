@@ -175,22 +175,29 @@ Tilt.TextureUtils = {
   resizeImageToPowerOfTwo: function(image, parameters) {
     var isChromePath = (image.src || "").indexOf("chrome://"),
       isPowerOfTwoWidth = Tilt.Math.isPowerOfTwo(image.width),
-      isPowerOfTwoHeight = Tilt.Math.isPowerOfTwo(image.height);
+      isPowerOfTwoHeight = Tilt.Math.isPowerOfTwo(image.height),
+      width, height, canvas, context;
 
     // first check if the image is not already power of two
     if (isPowerOfTwoWidth && isPowerOfTwoHeight && isChromePath === -1) {
-      return image;
+      try {
+        return image;
+      }
+      finally {
+        image = null;
+        parameters = null;
+      }
     }
 
     // make sure the parameters argument is an object
     parameters = parameters || {};
 
     // calculate the power of two dimensions for the npot image
-    var width = Tilt.Math.nextPowerOfTwo(image.width),
-      height = Tilt.Math.nextPowerOfTwo(image.height),
+    width = Tilt.Math.nextPowerOfTwo(image.width);
+    height = Tilt.Math.nextPowerOfTwo(image.height);
 
     // create a canvas, then we will use a 2d context to scale the image
-    canvas = Tilt.Document.initCanvas(width, height),
+    canvas = Tilt.Document.initCanvas(width, height);
 
     // do some 2d context magic
     context = canvas.getContext("2d");
