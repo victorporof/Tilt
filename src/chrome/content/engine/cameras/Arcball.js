@@ -35,6 +35,8 @@
 var Tilt = Tilt || {};
 var EXPORTED_SYMBOLS = ["Tilt.Arcball"];
 
+/*global vec3, mat3, mat4, quat4 */
+
 /**
  * Arcball constructor.
  * This is a general purpose 3D rotation controller described by Ken Shoemake
@@ -165,7 +167,7 @@ Tilt.Arcball.prototype = {
     y = mouseLerp[1];
 
     // the smoothed arcball rotation may not be finished when the mouse is
-    // pressed again, so cancel the rotation if other events occur or the 
+    // pressed again, so cancel the rotation if other events occur or the
     // animation finishes
     if (mouseButton === 3 || x === mouseRelease[0] && y === mouseRelease[1]) {
       this.$rotating = false;
