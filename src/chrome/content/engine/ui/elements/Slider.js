@@ -234,7 +234,8 @@ Tilt.Slider.prototype = {
    * @param {Tilt.Renderer} tilt: optional, a reference to a Tilt.Renderer
    */
   update: function(frameDelta, tilt) {
-    var ui = Tilt.UI;
+    var ui = Tilt.UI,
+      sprite, px, py, x, y, size, direction, xps, yps, p, pmpx, pmpy;
 
     // if the mouse was pressed over the handler, begin sliding
     if (this.mousePressed) {
@@ -247,13 +248,13 @@ Tilt.Slider.prototype = {
 
     // if we're currently sliding, update this object's internal params
     if (this.$sliding) {
-      var sprite = this.$sprite,
-        px = this.$parentX,
-        py = this.$parentY,
-        x = this.$x,
-        y = this.$y,
-        size = this.$size,
-        direction = this.$direction, xps, yps, p, pmpx;
+      sprite = this.$sprite;
+      px = this.$parentX;
+      py = this.$parentY;
+      x = this.$x;
+      y = this.$y;
+      size = this.$size;
+      direction = this.$direction;
 
       // depending on the direction, move the handler along the x or y axis
       if (direction === 0) {
