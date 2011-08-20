@@ -35,21 +35,25 @@
 var Tilt = Tilt || {};
 var EXPORTED_SYMBOLS = ["Tilt.File"];
 
+/*global Cc, Ci, Cu, Components, FileUtils, NetUtil */
+
 Tilt.File = {
 
   /**
    * Shows a file picker and returns the result.
    *
+   * @param {String} message: the title for the picker
    * @param {String} type: either "file" or "folder"
    * @return {Object} the picked file if the returned OK, null otherwise
    */
-  showPicker: function(type) {
+  showPicker: function(message, type) {
     var fp, res, folder;
 
     fp = Cc["@mozilla.org/filepicker;1"].createInstance(Ci.nsIFilePicker);
-    fp.init(window, "Select the folder to save the 3D webpage", 
-      type === "folder" ? Ci.nsIFilePicker.modeGetFolder :
-                          Ci.nsIFilePicker.modeOpen);
+
+    fp.init(window, message, type === "folder" ? 
+      Ci.nsIFilePicker.modeGetFolder :
+      Ci.nsIFilePicker.modeOpen);
 
     if ((res = fp.show()) == Ci.nsIFilePicker.returnOK) {
       return fp.file;
@@ -68,8 +72,8 @@ Tilt.File = {
   save: function(data, path) {
     var file, ostream, istream, converter;
 
-    Cu["import"]("resource://gre/modules/FileUtils.jsm");
-    Cu["import"]("resource://gre/modules/NetUtil.jsm");
+    Cu.import("resource://gre/modules/FileUtils.jsm");
+    Cu.import("resource://gre/modules/NetUtil.jsm");
 
     file = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsILocalFile);
     file.initWithPath(path);
@@ -86,7 +90,7 @@ Tilt.File = {
       if (!Components.isSuccessCode(status)) {
         return;
       }
-    });  
+    });
   },
 
   /**
@@ -98,8 +102,8 @@ Tilt.File = {
   saveImage: function(canvas, path) {
     var file, io, source, target, persist;
 
-    Cu["import"]("resource://gre/modules/FileUtils.jsm");
-    Cu["import"]("resource://gre/modules/NetUtil.jsm");
+    Cu.import("resource://gre/modules/FileUtils.jsm");
+    Cu.import("resource://gre/modules/NetUtil.jsm");
 
     file = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsILocalFile);
     file.initWithPath(path);
@@ -129,5 +133,6 @@ Tilt.File = {
     else if (navigator.appVersion.indexOf("Mac") !== -1) { return "/"; }
     else if (navigator.appVersion.indexOf("X11") !== -1) { return "/"; }
     else if (navigator.appVersion.indexOf("Linux") !== -1) { return "/"; }
+    else { return "/"; }
   })()
 };
