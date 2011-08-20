@@ -54,7 +54,7 @@ Tilt.UI.draw = function(frameDelta) {
   var tilt = Tilt.$renderer,
     i, len, container;
 
-  // before drawing, make sure we're in an orthographic default environment 
+  // before drawing, make sure we're in an orthographic default environment
   tilt.defaults();
   tilt.ortho();
 
