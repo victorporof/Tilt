@@ -139,15 +139,16 @@ Tilt.Program.prototype = {
    * could take quite a lot of time.
    */
   use: function() {
-    var id = this.$id;
-    
+    var id = this.$id,
+      gl, i;
+
     // check if the program wasn't already active
     if (Tilt.$activeShader !== id) {
       Tilt.$activeShader = id;
 
       // cache the WebGL context variable
       // use the the program if it wasn't already set
-      var gl = Tilt.$gl;
+      gl = Tilt.$gl;
       gl.useProgram(this.$ref);
 
       // the texture cache needs to be cleared each time a program is used
@@ -158,7 +159,7 @@ Tilt.Program.prototype = {
         Tilt.$enabledAttributes = this.$attributes.length;
 
         // enable any necessary vertex attributes using the cache
-        for (var i in this.$attributes) {
+        for (i in this.$attributes) {
           if (this.$attributes.hasOwnProperty(i) && i !== "length") {
             gl.enableVertexAttribArray(this.$attributes[i]);
           }
@@ -249,13 +250,14 @@ Tilt.Program.prototype = {
    */
   bindTexture: function(sampler, texture, unit) {
     var cache = this.$texcache,
-      id = texture.$id;
+      id = texture.$id,
+      gl;
 
     // check the cache to see if this texture wasn't already set
     if (cache[sampler] !== id) {
       cache[sampler] = id;
 
-      var gl = Tilt.$gl;
+      gl = Tilt.$gl;
       gl.bindTexture(gl.TEXTURE_2D, texture.$ref);
       gl.uniform1i(this.$uniforms[sampler], 0);
     }
