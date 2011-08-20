@@ -35,6 +35,9 @@
 var TiltChrome = TiltChrome || {};
 var EXPORTED_SYMBOLS = ["TiltChrome.Visualization"];
 
+/*global Tilt, gBrowser, vec3, mat3, mat4, quat4 */
+/*jshint sub: true, undef: false, onevar: false */
+
 /**
  * TiltChrome visualization constructor.
  *
@@ -111,7 +114,7 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
   /**
    * The initialization logic.
    */
-  function setup() {
+  var setup = function() {
     if (!tilt || !tilt.gl) {
       return;
     }
@@ -131,7 +134,7 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
       TiltChrome.Shaders.Visualization.vs,
       TiltChrome.Shaders.Visualization.fs);
 
-    // setup the controller, user interface, visualization mesh, and the 
+    // setup the controller, user interface, visualization mesh, and the
     // browser event handlers
     setupController();
     setupUI();
@@ -148,13 +151,13 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
     window.setTimeout(function() {
       gResize();
       gMouseOver();
-    }.bind(this), 100); 
-  }
+    }.bind(this), 100);
+  }.bind(this);
 
   /**
    * The rendering animation logic and loop.
    */
-  function draw() {
+  var draw = function() {
     // if the visualization was destroyed, don't continue rendering
     if (!tilt || !tilt.gl) {
       return;
@@ -252,13 +255,13 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
     if ((tilt.frameCount + 1) % 1000 === 0) {
       TiltChrome.BrowserOverlay.performGC();
     }
-  }
+  }.bind(this);
 
   /**
    * Setup the controller, referencing this visualization.
    */
   var setupController = function() {
-    // we might have the controller undefined (not passed as a parameter in 
+    // we might have the controller undefined (not passed as a parameter in
     // the constructor, in which case the controller won't be used)
     if ("undefined" === typeof controller) {
       return;
@@ -277,7 +280,7 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
    * Setup the user interface, referencing this visualization.
    */
   var setupUI = function() {
-    // we might have the interface undefined (not passed as a parameter in 
+    // we might have the interface undefined (not passed as a parameter in
     // the constructor, in which case the interface won't be used)
     if ("undefined" === typeof ui) {
       return;
@@ -416,16 +419,16 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
                      i + 8,  i + 11, i + 4,  i + 8,  i + 4,  i + 7);
 
         // compute the wireframe indices
-        wireframeIndices.push(i + 0,  i + 1,  i + 1,  i + 2,  
+        wireframeIndices.push(i + 0,  i + 1,  i + 1,  i + 2,
                               i + 2,  i + 3,  i + 3,  i + 0,
-                              i + 4,  i + 5,  i + 5,  i + 6,  
+                              i + 4,  i + 5,  i + 5,  i + 6,
                               i + 6,  i + 7,  i + 7,  i + 4,
-                              i + 8,  i + 9,  i + 9,  i + 10, 
+                              i + 8,  i + 9,  i + 9,  i + 10,
                               i + 10, i + 11, i + 11, i + 8,
-                              i + 10, i + 9,  i + 9,  i + 6,  
+                              i + 10, i + 9,  i + 9,  i + 6,
                               i + 6,  i + 5,  i + 5,  i + 10);
       }
-      else {        
+      else {
         // information about these nodes should still be accessible, despite
         // the fact that they're not rendered
         info.index = -1;
@@ -452,7 +455,7 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
       visibleNodes: visibleNodes,
       hiddenNodes: hiddenNodes,
 
-      // override the default mesh draw function to use our custom 
+      // override the default mesh draw function to use our custom
       // visualization shader, textures and colors
       draw: function() {
 
@@ -490,7 +493,7 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
       }
     });
 
-    // additionally, create a wireframe representation to make the 
+    // additionally, create a wireframe representation to make the
     // visualization a bit more pretty
     meshWireframe = new Tilt.Mesh({
       vertices: mesh.vertices,
@@ -674,10 +677,10 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
 
       // the head and body use an identical color code by default
       name = (node.localName !== "head" &&
-              node.localName !== "body") ? 
+              node.localName !== "body") ?
               node.localName : "head/body",
 
-      // the color settings may or not be specified for the current node name 
+      // the color settings may or not be specified for the current node name
       settings = config.domStrips[name] ||
                  config.domStrips["other"],
 
@@ -726,10 +729,10 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
 
         // the head and body use an identical color code by default
         name = (node.localName !== "head" &&
-                node.localName !== "body") ? 
+                node.localName !== "body") ?
                 node.localName : "head/body",
 
-        // the color settings may not be specified for the current node name 
+        // the color settings may not be specified for the current node name
         settings = config.domStrips[name] ||
                    config.domStrips["other"];
 
@@ -745,7 +748,7 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
           TiltChrome.BrowserOverlay.sourceEditor.panel.hidePopup();
         }
 
-        highlightQuad.index = -1;      
+        highlightQuad.index = -1;
       }
     });
   };
@@ -832,7 +835,7 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
     // continue only if we actually clicked something
     if (intersections.length > 0) {
 
-      // if there were any intersections, sort them by the distance towards 
+      // if there were any intersections, sort them by the distance towards
       // the camera, and show a panel with the node information
       intersections.sort(function(a, b) {
         return a.location[2] < b.location[2] ? 1 : -1;
@@ -948,10 +951,10 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
 
       // the head and body use an identical color code by default
       name = (node.localName !== "head" &&
-              node.localName !== "body") ? 
+              node.localName !== "body") ?
               node.localName : "head/body",
 
-      // the color settings may or not be specified for the current node name 
+      // the color settings may or not be specified for the current node name
       settings = config.domStrips[name] ||
                  config.domStrips["other"];
 
