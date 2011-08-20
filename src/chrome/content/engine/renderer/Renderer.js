@@ -35,6 +35,8 @@
 var Tilt = Tilt || {};
 var EXPORTED_SYMBOLS = ["Tilt.Renderer"];
 
+/*global vec3, mat3, mat4, quat4 */
+
 /**
  * Tilt.Renderer constructor.
  *
@@ -856,8 +858,8 @@ Tilt.Renderer.prototype = {
    * @param {Object} opt_attribs: optional attributes used for initialization
    */
   create3DContext: function(canvas, opt_attribs) {
-    var names = ["experimental-webgl", "webgl", "webkit-3d", "moz-webgl"];
-    var context, i, len;
+    var names = ["experimental-webgl", "webgl", "webkit-3d", "moz-webgl"],
+      context, i, len;
 
     for (i = 0, len = names.length; i < len; ++i) {
       try {
@@ -916,7 +918,7 @@ Tilt.Renderer.prototype = {
    * Clears the Tilt cache, destroys this object and deletes all members.
    */
   destroy: function() {
-    Tilt.destroyObject(this);
     Tilt.clearCache();
+    Tilt.destroyObject(this);
   }
 };
