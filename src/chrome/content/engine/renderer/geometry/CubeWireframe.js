@@ -45,7 +45,7 @@ var EXPORTED_SYMBOLS = ["Tilt.CubeWireframe"];
 Tilt.CubeWireframe = function(width, height, depth) {
 
   // intercept this object using a profiler when building in debug mode
-  Tilt.Profiler.intercept("Tilt.CubeWireframe", this);  
+  Tilt.Profiler.intercept("Tilt.CubeWireframe", this);
 
   // make sure the width, height and depth are valid number values
   width = width || 1;

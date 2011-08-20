@@ -41,7 +41,7 @@ var EXPORTED_SYMBOLS = ["Tilt.RectangleWireframe"];
 Tilt.RectangleWireframe = function() {
 
   // intercept this object using a profiler when building in debug mode
-  Tilt.Profiler.intercept("Tilt.RectangleWireframe", this);  
+  Tilt.Profiler.intercept("Tilt.RectangleWireframe", this);
 
   /**
    * Buffer of 2-component vertices (x, y) as the outline of a rectangle.

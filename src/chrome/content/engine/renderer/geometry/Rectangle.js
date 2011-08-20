@@ -41,7 +41,7 @@ var EXPORTED_SYMBOLS = ["Tilt.Rectangle"];
 Tilt.Rectangle = function(width, height, depth) {
 
   // intercept this object using a profiler when building in debug mode
-  Tilt.Profiler.intercept("Tilt.Rectangle", this);  
+  Tilt.Profiler.intercept("Tilt.Rectangle", this);
 
   /**
    * Buffer of 2-component vertices (x, y) as the corners of a rectangle.

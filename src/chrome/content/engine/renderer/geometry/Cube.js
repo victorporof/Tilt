@@ -45,7 +45,7 @@ var EXPORTED_SYMBOLS = ["Tilt.Cube"];
 Tilt.Cube = function(width, height, depth) {
 
   // intercept this object using a profiler when building in debug mode
-  Tilt.Profiler.intercept("Tilt.Cube", this);  
+  Tilt.Profiler.intercept("Tilt.Cube", this);
 
   // make sure the width, height and depth are valid number values
   width = width || 1;
