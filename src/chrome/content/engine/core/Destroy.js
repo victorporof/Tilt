@@ -33,52 +33,24 @@
 "use strict";
 
 var Tilt = Tilt || {};
-var EXPORTED_SYMBOLS = [
-  "Tilt.$gl",
-  "Tilt.$renderer",
-  "Tilt.$activeShader",
-  "Tilt.$enabledAttributes",
-  "Tilt.$loadedTextures",
-  "Tilt.clearCache"];
+var EXPORTED_SYMBOLS = ["Tilt.destroyObject"];
 
-/* All cached variables begin with the $ sign, for easy spotting.
- * ------------------------------------------------------------------------ */
+/*jshint forin: false */
 
 /**
- * The current active WebGL context.
+ * Destroys an object and deletes all members.
  */
-Tilt.$gl = null;
-
-/**
- * The current active Tilt renderer.
- */
-Tilt.$renderer = null;
-
-/**
- * Represents the current active shader, identified by an id.
- */
-Tilt.$activeShader = -1;
-
-/**
- * Represents the current enabled attributes.
- */
-Tilt.$enabledAttributes = -1;
-
-/**
- * All the loaded textures, stored in a hash table.
- */
-Tilt.$loadedTextures = {};
-
-/**
- * Clears the cache and sets all the variables to default.
- */
-Tilt.clearCache = function() {
-  Tilt.$gl = null;
-  Tilt.$renderer = null;
-  Tilt.$activeShader = -1;
-  Tilt.$enabledAttributes = -1;
-  Tilt.$loadedTextures = {};
-
-  Tilt.GLSL.$count = 0;
-  Tilt.TextureUtils.$count = 0;
+Tilt.destroyObject = function(scope) {
+  for (var i in scope) {
+    try {
+      if ("function" === typeof scope[i].destroy) {
+        scope[i].destroy();
+      }
+    }
+    catch(e) {}
+    finally {
+      scope[i] = null;
+      delete scope[i];
+    }
+  }
 };
