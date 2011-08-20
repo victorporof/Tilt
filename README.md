@@ -17,7 +17,7 @@ In the bin folder you will find the latest [Tilt.xpi](https://github.com/victorp
 </center>
 
 ### Help
-If you have any questions, ping anyone on IRC in `#tilt` on [irc.mozilla.org](irc://irc.mozilla.org)
+If you have any questions, ping anyone on IRC in `#tilt` on [irc.mozilla.org](irc://irc.mozilla.org).
 
 ### License
 Tilt is licensed as Mozilla Public License Version 1.1, like any other Mozilla
