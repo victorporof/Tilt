@@ -35,7 +35,7 @@
 var Tilt = Tilt || {};
 var EXPORTED_SYMBOLS = ["Tilt.Xhr"];
 
-/** 
+/**
  * XMLHttpRequest utilities.
  */
 Tilt.Xhr = {
