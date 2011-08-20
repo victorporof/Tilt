@@ -222,8 +222,8 @@ Tilt.GLSL = {
       param = variables[i];
       io = this.shaderIO(program, param);
 
-      // if we get an attribute location, store it
       if ("number" === typeof io) {
+        // if we get an attribute location, store it
         // bind the new parameter only if it was not already defined
         if ("undefined" === typeof program.attributes[param]) {
           program.attributes[param] = io;
@@ -231,8 +231,9 @@ Tilt.GLSL = {
         }
       }
 
-      // if we get a WebGL uniform object, store it
+      /*global WebGLUniformLocation */
       if (("object" === typeof io && io instanceof WebGLUniformLocation)) {
+        // if we get a WebGL uniform object, store it
         // bind the new parameter only if it was not already defined
         if ("undefined" === typeof program.uniforms[param]) {
           program.uniforms[param] = io;
