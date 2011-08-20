@@ -52,7 +52,7 @@ var EXPORTED_SYMBOLS = ["Tilt.Container"];
 Tilt.Container = function(properties) {
 
   // intercept this object using a profiler when building in debug mode
-  Tilt.Profiler.intercept("Tilt.Container", this); 
+  Tilt.Profiler.intercept("Tilt.Container", this);
 
   // make sure the properties parameter is a valid object
   properties = properties || {};
