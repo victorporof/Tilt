@@ -35,6 +35,8 @@
 var Tilt = Tilt || {};
 var EXPORTED_SYMBOLS = ["Tilt.Profiler"];
 
+/*jshint evil: true */
+
 /**
  * Handy way of profiling functions in Tilt.
  */
@@ -111,8 +113,8 @@ Tilt.Profiler = {
 
       // overwrite the function to handle before, after and during calls
       object[name] = function() {
-        // a tricky issue can appear when an overwritten function needs to 
-        // return a value; in this case, the afterCall still needs to be 
+        // a tricky issue can appear when an overwritten function needs to
+        // return a value; in this case, the afterCall still needs to be
         // executed after the function returns
         try {
           beforeCall(index);
@@ -161,9 +163,9 @@ Tilt.Profiler = {
       return method.call(object);
     }
 
-    // since most of the times the overwritten function has one or more 
-    // arguments, simply passing the arguments property inside the function 
-    // isn’t enough; we need to construct the parameters directly, separated 
+    // since most of the times the overwritten function has one or more
+    // arguments, simply passing the arguments property inside the function
+    // isn't enough; we need to construct the parameters directly, separated
     // by commas, just like a normal call would be executed
     for (var i = 0, len = args.length, $ = ""; i < len; i++) {
       $ += "arguments[2][" + i + "]" + ((i !== len - 1) ? "," : "");
@@ -175,28 +177,29 @@ Tilt.Profiler = {
    * Logs information about the currently profiled functions.
    */
   log: function() {
-    var functions = this.functions.slice(0); // duplicate the functions array
+    var functions = this.functions.slice(0), // duplicate the functions array
+      i, j, f, f2;
 
-    // once everything is finished, logging can be done by sorting all the 
+    // once everything is finished, logging can be done by sorting all the
     // recorded function calls, timing and other information by a key
 
-    // with Tilt, the most useful data was received when sorting by the total 
+    // with Tilt, the most useful data was received when sorting by the total
     // time necessary for a function to be executed
     functions.sort(function(a, b) {
       return a.totalTime < b.totalTime ? 1 : -1;
     });
 
     // browse through each intercepted function information
-    for (var i = 0; i < functions.length; i++) {
-      var f = functions[i];
+    for (i = 0; i < functions.length; i++) {
+      f = functions[i];
 
-      // because some functions inside objects can be duplicated when creating 
-      // object via var foo = new MyObject(), that is, when they are declared 
-      // inside the constructor function and not the object prototype, we need 
-      // to check for duplicates and recalculate the number of calls, longest 
+      // because some functions inside objects can be duplicated when creating
+      // object via var foo = new MyObject(), that is, when they are declared
+      // inside the constructor function and not the object prototype, we need
+      // to check for duplicates and recalculate the number of calls, longest
       // time, total time, average time for these situations.
-      for (var j = i + 1; j < functions.length; j++) {
-        var f2 = functions[j];
+      for (j = i + 1; j < functions.length; j++) {
+        f2 = functions[j];
 
         if (f.name === f2.name) {
           f.calls += f2.calls;
