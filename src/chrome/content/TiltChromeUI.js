@@ -35,6 +35,9 @@
 var TiltChrome = TiltChrome || {};
 var EXPORTED_SYMBOLS = ["TiltChrome.UI.Default"];
 
+/*global Tilt */
+/*jshint sub: true, undef: false, onevar: false */
+
 /**
  * Default UI implementation.
  */
@@ -190,7 +193,8 @@ TiltChrome.UI.Default = function() {
       y: -5,
       padding: [0, 0, 0, 5],
       onclick: function() {
-        var folder = Tilt.File.showPicker("folder");
+        var folder = Tilt.File.showPicker(
+          "Select the folder to save the 3D webpage", "folder");
 
         if (folder) {
           folder.reveal();
@@ -742,7 +746,7 @@ TiltChrome.UI.Default = function() {
     hideableElements.push(
       helpButton, exportButton, optionsButton,
       htmlButton, cssButton, attrButton,
-      resetButton, zoomInButton, zoomOutButton, arcballSprite, 
+      resetButton, zoomInButton, zoomOutButton, arcballSprite,
       arcballUpButton, arcballDownButton,
       arcballLeftButton, arcballRightButton,
       viewModeButton, colorAdjustButton, domStripsLegend,
@@ -812,7 +816,7 @@ TiltChrome.UI.Default = function() {
 
   /**
    * Function called for each node in the dom tree
-   * 
+   *
    * @param {HTMLNode} node: the dom node
    * @param {Number} depth: the node depth in the dom tree
    * @param {Number} index: the index of the node in the dom tree
@@ -944,10 +948,10 @@ TiltChrome.UI.Default = function() {
 
       // the head and body use an identical color code by default
       var name = (element.localName !== "head" &&
-                  element.localName !== "body") ? 
+                  element.localName !== "body") ?
                   element.localName : "head/body",
 
-      // the color settings may or not be specified for the current node name 
+      // the color settings may or not be specified for the current node name
       settings = config.domStrips[name] ||
                  config.domStrips["other"];
 
@@ -1062,5 +1066,5 @@ TiltChrome.UI.Default = function() {
   };
 
   // intercept this object using a profiler when building in debug mode
-  Tilt.Profiler.intercept("TiltChrome.UI", this);  
+  Tilt.Profiler.intercept("TiltChrome.UI", this);
 };
