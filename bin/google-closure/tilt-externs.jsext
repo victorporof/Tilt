@@ -75,7 +75,7 @@ window["NetUtil"] = NetUtil;
 NetUtil["asyncCopy"] = NetUtil.asyncCopy;
 
 
-window["QueryInterface"] = QueryInterface;
+window["QueryInterface"] = window.QueryInterface;
 Ci["nsIInterfaceRequestor"] = Ci.nsIInterfaceRequestor;
 Ci["nsIDOMWindowUtils"] = Ci.nsIDOMWindowUtils;
 QueryInterface(Ci.nsIInterfaceRequestor)["getInterface"] = QueryInterface(Ci.nsIInterfaceRequestor).getInterface;
