@@ -35,6 +35,8 @@
 var TiltChrome = TiltChrome || {};
 var EXPORTED_SYMBOLS = ["TiltChrome.BrowserOverlay"];
 
+/*global Cc, Ci, Cu, Tilt, gBrowser */
+
 /**
  * Controls the browser overlay for the Tilt extension.
  */
@@ -96,10 +98,10 @@ TiltChrome.BrowserOverlay = {
       };
 
       // remember the refresh functions from the panels iframes
-      this.sourceEditor.refresh = 
+      this.sourceEditor.refresh =
         this.sourceEditor.iframe.contentWindow.refreshCodeEditor;
 
-      this.colorPicker.refresh = 
+      this.colorPicker.refresh =
         this.colorPicker.iframe.contentWindow.refreshColorPicker;
 
       // get the iframe which will be used to create the canvas element
@@ -148,7 +150,7 @@ TiltChrome.BrowserOverlay = {
         this.visualization.destroy();
         this.visualization = null;
       }
-      if (this.sourceEditor !== null) {      
+      if (this.sourceEditor !== null) {
         this.sourceEditor.panel.hidePopup();
         this.sourceEditor.panel = null;
         this.sourceEditor.title = null;
@@ -187,7 +189,7 @@ TiltChrome.BrowserOverlay = {
    * Forces a garbage collection.
    */
   performGC: function() {
-    QueryInterface(Ci.nsIInterfaceRequestor).
+    window.QueryInterface(Ci.nsIInterfaceRequestor).
       getInterface(Ci.nsIDOMWindowUtils).
       garbageCollect();
   }
