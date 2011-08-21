@@ -13,9 +13,12 @@
  *
  * The Original Code is Tilt: A WebGL-based 3D visualization of a webpage.
  *
- * The Initial Developer of the Original Code is Victor Porof.
+ * The Initial Developer of the Original Code is The Mozilla Foundation.
  * Portions created by the Initial Developer are Copyright (C) 2011
  * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *   Victor Porof (victor.porof@gmail.com)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -209,9 +212,12 @@ TiltChrome.BrowserOverlay = {
  *
  * The Original Code is Tilt: A WebGL-based 3D visualization of a webpage.
  *
- * The Initial Developer of the Original Code is Victor Porof.
+ * The Initial Developer of the Original Code is The Mozilla Foundation.
  * Portions created by the Initial Developer are Copyright (C) 2011
  * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *   Victor Porof (victor.porof@gmail.com)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -262,6 +268,9 @@ Tilt.Arcball = function(width, height, radius) {
    */
   this.$mouseButton = -1;
   this.$scrollValue = 0;
+  this.scrollMin = -3000;
+  this.scrollMax = 500;
+  this.scrollSpeed = 5;
 
   /**
    * Array retaining the current pressed key codes.
@@ -548,11 +557,16 @@ Tilt.Arcball.prototype = {
    * @param {Number} scroll: the mouse wheel direction and speed
    */
   mouseScroll: function(scroll) {
+    var speed = this.scrollSpeed,
+      min = this.scrollMin,
+      max = this.scrollMax;
+
     // clear any interval resetting or manipulating the arcball if set
     this.$clearInterval();
 
     // save the mouse scroll state and prepare for translations
-    this.$scrollValue -= scroll * 10;
+    this.$scrollValue = Tilt.Math.clamp(
+      this.$scrollValue - scroll * speed, min, max);
   },
 
   /**
@@ -782,9 +796,12 @@ Tilt.Arcball.prototype = {
  *
  * The Original Code is Tilt: A WebGL-based 3D visualization of a webpage.
  *
- * The Initial Developer of the Original Code is Victor Porof.
+ * The Initial Developer of the Original Code is The Mozilla Foundation.
  * Portions created by the Initial Developer are Copyright (C) 2011
  * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *   Victor Porof (victor.porof@gmail.com)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -982,9 +999,12 @@ Tilt.IndexBuffer.prototype = {
  *
  * The Original Code is Tilt: A WebGL-based 3D visualization of a webpage.
  *
- * The Initial Developer of the Original Code is Victor Porof.
+ * The Initial Developer of the Original Code is The Mozilla Foundation.
  * Portions created by the Initial Developer are Copyright (C) 2011
  * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *   Victor Porof (victor.porof@gmail.com)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -1066,9 +1086,12 @@ Tilt.clearCache = function() {
  *
  * The Original Code is Tilt: A WebGL-based 3D visualization of a webpage.
  *
- * The Initial Developer of the Original Code is Victor Porof.
+ * The Initial Developer of the Original Code is The Mozilla Foundation.
  * Portions created by the Initial Developer are Copyright (C) 2011
  * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *   Victor Porof (victor.porof@gmail.com)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -1122,9 +1145,12 @@ Tilt.destroyObject = function(scope) {
  *
  * The Original Code is Tilt: A WebGL-based 3D visualization of a webpage.
  *
- * The Initial Developer of the Original Code is Victor Porof.
+ * The Initial Developer of the Original Code is The Mozilla Foundation.
  * Portions created by the Initial Developer are Copyright (C) 2011
  * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *   Victor Porof (victor.porof@gmail.com)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -1357,9 +1383,12 @@ Tilt.Profiler = {
  *
  * The Original Code is Tilt: A WebGL-based 3D visualization of a webpage.
  *
- * The Initial Developer of the Original Code is Victor Porof.
+ * The Initial Developer of the Original Code is The Mozilla Foundation.
  * Portions created by the Initial Developer are Copyright (C) 2011
  * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *   Victor Porof (victor.porof@gmail.com)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -1644,9 +1673,12 @@ Tilt.Program.prototype = {
  *
  * The Original Code is Tilt: A WebGL-based 3D visualization of a webpage.
  *
- * The Initial Developer of the Original Code is Victor Porof.
+ * The Initial Developer of the Original Code is The Mozilla Foundation.
  * Portions created by the Initial Developer are Copyright (C) 2011
  * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *   Victor Porof (victor.porof@gmail.com)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -1896,9 +1928,12 @@ Tilt.GLSL = {
  *
  * The Original Code is Tilt: A WebGL-based 3D visualization of a webpage.
  *
- * The Initial Developer of the Original Code is Victor Porof.
+ * The Initial Developer of the Original Code is The Mozilla Foundation.
  * Portions created by the Initial Developer are Copyright (C) 2011
  * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *   Victor Porof (victor.porof@gmail.com)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -2061,9 +2096,12 @@ Tilt.Texture.prototype = {
  *
  * The Original Code is Tilt: A WebGL-based 3D visualization of a webpage.
  *
- * The Initial Developer of the Original Code is Victor Porof.
+ * The Initial Developer of the Original Code is The Mozilla Foundation.
  * Portions created by the Initial Developer are Copyright (C) 2011
  * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *   Victor Porof (victor.porof@gmail.com)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -3953,7 +3991,7 @@ if (typeof exports !== "undefined")
  *    distribution.
  */
 
-var glMatrixArrayType, vec3, mat3, mat4, quat4;
+var glMatrixArrayType;
 
 // Fallback for systems that don't support WebGL
 if(typeof Float32Array != 'undefined') {
@@ -5390,7 +5428,7 @@ mat4.str = function(mat) {
 /*
  * quat4 - Quaternions 
  */
-quat4 = {};
+var quat4 = {};
 
 /*
  * quat4.create
@@ -6256,9 +6294,12 @@ if (!JSON) {
  *
  * The Original Code is Tilt: A WebGL-based 3D visualization of a webpage.
  *
- * The Initial Developer of the Original Code is Victor Porof.
+ * The Initial Developer of the Original Code is The Mozilla Foundation.
  * Portions created by the Initial Developer are Copyright (C) 2011
  * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *   Victor Porof (victor.porof@gmail.com)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -6372,9 +6413,12 @@ Tilt.Cube.prototype = {
  *
  * The Original Code is Tilt: A WebGL-based 3D visualization of a webpage.
  *
- * The Initial Developer of the Original Code is Victor Porof.
+ * The Initial Developer of the Original Code is The Mozilla Foundation.
  * Portions created by the Initial Developer are Copyright (C) 2011
  * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *   Victor Porof (victor.porof@gmail.com)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -6459,9 +6503,12 @@ Tilt.CubeWireframe.prototype = {
  *
  * The Original Code is Tilt: A WebGL-based 3D visualization of a webpage.
  *
- * The Initial Developer of the Original Code is Victor Porof.
+ * The Initial Developer of the Original Code is The Mozilla Foundation.
  * Portions created by the Initial Developer are Copyright (C) 2011
  * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *   Victor Porof (victor.porof@gmail.com)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -6524,9 +6571,12 @@ Tilt.Rectangle.prototype = {
  *
  * The Original Code is Tilt: A WebGL-based 3D visualization of a webpage.
  *
- * The Initial Developer of the Original Code is Victor Porof.
+ * The Initial Developer of the Original Code is The Mozilla Foundation.
  * Portions created by the Initial Developer are Copyright (C) 2011
  * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *   Victor Porof (victor.porof@gmail.com)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -6584,9 +6634,12 @@ Tilt.RectangleWireframe.prototype = {
  *
  * The Original Code is Tilt: A WebGL-based 3D visualization of a webpage.
  *
- * The Initial Developer of the Original Code is Victor Porof.
+ * The Initial Developer of the Original Code is The Mozilla Foundation.
  * Portions created by the Initial Developer are Copyright (C) 2011
  * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *   Victor Porof (victor.porof@gmail.com)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -6711,9 +6764,12 @@ Tilt.Mesh.prototype = {
  *
  * The Original Code is Tilt: A WebGL-based 3D visualization of a webpage.
  *
- * The Initial Developer of the Original Code is Victor Porof.
+ * The Initial Developer of the Original Code is The Mozilla Foundation.
  * Portions created by the Initial Developer are Copyright (C) 2011
  * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *   Victor Porof (victor.porof@gmail.com)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -6793,9 +6849,12 @@ Tilt.Mesh.prototype.save = function(directory, name) {
  *
  * The Original Code is Tilt: A WebGL-based 3D visualization of a webpage.
  *
- * The Initial Developer of the Original Code is Victor Porof.
+ * The Initial Developer of the Original Code is The Mozilla Foundation.
  * Portions created by the Initial Developer are Copyright (C) 2011
  * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *   Victor Porof (victor.porof@gmail.com)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -7717,9 +7776,12 @@ Tilt.Renderer.prototype = {
  *
  * The Original Code is Tilt: A WebGL-based 3D visualization of a webpage.
  *
- * The Initial Developer of the Original Code is Victor Porof.
+ * The Initial Developer of the Original Code is The Mozilla Foundation.
  * Portions created by the Initial Developer are Copyright (C) 2011
  * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *   Victor Porof (victor.porof@gmail.com)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -7761,9 +7823,12 @@ window.requestAnimFrame = (function() {
  *
  * The Original Code is Tilt: A WebGL-based 3D visualization of a webpage.
  *
- * The Initial Developer of the Original Code is Victor Porof.
+ * The Initial Developer of the Original Code is The Mozilla Foundation.
  * Portions created by the Initial Developer are Copyright (C) 2011
  * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *   Victor Porof (victor.porof@gmail.com)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -7889,9 +7954,12 @@ Tilt.Shaders.Texture = {
  *
  * The Original Code is Tilt: A WebGL-based 3D visualization of a webpage.
  *
- * The Initial Developer of the Original Code is Victor Porof.
+ * The Initial Developer of the Original Code is The Mozilla Foundation.
  * Portions created by the Initial Developer are Copyright (C) 2011
  * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *   Victor Porof (victor.porof@gmail.com)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -7916,7 +7984,8 @@ var EXPORTED_SYMBOLS = ["Tilt.Container"];
  *
  * @param {Object} properties: additional properties for this object
  *  @param {Boolean} hidden: specifies if this shouldn't be drawn
- *  @param {Boolean} disabled: specifies if this shouldn't receive events
+ *  @param {Boolean} disabled: true if the children shouldn't receive events
+ *  @param {Boolean} standby: true if the container should respond to events
  *  @param {String} background: color to fill the screen
  *  @param {Number} x: the x position of the object
  *  @param {Number} y: the y position of the object
@@ -7942,6 +8011,11 @@ Tilt.Container = function(properties) {
    * Variable specifying if this object shouldn't be responsive to events.
    */
   this.disabled = properties.disabled || false;
+
+  /**
+   *
+   */
+  this.standby = properties.standby || false;
 
   /**
    * The color of the full screen background rectangle.
@@ -8217,9 +8291,12 @@ Tilt.Container.prototype.destroy = function() {
  *
  * The Original Code is Tilt: A WebGL-based 3D visualization of a webpage.
  *
- * The Initial Developer of the Original Code is Victor Porof.
+ * The Initial Developer of the Original Code is The Mozilla Foundation.
  * Portions created by the Initial Developer are Copyright (C) 2011
  * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *   Victor Porof (victor.porof@gmail.com)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -8244,9 +8321,11 @@ var EXPORTED_SYMBOLS = ["Tilt.Scrollview"];
  *
  * @param {Object} properties: additional properties for this object
  *  @param {Boolean} hidden: specifies if this shouldn't be drawn
- *  @param {Boolean} disabled: specifies if this shouldn't receive events
+ *  @param {Boolean} disabled: true if the children shouldn't receive events
+ *  @param {Boolean} standby: true if the container should respond to events
  *  @param {String} background: color to fill the screen
  *  @param {Array} offset: the [x, y] offset of the inner contents
+ *  @param {Array} scrollable: the [min, max] scrollable offset of contents
  *  @param {Boolean} bounds: the inner drawable bounds for this view
  *  @param {Array} elements: an array of elements to be initially added
  *  @param {Tilt.Sprite} top: a sprite for the slider top button
@@ -8265,12 +8344,23 @@ Tilt.ScrollContainer = function(properties) {
    * The normal view containing all the elements.
    */
   this.view = new Tilt.Container(properties);
+  this.view.standby = true;
 
   /**
    * The view containing the scrollbars.
    */
   this.scrollbars = new Tilt.Container();
 
+  /**
+   * The minimum and maximum scrollable offset for the contents.
+   */
+  this.top = properties.scrollable[0] || 0;
+  this.bottom = properties.scrollable[1] || Number.MAX_VALUE;
+  this.view.$offset[1] = this.top;
+
+  /**
+   * The top, bottom and reset buttons.
+   */
   var topButton = new Tilt.Button(properties.top, {
     x: this.view.$x - 25,
     y: this.view.$y - 5,
@@ -8281,14 +8371,22 @@ Tilt.ScrollContainer = function(properties) {
     onmousedown: function() {
       window.clearInterval(this.$scrollTopReset);
       window.clearInterval(this.$scrollTop);
-      var ui = Tilt.UI;
+      window.clearInterval(this.$scrollBottom);
+
+      var ui = Tilt.UI,
+        view = this.view,
+        offset = view.$offset;
 
       this.$scrollTop = window.setInterval(function() {
-        this.view.$offset[1] += 5;
+        offset[1] = Tilt.Math.clamp(
+          offset[1] + 5, this.top, -this.bottom + view.$height);
+
         ui.requestRedraw();
 
         if (!ui.mousePressed) {
           ui = null;
+          view = null;
+          offset = null;
           window.clearInterval(this.$scrollTop);
         }
       }.bind(this), 1000 / 60);
@@ -8304,15 +8402,23 @@ Tilt.ScrollContainer = function(properties) {
     padding: properties.bottom ? properties.bottom.$padding : [0, 0, 0, 0],
     onmousedown: function() {
       window.clearInterval(this.$scrollTopReset);
+      window.clearInterval(this.$scrollTop);
       window.clearInterval(this.$scrollBottom);
-      var ui = Tilt.UI;
+
+      var ui = Tilt.UI,
+        view = this.view,
+        offset = view.$offset;
 
       this.$scrollBottom = window.setInterval(function() {
-        this.view.$offset[1] -= 5;
+        offset[1] = Tilt.Math.clamp(
+          offset[1] - 5, this.top, -this.bottom + view.$height);
+
         ui.requestRedraw();
 
         if (!ui.mousePressed) {
           ui = null;
+          view = null;
+          offset = null;
           window.clearInterval(this.$scrollBottom);
         }
       }.bind(this), 1000 / 60);
@@ -8328,19 +8434,52 @@ Tilt.ScrollContainer = function(properties) {
     padding: properties.reset ? properties.reset.$padding : [0, 0, 0, 0],
     onmousedown: function() {
       window.clearInterval(this.$scrollTopReset);
-      var ui = Tilt.UI;
+      window.clearInterval(this.$scrollTop);
+      window.clearInterval(this.$scrollBottom);
+
+      var ui = Tilt.UI,
+        view = this.view,
+        offset = view.$offset;
 
       this.$scrollTopReset = window.setInterval(function() {
-        this.view.$offset[1] /= 1.15;
+        offset[1] -= (offset[1] - this.top) / 10;
+
         ui.requestRedraw();
 
-        if (Math.abs(this.view.$offset[1]) < 0.1) {
+        if (Math.abs(offset[1] - this.top) < 0.1) {
+          ui = null;
+          view = null;
+          offset = null;
           window.clearInterval(this.$scrollTopReset);
         }
       }.bind(this), 1000 / 60);
     }.bind(this)
   });
 
+  /**
+   * Handles the mouse wheel event for the container view.
+   * @param {Number} scroll: the mouse wheel direction and speed
+   */
+  this.view["onmousescroll"] = function(scroll) {
+    window.clearInterval(this.$scrollTopReset);
+    window.clearInterval(this.$scrollTop);
+    window.clearInterval(this.$scrollBottom);
+
+    var ui = Tilt.UI,
+      view = this.view,
+      offset = view.$offset;
+
+    offset[1] = Tilt.Math.clamp(
+      offset[1] - scroll, this.top, -this.bottom + view.$height);
+
+    ui.requestRedraw();
+
+    ui = null;
+    view = null;
+    offset = null;
+  }.bind(this);
+
+  // add the top, bottom and reset button to the scrollbars container
   this.scrollbars.push(topButton, bottomButton, resetButton);
   topButton = null;
   bottomButton = null;
@@ -8392,9 +8531,12 @@ Tilt.ScrollContainer.prototype = {
  *
  * The Original Code is Tilt: A WebGL-based 3D visualization of a webpage.
  *
- * The Initial Developer of the Original Code is Victor Porof.
+ * The Initial Developer of the Original Code is The Mozilla Foundation.
  * Portions created by the Initial Developer are Copyright (C) 2011
  * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *   Victor Porof (victor.porof@gmail.com)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -8715,9 +8857,12 @@ Tilt.Button.prototype = {
  *
  * The Original Code is Tilt: A WebGL-based 3D visualization of a webpage.
  *
- * The Initial Developer of the Original Code is Victor Porof.
+ * The Initial Developer of the Original Code is The Mozilla Foundation.
  * Portions created by the Initial Developer are Copyright (C) 2011
  * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *   Victor Porof (victor.porof@gmail.com)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -9021,9 +9166,12 @@ Tilt.Slider.prototype = {
  *
  * The Original Code is Tilt: A WebGL-based 3D visualization of a webpage.
  *
- * The Initial Developer of the Original Code is Victor Porof.
+ * The Initial Developer of the Original Code is The Mozilla Foundation.
  * Portions created by the Initial Developer are Copyright (C) 2011
  * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *   Victor Porof (victor.porof@gmail.com)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -9311,9 +9459,12 @@ Tilt.Sprite.prototype = {
  *
  * The Original Code is Tilt: A WebGL-based 3D visualization of a webpage.
  *
- * The Initial Developer of the Original Code is Victor Porof.
+ * The Initial Developer of the Original Code is The Mozilla Foundation.
  * Portions created by the Initial Developer are Copyright (C) 2011
  * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *   Victor Porof (victor.porof@gmail.com)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -9474,8 +9625,9 @@ Tilt.UI.mouseMove = function(x, y) {
  * @param {Number} scroll: the mouse wheel direction and speed
  */
 Tilt.UI.mouseScroll = function(scroll) {
+  this.mouseOver = false;
   this.mouseScrollAmmount = scroll;
-  this.$handleKeyEvent("onmousescroll", scroll);
+  this.$handleMouseEvent("onmousescroll", scroll);
 };
 
 /**
@@ -9514,7 +9666,7 @@ Tilt.UI.keyUp = function(code) {
  */
 Tilt.UI.$handleMouseEvent = function(name, x, y, button) {
   var i, e, len, len2, container, element, func,
-    offset, left, top,
+    offset, contnrX, contnrY, contnrWidth, contnrHeight, left,top,
     bounds, boundsX, boundsY, boundsWidth, boundsHeight,
     mouseX = this.mouseX,
     mouseY = this.mouseY;
@@ -9528,10 +9680,33 @@ Tilt.UI.$handleMouseEvent = function(name, x, y, button) {
       continue;
     }
 
+    contnrX = container.$x || 0;
+    contnrY = container.$y || 0;
+    contnrWidth = container.$width || 0;
+    contnrHeight = container.$height || 0;
+
+    // the container can receive events just like it's child elements
+    if (container.standby) {
+      if (mouseX > contnrX && mouseX < contnrX + contnrWidth &&
+          mouseY > contnrY && mouseY < contnrY + contnrHeight) {
+
+        // the mouse pointer is over a container, set a global flag for this
+        this.mouseOver = true;
+
+        // get the event function from the container
+        func = container[name];
+
+        // if the event is a valid set function, call it now
+        if ("function" === typeof func) {
+          func(x, y, button);
+        }
+      }
+    }
+
     // remember the view offset (for example, used in scroll containers)
     offset = container.$offset || [0, 0];
-    left = container.$x + offset[0];
-    top = container.$y + offset[1] + 2;
+    left = contnrX + offset[0];
+    top = contnrY + offset[1] + 2;
 
     // each view has multiple container attach, browse and handle each one
     for (e = 0, len2 = container.length; e < len2; e++) {
@@ -9566,7 +9741,6 @@ Tilt.UI.$handleMouseEvent = function(name, x, y, button) {
         }
 
         // the mouse pointer is over a gui element, set a global flag for this
-        // so it can be used by other controllers
         this.mouseOver = true;
 
         // get the event function from the element
@@ -9595,6 +9769,17 @@ Tilt.UI.$handleKeyEvent = function(name, code) {
     // handle keyboard events only if the view is visible and enabled
     if (container.hidden || container.disabled) {
       continue;
+    }
+
+    // the container can receive events just like it's child elements
+    if (container.standby) {
+      // get the event function from the element
+      func = container[name];
+
+      // if the event is a valid set function, call it now
+      if ("function" === typeof func) {
+        func(code);
+      }
     }
 
     // each view has multiple container attach, browse and handle each one
@@ -9634,9 +9819,12 @@ Tilt.Profiler.intercept("Tilt.UI", Tilt.UI);
  *
  * The Original Code is Tilt: A WebGL-based 3D visualization of a webpage.
  *
- * The Initial Developer of the Original Code is Victor Porof.
+ * The Initial Developer of the Original Code is The Mozilla Foundation.
  * Portions created by the Initial Developer are Copyright (C) 2011
  * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *   Victor Porof (victor.porof@gmail.com)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -9861,9 +10049,12 @@ Tilt.StringBundle = {
  *
  * The Original Code is Tilt: A WebGL-based 3D visualization of a webpage.
  *
- * The Initial Developer of the Original Code is Victor Porof.
+ * The Initial Developer of the Original Code is The Mozilla Foundation.
  * Portions created by the Initial Developer are Copyright (C) 2011
  * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *   Victor Porof (victor.porof@gmail.com)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -10457,9 +10648,12 @@ Tilt.Document = {
  *
  * The Original Code is Tilt: A WebGL-based 3D visualization of a webpage.
  *
- * The Initial Developer of the Original Code is Victor Porof.
+ * The Initial Developer of the Original Code is The Mozilla Foundation.
  * Portions created by the Initial Developer are Copyright (C) 2011
  * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *   Victor Porof (victor.porof@gmail.com)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -10595,9 +10789,12 @@ Tilt.File = {
  *
  * The Original Code is Tilt: A WebGL-based 3D visualization of a webpage.
  *
- * The Initial Developer of the Original Code is Victor Porof.
+ * The Initial Developer of the Original Code is The Mozilla Foundation.
  * Portions created by the Initial Developer are Copyright (C) 2011
  * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *   Victor Porof (victor.porof@gmail.com)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -10691,6 +10888,11 @@ Tilt.Math = {
    * @param {Number} max: the maximum allowed value for the number
    */
   clamp: function(value, min, max) {
+    if (min > max) {
+      var aux = min;
+      min = max;
+      max = aux;
+    }
     return Math.max(min, Math.min(max, value));
   },
 
@@ -11183,9 +11385,12 @@ Tilt.Math = {
  *
  * The Original Code is Tilt: A WebGL-based 3D visualization of a webpage.
  *
- * The Initial Developer of the Original Code is Victor Porof.
+ * The Initial Developer of the Original Code is The Mozilla Foundation.
  * Portions created by the Initial Developer are Copyright (C) 2011
  * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *   Victor Porof (victor.porof@gmail.com)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -11255,9 +11460,12 @@ Tilt.String = {
  *
  * The Original Code is Tilt: A WebGL-based 3D visualization of a webpage.
  *
- * The Initial Developer of the Original Code is Victor Porof.
+ * The Initial Developer of the Original Code is The Mozilla Foundation.
  * Portions created by the Initial Developer are Copyright (C) 2011
  * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *   Victor Porof (victor.porof@gmail.com)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -11343,9 +11551,12 @@ Tilt.Extensions.WebGL = {
  *
  * The Original Code is Tilt: A WebGL-based 3D visualization of a webpage.
  *
- * The Initial Developer of the Original Code is Victor Porof.
+ * The Initial Developer of the Original Code is The Mozilla Foundation.
  * Portions created by the Initial Developer are Copyright (C) 2011
  * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *   Victor Porof (victor.porof@gmail.com)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -11441,9 +11652,12 @@ Tilt.Xhr = {
  *
  * The Original Code is Tilt: A WebGL-based 3D visualization of a webpage.
  *
- * The Initial Developer of the Original Code is Victor Porof.
+ * The Initial Developer of the Original Code is The Mozilla Foundation.
  * Portions created by the Initial Developer are Copyright (C) 2011
  * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *   Victor Porof (victor.porof@gmail.com)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -11587,6 +11801,9 @@ TiltChrome.Config.UI = {
     "img": {
       fill: "#FFB473"
     },
+		"iframe": {
+			fill: "#85004B"
+		},
     "other": {
       fill: "#444"
     }
@@ -11607,9 +11824,12 @@ TiltChrome.Config.UI = {
  *
  * The Original Code is Tilt: A WebGL-based 3D visualization of a webpage.
  *
- * The Initial Developer of the Original Code is Victor Porof.
+ * The Initial Developer of the Original Code is The Mozilla Foundation.
  * Portions created by the Initial Developer are Copyright (C) 2011
  * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *   Victor Porof (victor.porof@gmail.com)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -11630,6 +11850,7 @@ var TiltChrome = TiltChrome || {};
 var EXPORTED_SYMBOLS = ["TiltChrome.Controller.MouseAndKeyboard"];
 
 /*global Tilt */
+/*jshint undef: false */
 
 /**
  * A mouse and keyboard implementation.
@@ -11650,13 +11871,7 @@ TiltChrome.Controller.MouseAndKeyboard = function() {
   /**
    * Retain the position for the mouseDown event.
    */
-  downX = 0, downY = 0,
-
-  /**
-   * Event functions, defined later.
-   */
-  mouseDown, mouseUp, click, doubleClick, mouseMove, mouseOut, mouseScroll,
-  keyDown, keyUp;
+  downX = 0, downY = 0;
 
   /**
    * Function called automatically by the visualization at the setup().
@@ -11701,7 +11916,7 @@ TiltChrome.Controller.MouseAndKeyboard = function() {
   /**
    * Called once after every time a mouse button is pressed.
    */
-  mouseDown = function(e) {
+  var mouseDown = function(e) {
     e.preventDefault();
     e.stopPropagation();
 
@@ -11726,7 +11941,7 @@ TiltChrome.Controller.MouseAndKeyboard = function() {
   /**
    * Called every time a mouse button is released.
    */
-  mouseUp = function(e) {
+  var mouseUp = function(e) {
     e.preventDefault();
     e.stopPropagation();
 
@@ -11742,7 +11957,7 @@ TiltChrome.Controller.MouseAndKeyboard = function() {
   /**
    * Called every time a mouse button is clicked.
    */
-  click = function(e) {
+  var click = function(e) {
     e.preventDefault();
     e.stopPropagation();
 
@@ -11768,7 +11983,7 @@ TiltChrome.Controller.MouseAndKeyboard = function() {
   /**
    * Called every time a mouse button is double clicked.
    */
-  doubleClick = function(e) {
+  var doubleClick = function(e) {
     e.preventDefault();
     e.stopPropagation();
 
@@ -11794,7 +12009,7 @@ TiltChrome.Controller.MouseAndKeyboard = function() {
   /**
    * Called every time the mouse moves.
    */
-  mouseMove = function(e) {
+  var mouseMove = function(e) {
     e.preventDefault();
     e.stopPropagation();
 
@@ -11809,7 +12024,7 @@ TiltChrome.Controller.MouseAndKeyboard = function() {
   /**
    * Called when the the mouse leaves the visualization bounds.
    */
-  mouseOut = function(e) {
+  var mouseOut = function(e) {
     e.preventDefault();
     e.stopPropagation();
 
@@ -11820,18 +12035,21 @@ TiltChrome.Controller.MouseAndKeyboard = function() {
   /**
    * Called when the the mouse wheel is used.
    */
-  mouseScroll = function(e) {
+  var mouseScroll = function(e) {
     e.preventDefault();
     e.stopPropagation();
 
     ui.mouseScroll(e.detail);
-    arcball.mouseScroll(e.detail);
+
+    if (!ui.mouseOver) {
+      arcball.mouseScroll(e.detail);
+    }
   };
 
   /**
    * Called when a key is pressed.
    */
-  keyDown = function(e) {
+  var keyDown = function(e) {
     var code = e.keyCode || e.which;
 
     // handle key events only if the source editor is not open
@@ -11846,7 +12064,7 @@ TiltChrome.Controller.MouseAndKeyboard = function() {
   /**
    * Called when a key is released.
    */
-  keyUp = function(e) {
+  var keyUp = function(e) {
     var code = e.keyCode || e.which;
 
     if (code === 27) { // escape keyCode
@@ -11936,9 +12154,12 @@ TiltChrome.Controller.MouseAndKeyboard = function() {
  *
  * The Original Code is Tilt: A WebGL-based 3D visualization of a webpage.
  *
- * The Initial Developer of the Original Code is Victor Porof.
+ * The Initial Developer of the Original Code is The Mozilla Foundation.
  * Portions created by the Initial Developer are Copyright (C) 2011
  * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *   Victor Porof (victor.porof@gmail.com)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -12015,6 +12236,7 @@ TiltChrome.UI.Default = function() {
   pStripButton = null,
   aStripButton = null,
   imgStripButton = null,
+	iframeStripButton = null,
   otherStripButton = null,
 
   /**
@@ -12116,12 +12338,13 @@ TiltChrome.UI.Default = function() {
       y: -5,
       padding: [0, 0, 0, 5],
       onclick: function() {
-        var folder = Tilt.File.showPicker(
-          "Select the folder to save the 3D webpage", "folder");
+        var folderPicker = Tilt.StringBundle.get("folderPicker.string"),
+          webpageFilename = Tilt.StringBundle.get("webpageFilename.string"),
+          folder = Tilt.File.showPicker(folderPicker, "folder");
 
         if (folder) {
           folder.reveal();
-          this.visualization.performMeshSave(folder.path, "webpage");
+          this.visualization.performMeshSave(folder.path, webpageFilename);
         }
       }.bind(this)
     });
@@ -12130,6 +12353,7 @@ TiltChrome.UI.Default = function() {
       x: canvas.width - 285,
       y: -5,
       padding: [0, 0, 0, 5],
+      hidden: true,
       onclick: function() {
         Tilt.Console.alert("Tilt", Tilt.StringBundle.get("implement.info"));
       }.bind(this)
@@ -12293,7 +12517,7 @@ TiltChrome.UI.Default = function() {
       }.bind(this)
     });
 
-    domStripsLegend = new Tilt.Sprite(t, [1, 365, 88, 333], {
+    domStripsLegend = new Tilt.Sprite(t, [1, 365, 88, 353], {
       x: 0,
       y: 292,
       disabled: true
@@ -12305,14 +12529,15 @@ TiltChrome.UI.Default = function() {
       width: 130,
       height: canvas.height - 310,
       background: "#0001",
+      scrollable: [0, Math.MAX_VALUE],
       top: new Tilt.Sprite(t, [506, 69, 33, 30], {
-        padding: [4, 4, 4, 8]
+        padding: [2, 2, 2, 4]
       }),
       bottom: new Tilt.Sprite(t, [506, 102, 33, 30], {
-        padding: [4, 4, 4, 8]
+        padding: [2, 2, 2, 4]
       }),
       reset: new Tilt.Sprite(t, [506, 134, 33, 30], {
-        padding: [4, 8, 4, 4]
+        padding: [2, 4, 2, 2]
       })
     });
 
@@ -12481,9 +12706,20 @@ TiltChrome.UI.Default = function() {
       }
     });
 
-    otherStripButton = new Tilt.Button(null, {
+    iframeStripButton = new Tilt.Button(null, {
       x: 5,
       y: imgStripButton.getY() + 20,
+      width: 14,
+      height: 14,
+      fill: config.domStrips["iframe"].fill,
+      onclick: function() {
+        showColorPicker(config.domStrips["iframe"], iframeStripButton);
+      }
+    });
+
+    otherStripButton = new Tilt.Button(null, {
+      x: 5,
+      y: iframeStripButton.getY() + 20,
       width: 14,
       height: 14,
       fill: config.domStrips["other"].fill,
@@ -12688,6 +12924,7 @@ TiltChrome.UI.Default = function() {
       pStripButton,
       aStripButton,
       imgStripButton,
+			iframeStripButton,
       otherStripButton);
   };
 
@@ -12757,7 +12994,7 @@ TiltChrome.UI.Default = function() {
       x = 3 + depth * 6,
       y = 3 + stripNo * 10,
       height = 7,
-      stripButton, stripIdButton, stripClassButton, right,
+      stripButton, stripIdButton, stripClassButton, right, bottom,
 
     namelength = Tilt.Math.clamp(node.localName.length, 3, 10),
     clslength = Tilt.Math.clamp(node.localName.length, 3, 10),
@@ -12776,6 +13013,7 @@ TiltChrome.UI.Default = function() {
     });
 
     right = stripButton.getX() + stripButton.getWidth();
+    bottom = stripButton.getY() + stripButton.getHeight() * 2;
 
     if (node.className) {
       stripClassButton = new Tilt.Button(null, {
@@ -12808,6 +13046,7 @@ TiltChrome.UI.Default = function() {
     if (right > minidomContainer.view.getWidth()) {
       minidomContainer.view.setWidth(right);
     }
+    minidomContainer.bottom = bottom;
 
     if (stripButton) {
       minidomContainer.view.push(stripButton);
@@ -12953,6 +13192,7 @@ TiltChrome.UI.Default = function() {
     pStripButton = null;
     aStripButton = null;
     imgStripButton = null;
+		iframeStripButton = null;
     otherStripButton = null;
 
     exitButton = null;
@@ -13006,9 +13246,12 @@ TiltChrome.UI.Default = function() {
  *
  * The Original Code is Tilt: A WebGL-based 3D visualization of a webpage.
  *
- * The Initial Developer of the Original Code is Victor Porof.
+ * The Initial Developer of the Original Code is The Mozilla Foundation.
  * Portions created by the Initial Developer are Copyright (C) 2011
  * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *   Victor Porof (victor.porof@gmail.com)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -13029,7 +13272,7 @@ var TiltChrome = TiltChrome || {};
 var EXPORTED_SYMBOLS = ["TiltChrome.Visualization"];
 
 /*global Tilt, gBrowser, vec3, mat3, mat4, quat4 */
-/*jshint sub: true, undef: false, onevar: false */
+/*jshint sub: true, undef: false */
 
 /**
  * TiltChrome visualization constructor.
@@ -13752,7 +13995,7 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
    */
   this.performMeshPickEdit = function(x, y) {
     this.performMeshPick(x, y, {
-      
+
       onpick: function(intersections) {
         this.openEditor(intersections[0].node);
       }.bind(this),
@@ -14187,9 +14430,12 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
  *
  * The Original Code is Tilt: A WebGL-based 3D visualization of a webpage.
  *
- * The Initial Developer of the Original Code is Victor Porof.
+ * The Initial Developer of the Original Code is The Mozilla Foundation.
  * Portions created by the Initial Developer are Copyright (C) 2011
  * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *   Victor Porof (victor.porof@gmail.com)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
