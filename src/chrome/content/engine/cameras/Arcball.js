@@ -13,9 +13,12 @@
  *
  * The Original Code is Tilt: A WebGL-based 3D visualization of a webpage.
  *
- * The Initial Developer of the Original Code is Victor Porof.
+ * The Initial Developer of the Original Code is The Mozilla Foundation.
  * Portions created by the Initial Developer are Copyright (C) 2011
  * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *   Victor Porof (victor.porof@gmail.com)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -66,6 +69,9 @@ Tilt.Arcball = function(width, height, radius) {
    */
   this.$mouseButton = -1;
   this.$scrollValue = 0;
+  this.scrollMin = -3000;
+  this.scrollMax = 500;
+  this.scrollSpeed = 5;
 
   /**
    * Array retaining the current pressed key codes.
@@ -352,11 +358,16 @@ Tilt.Arcball.prototype = {
    * @param {Number} scroll: the mouse wheel direction and speed
    */
   mouseScroll: function(scroll) {
+    var speed = this.scrollSpeed,
+      min = this.scrollMin,
+      max = this.scrollMax;
+
     // clear any interval resetting or manipulating the arcball if set
     this.$clearInterval();
 
     // save the mouse scroll state and prepare for translations
-    this.$scrollValue -= scroll * 10;
+    this.$scrollValue = Tilt.Math.clamp(
+      this.$scrollValue - scroll * speed, min, max);
   },
 
   /**
