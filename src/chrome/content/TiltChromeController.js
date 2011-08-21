@@ -36,6 +36,7 @@ var TiltChrome = TiltChrome || {};
 var EXPORTED_SYMBOLS = ["TiltChrome.Controller.MouseAndKeyboard"];
 
 /*global Tilt */
+/*jshint undef: false */
 
 /**
  * A mouse and keyboard implementation.
@@ -56,13 +57,7 @@ TiltChrome.Controller.MouseAndKeyboard = function() {
   /**
    * Retain the position for the mouseDown event.
    */
-  downX = 0, downY = 0,
-
-  /**
-   * Event functions, defined later.
-   */
-  mouseDown, mouseUp, click, doubleClick, mouseMove, mouseOut, mouseScroll,
-  keyDown, keyUp;
+  downX = 0, downY = 0;
 
   /**
    * Function called automatically by the visualization at the setup().
@@ -107,7 +102,7 @@ TiltChrome.Controller.MouseAndKeyboard = function() {
   /**
    * Called once after every time a mouse button is pressed.
    */
-  mouseDown = function(e) {
+  var mouseDown = function(e) {
     e.preventDefault();
     e.stopPropagation();
 
@@ -132,7 +127,7 @@ TiltChrome.Controller.MouseAndKeyboard = function() {
   /**
    * Called every time a mouse button is released.
    */
-  mouseUp = function(e) {
+  var mouseUp = function(e) {
     e.preventDefault();
     e.stopPropagation();
 
@@ -148,7 +143,7 @@ TiltChrome.Controller.MouseAndKeyboard = function() {
   /**
    * Called every time a mouse button is clicked.
    */
-  click = function(e) {
+  var click = function(e) {
     e.preventDefault();
     e.stopPropagation();
 
@@ -174,7 +169,7 @@ TiltChrome.Controller.MouseAndKeyboard = function() {
   /**
    * Called every time a mouse button is double clicked.
    */
-  doubleClick = function(e) {
+  var doubleClick = function(e) {
     e.preventDefault();
     e.stopPropagation();
 
@@ -200,7 +195,7 @@ TiltChrome.Controller.MouseAndKeyboard = function() {
   /**
    * Called every time the mouse moves.
    */
-  mouseMove = function(e) {
+  var mouseMove = function(e) {
     e.preventDefault();
     e.stopPropagation();
 
@@ -215,7 +210,7 @@ TiltChrome.Controller.MouseAndKeyboard = function() {
   /**
    * Called when the the mouse leaves the visualization bounds.
    */
-  mouseOut = function(e) {
+  var mouseOut = function(e) {
     e.preventDefault();
     e.stopPropagation();
 
@@ -226,7 +221,7 @@ TiltChrome.Controller.MouseAndKeyboard = function() {
   /**
    * Called when the the mouse wheel is used.
    */
-  mouseScroll = function(e) {
+  var mouseScroll = function(e) {
     e.preventDefault();
     e.stopPropagation();
 
@@ -237,7 +232,7 @@ TiltChrome.Controller.MouseAndKeyboard = function() {
   /**
    * Called when a key is pressed.
    */
-  keyDown = function(e) {
+  var keyDown = function(e) {
     var code = e.keyCode || e.which;
 
     // handle key events only if the source editor is not open
@@ -252,7 +247,7 @@ TiltChrome.Controller.MouseAndKeyboard = function() {
   /**
    * Called when a key is released.
    */
-  keyUp = function(e) {
+  var keyUp = function(e) {
     var code = e.keyCode || e.which;
 
     if (code === 27) { // escape keyCode
