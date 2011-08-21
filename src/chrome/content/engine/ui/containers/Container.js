@@ -13,9 +13,12 @@
  *
  * The Original Code is Tilt: A WebGL-based 3D visualization of a webpage.
  *
- * The Initial Developer of the Original Code is Victor Porof.
+ * The Initial Developer of the Original Code is The Mozilla Foundation.
  * Portions created by the Initial Developer are Copyright (C) 2011
  * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *   Victor Porof (victor.porof@gmail.com)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -40,7 +43,8 @@ var EXPORTED_SYMBOLS = ["Tilt.Container"];
  *
  * @param {Object} properties: additional properties for this object
  *  @param {Boolean} hidden: specifies if this shouldn't be drawn
- *  @param {Boolean} disabled: specifies if this shouldn't receive events
+ *  @param {Boolean} disabled: true if the children shouldn't receive events
+ *  @param {Boolean} standby: true if the container should respond to events
  *  @param {String} background: color to fill the screen
  *  @param {Number} x: the x position of the object
  *  @param {Number} y: the y position of the object
@@ -66,6 +70,11 @@ Tilt.Container = function(properties) {
    * Variable specifying if this object shouldn't be responsive to events.
    */
   this.disabled = properties.disabled || false;
+
+  /**
+   *
+   */
+  this.standby = properties.standby || false;
 
   /**
    * The color of the full screen background rectangle.
