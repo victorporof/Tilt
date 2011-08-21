@@ -13,9 +13,12 @@
  *
  * The Original Code is Tilt: A WebGL-based 3D visualization of a webpage.
  *
- * The Initial Developer of the Original Code is Victor Porof.
+ * The Initial Developer of the Original Code is The Mozilla Foundation.
  * Portions created by the Initial Developer are Copyright (C) 2011
  * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *   Victor Porof (victor.porof@gmail.com)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -176,8 +179,9 @@ Tilt.UI.mouseMove = function(x, y) {
  * @param {Number} scroll: the mouse wheel direction and speed
  */
 Tilt.UI.mouseScroll = function(scroll) {
+  this.mouseOver = false;
   this.mouseScrollAmmount = scroll;
-  this.$handleKeyEvent("onmousescroll", scroll);
+  this.$handleMouseEvent("onmousescroll", scroll);
 };
 
 /**
@@ -216,7 +220,7 @@ Tilt.UI.keyUp = function(code) {
  */
 Tilt.UI.$handleMouseEvent = function(name, x, y, button) {
   var i, e, len, len2, container, element, func,
-    offset, left, top,
+    offset, contnrX, contnrY, contnrWidth, contnrHeight, left,top,
     bounds, boundsX, boundsY, boundsWidth, boundsHeight,
     mouseX = this.mouseX,
     mouseY = this.mouseY;
@@ -230,10 +234,33 @@ Tilt.UI.$handleMouseEvent = function(name, x, y, button) {
       continue;
     }
 
+    contnrX = container.$x || 0;
+    contnrY = container.$y || 0;
+    contnrWidth = container.$width || 0;
+    contnrHeight = container.$height || 0;
+
+    // the container can receive events just like it's child elements
+    if (container.standby) {
+      if (mouseX > contnrX && mouseX < contnrX + contnrWidth &&
+          mouseY > contnrY && mouseY < contnrY + contnrHeight) {
+
+        // the mouse pointer is over a container, set a global flag for this
+        this.mouseOver = true;
+
+        // get the event function from the container
+        func = container[name];
+
+        // if the event is a valid set function, call it now
+        if ("function" === typeof func) {
+          func(x, y, button);
+        }
+      }
+    }
+
     // remember the view offset (for example, used in scroll containers)
     offset = container.$offset || [0, 0];
-    left = container.$x + offset[0];
-    top = container.$y + offset[1] + 2;
+    left = contnrX + offset[0];
+    top = contnrY + offset[1] + 2;
 
     // each view has multiple container attach, browse and handle each one
     for (e = 0, len2 = container.length; e < len2; e++) {
@@ -268,7 +295,6 @@ Tilt.UI.$handleMouseEvent = function(name, x, y, button) {
         }
 
         // the mouse pointer is over a gui element, set a global flag for this
-        // so it can be used by other controllers
         this.mouseOver = true;
 
         // get the event function from the element
@@ -297,6 +323,17 @@ Tilt.UI.$handleKeyEvent = function(name, code) {
     // handle keyboard events only if the view is visible and enabled
     if (container.hidden || container.disabled) {
       continue;
+    }
+
+    // the container can receive events just like it's child elements
+    if (container.standby) {
+      // get the event function from the element
+      func = container[name];
+
+      // if the event is a valid set function, call it now
+      if ("function" === typeof func) {
+        func(code);
+      }
     }
 
     // each view has multiple container attach, browse and handle each one
