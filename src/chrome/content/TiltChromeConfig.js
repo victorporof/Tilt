@@ -13,9 +13,12 @@
  *
  * The Original Code is Tilt: A WebGL-based 3D visualization of a webpage.
  *
- * The Initial Developer of the Original Code is Victor Porof.
+ * The Initial Developer of the Original Code is The Mozilla Foundation.
  * Portions created by the Initial Developer are Copyright (C) 2011
  * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *   Victor Porof (victor.porof@gmail.com)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -159,6 +162,9 @@ TiltChrome.Config.UI = {
     "img": {
       fill: "#FFB473"
     },
+		"iframe": {
+			fill: "#85004B"
+		},
     "other": {
       fill: "#444"
     }
