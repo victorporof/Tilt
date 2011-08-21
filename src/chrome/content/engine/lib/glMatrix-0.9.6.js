@@ -26,7 +26,7 @@
  *    distribution.
  */
 
-var glMatrixArrayType, vec3, mat3, mat4, quat4;
+var glMatrixArrayType;
 
 // Fallback for systems that don't support WebGL
 if(typeof Float32Array != 'undefined') {
@@ -1463,7 +1463,7 @@ mat4.str = function(mat) {
 /*
  * quat4 - Quaternions 
  */
-quat4 = {};
+var quat4 = {};
 
 /*
  * quat4.create
