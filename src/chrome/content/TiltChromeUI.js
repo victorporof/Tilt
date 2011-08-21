@@ -13,9 +13,12 @@
  *
  * The Original Code is Tilt: A WebGL-based 3D visualization of a webpage.
  *
- * The Initial Developer of the Original Code is Victor Porof.
+ * The Initial Developer of the Original Code is The Mozilla Foundation.
  * Portions created by the Initial Developer are Copyright (C) 2011
  * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *   Victor Porof (victor.porof@gmail.com)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -92,6 +95,7 @@ TiltChrome.UI.Default = function() {
   pStripButton = null,
   aStripButton = null,
   imgStripButton = null,
+	iframeStripButton = null,
   otherStripButton = null,
 
   /**
@@ -193,12 +197,13 @@ TiltChrome.UI.Default = function() {
       y: -5,
       padding: [0, 0, 0, 5],
       onclick: function() {
-        var folder = Tilt.File.showPicker(
-          "Select the folder to save the 3D webpage", "folder");
+        var folderPicker = Tilt.StringBundle.get("folderPicker.string"),
+          webpageFilename = Tilt.StringBundle.get("webpageFilename.string"),
+          folder = Tilt.File.showPicker(folderPicker, "folder");
 
         if (folder) {
           folder.reveal();
-          this.visualization.performMeshSave(folder.path, "webpage");
+          this.visualization.performMeshSave(folder.path, webpageFilename);
         }
       }.bind(this)
     });
@@ -371,7 +376,7 @@ TiltChrome.UI.Default = function() {
       }.bind(this)
     });
 
-    domStripsLegend = new Tilt.Sprite(t, [1, 365, 88, 333], {
+    domStripsLegend = new Tilt.Sprite(t, [1, 365, 88, 353], {
       x: 0,
       y: 292,
       disabled: true
@@ -383,14 +388,15 @@ TiltChrome.UI.Default = function() {
       width: 130,
       height: canvas.height - 310,
       background: "#0001",
+      scrollable: [0, Math.MAX_VALUE],
       top: new Tilt.Sprite(t, [506, 69, 33, 30], {
-        padding: [4, 4, 4, 8]
+        padding: [2, 2, 2, 4]
       }),
       bottom: new Tilt.Sprite(t, [506, 102, 33, 30], {
-        padding: [4, 4, 4, 8]
+        padding: [2, 2, 2, 4]
       }),
       reset: new Tilt.Sprite(t, [506, 134, 33, 30], {
-        padding: [4, 8, 4, 4]
+        padding: [2, 4, 2, 2]
       })
     });
 
@@ -559,9 +565,20 @@ TiltChrome.UI.Default = function() {
       }
     });
 
-    otherStripButton = new Tilt.Button(null, {
+    iframeStripButton = new Tilt.Button(null, {
       x: 5,
       y: imgStripButton.getY() + 20,
+      width: 14,
+      height: 14,
+      fill: config.domStrips["iframe"].fill,
+      onclick: function() {
+        showColorPicker(config.domStrips["iframe"], iframeStripButton);
+      }
+    });
+
+    otherStripButton = new Tilt.Button(null, {
+      x: 5,
+      y: iframeStripButton.getY() + 20,
       width: 14,
       height: 14,
       fill: config.domStrips["other"].fill,
@@ -766,6 +783,7 @@ TiltChrome.UI.Default = function() {
       pStripButton,
       aStripButton,
       imgStripButton,
+			iframeStripButton,
       otherStripButton);
   };
 
@@ -835,7 +853,7 @@ TiltChrome.UI.Default = function() {
       x = 3 + depth * 6,
       y = 3 + stripNo * 10,
       height = 7,
-      stripButton, stripIdButton, stripClassButton, right,
+      stripButton, stripIdButton, stripClassButton, right, bottom,
 
     namelength = Tilt.Math.clamp(node.localName.length, 3, 10),
     clslength = Tilt.Math.clamp(node.localName.length, 3, 10),
@@ -854,6 +872,7 @@ TiltChrome.UI.Default = function() {
     });
 
     right = stripButton.getX() + stripButton.getWidth();
+    bottom = stripButton.getY() + stripButton.getHeight() * 2;
 
     if (node.className) {
       stripClassButton = new Tilt.Button(null, {
@@ -886,6 +905,7 @@ TiltChrome.UI.Default = function() {
     if (right > minidomContainer.view.getWidth()) {
       minidomContainer.view.setWidth(right);
     }
+    minidomContainer.bottom = bottom;
 
     if (stripButton) {
       minidomContainer.view.push(stripButton);
@@ -1031,6 +1051,7 @@ TiltChrome.UI.Default = function() {
     pStripButton = null;
     aStripButton = null;
     imgStripButton = null;
+		iframeStripButton = null;
     otherStripButton = null;
 
     exitButton = null;
