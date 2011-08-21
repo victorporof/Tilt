@@ -36,7 +36,7 @@ var TiltChrome = TiltChrome || {};
 var EXPORTED_SYMBOLS = ["TiltChrome.Visualization"];
 
 /*global Tilt, gBrowser, vec3, mat3, mat4, quat4 */
-/*jshint sub: true, undef: false, onevar: false */
+/*jshint sub: true, undef: false */
 
 /**
  * TiltChrome visualization constructor.
@@ -759,7 +759,7 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
    */
   this.performMeshPickEdit = function(x, y) {
     this.performMeshPick(x, y, {
-      
+
       onpick: function(intersections) {
         this.openEditor(intersections[0].node);
       }.bind(this),
