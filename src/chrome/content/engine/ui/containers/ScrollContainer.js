@@ -13,9 +13,12 @@
  *
  * The Original Code is Tilt: A WebGL-based 3D visualization of a webpage.
  *
- * The Initial Developer of the Original Code is Victor Porof.
+ * The Initial Developer of the Original Code is The Mozilla Foundation.
  * Portions created by the Initial Developer are Copyright (C) 2011
  * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *   Victor Porof (victor.porof@gmail.com)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -40,9 +43,11 @@ var EXPORTED_SYMBOLS = ["Tilt.Scrollview"];
  *
  * @param {Object} properties: additional properties for this object
  *  @param {Boolean} hidden: specifies if this shouldn't be drawn
- *  @param {Boolean} disabled: specifies if this shouldn't receive events
+ *  @param {Boolean} disabled: true if the children shouldn't receive events
+ *  @param {Boolean} standby: true if the container should respond to events
  *  @param {String} background: color to fill the screen
  *  @param {Array} offset: the [x, y] offset of the inner contents
+ *  @param {Array} scrollable: the [min, max] scrollable offset of contents
  *  @param {Boolean} bounds: the inner drawable bounds for this view
  *  @param {Array} elements: an array of elements to be initially added
  *  @param {Tilt.Sprite} top: a sprite for the slider top button
@@ -61,12 +66,23 @@ Tilt.ScrollContainer = function(properties) {
    * The normal view containing all the elements.
    */
   this.view = new Tilt.Container(properties);
+  this.view.standby = true;
 
   /**
    * The view containing the scrollbars.
    */
   this.scrollbars = new Tilt.Container();
 
+  /**
+   * The minimum and maximum scrollable offset for the contents.
+   */
+  this.top = properties.scrollable[0] || 0;
+  this.bottom = properties.scrollable[1] || Number.MAX_VALUE;
+  this.view.$offset[1] = this.top;
+
+  /**
+   * The top, bottom and reset buttons.
+   */
   var topButton = new Tilt.Button(properties.top, {
     x: this.view.$x - 25,
     y: this.view.$y - 5,
@@ -77,14 +93,22 @@ Tilt.ScrollContainer = function(properties) {
     onmousedown: function() {
       window.clearInterval(this.$scrollTopReset);
       window.clearInterval(this.$scrollTop);
-      var ui = Tilt.UI;
+      window.clearInterval(this.$scrollBottom);
+
+      var ui = Tilt.UI,
+        view = this.view,
+        offset = view.$offset;
 
       this.$scrollTop = window.setInterval(function() {
-        this.view.$offset[1] += 5;
+        offset[1] = Tilt.Math.clamp(
+          offset[1] + 5, this.top, -this.bottom + view.$height);
+
         ui.requestRedraw();
 
         if (!ui.mousePressed) {
           ui = null;
+          view = null;
+          offset = null;
           window.clearInterval(this.$scrollTop);
         }
       }.bind(this), 1000 / 60);
@@ -100,15 +124,23 @@ Tilt.ScrollContainer = function(properties) {
     padding: properties.bottom ? properties.bottom.$padding : [0, 0, 0, 0],
     onmousedown: function() {
       window.clearInterval(this.$scrollTopReset);
+      window.clearInterval(this.$scrollTop);
       window.clearInterval(this.$scrollBottom);
-      var ui = Tilt.UI;
+
+      var ui = Tilt.UI,
+        view = this.view,
+        offset = view.$offset;
 
       this.$scrollBottom = window.setInterval(function() {
-        this.view.$offset[1] -= 5;
+        offset[1] = Tilt.Math.clamp(
+          offset[1] - 5, this.top, -this.bottom + view.$height);
+
         ui.requestRedraw();
 
         if (!ui.mousePressed) {
           ui = null;
+          view = null;
+          offset = null;
           window.clearInterval(this.$scrollBottom);
         }
       }.bind(this), 1000 / 60);
@@ -124,19 +156,52 @@ Tilt.ScrollContainer = function(properties) {
     padding: properties.reset ? properties.reset.$padding : [0, 0, 0, 0],
     onmousedown: function() {
       window.clearInterval(this.$scrollTopReset);
-      var ui = Tilt.UI;
+      window.clearInterval(this.$scrollTop);
+      window.clearInterval(this.$scrollBottom);
+
+      var ui = Tilt.UI,
+        view = this.view,
+        offset = view.$offset;
 
       this.$scrollTopReset = window.setInterval(function() {
-        this.view.$offset[1] /= 1.15;
+        offset[1] -= (offset[1] - this.top) / 10;
+
         ui.requestRedraw();
 
-        if (Math.abs(this.view.$offset[1]) < 0.1) {
+        if (Math.abs(offset[1] - this.top) < 0.1) {
+          ui = null;
+          view = null;
+          offset = null;
           window.clearInterval(this.$scrollTopReset);
         }
       }.bind(this), 1000 / 60);
     }.bind(this)
   });
 
+  /**
+   * Handles the mouse wheel event for the container view.
+   * @param {Number} scroll: the mouse wheel direction and speed
+   */
+  this.view["onmousescroll"] = function(scroll) {
+    window.clearInterval(this.$scrollTopReset);
+    window.clearInterval(this.$scrollTop);
+    window.clearInterval(this.$scrollBottom);
+
+    var ui = Tilt.UI,
+      view = this.view,
+      offset = view.$offset;
+
+    offset[1] = Tilt.Math.clamp(
+      offset[1] - scroll, this.top, -this.bottom + view.$height);
+
+    ui.requestRedraw();
+
+    ui = null;
+    view = null;
+    offset = null;
+  }.bind(this);
+
+  // add the top, bottom and reset button to the scrollbars container
   this.scrollbars.push(topButton, bottomButton, resetButton);
   topButton = null;
   bottomButton = null;
