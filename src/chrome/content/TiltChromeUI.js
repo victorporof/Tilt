@@ -207,6 +207,7 @@ TiltChrome.UI.Default = function() {
       x: canvas.width - 285,
       y: -5,
       padding: [0, 0, 0, 5],
+      hidden: true,
       onclick: function() {
         Tilt.Console.alert("Tilt", Tilt.StringBundle.get("implement.info"));
       }.bind(this)
