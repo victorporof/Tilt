@@ -13,9 +13,12 @@
  *
  * The Original Code is Tilt: A WebGL-based 3D visualization of a webpage.
  *
- * The Initial Developer of the Original Code is Victor Porof.
+ * The Initial Developer of the Original Code is The Mozilla Foundation.
  * Portions created by the Initial Developer are Copyright (C) 2011
  * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *   Victor Porof (victor.porof@gmail.com)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -109,6 +112,11 @@ Tilt.Math = {
    * @param {Number} max: the maximum allowed value for the number
    */
   clamp: function(value, min, max) {
+    if (min > max) {
+      var aux = min;
+      min = max;
+      max = aux;
+    }
     return Math.max(min, Math.min(max, value));
   },
 
