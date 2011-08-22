@@ -192,7 +192,7 @@ Tilt.ScrollContainer = function(properties) {
       offset = view.$offset;
 
     offset[1] = Tilt.Math.clamp(
-      offset[1] - scroll, this.top, -this.bottom + view.$height);
+      offset[1] - scroll * 2, this.top, -this.bottom + view.$height);
 
     ui.requestRedraw();
 
