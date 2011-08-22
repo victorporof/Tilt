@@ -13586,7 +13586,12 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
           node.localName === "script" ||
           node.localName === "noscript" ||
           node.localName === "span" ||
-          node.localName === "option") {
+          node.localName === "option" ||
+          node.localName === "font" ||
+          node.localName === "strong" ||
+          node.localName === "b" ||
+          node.localName === "i" ||
+          node.localName === "u") {
 
         // information about these nodes should still be accessible, despite
         // the fact that they're not rendered
@@ -14167,7 +14172,6 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
       if (node.localName === "img" ||
           node.localName === "input" ||
           node.localName === "button" ||
-          node.localName === "iframe" ||
           code.editorType === "attr") {
 
         code.innerHTML = attr;
