@@ -131,6 +131,6 @@
         height="203"/>
     </panel>
 
-    <iframe id="tilt-iframe" style="visibility: collapse;"/>
+    <iframe id="tilt-iframe" style="visibility: collapse;" type="chrome"/>
   </window>  
 </overlay>
