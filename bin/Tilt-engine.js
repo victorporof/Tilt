@@ -71,7 +71,7 @@ Tilt.Arcball = function(width, height, radius) {
   this.$scrollValue = 0;
   this.scrollMin = -3000;
   this.scrollMax = 500;
-  this.scrollSpeed = 5;
+  this.scrollSpeed = 10;
 
   /**
    * Array retaining the current pressed key codes.
@@ -8271,7 +8271,7 @@ Tilt.ScrollContainer = function(properties) {
       offset = view.$offset;
 
     offset[1] = Tilt.Math.clamp(
-      offset[1] - scroll, this.top, -this.bottom + view.$height);
+      offset[1] - scroll * 2, this.top, -this.bottom + view.$height);
 
     ui.requestRedraw();
 
