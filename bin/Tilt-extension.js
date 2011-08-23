@@ -329,7 +329,7 @@ Tilt.Arcball.prototype = {
     }
     else {
       // this should be in the (0..1) interval
-      frameDelta = Tilt.Math.clamp(frameDelta / 100, 0.01, 0.99);
+      frameDelta = Tilt.Math.clamp(frameDelta * 0.01, 0.01, 0.99);
     }
 
     // cache some variables for easier access
@@ -433,21 +433,21 @@ Tilt.Arcball.prototype = {
     }
 
     // mouse wheel handles zooming
-    deltaTrans[2] = (scrollValue - currentTrans[2]) / 10;
+    deltaTrans[2] = (scrollValue - currentTrans[2]) * 0.1;
     currentTrans[2] += deltaTrans[2];
 
     // handle additional rotation and translation by the keyboard
     if (keyCode[65]) { // w
-      addKeyRot[0] -= frameDelta / 5;
+      addKeyRot[0] -= frameDelta * 0.2;
     }
     if (keyCode[68]) { // s
-      addKeyRot[0] += frameDelta / 5;
+      addKeyRot[0] += frameDelta * 0.2;
     }
     if (keyCode[87]) { // a
-      addKeyRot[1] += frameDelta / 5;
+      addKeyRot[1] += frameDelta * 0.2;
     }
     if (keyCode[83]) { // d
-      addKeyRot[1] -= frameDelta / 5;
+      addKeyRot[1] -= frameDelta * 0.2;
     }
     if (keyCode[37]) { // left
       addKeyTrans[0] += frameDelta * 50;
@@ -606,8 +606,8 @@ Tilt.Arcball.prototype = {
    */
   pointToSphere: function(x, y, width, height, radius, sphereVec) {
     // adjust point coords and scale down to range of [-1..1]
-    x = (x - width / 2) / radius;
-    y = (y - height / 2) / radius;
+    x = (x - width * 0.5) / radius;
+    y = (y - height * 0.5) / radius;
 
     // compute the square length of the vector to the point from the center
     var normal = 0,
@@ -700,19 +700,24 @@ Tilt.Arcball.prototype = {
       deltaTrans = this.$deltaTrans,
       currentTrans = this.$currentTrans,
       addKeyRot = this.$addKeyRot,
-      addKeyTrans = this.$addKeyTrans;
+      addKeyTrans = this.$addKeyTrans,
+
+      quat4inverse = quat4.inverse,
+      quat4slerp = quat4.slerp,
+      vec3scale = vec3.scale,
+      vec3length = vec3.length;
 
     // create an interval and smoothly reset all the values to identity
     this.$setInterval(function() {
-      inverse = quat4.inverse(lastRot);
+      inverse = quat4inverse(lastRot);
 
       // reset the rotation quaternion and translation vector
-      quat4.slerp(lastRot, inverse, 1 - factor);
-      quat4.slerp(deltaRot, inverse, 1 - factor);
-      quat4.slerp(currentRot, inverse, 1 - factor);
-      vec3.scale(lastTrans, factor);
-      vec3.scale(deltaTrans, factor);
-      vec3.scale(currentTrans, factor);
+      quat4slerp(lastRot, inverse, 1 - factor);
+      quat4slerp(deltaRot, inverse, 1 - factor);
+      quat4slerp(currentRot, inverse, 1 - factor);
+      vec3scale(lastTrans, factor);
+      vec3scale(deltaTrans, factor);
+      vec3scale(currentTrans, factor);
 
       // reset any additional transforms by the keyboard or mouse
       addKeyRot[0] *= factor;
@@ -722,14 +727,14 @@ Tilt.Arcball.prototype = {
       this.$scrollValue *= factor;
 
       // clear the loop if the all values are very close to zero
-      if (vec3.length(lastRot) < 0.0001 &&
-          vec3.length(deltaRot) < 0.0001 &&
-          vec3.length(currentRot) < 0.0001 &&
-          vec3.length(lastTrans) < 0.01 &&
-          vec3.length(deltaTrans) < 0.01 &&
-          vec3.length(currentTrans) < 0.01 &&
-          vec3.length([addKeyRot[0], addKeyRot[1], scrollValue]) < 0.01 &&
-          vec3.length([addKeyTrans[0], addKeyTrans[1], scrollValue]) < 0.01) {
+      if (vec3length(lastRot) < 0.0001 &&
+          vec3length(deltaRot) < 0.0001 &&
+          vec3length(currentRot) < 0.0001 &&
+          vec3length(lastTrans) < 0.01 &&
+          vec3length(deltaTrans) < 0.01 &&
+          vec3length(currentTrans) < 0.01 &&
+          vec3length([addKeyRot[0], addKeyRot[1], scrollValue]) < 0.01 &&
+          vec3length([addKeyTrans[0], addKeyTrans[1], scrollValue]) < 0.01) {
         this.$clearInterval();
       }
     }.bind(this), 1000 / 60);
@@ -1267,7 +1272,11 @@ Tilt.Profiler = {
    * @param {Number} index: the index of the function in the profile array
    */
   beforeCall: function(index) {
-    this.functions[index].currentTime = new Date().getTime();
+    var f = this.functions[index];
+
+    if ("undefined" !== typeof f) {
+      this.functions[index].currentTime = new Date().getTime();
+    }
   },
 
   /**
@@ -1275,15 +1284,18 @@ Tilt.Profiler = {
    * @param {Number} index: the index of the function in the profile array
    */
   afterCall: function(index) {
-    var f = this.functions[index],
-      beforeTime = f.currentTime,
-      afterTime = new Date().getTime(),
-      currentDuration = afterTime - beforeTime;
+    var f = this.functions[index];
 
-    f.calls++;
-    f.longestTime = Math.max(f.longestTime, currentDuration);
-    f.averageTime = (f.longestTime + currentDuration) / 2;
-    f.totalTime += currentDuration;
+    if ("undefined" !== typeof f) {
+      var beforeTime = f.currentTime,
+        afterTime = new Date().getTime(),
+        currentDuration = afterTime - beforeTime;
+
+      f.calls++;
+      f.longestTime = Math.max(f.longestTime, currentDuration);
+      f.averageTime = (f.longestTime + currentDuration) * 0.5;
+      f.totalTime += currentDuration;
+    }
   },
 
   /**
@@ -1339,7 +1351,7 @@ Tilt.Profiler = {
         if (f.name === f2.name) {
           f.calls += f2.calls;
           f.longestTime = Math.max(f.longestTime, f2.longestTime);
-          f.averageTime = (f.averageTime + f2.averageTime) / 2;
+          f.averageTime = (f.averageTime + f2.averageTime) * 0.5;
           f.totalTime += f2.totalTime;
 
           functions.splice(j, 1);
@@ -7526,7 +7538,9 @@ Tilt.Renderer.prototype = {
     var rectangle = this.$rectangle,
       wireframe = this.$rectangleWireframe,
       fill = this.$fillColor,
-      stroke = this.$strokeColor;
+      stroke = this.$strokeColor,
+      vertices = rectangle.vertices,
+      wvertices = wireframe.vertices;
 
     // if rectMode is set to "center", we need to offset the origin
     if ("center" === this.$rectangle.rectModeValue) {
@@ -7543,15 +7557,15 @@ Tilt.Renderer.prototype = {
     // draw the rectangle only if the fill alpha channel is not transparent
     if (fill[3]) {
       // use the necessary shader and draw the vertices
-      this.useColorShader(rectangle.vertices, fill);
-      this.drawVertices(this.TRIANGLE_STRIP, rectangle.vertices.numItems);
+      this.useColorShader(vertices, fill);
+      this.drawVertices(this.TRIANGLE_STRIP, vertices.numItems);
     }
 
     // draw the outline only if the stroke alpha channel is not transparent
     if (stroke[3]) {
       // use the necessary shader and draw the vertices
-      this.useColorShader(wireframe.vertices, stroke);
-      this.drawVertices(this.LINE_LOOP, wireframe.vertices.numItems);
+      this.useColorShader(wvertices, stroke);
+      this.drawVertices(this.LINE_LOOP, wvertices.numItems);
     }
 
     this.popMatrix();
@@ -7588,6 +7602,7 @@ Tilt.Renderer.prototype = {
     var rectangle = this.$rectangle,
       tint = this.$tintColor,
       stroke = this.$strokeColor,
+      vertices = rectangle.vertices,
       texCoordBuffer = texCoord || rectangle.texCoord;
 
     // if the width and height are not specified, we use the embedded
@@ -7599,8 +7614,8 @@ Tilt.Renderer.prototype = {
 
     // if imageMode is set to "center", we need to offset the origin
     if ("center" === rectangle.imageModeValue) {
-      x -= width / 2;
-      y -= height / 2;
+      x -= width * 0.5;
+      y -= height * 0.5;
     }
 
     // draw the image only if the tint alpha channel is not transparent
@@ -7612,8 +7627,8 @@ Tilt.Renderer.prototype = {
       this.scale(width, height, 1);
 
       // use the necessary shader and draw the vertices
-      this.useTextureShader(rectangle.vertices, texCoordBuffer, tint, tex);
-      this.drawVertices(this.TRIANGLE_STRIP, rectangle.vertices.numItems);
+      this.useTextureShader(vertices, texCoordBuffer, tint, tex);
+      this.drawVertices(this.TRIANGLE_STRIP, vertices.numItems);
 
       this.popMatrix();
     }
@@ -9109,7 +9124,7 @@ Tilt.Slider.prototype = {
         xps = x + size;
 
         // clamp the handler position between the left and right edges
-        p = Tilt.Math.clamp(ui.mouseX - sprite.$width / 2, x, xps);
+        p = Tilt.Math.clamp(ui.mouseX - sprite.$width * 0.5, x, xps);
         pmpx = p - px;
 
         // set the sprite x position and update the value and bounds
@@ -9122,7 +9137,7 @@ Tilt.Slider.prototype = {
         yps = y + size;
 
         // clamp the handler position between the top and bottom edges
-        p = Tilt.Math.clamp(ui.$mouseY - sprite.$height / 2, y, yps);
+        p = Tilt.Math.clamp(ui.$mouseY - sprite.$height * 0.5, y, yps);
         pmpy = p - py;
 
         // set the sprite y position and update the value and bounds
@@ -10633,6 +10648,9 @@ Tilt.Document = {
     return cssText.join("\n") + "\n";
   }
 };
+
+// intercept this object using a profiler when building in debug mode
+Tilt.Profiler.intercept("Tilt.Document", Tilt.Document);
 /***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -10774,6 +10792,9 @@ Tilt.File = {
     else { return "/"; }
   })()
 };
+
+// intercept this object using a profiler when building in debug mode
+Tilt.Profiler.intercept("Tilt.File", Tilt.File);
 /***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -10828,7 +10849,7 @@ Tilt.Math = {
    * @return {Number} the degrees converted to radians
    */
   radians: function(degrees) {
-    return degrees * Math.PI / 180;
+    return degrees * 0.0174532925;
   },
 
   /**
@@ -10838,7 +10859,7 @@ Tilt.Math = {
    * @return {Number} the radians converted to degrees
    */
   degrees: function(radians) {
-    return radians * 180 / Math.PI;
+    return radians * 57.2957795;
   },
 
   /**
@@ -10995,10 +11016,10 @@ Tilt.Math = {
       // transform the homogenous coordinates into screen space
       out[0]  =  coordinates[0] / coordinates[3];
       out[1]  =  coordinates[1] / coordinates[3];
-      out[0] *=  viewport[2] / 2;
-      out[1] *= -viewport[3] / 2;
-      out[0] +=  viewport[2] / 2;
-      out[1] +=  viewport[3] / 2;
+      out[0] *=  viewport[2] * 0.5;
+      out[1] *= -viewport[3] * 0.5;
+      out[0] +=  viewport[2] * 0.5;
+      out[1] +=  viewport[3] * 0.5;
       out[2]  =  0;
     }
     else {
@@ -11162,9 +11183,9 @@ Tilt.Math = {
   hue2rgb: function(p, q, t) {
     if (t < 0) { t += 1; }
     if (t > 1) { t -= 1; }
-    if (t < 1 / 6) { return p + (q - p) * 6 * t; }
-    if (t < 1 / 2) { return q; }
-    if (t < 2 / 3) { return p + (q - p) * (2 / 3 - t) * 6; }
+    if (t < 0.166666667) { return p + (q - p) * 6 * t; }
+    if (t < 0.5) { return q; }
+    if (t < 0.666666667) { return p + (q - p) * (2 / 3 - t) * 6; }
 
     return p;
   },
@@ -11181,13 +11202,13 @@ Tilt.Math = {
    * @return {Array} the HSL representation
    */
   rgb2hsl: function(r, g, b) {
-    r /= 255;
-    g /= 255;
-    b /= 255;
+    r *= 0.00392156863;
+    g *= 0.00392156863;
+    b *= 0.00392156863;
 
     var max = Math.max(r, g, b),
       min = Math.min(r, g, b),
-      d, h, s, l = (max + min) / 2;
+      d, h, s, l = (max + min) * 0.5;
 
     if (max === min) {
       h = s = 0; // achromatic
@@ -11229,9 +11250,9 @@ Tilt.Math = {
       q = l < 0.5 ? l * (1 + s) : l + s - l * s;
       p = 2 * l - q;
 
-      r = this.hue2rgb(p, q, h + 1 / 3);
+      r = this.hue2rgb(p, q, h + 0.333333333);
       g = this.hue2rgb(p, q, h);
-      b = this.hue2rgb(p, q, h - 1 / 3);
+      b = this.hue2rgb(p, q, h - 0.333333333);
     }
 
     return [r * 255, g * 255, b * 255];
@@ -11249,9 +11270,9 @@ Tilt.Math = {
    * @return {Array} the HSV representation
    */
   rgb2hsv: function(r, g, b) {
-    r = r / 255;
-    g = g / 255;
-    b = b / 255;
+    r *= 0.00392156863;
+    g *= 0.00392156863;
+    b *= 0.00392156863;
 
     var max = Math.max(r, g, b),
       min = Math.min(r, g, b),
@@ -11341,10 +11362,10 @@ Tilt.Math = {
     // e.g. "rgba(255, 0, 0, 128)"
     else if (hex.match("^rgba") == "rgba") {
       rgba = hex.substring(5, hex.length - 1).split(',');
-      rgba[0] /= 255;
-      rgba[1] /= 255;
-      rgba[2] /= 255;
-      rgba[3] /= 255;
+      rgba[0] *= 0.00392156863;
+      rgba[1] *= 0.00392156863;
+      rgba[2] *= 0.00392156863;
+      rgba[3] *= 0.00392156863;
 
       this[hex] = rgba;
       return rgba;
@@ -11352,24 +11373,28 @@ Tilt.Math = {
     // e.g. "rgb(255, 0, 0)"
     else if (hex.match("^rgb") == "rgb") {
       rgba = hex.substring(4, hex.length - 1).split(',');
-      rgba[0] /= 255;
-      rgba[1] /= 255;
-      rgba[2] /= 255;
+      rgba[0] *= 0.00392156863;
+      rgba[1] *= 0.00392156863;
+      rgba[2] *= 0.00392156863;
       rgba[3] = 1;
 
       this[hex] = rgba;
       return rgba;
     }
 
-    r = parseInt(hex.substring(0, 2), 16) / 255;
-    g = parseInt(hex.substring(2, 4), 16) / 255;
-    b = parseInt(hex.substring(4, 6), 16) / 255;
-    a = hex.length === 6 ? 1 : parseInt(hex.substring(6, 8), 16) / 255;
+    r = parseInt(hex.substring(0, 2), 16) * 0.00392156863;
+    g = parseInt(hex.substring(2, 4), 16) * 0.00392156863;
+    b = parseInt(hex.substring(4, 6), 16) * 0.00392156863;
+    a = hex.length === 6 ? 1 : parseInt(
+      hex.substring(6, 8), 16) * 0.00392156863;
 
     this[hex] = rgba = [r, g, b, a];
     return rgba;
   }
 };
+
+// intercept this object using a profiler when building in debug mode
+Tilt.Profiler.intercept("Tilt.Math", Tilt.Math);
 /***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -11445,6 +11470,9 @@ Tilt.String = {
     return str.replace(/\s+$/, "");
   }
 };
+
+// intercept this object using a profiler when building in debug mode
+Tilt.Profiler.intercept("Tilt.String", Tilt.String);
 /***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -11536,6 +11564,9 @@ Tilt.Extensions.WebGL = {
     }
   }
 };
+
+// intercept this object using a profiler when building in debug mode
+Tilt.Profiler.intercept("Tilt.WebGL", Tilt.WebGL);
 /***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -11637,6 +11668,9 @@ Tilt.Xhr = {
     }
   }
 };
+
+// intercept this object using a profiler when building in debug mode
+Tilt.Profiler.intercept("Tilt.Xhr", Tilt.Xhr);
 /***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -12236,7 +12270,7 @@ TiltChrome.UI.Default = function() {
   pStripButton = null,
   aStripButton = null,
   imgStripButton = null,
-	iframeStripButton = null,
+  iframeStripButton = null,
   otherStripButton = null,
 
   /**
@@ -12322,10 +12356,10 @@ TiltChrome.UI.Default = function() {
       y: -5,
       padding: [0, 0, 0, 5],
       onclick: function() {
-        var helpX = canvas.width / 2 - 305,
-          helpY = canvas.height / 2 - 305,
-          exitX = canvas.width / 2 + 197,
-          exitY = canvas.height / 2 - 218;
+        var helpX = canvas.width * 0.5 - 305,
+          helpY = canvas.height * 0.5 - 305,
+          exitX = canvas.width * 0.5 + 197,
+          exitY = canvas.height * 0.5 - 218;
 
         helpBoxSprite.setPosition(helpX, helpY);
         helpCloseButon.setPosition(exitX, exitY);
@@ -12846,15 +12880,15 @@ TiltChrome.UI.Default = function() {
       window.clearInterval(this.$sliderMove);
       this.$sliderMove = window.setInterval(function() {
         var rgba = Tilt.Math.hsv2rgb(
-          hueSlider.getValue() / 100,
-          saturationSlider.getValue() / 100,
-          brightnessSlider.getValue() / 100),
-          textureAlpha = textureSlider.getValue() / 100;
+          hueSlider.getValue() * 0.01,
+          saturationSlider.getValue() * 0.01,
+          brightnessSlider.getValue() * 0.01),
+          textureAlpha = textureSlider.getValue() * 0.01;
 
         rgba[0] /= 255;
         rgba[1] /= 255;
         rgba[2] /= 255;
-        rgba[3] = alphaSlider.getValue() / 100;
+        rgba[3] = alphaSlider.getValue() * 0.01;
 
         this.visualization.setMeshColor(rgba);
         this.visualization.setMeshTextureAlpha(textureAlpha);
@@ -12924,7 +12958,7 @@ TiltChrome.UI.Default = function() {
       pStripButton,
       aStripButton,
       imgStripButton,
-			iframeStripButton,
+      iframeStripButton,
       otherStripButton);
   };
 
@@ -13192,7 +13226,7 @@ TiltChrome.UI.Default = function() {
     pStripButton = null;
     aStripButton = null;
     imgStripButton = null;
-		iframeStripButton = null;
+    iframeStripButton = null;
     otherStripButton = null;
 
     exitButton = null;
@@ -13412,8 +13446,8 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
       tilt.clear(0, 0, 0, 1);
 
       // apply the preliminary transformations to the model view
-      tilt.translate(tilt.width / 2 + 100,
-                     tilt.height / 2 - 50, -thickness * 30);
+      tilt.translate(tilt.width * 0.5 + 100,
+                     tilt.height * 0.5 - 50, -thickness * 30);
 
       // calculate the camera matrix using the rotation and translation
       tilt.translate(transforms.translation[0],
@@ -13585,13 +13619,7 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
           node.localName === "style" ||
           node.localName === "script" ||
           node.localName === "noscript" ||
-          node.localName === "span" ||
-          node.localName === "option" ||
-          node.localName === "font" ||
-          node.localName === "strong" ||
-          node.localName === "b" ||
-          node.localName === "i" ||
-          node.localName === "u") {
+          node.localName === "option") {
 
         // information about these nodes should still be accessible, despite
         // the fact that they're not rendered
@@ -13615,9 +13643,9 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
         var i = vertices.length / 3, // a vertex has 3 coords: x, y & z
 
         // the entire mesh's pivot is the screen center
-        z = depth * thickness + Math.random() / 10,
-        x = coord.x - tilt.width / 2 + Math.random() / 10 + left,
-        y = coord.y - tilt.height / 2 + Math.random() / 10 + top,
+        z = depth * thickness + Math.random() * 0.1,
+        x = coord.x - tilt.width / 2 + Math.random() * 0.1 + left,
+        y = coord.y - tilt.height / 2 + Math.random() * 0.1 + top,
         w = coord.width,
         h = coord.height;
 
@@ -13641,14 +13669,14 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
                       x,     y,     z - thickness);                   // 11
 
         // compute the texture coordinates
-        texCoord.push((x + tilt.width  / 2    ) / texture.width,
-                      (y + tilt.height / 2    ) / texture.height,
-                      (x + tilt.width  / 2 + w) / texture.width,
-                      (y + tilt.height / 2    ) / texture.height,
-                      (x + tilt.width  / 2 + w) / texture.width,
-                      (y + tilt.height / 2 + h) / texture.height,
-                      (x + tilt.width  / 2    ) / texture.width,
-                      (y + tilt.height / 2 + h) / texture.height,
+        texCoord.push((x + tilt.width  * 0.5    ) / texture.width,
+                      (y + tilt.height * 0.5    ) / texture.height,
+                      (x + tilt.width  * 0.5 + w) / texture.width,
+                      (y + tilt.height * 0.5    ) / texture.height,
+                      (x + tilt.width  * 0.5 + w) / texture.width,
+                      (y + tilt.height * 0.5 + h) / texture.height,
+                      (x + tilt.width  * 0.5    ) / texture.width,
+                      (y + tilt.height * 0.5 + h) / texture.height,
                       -1, -1, -1, -1, -1, -1, -1, -1,
                       -1, -1, -1, -1, -1, -1, -1, -1);
 
