@@ -690,7 +690,9 @@ Tilt.Renderer.prototype = {
     var rectangle = this.$rectangle,
       wireframe = this.$rectangleWireframe,
       fill = this.$fillColor,
-      stroke = this.$strokeColor;
+      stroke = this.$strokeColor,
+      vertices = rectangle.vertices,
+      wvertices = wireframe.vertices;
 
     // if rectMode is set to "center", we need to offset the origin
     if ("center" === this.$rectangle.rectModeValue) {
@@ -707,15 +709,15 @@ Tilt.Renderer.prototype = {
     // draw the rectangle only if the fill alpha channel is not transparent
     if (fill[3]) {
       // use the necessary shader and draw the vertices
-      this.useColorShader(rectangle.vertices, fill);
-      this.drawVertices(this.TRIANGLE_STRIP, rectangle.vertices.numItems);
+      this.useColorShader(vertices, fill);
+      this.drawVertices(this.TRIANGLE_STRIP, vertices.numItems);
     }
 
     // draw the outline only if the stroke alpha channel is not transparent
     if (stroke[3]) {
       // use the necessary shader and draw the vertices
-      this.useColorShader(wireframe.vertices, stroke);
-      this.drawVertices(this.LINE_LOOP, wireframe.vertices.numItems);
+      this.useColorShader(wvertices, stroke);
+      this.drawVertices(this.LINE_LOOP, wvertices.numItems);
     }
 
     this.popMatrix();
@@ -752,6 +754,7 @@ Tilt.Renderer.prototype = {
     var rectangle = this.$rectangle,
       tint = this.$tintColor,
       stroke = this.$strokeColor,
+      vertices = rectangle.vertices,
       texCoordBuffer = texCoord || rectangle.texCoord;
 
     // if the width and height are not specified, we use the embedded
@@ -763,8 +766,8 @@ Tilt.Renderer.prototype = {
 
     // if imageMode is set to "center", we need to offset the origin
     if ("center" === rectangle.imageModeValue) {
-      x -= width / 2;
-      y -= height / 2;
+      x -= width * 0.5;
+      y -= height * 0.5;
     }
 
     // draw the image only if the tint alpha channel is not transparent
@@ -776,8 +779,8 @@ Tilt.Renderer.prototype = {
       this.scale(width, height, 1);
 
       // use the necessary shader and draw the vertices
-      this.useTextureShader(rectangle.vertices, texCoordBuffer, tint, tex);
-      this.drawVertices(this.TRIANGLE_STRIP, rectangle.vertices.numItems);
+      this.useTextureShader(vertices, texCoordBuffer, tint, tex);
+      this.drawVertices(this.TRIANGLE_STRIP, vertices.numItems);
 
       this.popMatrix();
     }
