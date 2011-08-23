@@ -13009,7 +13009,7 @@ TiltChrome.UI.Default = function() {
   };
 
   /**
-   * Function called for each node in the dom tree
+   * Function called for each node in the dom tree.
    *
    * @param {HTMLNode} node: the dom node
    * @param {Number} depth: the node depth in the dom tree
@@ -13031,11 +13031,11 @@ TiltChrome.UI.Default = function() {
       stripButton, stripIdButton, stripClassButton, right, bottom,
 
     namelength = Tilt.Math.clamp(node.localName.length, 3, 10),
-    clslength = Tilt.Math.clamp(node.localName.length, 3, 10),
     idlength = Tilt.Math.clamp(node.id.length, 3, 10),
+    clslength = Tilt.Math.clamp(node.className.length, 3, 10),
 
-    clsx = x + namelength * 10 + 3,
-    idx = clsx + clslength * 3 + 3;
+    idx = x + namelength * 10 + 3,
+    clsx = idx + idlength * 2 + 3;
 
     stripButton = new Tilt.Button(null, {
       x: x,
@@ -13049,25 +13049,11 @@ TiltChrome.UI.Default = function() {
     right = stripButton.getX() + stripButton.getWidth();
     bottom = stripButton.getY() + stripButton.getHeight() * 2;
 
-    if (node.className) {
-      stripClassButton = new Tilt.Button(null, {
-        x: clsx,
-        y: y,
-        width: clslength * 3,
-        height: height,
-        padding: [-1, -1, -1, -1],
-        stroke: stripButton.getStroke()
-      });
-
-      right = Math.max(right,
-        stripClassButton.getX() + stripClassButton.getWidth());
-    }
-
     if (node.id) {
       stripIdButton = new Tilt.Button(null, {
         x: idx,
         y: y,
-        width: idlength * 3,
+        width: idlength * 2,
         height: height,
         padding: [-1, -1, -1, -1],
         stroke: stripButton.getStroke()
@@ -13075,6 +13061,20 @@ TiltChrome.UI.Default = function() {
 
       right = Math.max(right,
         stripIdButton.getX() + stripIdButton.getWidth());
+    }
+
+    if (node.className) {
+      stripClassButton = new Tilt.Button(null, {
+        x: clsx,
+        y: y,
+        width: clslength * 2,
+        height: height,
+        padding: [-1, -1, -1, -1],
+        stroke: stripButton.getStroke()
+      });
+
+      right = Math.max(right,
+        stripClassButton.getX() + stripClassButton.getWidth());
     }
 
     if (right > minidomContainer.view.getWidth()) {
@@ -13106,23 +13106,23 @@ TiltChrome.UI.Default = function() {
       }.bind(this);
     }
 
-    if (stripClassButton) {
-      minidomContainer.view.push(stripClassButton);
-      stripClassButton.setFill(stripButton.getFill());
-      stripClassButton.localName = node.localName;
-
-      stripClassButton.onclick = function() {
-        this.visualization.setAttributesEditor();
-        this.visualization.openEditor(uid);
-      }.bind(this);
-    }
-
     if (stripIdButton) {
       minidomContainer.view.push(stripIdButton);
       stripIdButton.setFill(stripButton.getFill());
       stripIdButton.localName = node.localName;
 
       stripIdButton.onclick = function() {
+        this.visualization.setAttributesEditor();
+        this.visualization.openEditor(uid);
+      }.bind(this);
+    }
+
+    if (stripClassButton) {
+      minidomContainer.view.push(stripClassButton);
+      stripClassButton.setFill(stripButton.getFill());
+      stripClassButton.localName = node.localName;
+
+      stripClassButton.onclick = function() {
         this.visualization.setAttributesEditor();
         this.visualization.openEditor(uid);
       }.bind(this);
@@ -13322,8 +13322,8 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
    * Create the renderer, containing useful functions for easy drawing.
    */
   var tilt = new Tilt.Renderer(canvas, {
-    // if initialization fails because WebGL context coulnd't be created,
-    // show a corresponding alert message and open a tab to troubleshooting
+    // if initialization fails because the WebGL context couldn't be created,
+    // show a corresponding prompt message and open a tab to troubleshooting
     onfail: function() {
       TiltChrome.BrowserOverlay.destroy(true, true);
       TiltChrome.BrowserOverlay.href = null;
@@ -13465,8 +13465,8 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
       // check if there's anything to highlight (i.e any node is selected)
       if (highlightQuad.index !== -1) {
 
-        // project the node corners and draw an inverted quad to darken
-        // everything that's not inside the quad
+        // we'll need to calculate the quad corners to draw a highlighted area
+        // around the currently selected node
         var project = Tilt.Math.project,
           mvMatrix = mesh.mvMatrix,
           vertices = mesh.vertices.components,
