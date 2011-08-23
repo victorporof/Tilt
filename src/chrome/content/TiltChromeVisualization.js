@@ -55,8 +55,8 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
    * Create the renderer, containing useful functions for easy drawing.
    */
   var tilt = new Tilt.Renderer(canvas, {
-    // if initialization fails because WebGL context coulnd't be created,
-    // show a corresponding alert message and open a tab to troubleshooting
+    // if initialization fails because the WebGL context couldn't be created,
+    // show a corresponding prompt message and open a tab to troubleshooting
     onfail: function() {
       TiltChrome.BrowserOverlay.destroy(true, true);
       TiltChrome.BrowserOverlay.href = null;
@@ -198,8 +198,8 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
       // check if there's anything to highlight (i.e any node is selected)
       if (highlightQuad.index !== -1) {
 
-        // project the node corners and draw an inverted quad to darken
-        // everything that's not inside the quad
+        // we'll need to calculate the quad corners to draw a highlighted area
+        // around the currently selected node
         var project = Tilt.Math.project,
           mvMatrix = mesh.mvMatrix,
           vertices = mesh.vertices.components,
