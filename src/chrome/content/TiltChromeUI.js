@@ -95,7 +95,7 @@ TiltChrome.UI.Default = function() {
   pStripButton = null,
   aStripButton = null,
   imgStripButton = null,
-	iframeStripButton = null,
+  iframeStripButton = null,
   otherStripButton = null,
 
   /**
@@ -181,10 +181,10 @@ TiltChrome.UI.Default = function() {
       y: -5,
       padding: [0, 0, 0, 5],
       onclick: function() {
-        var helpX = canvas.width / 2 - 305,
-          helpY = canvas.height / 2 - 305,
-          exitX = canvas.width / 2 + 197,
-          exitY = canvas.height / 2 - 218;
+        var helpX = canvas.width * 0.5 - 305,
+          helpY = canvas.height * 0.5 - 305,
+          exitX = canvas.width * 0.5 + 197,
+          exitY = canvas.height * 0.5 - 218;
 
         helpBoxSprite.setPosition(helpX, helpY);
         helpCloseButon.setPosition(exitX, exitY);
@@ -705,15 +705,15 @@ TiltChrome.UI.Default = function() {
       window.clearInterval(this.$sliderMove);
       this.$sliderMove = window.setInterval(function() {
         var rgba = Tilt.Math.hsv2rgb(
-          hueSlider.getValue() / 100,
-          saturationSlider.getValue() / 100,
-          brightnessSlider.getValue() / 100),
-          textureAlpha = textureSlider.getValue() / 100;
+          hueSlider.getValue() * 0.01,
+          saturationSlider.getValue() * 0.01,
+          brightnessSlider.getValue() * 0.01),
+          textureAlpha = textureSlider.getValue() * 0.01;
 
         rgba[0] /= 255;
         rgba[1] /= 255;
         rgba[2] /= 255;
-        rgba[3] = alphaSlider.getValue() / 100;
+        rgba[3] = alphaSlider.getValue() * 0.01;
 
         this.visualization.setMeshColor(rgba);
         this.visualization.setMeshTextureAlpha(textureAlpha);
@@ -783,7 +783,7 @@ TiltChrome.UI.Default = function() {
       pStripButton,
       aStripButton,
       imgStripButton,
-			iframeStripButton,
+      iframeStripButton,
       otherStripButton);
   };
 
@@ -1051,7 +1051,7 @@ TiltChrome.UI.Default = function() {
     pStripButton = null;
     aStripButton = null;
     imgStripButton = null;
-		iframeStripButton = null;
+    iframeStripButton = null;
     otherStripButton = null;
 
     exitButton = null;
