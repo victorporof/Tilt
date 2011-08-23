@@ -265,7 +265,7 @@ Tilt.Slider.prototype = {
         xps = x + size;
 
         // clamp the handler position between the left and right edges
-        p = Tilt.Math.clamp(ui.mouseX - sprite.$width / 2, x, xps);
+        p = Tilt.Math.clamp(ui.mouseX - sprite.$width * 0.5, x, xps);
         pmpx = p - px;
 
         // set the sprite x position and update the value and bounds
@@ -278,7 +278,7 @@ Tilt.Slider.prototype = {
         yps = y + size;
 
         // clamp the handler position between the top and bottom edges
-        p = Tilt.Math.clamp(ui.$mouseY - sprite.$height / 2, y, yps);
+        p = Tilt.Math.clamp(ui.$mouseY - sprite.$height * 0.5, y, yps);
         pmpy = p - py;
 
         // set the sprite y position and update the value and bounds
