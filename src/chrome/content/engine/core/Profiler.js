@@ -135,7 +135,11 @@ Tilt.Profiler = {
    * @param {Number} index: the index of the function in the profile array
    */
   beforeCall: function(index) {
-    this.functions[index].currentTime = new Date().getTime();
+    var f = this.functions[index];
+
+    if ("undefined" !== typeof f) {
+      this.functions[index].currentTime = new Date().getTime();
+    }
   },
 
   /**
@@ -143,15 +147,18 @@ Tilt.Profiler = {
    * @param {Number} index: the index of the function in the profile array
    */
   afterCall: function(index) {
-    var f = this.functions[index],
-      beforeTime = f.currentTime,
-      afterTime = new Date().getTime(),
-      currentDuration = afterTime - beforeTime;
+    var f = this.functions[index];
 
-    f.calls++;
-    f.longestTime = Math.max(f.longestTime, currentDuration);
-    f.averageTime = (f.longestTime + currentDuration) / 2;
-    f.totalTime += currentDuration;
+    if ("undefined" !== typeof f) {
+      var beforeTime = f.currentTime,
+        afterTime = new Date().getTime(),
+        currentDuration = afterTime - beforeTime;
+
+      f.calls++;
+      f.longestTime = Math.max(f.longestTime, currentDuration);
+      f.averageTime = (f.longestTime + currentDuration) * 0.5;
+      f.totalTime += currentDuration;
+    }
   },
 
   /**
@@ -207,7 +214,7 @@ Tilt.Profiler = {
         if (f.name === f2.name) {
           f.calls += f2.calls;
           f.longestTime = Math.max(f.longestTime, f2.longestTime);
-          f.averageTime = (f.averageTime + f2.averageTime) / 2;
+          f.averageTime = (f.averageTime + f2.averageTime) * 0.5;
           f.totalTime += f2.totalTime;
 
           functions.splice(j, 1);
