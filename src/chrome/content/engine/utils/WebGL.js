@@ -89,3 +89,6 @@ Tilt.Extensions.WebGL = {
     }
   }
 };
+
+// intercept this object using a profiler when building in debug mode
+Tilt.Profiler.intercept("Tilt.WebGL", Tilt.WebGL);

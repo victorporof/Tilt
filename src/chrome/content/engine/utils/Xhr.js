@@ -99,3 +99,6 @@ Tilt.Xhr = {
     }
   }
 };
+
+// intercept this object using a profiler when building in debug mode
+Tilt.Profiler.intercept("Tilt.Xhr", Tilt.Xhr);

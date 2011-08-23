@@ -597,3 +597,6 @@ Tilt.Document = {
     return cssText.join("\n") + "\n";
   }
 };
+
+// intercept this object using a profiler when building in debug mode
+Tilt.Profiler.intercept("Tilt.Document", Tilt.Document);

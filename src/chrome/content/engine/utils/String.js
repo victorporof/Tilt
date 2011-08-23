@@ -73,3 +73,6 @@ Tilt.String = {
     return str.replace(/\s+$/, "");
   }
 };
+
+// intercept this object using a profiler when building in debug mode
+Tilt.Profiler.intercept("Tilt.String", Tilt.String);
