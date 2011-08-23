@@ -52,7 +52,7 @@ Tilt.Math = {
    * @return {Number} the degrees converted to radians
    */
   radians: function(degrees) {
-    return degrees * Math.PI / 180;
+    return degrees * 0.0174532925;
   },
 
   /**
@@ -62,7 +62,7 @@ Tilt.Math = {
    * @return {Number} the radians converted to degrees
    */
   degrees: function(radians) {
-    return radians * 180 / Math.PI;
+    return radians * 57.2957795;
   },
 
   /**
@@ -219,10 +219,10 @@ Tilt.Math = {
       // transform the homogenous coordinates into screen space
       out[0]  =  coordinates[0] / coordinates[3];
       out[1]  =  coordinates[1] / coordinates[3];
-      out[0] *=  viewport[2] / 2;
-      out[1] *= -viewport[3] / 2;
-      out[0] +=  viewport[2] / 2;
-      out[1] +=  viewport[3] / 2;
+      out[0] *=  viewport[2] * 0.5;
+      out[1] *= -viewport[3] * 0.5;
+      out[0] +=  viewport[2] * 0.5;
+      out[1] +=  viewport[3] * 0.5;
       out[2]  =  0;
     }
     else {
@@ -386,9 +386,9 @@ Tilt.Math = {
   hue2rgb: function(p, q, t) {
     if (t < 0) { t += 1; }
     if (t > 1) { t -= 1; }
-    if (t < 1 / 6) { return p + (q - p) * 6 * t; }
-    if (t < 1 / 2) { return q; }
-    if (t < 2 / 3) { return p + (q - p) * (2 / 3 - t) * 6; }
+    if (t < 0.166666667) { return p + (q - p) * 6 * t; }
+    if (t < 0.5) { return q; }
+    if (t < 0.666666667) { return p + (q - p) * (2 / 3 - t) * 6; }
 
     return p;
   },
@@ -405,13 +405,13 @@ Tilt.Math = {
    * @return {Array} the HSL representation
    */
   rgb2hsl: function(r, g, b) {
-    r /= 255;
-    g /= 255;
-    b /= 255;
+    r *= 0.00392156863;
+    g *= 0.00392156863;
+    b *= 0.00392156863;
 
     var max = Math.max(r, g, b),
       min = Math.min(r, g, b),
-      d, h, s, l = (max + min) / 2;
+      d, h, s, l = (max + min) * 0.5;
 
     if (max === min) {
       h = s = 0; // achromatic
@@ -453,9 +453,9 @@ Tilt.Math = {
       q = l < 0.5 ? l * (1 + s) : l + s - l * s;
       p = 2 * l - q;
 
-      r = this.hue2rgb(p, q, h + 1 / 3);
+      r = this.hue2rgb(p, q, h + 0.333333333);
       g = this.hue2rgb(p, q, h);
-      b = this.hue2rgb(p, q, h - 1 / 3);
+      b = this.hue2rgb(p, q, h - 0.333333333);
     }
 
     return [r * 255, g * 255, b * 255];
@@ -473,9 +473,9 @@ Tilt.Math = {
    * @return {Array} the HSV representation
    */
   rgb2hsv: function(r, g, b) {
-    r = r / 255;
-    g = g / 255;
-    b = b / 255;
+    r *= 0.00392156863;
+    g *= 0.00392156863;
+    b *= 0.00392156863;
 
     var max = Math.max(r, g, b),
       min = Math.min(r, g, b),
@@ -565,10 +565,10 @@ Tilt.Math = {
     // e.g. "rgba(255, 0, 0, 128)"
     else if (hex.match("^rgba") == "rgba") {
       rgba = hex.substring(5, hex.length - 1).split(',');
-      rgba[0] /= 255;
-      rgba[1] /= 255;
-      rgba[2] /= 255;
-      rgba[3] /= 255;
+      rgba[0] *= 0.00392156863;
+      rgba[1] *= 0.00392156863;
+      rgba[2] *= 0.00392156863;
+      rgba[3] *= 0.00392156863;
 
       this[hex] = rgba;
       return rgba;
@@ -576,21 +576,25 @@ Tilt.Math = {
     // e.g. "rgb(255, 0, 0)"
     else if (hex.match("^rgb") == "rgb") {
       rgba = hex.substring(4, hex.length - 1).split(',');
-      rgba[0] /= 255;
-      rgba[1] /= 255;
-      rgba[2] /= 255;
+      rgba[0] *= 0.00392156863;
+      rgba[1] *= 0.00392156863;
+      rgba[2] *= 0.00392156863;
       rgba[3] = 1;
 
       this[hex] = rgba;
       return rgba;
     }
 
-    r = parseInt(hex.substring(0, 2), 16) / 255;
-    g = parseInt(hex.substring(2, 4), 16) / 255;
-    b = parseInt(hex.substring(4, 6), 16) / 255;
-    a = hex.length === 6 ? 1 : parseInt(hex.substring(6, 8), 16) / 255;
+    r = parseInt(hex.substring(0, 2), 16) * 0.00392156863;
+    g = parseInt(hex.substring(2, 4), 16) * 0.00392156863;
+    b = parseInt(hex.substring(4, 6), 16) * 0.00392156863;
+    a = hex.length === 6 ? 1 : parseInt(
+      hex.substring(6, 8), 16) * 0.00392156863;
 
     this[hex] = rgba = [r, g, b, a];
     return rgba;
   }
 };
+
+// intercept this object using a profiler when building in debug mode
+Tilt.Profiler.intercept("Tilt.Math", Tilt.Math);
