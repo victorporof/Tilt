@@ -130,7 +130,7 @@ Tilt.Arcball.prototype = {
     }
     else {
       // this should be in the (0..1) interval
-      frameDelta = Tilt.Math.clamp(frameDelta / 100, 0.01, 0.99);
+      frameDelta = Tilt.Math.clamp(frameDelta * 0.01, 0.01, 0.99);
     }
 
     // cache some variables for easier access
@@ -234,21 +234,21 @@ Tilt.Arcball.prototype = {
     }
 
     // mouse wheel handles zooming
-    deltaTrans[2] = (scrollValue - currentTrans[2]) / 10;
+    deltaTrans[2] = (scrollValue - currentTrans[2]) * 0.1;
     currentTrans[2] += deltaTrans[2];
 
     // handle additional rotation and translation by the keyboard
     if (keyCode[65]) { // w
-      addKeyRot[0] -= frameDelta / 5;
+      addKeyRot[0] -= frameDelta * 0.2;
     }
     if (keyCode[68]) { // s
-      addKeyRot[0] += frameDelta / 5;
+      addKeyRot[0] += frameDelta * 0.2;
     }
     if (keyCode[87]) { // a
-      addKeyRot[1] += frameDelta / 5;
+      addKeyRot[1] += frameDelta * 0.2;
     }
     if (keyCode[83]) { // d
-      addKeyRot[1] -= frameDelta / 5;
+      addKeyRot[1] -= frameDelta * 0.2;
     }
     if (keyCode[37]) { // left
       addKeyTrans[0] += frameDelta * 50;
@@ -407,8 +407,8 @@ Tilt.Arcball.prototype = {
    */
   pointToSphere: function(x, y, width, height, radius, sphereVec) {
     // adjust point coords and scale down to range of [-1..1]
-    x = (x - width / 2) / radius;
-    y = (y - height / 2) / radius;
+    x = (x - width * 0.5) / radius;
+    y = (y - height * 0.5) / radius;
 
     // compute the square length of the vector to the point from the center
     var normal = 0,
@@ -501,19 +501,24 @@ Tilt.Arcball.prototype = {
       deltaTrans = this.$deltaTrans,
       currentTrans = this.$currentTrans,
       addKeyRot = this.$addKeyRot,
-      addKeyTrans = this.$addKeyTrans;
+      addKeyTrans = this.$addKeyTrans,
+
+      quat4inverse = quat4.inverse,
+      quat4slerp = quat4.slerp,
+      vec3scale = vec3.scale,
+      vec3length = vec3.length;
 
     // create an interval and smoothly reset all the values to identity
     this.$setInterval(function() {
-      inverse = quat4.inverse(lastRot);
+      inverse = quat4inverse(lastRot);
 
       // reset the rotation quaternion and translation vector
-      quat4.slerp(lastRot, inverse, 1 - factor);
-      quat4.slerp(deltaRot, inverse, 1 - factor);
-      quat4.slerp(currentRot, inverse, 1 - factor);
-      vec3.scale(lastTrans, factor);
-      vec3.scale(deltaTrans, factor);
-      vec3.scale(currentTrans, factor);
+      quat4slerp(lastRot, inverse, 1 - factor);
+      quat4slerp(deltaRot, inverse, 1 - factor);
+      quat4slerp(currentRot, inverse, 1 - factor);
+      vec3scale(lastTrans, factor);
+      vec3scale(deltaTrans, factor);
+      vec3scale(currentTrans, factor);
 
       // reset any additional transforms by the keyboard or mouse
       addKeyRot[0] *= factor;
@@ -523,14 +528,14 @@ Tilt.Arcball.prototype = {
       this.$scrollValue *= factor;
 
       // clear the loop if the all values are very close to zero
-      if (vec3.length(lastRot) < 0.0001 &&
-          vec3.length(deltaRot) < 0.0001 &&
-          vec3.length(currentRot) < 0.0001 &&
-          vec3.length(lastTrans) < 0.01 &&
-          vec3.length(deltaTrans) < 0.01 &&
-          vec3.length(currentTrans) < 0.01 &&
-          vec3.length([addKeyRot[0], addKeyRot[1], scrollValue]) < 0.01 &&
-          vec3.length([addKeyTrans[0], addKeyTrans[1], scrollValue]) < 0.01) {
+      if (vec3length(lastRot) < 0.0001 &&
+          vec3length(deltaRot) < 0.0001 &&
+          vec3length(currentRot) < 0.0001 &&
+          vec3length(lastTrans) < 0.01 &&
+          vec3length(deltaTrans) < 0.01 &&
+          vec3length(currentTrans) < 0.01 &&
+          vec3length([addKeyRot[0], addKeyRot[1], scrollValue]) < 0.01 &&
+          vec3length([addKeyTrans[0], addKeyTrans[1], scrollValue]) < 0.01) {
         this.$clearInterval();
       }
     }.bind(this), 1000 / 60);
