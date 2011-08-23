@@ -179,8 +179,8 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
       tilt.clear(0, 0, 0, 1);
 
       // apply the preliminary transformations to the model view
-      tilt.translate(tilt.width / 2 + 100,
-                     tilt.height / 2 - 50, -thickness * 30);
+      tilt.translate(tilt.width * 0.5 + 100,
+                     tilt.height * 0.5 - 50, -thickness * 30);
 
       // calculate the camera matrix using the rotation and translation
       tilt.translate(transforms.translation[0],
@@ -352,13 +352,7 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
           node.localName === "style" ||
           node.localName === "script" ||
           node.localName === "noscript" ||
-          node.localName === "span" ||
-          node.localName === "option" ||
-          node.localName === "font" ||
-          node.localName === "strong" ||
-          node.localName === "b" ||
-          node.localName === "i" ||
-          node.localName === "u") {
+          node.localName === "option") {
 
         // information about these nodes should still be accessible, despite
         // the fact that they're not rendered
@@ -382,9 +376,9 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
         var i = vertices.length / 3, // a vertex has 3 coords: x, y & z
 
         // the entire mesh's pivot is the screen center
-        z = depth * thickness + Math.random() / 10,
-        x = coord.x - tilt.width / 2 + Math.random() / 10 + left,
-        y = coord.y - tilt.height / 2 + Math.random() / 10 + top,
+        z = depth * thickness + Math.random() * 0.1,
+        x = coord.x - tilt.width / 2 + Math.random() * 0.1 + left,
+        y = coord.y - tilt.height / 2 + Math.random() * 0.1 + top,
         w = coord.width,
         h = coord.height;
 
@@ -408,14 +402,14 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
                       x,     y,     z - thickness);                   // 11
 
         // compute the texture coordinates
-        texCoord.push((x + tilt.width  / 2    ) / texture.width,
-                      (y + tilt.height / 2    ) / texture.height,
-                      (x + tilt.width  / 2 + w) / texture.width,
-                      (y + tilt.height / 2    ) / texture.height,
-                      (x + tilt.width  / 2 + w) / texture.width,
-                      (y + tilt.height / 2 + h) / texture.height,
-                      (x + tilt.width  / 2    ) / texture.width,
-                      (y + tilt.height / 2 + h) / texture.height,
+        texCoord.push((x + tilt.width  * 0.5    ) / texture.width,
+                      (y + tilt.height * 0.5    ) / texture.height,
+                      (x + tilt.width  * 0.5 + w) / texture.width,
+                      (y + tilt.height * 0.5    ) / texture.height,
+                      (x + tilt.width  * 0.5 + w) / texture.width,
+                      (y + tilt.height * 0.5 + h) / texture.height,
+                      (x + tilt.width  * 0.5    ) / texture.width,
+                      (y + tilt.height * 0.5 + h) / texture.height,
                       -1, -1, -1, -1, -1, -1, -1, -1,
                       -1, -1, -1, -1, -1, -1, -1, -1);
 
