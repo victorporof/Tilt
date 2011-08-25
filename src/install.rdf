@@ -49,7 +49,7 @@
     <em:homepageURL>http://blog.mozilla.com/tilt/</em:homepageURL>
     <em:type>2</em:type>
     <em:bootstrap>false</em:bootstrap>
-	<em:unpack>true</em:unpack>
+    <em:unpack>true</em:unpack>
 
     <!-- Mozilla Firefox -->
     <em:targetApplication>
