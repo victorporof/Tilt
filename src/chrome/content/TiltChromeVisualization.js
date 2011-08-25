@@ -344,8 +344,7 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
       }
 
       // skip some nodes to avoid too bloated visualization meshes
-      if (node.nodeType !== 1 ||
-          node.localName === "head" ||
+      if (node.localName === "head" ||
           node.localName === "title" ||
           node.localName === "meta" ||
           node.localName === "link" ||
