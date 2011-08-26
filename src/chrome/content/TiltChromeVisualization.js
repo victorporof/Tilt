@@ -1200,16 +1200,6 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
       sourceEditor = TiltChrome.BrowserOverlay.sourceEditor.panel,
       colorPicker = TiltChrome.BrowserOverlay.colorPicker.panel;
 
-    // useful for updating the visualization
-    window.addEventListener("MozAfterPaint", gAfterPaint, false);
-
-    // when the tab is closed or the url changes, destroy visualization
-    tabContainer.addEventListener("TabClose", gClose, false);
-    tabContainer.addEventListener("TabAttrModified", gClose, false);
-    contentWindow.addEventListener("DOMSubtreeModified", gSubtreeMod, false);
-    contentWindow.addEventListener("resize", gResize, false);
-    gBrowser.addEventListener("mouseover", gMouseOver, false);
-
     if (gAfterPaint !== null) {
       window.removeEventListener("MozAfterPaint", gAfterPaint, false);
       gAfterPaint = null;
