@@ -18,7 +18,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Victor Porof (victor.porof@gmail.com)
+ *   Victor Porof <victor.porof@gmail.com> (original author)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -45,7 +45,6 @@ Tilt.Extensions = {};
 Tilt.Extensions.WebGL = {
 
   /**
-   * JavaScript implementation of WebGL MOZ_dom_element_texture (#653656).
    * This shim renders a content window to a canvas element, but clamps the
    * maximum width and height of the canvas to MAX_TEXTURE_SIZE.
    *

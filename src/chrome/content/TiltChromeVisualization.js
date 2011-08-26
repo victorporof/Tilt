@@ -18,7 +18,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Victor Porof (victor.porof@gmail.com)
+ *   Victor Porof <victor.porof@gmail.com> (original author)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -125,6 +125,7 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
     // use an extension to get the image representation of the document
     // this will be removed once the MOZ_window_region_texture WebGL extension
     // is finished; currently converting the document image to a texture
+    // bug #653656
     image = Tilt.Extensions.WebGL.initDocumentImage(window.content);
 
     // create a static texture using the previously created document image
