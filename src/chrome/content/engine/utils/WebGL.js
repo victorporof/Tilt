@@ -75,6 +75,8 @@ Tilt.Extensions.WebGL = {
 
     // use the 2d context.drawWindow() magic
     ctx = canvas.getContext("2d");
+    ctx.fillStyle = "#fff";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
     ctx.drawWindow(contentWindow, 0, 0, width, height, "#fff");
 
     try {
