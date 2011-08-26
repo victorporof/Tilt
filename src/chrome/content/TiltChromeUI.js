@@ -855,9 +855,9 @@ TiltChrome.UI.Default = function() {
       height = 7,
       stripButton, stripIdButton, stripClassButton, right, bottom,
 
-    namelength = Tilt.Math.clamp(node.localName.length, 3, 10),
-    idlength = Tilt.Math.clamp(node.id.length, 3, 10),
-    clslength = Tilt.Math.clamp(node.className.length, 3, 10),
+    namelength = Tilt.Math.clamp(node.localName.length, 4, 10),
+    idlength = Tilt.Math.clamp(node.id.length, 4, 10),
+    clslength = Tilt.Math.clamp(node.className.length, 4, 10),
 
     idx = x + namelength * 10 + 3,
     clsx = idx + idlength * 2 + 3;
