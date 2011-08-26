@@ -396,11 +396,6 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
         info.style = "";
       }
 
-      // if the style is fixed, make the node stay above all others
-      if (info.style.position === "fixed") {
-        depth = 30;
-      }
-
       // skip some nodes to avoid too bloated visualization meshes
       if (node.localName === "head" ||
           node.localName === "title" ||
@@ -575,12 +570,11 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
       colorPicker = TiltChrome.BrowserOverlay.colorPicker.panel;
 
     // useful for updating the visualization
-    window.addEventListener("MozAfterPaint", gAfterPaint, false);
+    window.addEventListener("MozAfterPaint", gAfterPaint, true);
 
     // when the tab is closed or the url changes, destroy visualization
     tabContainer.addEventListener("TabClose", gClose, false);
     tabContainer.addEventListener("TabAttrModified", gClose, false);
-    contentWindow.addEventListener("DOMSubtreeModified", gSubtreeMod, false);
     contentWindow.addEventListener("resize", gResize, false);
     gBrowser.addEventListener("mouseover", gMouseOver, false);
 
@@ -603,12 +597,6 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
 
       this.requestRefreshTexture(boundingClientRect);
     }
-  }.bind(this);
-
-  /**
-   * Evend handling the DOM subtree being modified.
-   */
-  var gSubtreeMod = function() {
   }.bind(this);
 
   /**
@@ -1208,10 +1196,6 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
       tabContainer.removeEventListener("TabClose", gClose, false);
       tabContainer.removeEventListener("TabAttrModified", gClose, false);
       gClose = null;
-    }
-    if (gSubtreeMod !== null) {
-      contentWindow.removeEventListener("DOMSubtreeModified", gSubtreeMod, 0);
-      gSubtreeMod = null;
     }
     if (gResize !== null) {
       contentWindow.removeEventListener("resize", gResize, false);
