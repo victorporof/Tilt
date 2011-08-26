@@ -112,7 +112,7 @@ Tilt.Texture.prototype = {
   /**
    * Initializes a texture from a pre-existing image or canvas.
    *
-   * @param {Image} image: the texture source image or canvas
+   * @param {Image | HTMLCanvasElement} image: the source image or canvas
    * @param {Object} parameters: an object containing the texture properties
    */
   initTexture: function(image, parameters) {
@@ -156,6 +156,22 @@ Tilt.Texture.prototype = {
       image = null;
       parameters = null;
     }.bind(this);
+  },
+
+  /**
+   * Updates a region of a texture with another image.
+   *
+   * @param {Image | HTMLCanvasElement} image: the source image or canvas
+   * @param {Number} x: the x offset
+   * @param {Number} y: the y offset
+   */
+  updateSubImage2D: function(img, x, y) {
+    var gl = Tilt.$gl,
+      prev = gl.getParameter(gl.TEXTURE_BINDING_2D);
+
+    gl.bindTexture(gl.TEXTURE_2D, this.$ref);
+    gl.texSubImage2D(gl.TEXTURE_2D, 0, x, y, gl.RGBA, gl.UNSIGNED_BYTE, img);
+    gl.bindTexture(gl.TEXTURE_2D, prev);
   },
 
   /**
