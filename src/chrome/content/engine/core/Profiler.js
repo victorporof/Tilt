@@ -18,7 +18,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Victor Porof (victor.porof@gmail.com)
+ *   Victor Porof <victor.porof@gmail.com> (original author)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -37,8 +37,6 @@
 
 var Tilt = Tilt || {};
 var EXPORTED_SYMBOLS = ["Tilt.Profiler"];
-
-/*jshint evil: true */
 
 /**
  * Handy way of profiling functions in Tilt.
@@ -172,15 +170,9 @@ Tilt.Profiler = {
     if (args.length === 0) {
       return method.call(object);
     }
-
-    // since most of the times the overwritten function has one or more
-    // arguments, simply passing the arguments property inside the function
-    // isn't enough; we need to construct the parameters directly, separated
-    // by commas, just like a normal call would be executed
-    for (var i = 0, len = args.length, $ = ""; i < len; i++) {
-      $ += "arguments[2][" + i + "]" + ((i !== len - 1) ? "," : "");
+    else {
+      return method.apply(object, args);
     }
-    return eval("arguments[1].call(arguments[0], " + $ + ");");
   },
 
   /**
