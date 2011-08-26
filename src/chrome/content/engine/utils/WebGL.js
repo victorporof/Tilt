@@ -86,6 +86,35 @@ Tilt.Extensions.WebGL = {
       gl = null;
       ctx = null;
     }
+  },
+
+
+  /**
+   * Refreshes a sub area of a canvas with new pixel information from a 
+   * content window.
+   *
+   * @param {Window} contentWindow: the window content to draw
+   * @param {Canvas} canvas: the canvas to refresh
+   * @param {BoundingClientRect} rect: the bounding client rect
+   * @param {Boolean} preserve: true to preserve the canvas dimensions
+   */
+  refreshDocumentImage: function(contentWindow, canvas, rect, preserve) {
+    var ctx = canvas.getContext("2d"),
+      left = rect.left,
+      top = rect.top,
+      width = rect.width,
+      height = rect.height;
+
+    if (preserve) {
+      ctx.translate(left, top);
+      ctx.drawWindow(contentWindow, left, top, width, height, "#fff");
+      ctx.translate(-left, -top);
+    }
+    else {
+      canvas.width = width;
+      canvas.height = height;
+      ctx.drawWindow(contentWindow, left, top, width, height, "#fff");
+    }
   }
 };
 
