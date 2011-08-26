@@ -18,7 +18,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Victor Porof (victor.porof@gmail.com)
+ *   Victor Porof <victor.porof@gmail.com> (original author)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -607,7 +607,7 @@ Tilt.Arcball.prototype = {
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Victor Porof (victor.porof@gmail.com)
+ *   Victor Porof <victor.porof@gmail.com> (original author)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -810,7 +810,7 @@ Tilt.IndexBuffer.prototype = {
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Victor Porof (victor.porof@gmail.com)
+ *   Victor Porof <victor.porof@gmail.com> (original author)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -897,7 +897,7 @@ Tilt.clearCache = function() {
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Victor Porof (victor.porof@gmail.com)
+ *   Victor Porof <victor.porof@gmail.com> (original author)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -956,7 +956,7 @@ Tilt.destroyObject = function(scope) {
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Victor Porof (victor.porof@gmail.com)
+ *   Victor Porof <victor.porof@gmail.com> (original author)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -975,8 +975,6 @@ Tilt.destroyObject = function(scope) {
 
 var Tilt = Tilt || {};
 var EXPORTED_SYMBOLS = ["Tilt.Profiler"];
-
-/*jshint evil: true */
 
 /**
  * Handy way of profiling functions in Tilt.
@@ -1110,15 +1108,9 @@ Tilt.Profiler = {
     if (args.length === 0) {
       return method.call(object);
     }
-
-    // since most of the times the overwritten function has one or more
-    // arguments, simply passing the arguments property inside the function
-    // isn't enough; we need to construct the parameters directly, separated
-    // by commas, just like a normal call would be executed
-    for (var i = 0, len = args.length, $ = ""; i < len; i++) {
-      $ += "arguments[2][" + i + "]" + ((i !== len - 1) ? "," : "");
+    else {
+      return method.apply(object, args);
     }
-    return eval("arguments[1].call(arguments[0], " + $ + ");");
   },
 
   /**
@@ -1201,7 +1193,7 @@ Tilt.Profiler = {
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Victor Porof (victor.porof@gmail.com)
+ *   Victor Porof <victor.porof@gmail.com> (original author)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -1491,7 +1483,7 @@ Tilt.Program.prototype = {
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Victor Porof (victor.porof@gmail.com)
+ *   Victor Porof <victor.porof@gmail.com> (original author)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -1746,7 +1738,7 @@ Tilt.GLSL = {
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Victor Porof (victor.porof@gmail.com)
+ *   Victor Porof <victor.porof@gmail.com> (original author)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -1914,7 +1906,7 @@ Tilt.Texture.prototype = {
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Victor Porof (victor.porof@gmail.com)
+ *   Victor Porof <victor.porof@gmail.com> (original author)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -6112,7 +6104,7 @@ if (!JSON) {
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Victor Porof (victor.porof@gmail.com)
+ *   Victor Porof <victor.porof@gmail.com> (original author)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -6231,7 +6223,7 @@ Tilt.Cube.prototype = {
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Victor Porof (victor.porof@gmail.com)
+ *   Victor Porof <victor.porof@gmail.com> (original author)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -6321,7 +6313,7 @@ Tilt.CubeWireframe.prototype = {
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Victor Porof (victor.porof@gmail.com)
+ *   Victor Porof <victor.porof@gmail.com> (original author)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -6389,7 +6381,7 @@ Tilt.Rectangle.prototype = {
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Victor Porof (victor.porof@gmail.com)
+ *   Victor Porof <victor.porof@gmail.com> (original author)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -6452,7 +6444,7 @@ Tilt.RectangleWireframe.prototype = {
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Victor Porof (victor.porof@gmail.com)
+ *   Victor Porof <victor.porof@gmail.com> (original author)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -6582,7 +6574,7 @@ Tilt.Mesh.prototype = {
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Victor Porof (victor.porof@gmail.com)
+ *   Victor Porof <victor.porof@gmail.com> (original author)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -6667,7 +6659,7 @@ Tilt.Mesh.prototype.save = function(directory, name) {
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Victor Porof (victor.porof@gmail.com)
+ *   Victor Porof <victor.porof@gmail.com> (original author)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -7597,7 +7589,7 @@ Tilt.Renderer.prototype = {
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Victor Porof (victor.porof@gmail.com)
+ *   Victor Porof <victor.porof@gmail.com> (original author)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -7644,7 +7636,7 @@ window.requestAnimFrame = (function() {
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Victor Porof (victor.porof@gmail.com)
+ *   Victor Porof <victor.porof@gmail.com> (original author)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -7775,7 +7767,7 @@ Tilt.Shaders.Texture = {
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Victor Porof (victor.porof@gmail.com)
+ *   Victor Porof <victor.porof@gmail.com> (original author)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -8112,7 +8104,7 @@ Tilt.Container.prototype.destroy = function() {
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Victor Porof (victor.porof@gmail.com)
+ *   Victor Porof <victor.porof@gmail.com> (original author)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -8352,7 +8344,7 @@ Tilt.ScrollContainer.prototype = {
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Victor Porof (victor.porof@gmail.com)
+ *   Victor Porof <victor.porof@gmail.com> (original author)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -8678,7 +8670,7 @@ Tilt.Button.prototype = {
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Victor Porof (victor.porof@gmail.com)
+ *   Victor Porof <victor.porof@gmail.com> (original author)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -8987,7 +8979,7 @@ Tilt.Slider.prototype = {
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Victor Porof (victor.porof@gmail.com)
+ *   Victor Porof <victor.porof@gmail.com> (original author)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -9280,7 +9272,7 @@ Tilt.Sprite.prototype = {
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Victor Porof (victor.porof@gmail.com)
+ *   Victor Porof <victor.porof@gmail.com> (original author)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -9640,7 +9632,7 @@ Tilt.Profiler.intercept("Tilt.UI", Tilt.UI);
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Victor Porof (victor.porof@gmail.com)
+ *   Victor Porof <victor.porof@gmail.com> (original author)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -9870,7 +9862,7 @@ Tilt.StringBundle = {
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Victor Porof (victor.porof@gmail.com)
+ *   Victor Porof <victor.porof@gmail.com> (original author)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -10472,7 +10464,7 @@ Tilt.Profiler.intercept("Tilt.Document", Tilt.Document);
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Victor Porof (victor.porof@gmail.com)
+ *   Victor Porof <victor.porof@gmail.com> (original author)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -10616,7 +10608,7 @@ Tilt.Profiler.intercept("Tilt.File", Tilt.File);
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Victor Porof (victor.porof@gmail.com)
+ *   Victor Porof <victor.porof@gmail.com> (original author)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -11216,7 +11208,7 @@ Tilt.Profiler.intercept("Tilt.Math", Tilt.Math);
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Victor Porof (victor.porof@gmail.com)
+ *   Victor Porof <victor.porof@gmail.com> (original author)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -11294,7 +11286,7 @@ Tilt.Profiler.intercept("Tilt.String", Tilt.String);
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Victor Porof (victor.porof@gmail.com)
+ *   Victor Porof <victor.porof@gmail.com> (original author)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -11321,7 +11313,6 @@ Tilt.Extensions = {};
 Tilt.Extensions.WebGL = {
 
   /**
-   * JavaScript implementation of WebGL MOZ_dom_element_texture (#653656).
    * This shim renders a content window to a canvas element, but clamps the
    * maximum width and height of the canvas to MAX_TEXTURE_SIZE.
    *
@@ -11388,7 +11379,7 @@ Tilt.Profiler.intercept("Tilt.WebGL", Tilt.WebGL);
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Victor Porof (victor.porof@gmail.com)
+ *   Victor Porof <victor.porof@gmail.com> (original author)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
