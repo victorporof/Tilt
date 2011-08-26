@@ -14507,16 +14507,6 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
       sourceEditor = TiltChrome.BrowserOverlay.sourceEditor.panel,
       colorPicker = TiltChrome.BrowserOverlay.colorPicker.panel;
 
-    // useful for updating the visualization
-    window.addEventListener("MozAfterPaint", gAfterPaint, false);
-
-    // when the tab is closed or the url changes, destroy visualization
-    tabContainer.addEventListener("TabClose", gClose, false);
-    tabContainer.addEventListener("TabAttrModified", gClose, false);
-    contentWindow.addEventListener("DOMSubtreeModified", gSubtreeMod, false);
-    contentWindow.addEventListener("resize", gResize, false);
-    gBrowser.addEventListener("mouseover", gMouseOver, false);
-
     if (gAfterPaint !== null) {
       window.removeEventListener("MozAfterPaint", gAfterPaint, false);
       gAfterPaint = null;
@@ -14708,7 +14698,12 @@ TiltChrome.Shaders.Visualization = {
 "  }",
 "  else {",
 "    vec4 texture = texture2D(sampler, texCoord);",
-"    gl_FragColor = tint * texture * alpha + tint * (1.0 - alpha);",
+"    if (texture.a == 0.0) {",
+"       gl_FragColor = tint;",
+"    }",
+"    else {",
+"      gl_FragColor = tint * texture * alpha + tint * (1.0 - alpha);",
+"    }",
 "  }",
 "}"
 ].join("\n")
