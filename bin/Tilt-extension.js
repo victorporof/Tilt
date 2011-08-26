@@ -13070,9 +13070,9 @@ TiltChrome.UI.Default = function() {
       height = 7,
       stripButton, stripIdButton, stripClassButton, right, bottom,
 
-    namelength = Tilt.Math.clamp(node.localName.length, 3, 10),
-    idlength = Tilt.Math.clamp(node.id.length, 3, 10),
-    clslength = Tilt.Math.clamp(node.className.length, 3, 10),
+    namelength = Tilt.Math.clamp(node.localName.length, 4, 10),
+    idlength = Tilt.Math.clamp(node.id.length, 4, 10),
+    clslength = Tilt.Math.clamp(node.className.length, 4, 10),
 
     idx = x + namelength * 10 + 3,
     clsx = idx + idlength * 2 + 3;
@@ -13703,11 +13703,6 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
         info.style = "";
       }
 
-      // if the style is fixed, make the node stay above all others
-      if (info.style.position === "fixed") {
-        depth = 30;
-      }
-
       // skip some nodes to avoid too bloated visualization meshes
       if (node.localName === "head" ||
           node.localName === "title" ||
@@ -13882,12 +13877,11 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
       colorPicker = TiltChrome.BrowserOverlay.colorPicker.panel;
 
     // useful for updating the visualization
-    window.addEventListener("MozAfterPaint", gAfterPaint, false);
+    window.addEventListener("MozAfterPaint", gAfterPaint, true);
 
     // when the tab is closed or the url changes, destroy visualization
     tabContainer.addEventListener("TabClose", gClose, false);
     tabContainer.addEventListener("TabAttrModified", gClose, false);
-    contentWindow.addEventListener("DOMSubtreeModified", gSubtreeMod, false);
     contentWindow.addEventListener("resize", gResize, false);
     gBrowser.addEventListener("mouseover", gMouseOver, false);
 
@@ -13910,12 +13904,6 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
 
       this.requestRefreshTexture(boundingClientRect);
     }
-  }.bind(this);
-
-  /**
-   * Evend handling the DOM subtree being modified.
-   */
-  var gSubtreeMod = function() {
   }.bind(this);
 
   /**
@@ -14515,10 +14503,6 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
       tabContainer.removeEventListener("TabClose", gClose, false);
       tabContainer.removeEventListener("TabAttrModified", gClose, false);
       gClose = null;
-    }
-    if (gSubtreeMod !== null) {
-      contentWindow.removeEventListener("DOMSubtreeModified", gSubtreeMod, 0);
-      gSubtreeMod = null;
     }
     if (gResize !== null) {
       contentWindow.removeEventListener("resize", gResize, false);
