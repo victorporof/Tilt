@@ -71,7 +71,7 @@ Tilt.Arcball = function(width, height, radius) {
   this.$scrollValue = 0;
   this.scrollMin = -3000;
   this.scrollMax = 500;
-  this.scrollSpeed = 10;
+  this.scrollSpeed = 1;
 
   /**
    * Array retaining the current pressed key codes.
