@@ -84,7 +84,7 @@ TiltChrome.Controller.MouseAndKeyboard = function() {
     canvas.addEventListener("dblclick", doubleClick, false);
     canvas.addEventListener("mousemove", mouseMove, false);
     canvas.addEventListener("mouseout", mouseOut, false);
-    canvas.addEventListener("DOMMouseScroll", mouseScroll, false);
+    canvas.addEventListener("MozMousePixelScroll", mouseScroll, false);
     window.addEventListener("keydown", keyDown, false);
     window.addEventListener("keyup", keyUp, false);
   };
@@ -246,8 +246,10 @@ TiltChrome.Controller.MouseAndKeyboard = function() {
       return;
     }
 
-    ui.keyDown(code);
-    arcball.keyDown(code);
+    if (window.content.document.activeElement instanceof HTMLBodyElement) {
+      ui.keyDown(code);
+      arcball.keyDown(code);
+    }
   };
 
   /**
@@ -304,7 +306,7 @@ TiltChrome.Controller.MouseAndKeyboard = function() {
       mouseOut = null;
     }
     if (mouseScroll !== null) {
-      canvas.removeEventListener("DOMMouseScroll", mouseScroll, false);
+      canvas.removeEventListener("MozMousePixelScroll", mouseScroll, false);
       mouseScroll = null;
     }
     if (keyDown !== null) {
