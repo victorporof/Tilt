@@ -85,6 +85,8 @@ QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils)["gar
 panel.openPopup;
 panel.hidePopup;
 canvas.getContext("2d").drawWindow;
+canvas.offsetTop;
+canvas.offsetLeft;
 e.boundingClientRect;
 
 iframe.contentWindow.refreshCodeEditor;
