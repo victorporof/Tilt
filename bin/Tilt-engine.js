@@ -10993,10 +10993,10 @@ Tilt.Math = {
    */
   hue2rgb: function(p, q, t) {
     if (t < 0) { t += 1; }
-    if (t > 1) { t -= 1; }
-    if (t < 0.166666667) { return p + (q - p) * 6 * t; }
-    if (t < 0.5) { return q; }
-    if (t < 0.666666667) { return p + (q - p) * (2 / 3 - t) * 6; }
+    else if (t > 1) { t -= 1; }
+    else if (t < 0.166666667) { return p + (q - p) * 6 * t; }
+    else if (t < 0.5) { return q; }
+    else if (t < 0.666666667) { return p + (q - p) * (2 / 3 - t) * 6; }
 
     return p;
   },
@@ -11028,12 +11028,16 @@ Tilt.Math = {
       d = max - min;
       s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
 
-      switch (max) {
-        case r: h = (g - b) / d + (g < b ? 6 : 0); break;
-        case g: h = (b - r) / d + 2; break;
-        case b: h = (r - g) / d + 4; break;
-        default: break;
+      if (max === r) {
+        h = (g - b) / d + (g < b ? 6 : 0);
       }
+      else if (max === g) {
+        h = (b - r) / d + 2;
+      }
+      else if (max === b) {
+        h = (r - g) / d + 4;
+      }
+
       h /= 6;
     }
 
@@ -11096,12 +11100,16 @@ Tilt.Math = {
       h = 0; // achromatic
     }
     else {
-      switch(max) {
-        case r: h = (g - b) / d + (g < b ? 6 : 0); break;
-        case g: h = (b - r) / d + 2; break;
-        case b: h = (r - g) / d + 4; break;
-        default: break;
+      if (max === r) {
+        h = (g - b) / d + (g < b ? 6 : 0);
       }
+      else if (max === g) {
+        h = (b - r) / d + 2;
+      }
+      else if (max === b) {
+        h = (r - g) / d + 4;
+      }
+
       h /= 6;
     }
 
@@ -11126,15 +11134,25 @@ Tilt.Math = {
       p = v * (1 - s),
       q = v * (1 - f * s),
       t = v * (1 - (1 - f) * s);
+      im6 = i % 6;
 
-    switch (i % 6) {
-      case 0: r = v; g = t; b = p; break;
-      case 1: r = q; g = v; b = p; break;
-      case 2: r = p; g = v; b = t; break;
-      case 3: r = p; g = q; b = v; break;
-      case 4: r = t; g = p; b = v; break;
-      case 5: r = v; g = p; b = q; break;
-      default: break;
+    if (im6 === 0) {
+      r = v; g = t; b = p;
+    }
+    else if (im6 === 1) {
+      r = q; g = v; b = p;
+    }
+    else if (im6 === 2) {
+      r = p; g = v; b = t;
+    }
+    else if (im6 === 3) {
+      r = p; g = q; b = v;
+    }
+    else if (im6 === 4) {
+      r = t; g = p; b = v;
+    }
+    else if (im6 === 5) {
+      r = v; g = p; b = q;
     }
 
     return [r * 255, g * 255, b * 255];
@@ -11361,6 +11379,8 @@ Tilt.Extensions.WebGL = {
 
     // use the 2d context.drawWindow() magic
     ctx = canvas.getContext("2d");
+    ctx.fillStyle = "#fff";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
     ctx.drawWindow(contentWindow, 0, 0, width, height, "#fff");
 
     try {
