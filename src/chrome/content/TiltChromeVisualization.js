@@ -112,7 +112,14 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
    * Variable specifying if the scene should be redrawn.
    * This happens, for example, when the visualization is translated/rotated.
    */
-  redraw = true;
+  redraw = true,
+
+  /**
+   * Variables specifying if the scene should be recreated.
+   * This happens usually after a MozAfterPaint event.
+   */
+  refreshTexture = true,
+  refreshMesh = true;
 
   /**
    * The initialization logic.
@@ -121,17 +128,6 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
     if (!tilt || !tilt.gl) {
       return;
     }
-
-    // use an extension to get the image representation of the document
-    // this will be removed once the MOZ_window_region_texture WebGL extension
-    // is finished; currently converting the document image to a texture
-    // bug #653656
-    image = Tilt.Extensions.WebGL.initDocumentImage(window.content);
-
-    // create a static texture using the previously created document image
-    texture = new Tilt.Texture(image, {
-      fill: "white", stroke: "#aaa", strokeWeight: 8
-    });
 
     // create the visualization shaders and program to draw the stacks mesh
     visualizationShader = new Tilt.Program(
@@ -142,7 +138,6 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
     // browser event handlers
     setupController();
     setupUI();
-    setupVisualization();
     setupBrowserEvents();
 
     // set the transformations at initialization
@@ -171,6 +166,17 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
     // behind the scenes, this issues a requestAnimFrame call and updates some
     // timing variables, frame count, frame rate etc.
     tilt.loop(draw);
+
+    if (refreshTexture) {
+      refreshTexture = false;
+      setupTexture();
+    }
+
+    // recreate the visualization mesh if necessary
+    if (refreshMesh) {
+      refreshMesh = false;
+      setupVisualization();
+    }
 
     // only redraw if we really have to
     if (redraw) {
@@ -304,16 +310,62 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
   }.bind(this);
 
   /**
+   * Creates or refreshes the texture applied to the visualization mesh.
+   */
+  var setupTexture = function() {
+    var rect = this.$refreshBoundingClientRect;
+
+    if ("undefined" === typeof rect || rect === null) {
+      // use an extension to get the image representation of the document
+      // this will be removed once the MOZ_window_region_texture extension
+      // is finished; currently converting the document image to a texture
+      // bug #653656
+      image = Tilt.Extensions.WebGL.initDocumentImage(window.content);
+
+      if (texture !== null) {
+        texture.destroy();
+      }
+
+      // create a static texture using the previously created document image
+      texture = new Tilt.Texture(image, {
+        fill: "white", stroke: "#aaa", strokeWeight: 8, preserve: true
+      });
+    }
+    else {
+      Tilt.Extensions.WebGL.refreshDocumentImage(window.content, image, rect);
+
+      // update the texture with the refreshed sub-image
+      texture.updateSubImage2D(image, rect.left, rect.top);
+    }
+
+    if (mesh !== null) {
+      mesh.texture = texture;
+    }
+  }.bind(this);
+
+  /**
    * Create the combined mesh representing the document visualization by
    * traversing the document & adding a stack for each node that is drawable.
    */
   var setupVisualization = function() {
+    // if the visualization was destroyed, don't continue setup
+    if (!tilt || !tilt.gl) {
+      return;
+    }
+
     var vertices = [],
       texCoord = [],
       indices = [],
       wireframeIndices = [],
       visibleNodes = [],
       hiddenNodes = [];
+
+    if (mesh !== null) {
+      mesh.destroy();
+    }
+    if (meshWireframe !== null) {
+      meshWireframe.destroy();
+    }
 
     // traverse the document and issue a callback for each node in the dom
     Tilt.Document.traverse(function(node, depth, index, uid, left, top) {
@@ -342,6 +394,11 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
       }
       catch (e) {
         info.style = "";
+      }
+
+      // if the style is fixed, make the node stay above all others
+      if (info.style.position === "fixed") {
+        depth = 30;
       }
 
       // skip some nodes to avoid too bloated visualization meshes
@@ -377,8 +434,8 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
 
         // the entire mesh's pivot is the screen center
         z = depth * thickness + Math.random() * 0.1,
-        x = coord.x - tilt.width / 2 + Math.random() * 0.1 + left,
-        y = coord.y - tilt.height / 2 + Math.random() * 0.1 + top,
+        x = coord.x - tilt.width / 2 + left + Math.random() * 0.1,
+        y = coord.y - tilt.height / 2 + top + Math.random() * 0.1,
         w = coord.width,
         h = coord.height;
 
@@ -513,19 +570,45 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
    */
   var setupBrowserEvents = function() {
     var tabContainer = gBrowser.tabContainer,
+      contentWindow = gBrowser.contentWindow,
       sourceEditor = TiltChrome.BrowserOverlay.sourceEditor.panel,
       colorPicker = TiltChrome.BrowserOverlay.colorPicker.panel;
+
+    // useful for updating the visualization
+    window.addEventListener("MozAfterPaint", gAfterPaint, false);
 
     // when the tab is closed or the url changes, destroy visualization
     tabContainer.addEventListener("TabClose", gClose, false);
     tabContainer.addEventListener("TabAttrModified", gClose, false);
-    gBrowser.contentWindow.addEventListener("resize", gResize, false);
+    contentWindow.addEventListener("DOMSubtreeModified", gSubtreeMod, false);
+    contentWindow.addEventListener("resize", gResize, false);
     gBrowser.addEventListener("mouseover", gMouseOver, false);
 
     sourceEditor.addEventListener("popupshown", eEditorShown, false);
     sourceEditor.addEventListener("popuphidden", eEditorHidden, false);
     colorPicker.addEventListener("popupshown", ePickerShown, false);
     colorPicker.addEventListener("popuphidden", ePickerHidden, false);
+  }.bind(this);
+
+  /**
+   * Event handling the MozAfterPaint event.
+   */
+  var gAfterPaint = function(e) {
+    var boundingClientRect = e.boundingClientRect;
+
+    if (boundingClientRect.top > canvas.offsetTop &&
+        boundingClientRect.left > canvas.offsetLeft &&
+        boundingClientRect.width > 4 &&
+        boundingClientRect.height > 4) {
+
+      this.requestRefreshTexture(boundingClientRect);
+    }
+  }.bind(this);
+
+  /**
+   * Evend handling the DOM subtree being modified.
+   */
+  var gSubtreeMod = function() {
   }.bind(this);
 
   /**
@@ -643,6 +726,24 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
    */
   this.requestRedraw = function() {
     redraw = true;
+  };
+
+  /**
+   * Recreates the visualization texture.
+   * @param {BoundingClientRect} rect: a rectangle used to refresh the texture
+   */
+  this.requestRefreshTexture = function(rect) {
+    this.$refreshBoundingClientRect = rect;
+    redraw = true;
+    refreshTexture = true;
+  };
+
+  /**
+   * Recreates the visualization mesh.
+   */
+  this.requestRefreshMesh = function() {
+    redraw = true;
+    refreshMesh = true;
   };
 
   /**
@@ -1095,16 +1196,35 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
    */
   this.destroy = function() {
     var tabContainer = gBrowser.tabContainer,
+      contentWindow = gBrowser.contentWindow,
       sourceEditor = TiltChrome.BrowserOverlay.sourceEditor.panel,
       colorPicker = TiltChrome.BrowserOverlay.colorPicker.panel;
 
+    // useful for updating the visualization
+    window.addEventListener("MozAfterPaint", gAfterPaint, false);
+
+    // when the tab is closed or the url changes, destroy visualization
+    tabContainer.addEventListener("TabClose", gClose, false);
+    tabContainer.addEventListener("TabAttrModified", gClose, false);
+    contentWindow.addEventListener("DOMSubtreeModified", gSubtreeMod, false);
+    contentWindow.addEventListener("resize", gResize, false);
+    gBrowser.addEventListener("mouseover", gMouseOver, false);
+
+    if (gAfterPaint !== null) {
+      window.removeEventListener("MozAfterPaint", gAfterPaint, false);
+      gAfterPaint = null;
+    }
     if (gClose !== null) {
       tabContainer.removeEventListener("TabClose", gClose, false);
       tabContainer.removeEventListener("TabAttrModified", gClose, false);
       gClose = null;
     }
+    if (gSubtreeMod !== null) {
+      contentWindow.removeEventListener("DOMSubtreeModified", gSubtreeMod, 0);
+      gSubtreeMod = null;
+    }
     if (gResize !== null) {
-      gBrowser.contentWindow.removeEventListener("resize", gResize, false);
+      contentWindow.removeEventListener("resize", gResize, false);
       gResize = null;
     }
     if (gMouseOver !== null) {
@@ -1169,6 +1289,9 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
     setupController = null;
     setupUI = null;
     tabContainer = null;
+    contentWindow = null;
+    sourceEditor = null;
+    colorPicker = null;
 
     Tilt.destroyObject(this);
   };
