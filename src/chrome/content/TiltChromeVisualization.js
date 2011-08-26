@@ -332,6 +332,8 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
       });
     }
     else {
+      // refresh the image representation of the document only for a delimited
+      // bounding rectangle
       Tilt.Extensions.WebGL.refreshDocumentImage(window.content, image, rect);
 
       // update the texture with the refreshed sub-image
@@ -570,7 +572,7 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
       colorPicker = TiltChrome.BrowserOverlay.colorPicker.panel;
 
     // useful for updating the visualization
-    window.addEventListener("MozAfterPaint", gAfterPaint, true);
+    window.addEventListener("MozAfterPaint", gAfterPaint, false);
 
     // when the tab is closed or the url changes, destroy visualization
     tabContainer.addEventListener("TabClose", gClose, false);
