@@ -85,6 +85,7 @@ QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils)["gar
 panel.openPopup;
 panel.hidePopup;
 canvas.getContext("2d").drawWindow;
+e.boundingClientRect;
 
 iframe.contentWindow.refreshCodeEditor;
 iframe.contentWindow.refreshColorPicker;
