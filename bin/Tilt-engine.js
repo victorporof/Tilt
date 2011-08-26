@@ -71,7 +71,7 @@ Tilt.Arcball = function(width, height, radius) {
   this.$scrollValue = 0;
   this.scrollMin = -3000;
   this.scrollMax = 500;
-  this.scrollSpeed = 10;
+  this.scrollSpeed = 1;
 
   /**
    * Array retaining the current pressed key codes.
@@ -1832,7 +1832,7 @@ Tilt.Texture.prototype = {
   /**
    * Initializes a texture from a pre-existing image or canvas.
    *
-   * @param {Image} image: the texture source image or canvas
+   * @param {Image | HTMLCanvasElement} image: the source image or canvas
    * @param {Object} parameters: an object containing the texture properties
    */
   initTexture: function(image, parameters) {
@@ -1876,6 +1876,22 @@ Tilt.Texture.prototype = {
       image = null;
       parameters = null;
     }.bind(this);
+  },
+
+  /**
+   * Updates a region of a texture with another image.
+   *
+   * @param {Image | HTMLCanvasElement} image: the source image or canvas
+   * @param {Number} x: the x offset
+   * @param {Number} y: the y offset
+   */
+  updateSubImage2D: function(img, x, y) {
+    var gl = Tilt.$gl,
+      prev = gl.getParameter(gl.TEXTURE_BINDING_2D);
+
+    gl.bindTexture(gl.TEXTURE_2D, this.$ref);
+    gl.texSubImage2D(gl.TEXTURE_2D, 0, x, y, gl.RGBA, gl.UNSIGNED_BYTE, img);
+    gl.bindTexture(gl.TEXTURE_2D, prev);
   },
 
   /**
@@ -1934,7 +1950,7 @@ Tilt.TextureUtils = {
   /**
    * Initializes a texture from a pre-existing image or canvas.
    *
-   * @param {Image} image: the texture source image or canvas
+   * @param {Image | HTMLCanvasElement} image: the source image or canvas
    * @param {Object} parameters: an object containing the texture properties
    * @return {WebGLTexture} the created texture
    */
@@ -2058,19 +2074,24 @@ Tilt.TextureUtils = {
    *
    * @param {Image} image: the image to be scaled
    * @param {Object} parameters: an object containing the following properties
+   *  @param {Boolean} preserve: true if resize should be ignored
    *  @param {String} fill: optional, color to fill the transparent bits
    *  @param {String} stroke: optional, color to draw an image outline
    *  @param {Number} strokeWeight: optional, the width of the outline
    * @return {Image} the resized image
    */
-  resizeImageToPowerOfTwo: function(image, parameters) {
+  resizeImageToPowerOfTwo: function(image, parameters) { 
+    // make sure the parameters argument is an object
+    parameters = parameters || {};
+
     var isChromePath = (image.src || "").indexOf("chrome://"),
       isPowerOfTwoWidth = Tilt.Math.isPowerOfTwo(image.width),
       isPowerOfTwoHeight = Tilt.Math.isPowerOfTwo(image.height),
       width, height, canvas, context;
 
     // first check if the image is not already power of two
-    if (isPowerOfTwoWidth && isPowerOfTwoHeight && isChromePath === -1) {
+    if (parameters.preserve || (
+        isPowerOfTwoWidth && isPowerOfTwoHeight && isChromePath === -1)) {
       try {
         return image;
       }
@@ -2079,9 +2100,6 @@ Tilt.TextureUtils = {
         parameters = null;
       }
     }
-
-    // make sure the parameters argument is an object
-    parameters = parameters || {};
 
     // calculate the power of two dimensions for the npot image
     width = Tilt.Math.nextPowerOfTwo(image.width);
@@ -8278,7 +8296,7 @@ Tilt.ScrollContainer = function(properties) {
       offset = view.$offset;
 
     offset[1] = Tilt.Math.clamp(
-      offset[1] - scroll * 2, this.top, -this.bottom + view.$height);
+      offset[1] - scroll / 2, this.top, -this.bottom + view.$height);
 
     ui.requestRedraw();
 
@@ -11353,6 +11371,35 @@ Tilt.Extensions.WebGL = {
       canvas = null;
       gl = null;
       ctx = null;
+    }
+  },
+
+
+  /**
+   * Refreshes a sub area of a canvas with new pixel information from a 
+   * content window.
+   *
+   * @param {Window} contentWindow: the window content to draw
+   * @param {Canvas} canvas: the canvas to refresh
+   * @param {BoundingClientRect} rect: the bounding client rect
+   * @param {Boolean} preserve: true to preserve the canvas dimensions
+   */
+  refreshDocumentImage: function(contentWindow, canvas, rect, preserve) {
+    var ctx = canvas.getContext("2d"),
+      left = rect.left,
+      top = rect.top,
+      width = rect.width,
+      height = rect.height;
+
+    if (preserve) {
+      ctx.translate(left, top);
+      ctx.drawWindow(contentWindow, left, top, width, height, "#fff");
+      ctx.translate(-left, -top);
+    }
+    else {
+      canvas.width = width;
+      canvas.height = height;
+      ctx.drawWindow(contentWindow, left, top, width, height, "#fff");
     }
   }
 };
