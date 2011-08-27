@@ -1655,7 +1655,11 @@ Tilt.Program.prototype = {
    * Destroys this object and deletes all members.
    */
   destroy: function() {
-    Tilt.$gl.deleteShader(this.$ref);
+    try {
+      Tilt.$gl.deleteShader(this.$ref);
+    }
+    catch(e) {}
+
     Tilt.destroyObject(this);
   }
 };
@@ -2094,7 +2098,11 @@ Tilt.Texture.prototype = {
    * Destroys this object and deletes all members.
    */
   destroy: function() {
-    Tilt.$gl.deleteTexture(this.$ref);
+    try {
+      Tilt.$gl.deleteTexture(this.$ref);
+    }
+    catch(e) {}
+
     Tilt.destroyObject(this);
   }
 };
@@ -8294,6 +8302,18 @@ Tilt.Container.prototype.isMouseOver = function(element) {
 };
 
 /**
+ * Removes all the children from the container.
+ */
+Tilt.Container.prototype.clear = function() {
+  for (var i = 0, len = this.length; i < len; i++) {
+    this[i].destroy();
+    this[i] = null;
+  }
+
+  this.splice(0, this.length);
+};
+
+/**
  * Destroys this object and deletes all members.
  */
 Tilt.Container.prototype.destroy = function() {
@@ -12262,6 +12282,9 @@ TiltChrome.Controller.MouseAndKeyboard = function() {
       arcball = null;
     }
 
+    downX = null;
+    downY = null;
+
     Tilt.destroyObject(this);
   };
 
@@ -13113,6 +13136,11 @@ TiltChrome.UI.Default = function() {
    * @param {Number} uid: a unique id for the node
    */
   this.meshNodeCallback = function(node, depth, index, uid) {
+    if (minidomContainer.$loaded) {
+      minidomContainer.$loaded = false;
+      minidomContainer.view.clear();
+      this.stripNo = 0;
+    }
     if ("undefined" === typeof this.stripNo) {
       this.stripNo = 0;
     }
@@ -13249,6 +13277,9 @@ TiltChrome.UI.Default = function() {
 
       element.setFill(settings.fill);
     });
+
+    // set a flag for the minidom container
+    minidomContainer.$loaded = true;
   };
 
   /**
@@ -13277,6 +13308,7 @@ TiltChrome.UI.Default = function() {
     this.visualization = null;
     this.controller = null;
     ui = null;
+    config = null;
 
     if (alwaysVisibleElements !== null) {
       alwaysVisibleElements.destroy();
@@ -13925,6 +13957,9 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
 
     // call any necessary additional mesh initialization functions
     this.performMeshColorbufferRefresh();
+
+    // do a gargage collection after the initialization completes
+    TiltChrome.BrowserOverlay.performGC();
   }.bind(this);
 
   /**
@@ -13944,6 +13979,7 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
     tabContainer.addEventListener("TabAttrModified", gClose, false);
     contentWindow.addEventListener("resize", gResize, false);
     gBrowser.addEventListener("mouseover", gMouseOver, false);
+    gBrowser.addEventListener("load", gLoad, true);
 
     sourceEditor.addEventListener("popupshown", eEditorShown, false);
     sourceEditor.addEventListener("popuphidden", eEditorHidden, false);
@@ -13958,6 +13994,8 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
     var boundingClientRect = e.boundingClientRect,
       offsetLeft = canvas.offsetLeft,
       offsetTop = canvas.offsetTop,
+      imageWidth = image.width,
+      imageHeight = image.height,
       left = boundingClientRect.left,
       top = boundingClientRect.top,
       width = boundingClientRect.width,
@@ -13966,7 +14004,10 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
     if (top > offsetTop && left > offsetLeft && width > 4 && height > 4) {
       this.requestRefreshTexture(boundingClientRect);
     }
-    else if (top <= 0 && left <= 0 && width > 10 && height > 10) {
+    else if (left <= 0 && top <= 0 &&
+             left >= -imageWidth && top >= -imageHeight &&
+             (width >= imageWidth || height >= imageHeight)) {
+
       window.setTimeout(function() {
         try {
           if (!refreshMesh && !refreshTexture) {
@@ -13977,56 +14018,6 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
         catch(e) {}
      }.bind(this), 100);
    }
-  }.bind(this);
-
-  /**
-   * Event handling the source editor panel popup showing.
-   */
-  var eEditorShown = function() {
-    if ("function" === typeof ui.panelEditorShown) {
-      ui.panelEditorShown();
-    }
-
-    this.requestRedraw();
-  }.bind(this);
-
-  /**
-   * Event handling the source editor panel popup hiding.
-   */
-  var eEditorHidden = function() {
-    if ("function" === typeof ui.panelEditorHidden) {
-      ui.panelEditorHidden();
-    }
-
-    highlightQuad.index = -1;
-    TiltChrome.BrowserOverlay.performGC();
-
-    this.requestRedraw();
-  }.bind(this);
-
-  /**
-   * Event handling the color picker panel popup showing.
-   */
-  var ePickerShown = function() {
-    if ("function" === typeof ui.panelPickerShown) {
-      ui.panelPickerShown();
-    }
-
-    this.requestRedraw();
-  }.bind(this);
-
-  /**
-   * Event handling the color picker panel popup hiding.
-   */
-  var ePickerHidden = function() {
-    if ("function" === typeof ui.panelPickerHidden) {
-      ui.panelPickerHidden();
-    }
-
-    highlightQuad.index = -1;
-    TiltChrome.BrowserOverlay.performGC();
-
-    this.requestRedraw();
   }.bind(this);
 
   /**
@@ -14082,6 +14073,76 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
       tilt.gl.viewport(0, 0, canvas.width, canvas.height);
       draw();
     }
+  }.bind(this);
+
+  /**
+   * Event method called when the tab container of the current browser loads.
+   */
+  var gLoad = function(e) {
+    if ("undefined" === typeof this.$load) {
+      this.$load = true;
+    }
+    else {
+      window.setTimeout(function() {
+        try {
+          if (!refreshMesh && !refreshTexture) {
+            this.requestRefreshTexture(null);
+            this.requestRefreshMesh();               
+          }
+        }
+        catch(e) {}
+      }.bind(this), 1000);
+    }
+  }.bind(this);
+
+  /**
+   * Event handling the source editor panel popup showing.
+   */
+  var eEditorShown = function() {
+    if ("function" === typeof ui.panelEditorShown) {
+      ui.panelEditorShown();
+    }
+
+    this.requestRedraw();
+  }.bind(this);
+
+  /**
+   * Event handling the source editor panel popup hiding.
+   */
+  var eEditorHidden = function() {
+    if ("function" === typeof ui.panelEditorHidden) {
+      ui.panelEditorHidden();
+    }
+
+    highlightQuad.index = -1;
+    TiltChrome.BrowserOverlay.performGC();
+
+    this.requestRedraw();
+  }.bind(this);
+
+  /**
+   * Event handling the color picker panel popup showing.
+   */
+  var ePickerShown = function() {
+    if ("function" === typeof ui.panelPickerShown) {
+      ui.panelPickerShown();
+    }
+
+    this.requestRedraw();
+  }.bind(this);
+
+  /**
+   * Event handling the color picker panel popup hiding.
+   */
+  var ePickerHidden = function() {
+    if ("function" === typeof ui.panelPickerHidden) {
+      ui.panelPickerHidden();
+    }
+
+    highlightQuad.index = -1;
+    TiltChrome.BrowserOverlay.performGC();
+
+    this.requestRedraw();
   }.bind(this);
 
 
@@ -14585,6 +14646,10 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
       gBrowser.removeEventListener("mouseover", gMouseOver, false);
       gMouseOver = null;
     }
+    if (gLoad !== null) {
+      gBrowser.removeEventListener("load", gLoad, true);
+      gLoad = null;
+    }
 
     if (eEditorShown !== null) {
       sourceEditor.removeEventListener("popupshown", eEditorShown, false);
@@ -14624,9 +14689,16 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
       meshWireframe.destroy();
       meshWireframe = null;
     }
+    if (visualizationShader !== null) {
+      visualizationShader.destroy();
+      visualizationShader = null;
+    }
+    if (highlightQuad !== null) {
+      Tilt.destroyObject(highlightQuad);
+      highlightQuad = null;
+    }
     if (transforms !== null) {
-      transforms.rotation = null;
-      transforms.translation = null;
+      Tilt.destroyObject(transforms);
       transforms = null;
     }
     if (tilt !== null) {
@@ -14634,14 +14706,30 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
       tilt = null;
     }
 
-    image = null;
     canvas = null;
+    controller = null;
+    ui = null;
+
+    image = null;
+    texture = null;
+    thickness = null;
+    mesh = null;
+    meshWireframe = null;
+    visualizationShader = null;
+    highlightQuad = null;
+    transforms = null;
+    redraw = null;
+    refreshTexture = null;
+    refreshMesh = null;
+
     setup = null;
     draw = null;
-    setupVisualization = null;
-    setupBrowserEvents = null;
     setupController = null;
     setupUI = null;
+    setupTexture = null;
+    setupVisualization = null;
+    setupBrowserEvents = null;
+
     tabContainer = null;
     contentWindow = null;
     sourceEditor = null;

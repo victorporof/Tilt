@@ -1453,7 +1453,11 @@ Tilt.Program.prototype = {
    * Destroys this object and deletes all members.
    */
   destroy: function() {
-    Tilt.$gl.deleteShader(this.$ref);
+    try {
+      Tilt.$gl.deleteShader(this.$ref);
+    }
+    catch(e) {}
+
     Tilt.destroyObject(this);
   }
 };
@@ -1892,7 +1896,11 @@ Tilt.Texture.prototype = {
    * Destroys this object and deletes all members.
    */
   destroy: function() {
-    Tilt.$gl.deleteTexture(this.$ref);
+    try {
+      Tilt.$gl.deleteTexture(this.$ref);
+    }
+    catch(e) {}
+
     Tilt.destroyObject(this);
   }
 };
@@ -8089,6 +8097,18 @@ Tilt.Container.prototype.isMouseOver = function(element) {
   // check to see if the mouse pointer is inside the element bounds
   return mouseX > boundsX && mouseX < boundsX + boundsWidth &&
          mouseY > boundsY && mouseY < boundsY + boundsHeight;
+};
+
+/**
+ * Removes all the children from the container.
+ */
+Tilt.Container.prototype.clear = function() {
+  for (var i = 0, len = this.length; i < len; i++) {
+    this[i].destroy();
+    this[i] = null;
+  }
+
+  this.splice(0, this.length);
 };
 
 /**
