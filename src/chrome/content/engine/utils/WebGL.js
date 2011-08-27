@@ -96,26 +96,37 @@ Tilt.Extensions.WebGL = {
    * content window.
    *
    * @param {Window} contentWindow: the window content to draw
-   * @param {Canvas} canvas: the canvas to refresh
+   * @param {HTMLCanvasElement} canvas: the canvas to refresh
    * @param {BoundingClientRect} rect: the bounding client rect
-   * @param {Boolean} preserve: true to preserve the canvas dimensions
+   * @param {Boolean} overwrite: true to overwrite on the same canvas
+   * return {HTMLCanvasElement} the new canvas
    */
-  refreshDocumentImage: function(contentWindow, canvas, rect, preserve) {
-    var ctx = canvas.getContext("2d"),
+  refreshDocumentImage: function(contentWindow, canvas, rect, overwrite) {
+    var ctx,
       left = rect.left,
       top = rect.top,
       width = rect.width,
       height = rect.height;
 
-    if (preserve) {
+    if (overwrite) {
+      ctx = canvas.getContext("2d");
       ctx.translate(left, top);
       ctx.drawWindow(contentWindow, left, top, width, height, "#fff");
       ctx.translate(-left, -top);
+
+      return canvas;
     }
     else {
-      canvas.width = width;
-      canvas.height = height;
+      if ("undefined" === typeof this.$canvas) {
+        this.$canvas = Tilt.Document.initCanvas();
+      }
+      this.$canvas.width = width;
+      this.$canvas.height = height;
+
+      ctx = this.$canvas.getContext("2d");
       ctx.drawWindow(contentWindow, left, top, width, height, "#fff");
+
+      return this.$canvas;
     }
   }
 };
