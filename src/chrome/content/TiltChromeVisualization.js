@@ -789,15 +789,15 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
             Tilt.Math.clamp(hex[2] * f2, 0, 1)];
 
       // compute the colors for each vertex in the mesh
-      color.push(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                 g1[0], g1[1], g1[2],
-                 g1[0], g1[1], g1[2],
-                 g2[0], g2[1], g2[2],
-                 g2[0], g2[1], g2[2],
-                 g2[0], g2[1], g2[2],
-                 g2[0], g2[1], g2[2],
-                 g1[0], g1[1], g1[2],
-                 g1[0], g1[1], g1[2]);
+      color.unshift(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                    g1[0], g1[1], g1[2],
+                    g1[0], g1[1], g1[2],
+                    g2[0], g2[1], g2[2],
+                    g2[0], g2[1], g2[2],
+                    g2[0], g2[1], g2[2],
+                    g2[0], g2[1], g2[2],
+                    g1[0], g1[1], g1[2],
+                    g1[0], g1[1], g1[2]);
     }
 
     // create the buffer using the previously computed color array
