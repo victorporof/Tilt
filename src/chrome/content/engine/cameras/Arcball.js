@@ -124,14 +124,8 @@ Tilt.Arcball.prototype = {
    * @return {Object} the rotation quaternion and the zoom amount
    */
   loop: function(frameDelta) {
-    // if the frame delta wasn't specified, default to a small smoothstep
-    if ("undefined" === typeof frameDelta) {
-      frameDelta = 0.25;
-    }
-    else {
-      // this should be in the (0..1) interval
-      frameDelta = Tilt.Math.clamp(frameDelta * 0.01, 0.01, 0.99);
-    }
+    // this should be in the (0..1) interval
+    frameDelta = Tilt.Math.clamp((frameDelta || 25) * 0.01, 0.01, 0.99);
 
     // cache some variables for easier access
     var x, y,
