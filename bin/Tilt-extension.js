@@ -11372,7 +11372,7 @@ Tilt.Math = {
       return this[hex];
     }
     else {
-      value = window.parseInt(hex, 16);      
+      value = window.parseInt(hex, 16);
     }
 
     // e.g. "f00"
@@ -11402,12 +11402,21 @@ Tilt.Math = {
 
       return (this[hex] = [r, g, b, a]);
     }
+    // e.g. "f0088"
+    else if (hex.length === 5) {
+      r = ((value & 0xf0000) >> 12) / 255;
+      g = ((value & 0x0f000) >> 8 ) / 255;
+      b = ((value & 0x00f00) >> 4 ) / 255;
+      a = ((value & 0x000f0)      ) / 255;
+
+      return (this[hex] = [r, g, b, a]);
+    }
     // e.g "ff0000aa"
     else if (hex.length === 8) {
-      r = ((value & 0xff000000) >> 24) * 0.00392156863;
-      g = ((value & 0x00ff0000) >> 16) * 0.00392156863;
-      b = ((value & 0x0000ff00) >> 8 ) * 0.00392156863;
-      a = ((value & 0x000000ff)      ) * 0.00392156863;
+      r = parseInt(hex.substring(0, 2), 16) * 0.00392156863;
+      g = parseInt(hex.substring(2, 4), 16) * 0.00392156863;
+      b = parseInt(hex.substring(4, 6), 16) * 0.00392156863;
+      a = parseInt(hex.substring(6, 8), 16) * 0.00392156863;
 
       return (this[hex] = [r, g, b, a]);
     }
@@ -14133,15 +14142,15 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
             Tilt.Math.clamp(hex[2] * f2, 0, 1)];
 
       // compute the colors for each vertex in the mesh
-      color.push(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                 g1[0], g1[1], g1[2],
-                 g1[0], g1[1], g1[2],
-                 g2[0], g2[1], g2[2],
-                 g2[0], g2[1], g2[2],
-                 g2[0], g2[1], g2[2],
-                 g2[0], g2[1], g2[2],
-                 g1[0], g1[1], g1[2],
-                 g1[0], g1[1], g1[2]);
+      color.unshift(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                    g1[0], g1[1], g1[2],
+                    g1[0], g1[1], g1[2],
+                    g2[0], g2[1], g2[2],
+                    g2[0], g2[1], g2[2],
+                    g2[0], g2[1], g2[2],
+                    g2[0], g2[1], g2[2],
+                    g1[0], g1[1], g1[2],
+                    g1[0], g1[1], g1[2]);
     }
 
     // create the buffer using the previously computed color array
