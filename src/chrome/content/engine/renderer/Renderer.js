@@ -895,29 +895,31 @@ Tilt.Renderer.prototype = {
    *      draw();
    *
    * @param {Function} draw: the function to be called each frame
+   * @param {Boolean} debug: true if params like frame rate and frame delta 
+   * should be calculated
    */
-  loop: function(draw) {
+  loop: function(draw, debug) {
     window.requestAnimFrame(draw);
 
     // reset the model view and projection matrices
     this.perspective();
 
-    // calculate the frame delta and frame rate using the current time
-    this.$currentTime = new Date().getTime();
-
-    if (this.$lastTime !== 0) {
-      this.frameDelta = this.$currentTime - this.$lastTime;
-      this.frameRate = 1000 / this.frameDelta;
-    }
-    this.$lastTime = this.$currentTime;
-
-    // increment the elapsed time and total frame count
-    this.elapsedTime += this.frameDelta;
+    // increment the total frame count
     this.frameCount++;
 
-    // clear the cache associated with the shaders
-    // this.colorShader.clearCache();
-    // this.textureShader.clearCache();
+    if (debug) {
+      // calculate the frame delta and frame rate using the current time
+      this.$currentTime = new Date().getTime();
+
+      if (this.$lastTime !== 0) {
+        this.frameDelta = this.$currentTime - this.$lastTime;
+        this.frameRate = 1000 / this.frameDelta;
+      }
+
+      // increase the elapsed time based on the frame delta
+      this.$lastTime = this.$currentTime;
+      this.elapsedTime += this.frameDelta;
+    }
   },
 
   /**
