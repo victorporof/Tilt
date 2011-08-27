@@ -82,6 +82,7 @@ QueryInterface(Ci.nsIInterfaceRequestor)["getInterface"] = QueryInterface(Ci.nsI
 QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils)["garbageCollect"] = QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils).garbageCollect;
 
 
+window.parseInt;
 panel.openPopup;
 panel.hidePopup;
 canvas.getContext("2d").drawWindow;
