@@ -5,6 +5,8 @@ gBrowser["tabContainer"] = gBrowser.tabContainer;
 gBrowser["contentWindow"] = gBrowser.contentWindow;
 gBrowser["selectedBrowser"] = gBrowser.selectedBrowser;
 gBrowser.selectedBrowser["parentNode"] = gBrowser.selectedBrowser.parentNode;
+gBrowser.selectedBrowser["markupDocumentViewer"] = gBrowser.selectedBrowser.markupDocumentViewer;
+gBrowser.selectedBrowser.markupDocumentViewer["fullZoom"] = gBrowser.selectedBrowser.markupDocumentViewer.fullZoom;
 
 window["TiltChrome"] = TiltChrome;
 TiltChrome["BrowserOverlay"] = TiltChrome.BrowserOverlay;
