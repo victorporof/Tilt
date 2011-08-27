@@ -323,14 +323,8 @@ Tilt.Arcball.prototype = {
    * @return {Object} the rotation quaternion and the zoom amount
    */
   loop: function(frameDelta) {
-    // if the frame delta wasn't specified, default to a small smoothstep
-    if ("undefined" === typeof frameDelta) {
-      frameDelta = 0.25;
-    }
-    else {
-      // this should be in the (0..1) interval
-      frameDelta = Tilt.Math.clamp(frameDelta * 0.01, 0.01, 0.99);
-    }
+    // this should be in the (0..1) interval
+    frameDelta = Tilt.Math.clamp((frameDelta || 25) * 0.01, 0.01, 0.99);
 
     // cache some variables for easier access
     var x, y,
@@ -7753,29 +7747,31 @@ Tilt.Renderer.prototype = {
    *      draw();
    *
    * @param {Function} draw: the function to be called each frame
+   * @param {Boolean} debug: true if params like frame rate and frame delta 
+   * should be calculated
    */
-  loop: function(draw) {
+  loop: function(draw, debug) {
     window.requestAnimFrame(draw);
 
     // reset the model view and projection matrices
     this.perspective();
 
-    // calculate the frame delta and frame rate using the current time
-    this.$currentTime = new Date().getTime();
-
-    if (this.$lastTime !== 0) {
-      this.frameDelta = this.$currentTime - this.$lastTime;
-      this.frameRate = 1000 / this.frameDelta;
-    }
-    this.$lastTime = this.$currentTime;
-
-    // increment the elapsed time and total frame count
-    this.elapsedTime += this.frameDelta;
+    // increment the total frame count
     this.frameCount++;
 
-    // clear the cache associated with the shaders
-    // this.colorShader.clearCache();
-    // this.textureShader.clearCache();
+    if (debug) {
+      // calculate the frame delta and frame rate using the current time
+      this.$currentTime = new Date().getTime();
+
+      if (this.$lastTime !== 0) {
+        this.frameDelta = this.$currentTime - this.$lastTime;
+        this.frameRate = 1000 / this.frameDelta;
+      }
+
+      // increase the elapsed time based on the frame delta
+      this.$lastTime = this.$currentTime;
+      this.elapsedTime += this.frameDelta;
+    }
   },
 
   /**
@@ -13683,18 +13679,18 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
       texture = new Tilt.Texture(image, {
         fill: "white", stroke: "#aaa", strokeWeight: 8, preserve: true
       });
+
+      if (mesh !== null) {
+        mesh.texture = texture;
+      }
     }
-    else {
+    else if ("object" === typeof rect) {
       // refresh the image representation of the document only for a delimited
       // bounding rectangle
       Tilt.Extensions.WebGL.refreshDocumentImage(window.content, image, rect);
 
       // update the texture with the refreshed sub-image
       texture.updateSubImage2D(image, rect.left, rect.top);
-    }
-
-    if (mesh !== null) {
-      mesh.texture = texture;
     }
   }.bind(this);
 
@@ -13716,6 +13712,7 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
       hiddenNodes = [];
 
     if (mesh !== null) {
+      mesh.texture = null;
       mesh.destroy();
     }
     if (meshWireframe !== null) {
@@ -13943,15 +13940,28 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
    * Event handling the MozAfterPaint event.
    */
   var gAfterPaint = function(e) {
-    var boundingClientRect = e.boundingClientRect;
+    var boundingClientRect = e.boundingClientRect,
+      offsetLeft = canvas.offsetLeft,
+      offsetTop = canvas.offsetTop,
+      left = boundingClientRect.left,
+      top = boundingClientRect.top,
+      width = boundingClientRect.width,
+      height = boundingClientRect.height;
 
-    if (boundingClientRect.top > canvas.offsetTop &&
-        boundingClientRect.left > canvas.offsetLeft &&
-        boundingClientRect.width > 4 &&
-        boundingClientRect.height > 4) {
-
+    if (top > offsetTop && left > offsetLeft && width > 4 && height > 4) {
       this.requestRefreshTexture(boundingClientRect);
     }
+    else if (top <= 0 && left <= 0 && width > 10 && height > 10) {
+      window.setTimeout(function() {
+        try {
+          if (!refreshMesh && !refreshTexture) {
+            this.requestRefreshTexture(null);
+            this.requestRefreshMesh();               
+          }
+        }
+        catch(e) {}
+     }.bind(this), 100);
+   }
   }.bind(this);
 
   /**
