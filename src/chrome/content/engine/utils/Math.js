@@ -525,7 +525,7 @@ Tilt.Math = {
       f = h * 6 - i,
       p = v * (1 - s),
       q = v * (1 - f * s),
-      t = v * (1 - (1 - f) * s);
+      t = v * (1 - (1 - f) * s),
       im6 = i % 6;
 
     if (im6 === 0) {
@@ -558,27 +558,51 @@ Tilt.Math = {
    * with ranges from 0..1
    */
   hex2rgba: function(color) {
-    var rgba, r, g, b, a, cr, cg, cb, ca,
-      hex = color.charAt(0) === "#" ? color.substring(1) : color;
+    var hex = color.charAt(0) === "#" ? color.substring(1) : color,
+      value, rgba, r, g, b, a, cr, cg, cb, ca;
 
     if ("undefined" !== typeof this[hex]) {
       return this[hex];
     }
+    else {
+      value = window.parseInt(hex, 16);      
+    }
 
     // e.g. "f00"
     if (hex.length === 3) {
-      cr = hex.charAt(0);
-      cg = hex.charAt(1);
-      cb = hex.charAt(2);
-      hex = [cr, cr, cg, cg, cb, cb, "ff"].join('');
+      r = ((value & 0xf00) >> 8) * 0.062745098;
+      g = ((value & 0x0f0) >> 4) * 0.062745098;
+      b = ((value & 0x00f)     ) * 0.062745098;
+      a = 1;
+
+      return (this[hex] = [r, g, b, a]);
     }
     // e.g. "f008"
-    else if (hex.length === 4 || hex.length === 5) {
-      cr = hex.charAt(0);
-      cg = hex.charAt(1);
-      cb = hex.charAt(2);
-      ca = hex.charAt(3);
-      hex = [cr, cr, cg, cg, cb, cb, ca, ca].join('');
+    else if (hex.length === 4) {
+      r = ((value & 0xf000) >> 12) * 0.062745098;
+      g = ((value & 0x0f00) >> 8 ) * 0.062745098;
+      b = ((value & 0x00f0) >> 4 ) * 0.062745098;
+      a = ((value & 0x000f)      ) * 0.062745098;
+
+      return (this[hex] = [r, g, b, a]);
+    }
+    // e.g. "ff0000"
+    else if (hex.length === 6) {
+      r = ((value & 0xff0000) >> 16) * 0.00392156863;
+      g = ((value & 0x00ff00) >> 8 ) * 0.00392156863;
+      b = ((value & 0x0000ff)      ) * 0.00392156863;
+      a = 1;
+
+      return (this[hex] = [r, g, b, a]);
+    }
+    // e.g "ff0000aa"
+    else if (hex.length === 8) {
+      r = ((value & 0xff000000) >> 24) * 0.00392156863;
+      g = ((value & 0x00ff0000) >> 16) * 0.00392156863;
+      b = ((value & 0x0000ff00) >> 8 ) * 0.00392156863;
+      a = ((value & 0x000000ff)      ) * 0.00392156863;
+
+      return (this[hex] = [r, g, b, a]);
     }
     // e.g. "rgba(255, 0, 0, 128)"
     else if (hex.match("^rgba") == "rgba") {
@@ -588,8 +612,7 @@ Tilt.Math = {
       rgba[2] *= 0.00392156863;
       rgba[3] *= 0.00392156863;
 
-      this[hex] = rgba;
-      return rgba;
+      return (this[hex] = rgba);
     }
     // e.g. "rgb(255, 0, 0)"
     else if (hex.match("^rgb") == "rgb") {
@@ -599,18 +622,12 @@ Tilt.Math = {
       rgba[2] *= 0.00392156863;
       rgba[3] = 1;
 
-      this[hex] = rgba;
-      return rgba;
+      return (this[hex] = rgba);
     }
-
-    r = parseInt(hex.substring(0, 2), 16) * 0.00392156863;
-    g = parseInt(hex.substring(2, 4), 16) * 0.00392156863;
-    b = parseInt(hex.substring(4, 6), 16) * 0.00392156863;
-    a = hex.length === 6 ? 1 : parseInt(
-      hex.substring(6, 8), 16) * 0.00392156863;
-
-    this[hex] = rgba = [r, g, b, a];
-    return rgba;
+    // your argument is invalid
+    else {
+      return (this[hex] = [0, 0, 0, 1]);
+    }
   }
 };
 
