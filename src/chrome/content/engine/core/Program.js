@@ -284,7 +284,11 @@ Tilt.Program.prototype = {
    * Destroys this object and deletes all members.
    */
   destroy: function() {
-    Tilt.$gl.deleteShader(this.$ref);
+    try {
+      Tilt.$gl.deleteShader(this.$ref);
+    }
+    catch(e) {}
+
     Tilt.destroyObject(this);
   }
 };

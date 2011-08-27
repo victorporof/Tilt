@@ -178,7 +178,11 @@ Tilt.Texture.prototype = {
    * Destroys this object and deletes all members.
    */
   destroy: function() {
-    Tilt.$gl.deleteTexture(this.$ref);
+    try {
+      Tilt.$gl.deleteTexture(this.$ref);
+    }
+    catch(e) {}
+
     Tilt.destroyObject(this);
   }
 };
