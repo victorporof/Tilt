@@ -329,6 +329,18 @@ Tilt.Container.prototype.isMouseOver = function(element) {
 };
 
 /**
+ * Removes all the children from the container.
+ */
+Tilt.Container.prototype.clear = function() {
+  for (var i = 0, len = this.length; i < len; i++) {
+    this[i].destroy();
+    this[i] = null;
+  }
+
+  this.splice(0, this.length);
+};
+
+/**
  * Destroys this object and deletes all members.
  */
 Tilt.Container.prototype.destroy = function() {
