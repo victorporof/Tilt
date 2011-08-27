@@ -437,52 +437,52 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
         h = coord.height;
 
         // compute the vertices
-        vertices.push(x,     y,     z,                    /* front */ // 0
-                      x + w, y,     z,                                // 1
-                      x + w, y + h, z,                                // 2
-                      x,     y + h, z,                                // 3
+        vertices.unshift(x,     y,     z,                    /* front */ // 0
+                         x + w, y,     z,                                // 1
+                         x + w, y + h, z,                                // 2
+                         x,     y + h, z,                                // 3
 
         // we don't duplicate vertices for the left and right faces, because
         // they can be reused from the bottom and top faces; we do, however,
         // duplicate some vertices from front face, because it has custom
         // texture coordinates which are not shared by the other faces
-                      x,     y + h, z - thickness,       /* top */    // 4
-                      x + w, y + h, z - thickness,                    // 5
-                      x + w, y + h, z,                                // 6
-                      x,     y + h, z,                                // 7
-                      x,     y,     z,                   /* bottom */ // 8
-                      x + w, y,     z,                                // 9
-                      x + w, y,     z - thickness,                    // 10
-                      x,     y,     z - thickness);                   // 11
+                        x,     y + h, z - thickness,       /* top */    // 4
+                        x + w, y + h, z - thickness,                    // 5
+                        x + w, y + h, z,                                // 6
+                        x,     y + h, z,                                // 7
+                        x,     y,     z,                   /* bottom */ // 8
+                        x + w, y,     z,                                // 9
+                        x + w, y,     z - thickness,                    // 10
+                        x,     y,     z - thickness);                   // 11
 
         // compute the texture coordinates
-        texCoord.push((x + tilt.width  * 0.5    ) / texture.width,
-                      (y + tilt.height * 0.5    ) / texture.height,
-                      (x + tilt.width  * 0.5 + w) / texture.width,
-                      (y + tilt.height * 0.5    ) / texture.height,
-                      (x + tilt.width  * 0.5 + w) / texture.width,
-                      (y + tilt.height * 0.5 + h) / texture.height,
-                      (x + tilt.width  * 0.5    ) / texture.width,
-                      (y + tilt.height * 0.5 + h) / texture.height,
-                      -1, -1, -1, -1, -1, -1, -1, -1,
-                      -1, -1, -1, -1, -1, -1, -1, -1);
+        texCoord.unshift((x + tilt.width  * 0.5    ) / texture.width,
+                         (y + tilt.height * 0.5    ) / texture.height,
+                         (x + tilt.width  * 0.5 + w) / texture.width,
+                         (y + tilt.height * 0.5    ) / texture.height,
+                         (x + tilt.width  * 0.5 + w) / texture.width,
+                         (y + tilt.height * 0.5 + h) / texture.height,
+                         (x + tilt.width  * 0.5    ) / texture.width,
+                         (y + tilt.height * 0.5 + h) / texture.height,
+                         -1, -1, -1, -1, -1, -1, -1, -1,
+                         -1, -1, -1, -1, -1, -1, -1, -1);
 
         // compute the indices
-        indices.push(i + 0,  i + 1,  i + 2,  i + 0,  i + 2,  i + 3,
-                     i + 4,  i + 5,  i + 6,  i + 4,  i + 6,  i + 7,
-                     i + 8,  i + 9,  i + 10, i + 8,  i + 10, i + 11,
-                     i + 10, i + 9,  i + 6,  i + 10, i + 6,  i + 5,
-                     i + 8,  i + 11, i + 4,  i + 8,  i + 4,  i + 7);
+        indices.unshift(i + 0,  i + 1,  i + 2,  i + 0,  i + 2,  i + 3,
+                        i + 4,  i + 5,  i + 6,  i + 4,  i + 6,  i + 7,
+                        i + 8,  i + 9,  i + 10, i + 8,  i + 10, i + 11,
+                        i + 10, i + 9,  i + 6,  i + 10, i + 6,  i + 5,
+                        i + 8,  i + 11, i + 4,  i + 8,  i + 4,  i + 7);
 
         // compute the wireframe indices
-        wireframeIndices.push(i + 0,  i + 1,  i + 1,  i + 2,
-                              i + 2,  i + 3,  i + 3,  i + 0,
-                              i + 4,  i + 5,  i + 5,  i + 6,
-                              i + 6,  i + 7,  i + 7,  i + 4,
-                              i + 8,  i + 9,  i + 9,  i + 10,
-                              i + 10, i + 11, i + 11, i + 8,
-                              i + 10, i + 9,  i + 9,  i + 6,
-                              i + 6,  i + 5,  i + 5,  i + 10);
+        wireframeIndices.unshift(i + 0,  i + 1,  i + 1,  i + 2,
+                                 i + 2,  i + 3,  i + 3,  i + 0,
+                                 i + 4,  i + 5,  i + 5,  i + 6,
+                                 i + 6,  i + 7,  i + 7,  i + 4,
+                                 i + 8,  i + 9,  i + 9,  i + 10,
+                                 i + 10, i + 11, i + 11, i + 8,
+                                 i + 10, i + 9,  i + 9,  i + 6,
+                                 i + 6,  i + 5,  i + 5,  i + 10);
       }
       else {
         // information about these nodes should still be accessible, despite
