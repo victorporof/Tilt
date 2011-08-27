@@ -107,6 +107,9 @@ TiltChrome.BrowserOverlay = {
       this.colorPicker.refresh =
         this.colorPicker.iframe.contentWindow.refreshColorPicker;
 
+      // the document viewer zoom needs to be reset to avoid potential bugs
+      gBrowser.selectedBrowser.markupDocumentViewer.fullZoom = 1;
+
       // get the iframe which will be used to create the canvas element
       var iframe = document.getElementById("tilt-iframe"),
 
