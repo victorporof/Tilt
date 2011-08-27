@@ -842,6 +842,11 @@ TiltChrome.UI.Default = function() {
    * @param {Number} uid: a unique id for the node
    */
   this.meshNodeCallback = function(node, depth, index, uid) {
+    if (minidomContainer.$loaded) {
+      minidomContainer.$loaded = false;
+      minidomContainer.view.clear();
+      this.stripNo = 0;
+    }
     if ("undefined" === typeof this.stripNo) {
       this.stripNo = 0;
     }
@@ -978,6 +983,9 @@ TiltChrome.UI.Default = function() {
 
       element.setFill(settings.fill);
     });
+
+    // set a flag for the minidom container
+    minidomContainer.$loaded = true;
   };
 
   /**
@@ -1006,6 +1014,7 @@ TiltChrome.UI.Default = function() {
     this.visualization = null;
     this.controller = null;
     ui = null;
+    config = null;
 
     if (alwaysVisibleElements !== null) {
       alwaysVisibleElements.destroy();
