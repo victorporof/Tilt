@@ -323,6 +323,9 @@ TiltChrome.Controller.MouseAndKeyboard = function() {
       arcball = null;
     }
 
+    downX = null;
+    downY = null;
+
     Tilt.destroyObject(this);
   };
 
