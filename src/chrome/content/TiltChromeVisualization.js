@@ -338,10 +338,11 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
     else if ("object" === typeof rect) {
       // refresh the image representation of the document only for a delimited
       // bounding rectangle
-      Tilt.Extensions.WebGL.refreshDocumentImage(window.content, image, rect);
+      var refresh = Tilt.Extensions.WebGL.refreshDocumentImage(window.content, 
+        image, rect);
 
       // update the texture with the refreshed sub-image
-      texture.updateSubImage2D(image, rect.left, rect.top);
+      texture.updateSubImage2D(refresh, rect.left, rect.top);
     }
   }.bind(this);
 
