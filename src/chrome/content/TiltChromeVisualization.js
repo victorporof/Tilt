@@ -384,46 +384,52 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
 
       // save some information about each node in the dom
       // this will be used when showing the source editor panel popup
-      var info = {
-        innerHTML: node.innerHTML,
-        attributes: node.attributes,
-        localName: node.localName,
-        className: node.className,
-        id: node.id,
-        uid: uid
+      var innerHTML = node.innerHTML,
+        attributes = node.attributes,
+        localName = node.localName,
+        className = node.className,
+        id = node.id,
+
+      info = {
+        innerHTML: innerHTML,
+        attributes: attributes,
+        localName: localName,
+        className: className,
+        id: id,
+        uid: uid,
+        style: "",
+        index: -1
       };
 
       // if css style is available for the current node, compute it now
       try {
         info.style = window.getComputedStyle(node);
       }
-      catch (e) {
-        info.style = "";
-      }
+      catch (e) {}
 
       // skip some nodes to avoid too bloated visualization meshes
-      if (node.localName === "head" ||
-          node.localName === "title" ||
-          node.localName === "meta" ||
-          node.localName === "link" ||
-          node.localName === "style" ||
-          node.localName === "script" ||
-          node.localName === "noscript" ||
-          node.localName === "option") {
+      if (localName === "head" ||
+          localName === "title" ||
+          localName === "meta" ||
+          localName === "link" ||
+          localName === "style" ||
+          localName === "script" ||
+          localName === "noscript" ||
+          localName === "option") {
 
         // information about these nodes should still be accessible, despite
         // the fact that they're not rendered
-        info.index = -1;
         hiddenNodes.push(info);
-
         return;
       }
 
       // get the x, y, width and height coordinates of a node
-      var coord = Tilt.Document.getNodeCoordinates(node);
+      var coord = Tilt.Document.getNodeCoordinates(node),
+        coordWidth = coord.width,
+        coordHeight = coord.height;
 
       // use this node only if it actually has visible dimensions
-      if (coord.width > 4 && coord.height > 4) {
+      if (coordWidth > 4 && coordHeight > 4) {
 
         // information about these nodes should still be accessible
         info.index = visibleNodes.length;
@@ -436,8 +442,8 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
         z = depth * thickness + random() * 0.1,
         x = coord.x - tilt.width / 2 + left + random() * 0.1,
         y = coord.y - tilt.height / 2 + top + random() * 0.1,
-        w = coord.width,
-        h = coord.height;
+        w = coordWidth,
+        h = coordHeight;
 
         // compute the vertices
         vertices.unshift(x,     y,     z,                    /* front */ // 0
@@ -490,7 +496,6 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
       else {
         // information about these nodes should still be accessible, despite
         // the fact that they're not rendered
-        info.index = -1;
         hiddenNodes.push(info);
       }
     }.bind(this), function(maxDepth, totalNodes) {
@@ -580,6 +585,8 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
     // when the tab is closed or the url changes, destroy visualization
     tabContainer.addEventListener("TabClose", gClose, false);
     tabContainer.addEventListener("TabAttrModified", gClose, false);
+    contentWindow.addEventListener("blur", gBlur, false);
+    contentWindow.addEventListener("focus", gFocus, false);
     contentWindow.addEventListener("resize", gResize, false);
     gBrowser.addEventListener("mouseover", gMouseOver, false);
     gBrowser.addEventListener("load", gLoad, true);
@@ -594,7 +601,7 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
    * Event handling the MozAfterPaint event.
    */
   var gAfterPaint = function(e) {
-    if (this.$gResizing) {
+    if (this.$gResizing || this.$gFocusing || this.$gBlurring) {
       return;
     }
 
@@ -619,7 +626,7 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
         try {
           if (!refreshMesh && !refreshTexture) {
             this.requestRefreshTexture(null);
-            this.requestRefreshMesh();               
+            this.requestRefreshMesh();
           }
         }
         catch(e) {}
@@ -630,7 +637,7 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
   /**
    * Event method called when the tab container of the current browser closes.
    */
-  var gClose = function(e) {
+  var gClose = function() {
     if (TiltChrome.BrowserOverlay.href !== window.content.location.href) {
       TiltChrome.BrowserOverlay.href = null;
       TiltChrome.BrowserOverlay.destroy(true, true);
@@ -638,9 +645,37 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
   }.bind(this);
 
   /**
+   * Event method called when the content of the current browser is unfocused.
+   */
+  var gBlur = function() {
+    // set a flag to signal that the window is currently unfocusing (to avoid
+    // doing complex stuff like recreating the visualization mesh)
+    this.$gBlurring = true;
+
+    // set a flag to signal that the window has stopped unfocusing
+    window.setTimeout(function() {
+      this.$gBlurring = false;
+    }.bind(this), 100);
+  }.bind(this);
+
+  /**
+   * Event method called when the content of the current browser is focused.
+   */
+  var gFocus = function() {
+    // set a flag to signal that the window is currently focusing (to avoid
+    // doing complex stuff like recreating the visualization mesh)
+    this.$gFocusing = true;
+
+    // set a flag to signal that the window has stopped focusing
+    window.setTimeout(function() {
+      this.$gFocusing = false;
+    }.bind(this), 100);
+  }.bind(this);
+
+  /**
    * Event method called when the content of the current browser is resized.
    */
-  var gResize = function(e) {
+  var gResize = function() {
     // set a flag to signal that the window is currently resizing (to avoid
     // doing complex stuff like recreating the visualization mesh)
     this.$gResizing = true;
@@ -696,7 +731,7 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
   /**
    * Event method called when the tab container of the current browser loads.
    */
-  var gLoad = function(e) {
+  var gLoad = function() {
     if ("undefined" === typeof this.$gLoadFinished) {
       this.$gLoadFinished = true;
     }
@@ -813,7 +848,11 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
   this.performMeshColorbufferRefresh = function() {
     this.requestRedraw();
 
-    var config = TiltChrome.Config.UI,
+    var domStrips = TiltChrome.Config.UI.domStrips,
+      clamp = Tilt.Math.clamp.bind(Tilt.Math),
+      hex2rgba = Tilt.Math.hex2rgba.bind(Tilt.Math),
+      floor = Math.floor,
+
       indices = mesh.indices.components,
       nodes = mesh.visibleNodes,
       color = [];
@@ -823,7 +862,7 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
     for (var i = 0, len = indices.length; i < len; i += 30) {
 
       // get the node and the name to decide how to color code the node
-      var node = nodes[Math.floor(i / 30)],
+      var node = nodes[floor(i / 30)],
 
       // the head and body use an identical color code by default
       name = (node.localName !== "head" &&
@@ -831,30 +870,38 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
               node.localName : "head/body",
 
       // the color settings may or not be specified for the current node name
-      settings = config.domStrips[name] ||
-                 config.domStrips["other"],
+      settings = domStrips[name] ||
+                 domStrips["other"],
 
       // create a gradient using the current node color code
-      hex = Tilt.Math.hex2rgba(settings.fill),
+      hex = hex2rgba(settings.fill),
+
       f1 = 0.6,
       f2 = 1.0,
-      g1 = [Tilt.Math.clamp(hex[0] * f1, 0, 1),
-            Tilt.Math.clamp(hex[1] * f1, 0, 1),
-            Tilt.Math.clamp(hex[2] * f1, 0, 1)],
-      g2 = [Tilt.Math.clamp(hex[0] * f2, 0, 1),
-            Tilt.Math.clamp(hex[1] * f2, 0, 1),
-            Tilt.Math.clamp(hex[2] * f2, 0, 1)];
+      g1 = [clamp(hex[0] * f1, 0, 1),
+            clamp(hex[1] * f1, 0, 1),
+            clamp(hex[2] * f1, 0, 1)],
+      g2 = [clamp(hex[0] * f2, 0, 1),
+            clamp(hex[1] * f2, 0, 1),
+            clamp(hex[2] * f2, 0, 1)],
+
+      g10 = g1[0],
+      g11 = g1[1],
+      g12 = g1[2],
+      g20 = g2[0],
+      g21 = g2[1],
+      g22 = g2[2];
 
       // compute the colors for each vertex in the mesh
       color.unshift(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                    g1[0], g1[1], g1[2],
-                    g1[0], g1[1], g1[2],
-                    g2[0], g2[1], g2[2],
-                    g2[0], g2[1], g2[2],
-                    g2[0], g2[1], g2[2],
-                    g2[0], g2[1], g2[2],
-                    g1[0], g1[1], g1[2],
-                    g1[0], g1[1], g1[2]);
+                    g10, g11, g12,
+                    g10, g11, g12,
+                    g20, g21, g22,
+                    g20, g21, g22,
+                    g20, g21, g22,
+                    g20, g21, g22,
+                    g10, g11, g12,
+                    g10, g11, g12);
     }
 
     // create the buffer using the previously computed color array
@@ -1255,6 +1302,14 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
       tabContainer.removeEventListener("TabClose", gClose, false);
       tabContainer.removeEventListener("TabAttrModified", gClose, false);
       gClose = null;
+    }
+    if (gBlur !== null) {
+      contentWindow.removeEventListener("blur", gBlur, false);
+      gBlur = null;
+    }
+    if (gFocus !== null) {
+      contentWindow.removeEventListener("focus", gFocus, false);
+      gFocus = null;
     }
     if (gResize !== null) {
       contentWindow.removeEventListener("resize", gResize, false);
