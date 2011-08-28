@@ -280,7 +280,7 @@ Tilt.Document = {
         height: clientRect.height
       };
     }
-    catch (e) {
+    catch(e) {
       x = 0;
       y = 0;
       w = node.clientWidth;
