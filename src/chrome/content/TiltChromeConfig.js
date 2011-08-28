@@ -162,9 +162,9 @@ TiltChrome.Config.UI = {
     "img": {
       fill: "#FFB473"
     },
-		"iframe": {
-			fill: "#85004B"
-		},
+    "iframe": {
+      fill: "#85004B"
+    },
     "other": {
       fill: "#444"
     }
