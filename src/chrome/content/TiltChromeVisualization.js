@@ -356,7 +356,8 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
       return;
     }
 
-    var vertices = [],
+    var random = new Alea(0),
+      vertices = [],
       texCoord = [],
       indices = [],
       wireframeIndices = [],
@@ -432,9 +433,9 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
         var i = vertices.length / 3, // a vertex has 3 coords: x, y & z
 
         // the entire mesh's pivot is the screen center
-        z = depth * thickness + Math.random() * 0.1,
-        x = coord.x - tilt.width / 2 + left + Math.random() * 0.1,
-        y = coord.y - tilt.height / 2 + top + Math.random() * 0.1,
+        z = depth * thickness + random() * 0.1,
+        x = coord.x - tilt.width / 2 + left + random() * 0.1,
+        y = coord.y - tilt.height / 2 + top + random() * 0.1,
         w = coord.width,
         h = coord.height;
 
@@ -562,9 +563,6 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
 
     // call any necessary additional mesh initialization functions
     this.performMeshColorbufferRefresh();
-
-    // do a gargage collection after the initialization completes
-    TiltChrome.BrowserOverlay.performGC();
   }.bind(this);
 
   /**
@@ -599,8 +597,8 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
     var boundingClientRect = e.boundingClientRect,
       offsetLeft = canvas.offsetLeft,
       offsetTop = canvas.offsetTop,
-      imageWidth = image.width,
-      imageHeight = image.height,
+      innerWidth = window.content.innerWidth,
+      innerHeight = window.content.innerHeight,
       left = boundingClientRect.left,
       top = boundingClientRect.top,
       width = boundingClientRect.width,
@@ -610,8 +608,8 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
       this.requestRefreshTexture(boundingClientRect);
     }
     else if (left <= 0 && top <= 0 &&
-             left >= -imageWidth && top >= -imageHeight &&
-             (width >= imageWidth || height >= imageHeight)) {
+             left >= -innerWidth && top >= -innerHeight &&
+             width === innerWidth && height === innerHeight) {
 
       window.setTimeout(function() {
         try {
@@ -621,8 +619,8 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
           }
         }
         catch(e) {}
-     }.bind(this), 100);
-   }
+      }.bind(this), 10);
+    }
   }.bind(this);
 
   /**
