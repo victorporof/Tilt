@@ -84,7 +84,6 @@ TiltChrome.BrowserOverlay = {
       this.href = null; // forget the current tab location
     }
     else {
-
       // the current tab has a new page, so recreate the entire visualization
       // remember the current tab location
       this.href = window.content.location.href;
@@ -9957,7 +9956,7 @@ Tilt.Document = {
         height: clientRect.height
       };
     }
-    catch (e) {
+    catch(e) {
       x = 0;
       y = 0;
       w = node.clientWidth;
@@ -11181,13 +11180,12 @@ Tilt.Profiler.intercept("Tilt.String", Tilt.String);
 "use strict";
 
 var Tilt = Tilt || {};
-var EXPORTED_SYMBOLS = ["Tilt.Extensions.WebGL"];
+var EXPORTED_SYMBOLS = ["Tilt.WebGL"];
 
 /**
  * WebGL extensions
  */
-Tilt.Extensions = {};
-Tilt.Extensions.WebGL = {
+Tilt.WebGL = {
 
   /**
    * This shim renders a content window to a canvas element, but clamps the
@@ -11262,16 +11260,25 @@ Tilt.Extensions.WebGL = {
       return canvas;
     }
     else {
-      if ("undefined" === typeof this.$canvas) {
-        this.$canvas = Tilt.Document.initCanvas();
+      try {
+        if ("undefined" === typeof this.$canvas) {
+          this.$canvas = Tilt.Document.initCanvas();
+        }
+
+        this.$canvas.width = width;
+        this.$canvas.height = height;
+
+        ctx = this.$canvas.getContext("2d");
+        ctx.drawWindow(contentWindow, left, top, width, height, "#fff");
+
+        return this.$canvas;
       }
-      this.$canvas.width = width;
-      this.$canvas.height = height;
+      catch(e) {
+        this.$canvas = null;
+        delete this.$canvas;
 
-      ctx = this.$canvas.getContext("2d");
-      ctx.drawWindow(contentWindow, left, top, width, height, "#fff");
-
-      return this.$canvas;
+        return null;
+      }
     }
   }
 };
@@ -11546,9 +11553,9 @@ TiltChrome.Config.UI = {
     "img": {
       fill: "#FFB473"
     },
-		"iframe": {
-			fill: "#85004B"
-		},
+    "iframe": {
+      fill: "#85004B"
+    },
     "other": {
       fill: "#444"
     }
@@ -12105,7 +12112,7 @@ TiltChrome.UI.Default = function() {
       padding: [0, 0, 0, 5],
       onclick: function() {
         window.open("chrome://tilt/content/TiltChromeOptions.xul", "Options", 
-          "chrome, modal, centerscreen, width=400, height=325");
+          "chrome, modal, centerscreen, width=410, height=325");
       }.bind(this)
     });
 
@@ -13047,13 +13054,13 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
    * Create the renderer, containing useful functions for easy drawing.
    */
   var tilt = new Tilt.Renderer(canvas, {
-    // if initialization fails because the WebGL context couldn't be created,
-    // show a corresponding prompt message and open a tab to troubleshooting
+    // if initialization fails because the WebGL context couldn't be created
     onfail: function() {
       TiltChrome.BrowserOverlay.destroy(true, true);
       TiltChrome.BrowserOverlay.href = null;
       Tilt.Console.alert("Firefox", Tilt.StringBundle.get("initWebGL.error"));
 
+      // show a corresponding prompt message and open a tab to troubleshooting
       gBrowser.selectedTab =
         gBrowser.addTab("http://get.webgl.org/troubleshooting/");
     }
@@ -13312,7 +13319,7 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
       // this will be removed once the MOZ_window_region_texture extension
       // is finished; currently converting the document image to a texture
       // bug #653656
-      image = Tilt.Extensions.WebGL.initDocumentImage(window.content);
+      image = Tilt.WebGL.initDocumentImage(window.content);
 
       if (texture !== null) {
         texture.destroy();
@@ -13328,13 +13335,13 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
       }
     }
     else if ("object" === typeof rect) {
-      // refresh the image representation of the document only for a delimited
-      // bounding rectangle
-      var refresh = Tilt.Extensions.WebGL.refreshDocumentImage(window.content, 
-        image, rect);
+      // refresh the document image for a delimited bounding rectangle
+      var ref = Tilt.WebGL.refreshDocumentImage(window.content, image, rect);
 
       // update the texture with the refreshed sub-image
-      texture.updateSubImage2D(refresh, rect.left, rect.top);
+      if (ref) {
+        texture.updateSubImage2D(ref, rect.left, rect.top);        
+      }
     }
   }.bind(this);
 
@@ -13586,6 +13593,10 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
    * Event handling the MozAfterPaint event.
    */
   var gAfterPaint = function(e) {
+    if (this.$gResizing) {
+      return;
+    }
+
     var boundingClientRect = e.boundingClientRect,
       offsetLeft = canvas.offsetLeft,
       offsetTop = canvas.offsetTop,
@@ -13600,8 +13611,8 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
       this.requestRefreshTexture(boundingClientRect);
     }
     else if (left <= 0 && top <= 0 &&
-             left >= -innerWidth && top >= -innerHeight &&
-             width === innerWidth && height === innerHeight) {
+            (left >= -innerWidth || top >= -innerHeight) &&
+            (width >= innerWidth || height >= innerHeight)) {
 
       window.setTimeout(function() {
         try {
@@ -13629,6 +13640,10 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
    * Event method called when the content of the current browser is resized.
    */
   var gResize = function(e) {
+    // set a flag to signal that the window is currently resizing (to avoid
+    // doing complex stuff like recreating the visualization mesh)
+    this.$gResizing = true;
+
     this.requestRedraw();
     tilt.width = window.content.innerWidth;
     tilt.height = window.content.innerHeight;
@@ -13654,7 +13669,14 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
    * Event method called when the mouse comes over the current browser.
    */
   var gMouseOver = function() {
+    // set a flag to signal that the window has stopped resizing
+    window.setTimeout(function() {
+      this.$gResizing = false;
+    }.bind(this), 100);
+
     this.requestRedraw();
+    tilt.width = window.content.innerWidth;
+    tilt.height = window.content.innerHeight;
 
     // this happens after the browser window is resized
     if (canvas.width !== tilt.width || canvas.height !== tilt.height) {
@@ -13674,8 +13696,8 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
    * Event method called when the tab container of the current browser loads.
    */
   var gLoad = function(e) {
-    if ("undefined" === typeof this.$load) {
-      this.$load = true;
+    if ("undefined" === typeof this.$gLoadFinished) {
+      this.$gLoadFinished = true;
     }
     else {
       window.setTimeout(function() {

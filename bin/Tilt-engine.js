@@ -9754,7 +9754,7 @@ Tilt.Document = {
         height: clientRect.height
       };
     }
-    catch (e) {
+    catch(e) {
       x = 0;
       y = 0;
       w = node.clientWidth;
@@ -10978,13 +10978,12 @@ Tilt.Profiler.intercept("Tilt.String", Tilt.String);
 "use strict";
 
 var Tilt = Tilt || {};
-var EXPORTED_SYMBOLS = ["Tilt.Extensions.WebGL"];
+var EXPORTED_SYMBOLS = ["Tilt.WebGL"];
 
 /**
  * WebGL extensions
  */
-Tilt.Extensions = {};
-Tilt.Extensions.WebGL = {
+Tilt.WebGL = {
 
   /**
    * This shim renders a content window to a canvas element, but clamps the
@@ -11059,16 +11058,25 @@ Tilt.Extensions.WebGL = {
       return canvas;
     }
     else {
-      if ("undefined" === typeof this.$canvas) {
-        this.$canvas = Tilt.Document.initCanvas();
+      try {
+        if ("undefined" === typeof this.$canvas) {
+          this.$canvas = Tilt.Document.initCanvas();
+        }
+
+        this.$canvas.width = width;
+        this.$canvas.height = height;
+
+        ctx = this.$canvas.getContext("2d");
+        ctx.drawWindow(contentWindow, left, top, width, height, "#fff");
+
+        return this.$canvas;
       }
-      this.$canvas.width = width;
-      this.$canvas.height = height;
+      catch(e) {
+        this.$canvas = null;
+        delete this.$canvas;
 
-      ctx = this.$canvas.getContext("2d");
-      ctx.drawWindow(contentWindow, left, top, width, height, "#fff");
-
-      return this.$canvas;
+        return null;
+      }
     }
   }
 };
