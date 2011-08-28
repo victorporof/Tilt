@@ -15,7 +15,7 @@
           <radio label="Document texture only (fastest)"
             selected="false"/>
 
-          <radio label="Texture and some DOM elements"
+          <radio label="Texture and some DOM elements (recommended)"
             selected="true"/>
 
           <radio label="Everything (slowest)"
@@ -44,7 +44,7 @@
 
   <groupbox>
       <hbox align="center">
-          <label value="Open &amp; close Tilt" width="100"/>
+          <label value="Open &amp; close Tilt" width="110"/>
           <textbox value="Ctrl+Shift+M"/>
           <button label="Reset"/>
       </hbox>
