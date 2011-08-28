@@ -65,8 +65,7 @@
   </keyset>
 
   <!-- <menupopup id="menu_ToolsPopup">
-    <menuitem class="menu-iconic"
-      id="tilt-menu"
+    <menuitem id="tilt-menu"
       key="tilt-menu-key"
       label="&tilt.menu.label;"
       accesskey="&tilt.menu.accesskey;"
@@ -76,8 +75,7 @@
   </menupopup> -->
 
   <menupopup id="menuWebDeveloperPopup">
-    <menuitem class="menu-iconic"
-      id="tilt-menu"
+    <menuitem id="tilt-menu"
       key="tilt-menu-key"
       label="&tilt.menu.label;"
       accesskey="&tilt.menu.accesskey;"
@@ -87,8 +85,7 @@
   </menupopup>
 
   <menupopup id="appmenu_webDeveloper_popup">
-    <menuitem class="menu-iconic"
-      id="tilt-menu"
+    <menuitem id="tilt-menu"
       key="tilt-menu-key"
       label="&tilt.menu.label;"
       accesskey="&tilt.menu.accesskey;"
@@ -106,15 +103,14 @@
       <vbox>
         <hbox align="center">
           <label id="tilt-sourceeditor-title"
-            crop="center"
-            width="350"/>
+            width="350"
+            crop="center"/>
 
           <spacer flex="1"/>
 
           <button id="tilt-sourceeditor-close"
-            label="Close"
-            oncommand="document.getElementById('tilt-sourceeditor') 
-                      .hidePopup();"/>
+            oncommand="document.getElementById('tilt-sourceeditor').hidePopup();"
+            label="Close"/>
         </hbox>
 
         <iframe id="tilt-sourceeditor-iframe"
@@ -132,5 +128,6 @@
     </panel>
 
     <iframe id="tilt-iframe" style="visibility: collapse;" type="chrome"/>
-  </window>  
+  </window>
+
 </overlay>
