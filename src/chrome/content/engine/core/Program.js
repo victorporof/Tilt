@@ -99,6 +99,10 @@ Tilt.Program.prototype = {
     this.$uniforms = this.$ref.uniforms;
 
     // cleanup
+    this.$ref.id = null;
+    this.$ref.attributes = null;
+    this.$ref.uniforms = null;
+
     delete this.$ref.id;
     delete this.$ref.attributes;
     delete this.$ref.uniforms;
