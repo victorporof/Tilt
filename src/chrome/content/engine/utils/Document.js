@@ -230,12 +230,14 @@ Tilt.Document = {
    */
   getContentWindowDimensions: function(contentWindow) {
     var coords,
-      pageWidth = contentWindow.innerWidth + contentWindow.scrollMaxX,
-      pageHeight = contentWindow.innerHeight + contentWindow.scrollMaxY,
-      size = { width: pageWidth, height: pageHeight };
+      size = {
+        width: contentWindow.innerWidth + contentWindow.scrollMaxX,
+        height: contentWindow.innerHeight + contentWindow.scrollMaxY
+      };
 
     this.traverse(function(child) {
       coords = this.getNodeCoordinates(child);
+
       size.width = Math.max(size.width, coords.x||0 + coords.width||0);
       size.height = Math.max(size.height, coords.y||0 + coords.height||0);
     }.bind(this), null, contentWindow.document);
@@ -262,9 +264,8 @@ Tilt.Document = {
     var x, y, w, h, clientRect;
 
     try {
-      if (node.localName === "head" ||
-          node.localName === "body") {
-            throw new Exception();
+      if (node.localName === "head" || node.localName === "body") {
+          throw new Exception();
       }
 
       // this is the preferred way of getting the bounding client rectangle
@@ -379,7 +380,8 @@ Tilt.Document = {
    * @return {String} the custom attributes text
    */
   getAttributesString: function(attributes) {
-    var attText = [], i, len;
+    var attText = [],
+      i, len;
 
     for (i = 0, len = attributes.length; i < len; i++) {
       attText.push(attributes[i].name + " = \"" + attributes[i].value + "\"");
