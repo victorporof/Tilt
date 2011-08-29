@@ -130,6 +130,11 @@ Tilt.Texture.prototype = {
     }
 
     // cleanup
+    this.$ref.id = null;
+    this.$ref.width = null;
+    this.$ref.height = null;
+    this.onload = null;
+
     delete this.$ref.id;
     delete this.$ref.width;
     delete this.$ref.height;
@@ -166,12 +171,15 @@ Tilt.Texture.prototype = {
    * @param {Number} y: the y offset
    */
   updateSubImage2D: function(img, x, y) {
-    var gl = Tilt.$gl,
-      prev = gl.getParameter(gl.TEXTURE_BINDING_2D);
+    if (this.width === img.width && this.height === img.height && x && y) {
+      x = 0;
+      y = 0;
+    }
+
+    var gl = Tilt.$gl;
 
     gl.bindTexture(gl.TEXTURE_2D, this.$ref);
     gl.texSubImage2D(gl.TEXTURE_2D, 0, x, y, gl.RGBA, gl.UNSIGNED_BYTE, img);
-    gl.bindTexture(gl.TEXTURE_2D, prev);
   },
 
   /**
