@@ -69,9 +69,9 @@ Tilt.Arcball = function(width, height, radius) {
    */
   this.$mouseButton = -1;
   this.$scrollValue = 0;
-  this.scrollMin = -3000;
-  this.scrollMax = 500;
-  this.scrollSpeed = 1;
+  this.$scrollSpeed = 1;
+  this.$scrollMin = -3000;
+  this.$scrollMax = 500;
 
   /**
    * Array retaining the current pressed key codes.
@@ -352,9 +352,9 @@ Tilt.Arcball.prototype = {
    * @param {Number} scroll: the mouse wheel direction and speed
    */
   mouseScroll: function(scroll) {
-    var speed = this.scrollSpeed,
-      min = this.scrollMin,
-      max = this.scrollMax;
+    var speed = this.$scrollSpeed,
+      min = this.$scrollMin,
+      max = this.$scrollMax;
 
     // clear any interval resetting or manipulating the arcball if set
     this.$clearInterval();
@@ -424,6 +424,25 @@ Tilt.Arcball.prototype = {
       sphereVec[1] = y;
       sphereVec[2] = Math.sqrt(1 - sqlength);
     }
+  },
+
+  /**
+   * Sets the minimum and maximum scrolling bounds.
+   *
+   * @param {Number} min: the minimum scrolling bounds
+   * @param {Number} max: the maximum scrolling bounds
+   */
+  setScrollBounds: function(min, max) {
+    this.$scrollMin = min;
+    this.$scrollMax = max;
+  },
+
+  /**
+   * Sets the scrolling (zooming) speed.
+   * @param {Number} speed: the speed
+   */
+  setScrollSpeed: function(speed) {
+    this.$scrollSpeed = speed;
   },
 
   /**
@@ -699,7 +718,11 @@ Tilt.VertexBuffer.prototype = {
    * Destroys this object and sets all members to null.
    */
   destroy: function() {
-    Tilt.$gl.deleteBuffer(this.$ref);
+    try {
+      Tilt.$gl.deleteBuffer(this.$ref);
+    }
+    catch(e) {}
+
     Tilt.destroyObject(this);
   }
 };
@@ -780,7 +803,11 @@ Tilt.IndexBuffer.prototype = {
    * Destroys this object and deletes all members.
    */
   destroy: function() {
-    Tilt.$gl.deleteBuffer(this.$ref);
+    try {
+      Tilt.$gl.deleteBuffer(this.$ref);
+    }
+    catch(e) {}
+
     Tilt.destroyObject(this);
   }
 };
@@ -862,6 +889,12 @@ Tilt.$loadedTextures = {};
  * Clears the cache and sets all the variables to default.
  */
 Tilt.clearCache = function() {
+  Tilt.destroyObject(Tilt.$gl);
+  Tilt.destroyObject(Tilt.$renderer);
+  Tilt.destroyObject(Tilt.$activeShader);
+  Tilt.destroyObject(Tilt.$enabledAttributes);
+  Tilt.destroyObject(Tilt.$loadedTextures);
+
   Tilt.$gl = null;
   Tilt.$renderer = null;
   Tilt.$activeShader = -1;
@@ -925,7 +958,10 @@ Tilt.destroyObject = function(scope) {
     }
     catch(e) {}
     finally {
-      scope[i] = null;
+      try {
+        scope[i] = null;
+      }
+      catch(e) {}
       delete scope[i];
     }
   }
@@ -1001,11 +1037,12 @@ Tilt.Profiler = {
    * @param {Function} duringCall: optional, custom logic for interception
    */
   intercept: function(ns, object, name, beforeCall, afterCall, duringCall) {
-    var method, index, i;
-
+    // the profiler must be enabled to intercept functions
     if (!this.enabled) {
       return;
     }
+
+    var method, index, i;
 
     // if the function name is falsy, intercept all the object functions
     if (!name) {
@@ -1268,6 +1305,10 @@ Tilt.Program.prototype = {
     this.$uniforms = this.$ref.uniforms;
 
     // cleanup
+    this.$ref.id = null;
+    this.$ref.attributes = null;
+    this.$ref.uniforms = null;
+
     delete this.$ref.id;
     delete this.$ref.attributes;
     delete this.$ref.uniforms;
@@ -1848,6 +1889,11 @@ Tilt.Texture.prototype = {
     }
 
     // cleanup
+    this.$ref.id = null;
+    this.$ref.width = null;
+    this.$ref.height = null;
+    this.onload = null;
+
     delete this.$ref.id;
     delete this.$ref.width;
     delete this.$ref.height;
@@ -1884,12 +1930,15 @@ Tilt.Texture.prototype = {
    * @param {Number} y: the y offset
    */
   updateSubImage2D: function(img, x, y) {
-    var gl = Tilt.$gl,
-      prev = gl.getParameter(gl.TEXTURE_BINDING_2D);
+    if (this.width === img.width && this.height === img.height && x && y) {
+      x = 0;
+      y = 0;
+    }
+
+    var gl = Tilt.$gl;
 
     gl.bindTexture(gl.TEXTURE_2D, this.$ref);
     gl.texSubImage2D(gl.TEXTURE_2D, 0, x, y, gl.RGBA, gl.UNSIGNED_BYTE, img);
-    gl.bindTexture(gl.TEXTURE_2D, prev);
   },
 
   /**
@@ -6318,10 +6367,7 @@ Tilt.Renderer = function(canvas, properties) {
    * The WebGL context obtained from the canvas element, used for drawing.
    */
   this.canvas = canvas;
-  this.gl = this.create3DContext(canvas, {
-    antialias: true,
-    stencil: true
-  });
+  this.gl = this.create3DContext(canvas);
 
   // first, clear the cache
   Tilt.clearCache();
@@ -6509,9 +6555,7 @@ Tilt.Renderer.prototype = {
     }
 
     // clear the color and depth buffers
-    gl.clear(gl.COLOR_BUFFER_BIT |
-             gl.DEPTH_BUFFER_BIT |
-             gl.STENCIL_BUFFER_BIT);
+    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
   },
 
   /**
@@ -6751,7 +6795,7 @@ Tilt.Renderer.prototype = {
    * Sets blending, either "alpha" or "add" (additive blending).
    * Anything else disables blending.
    *
-   * @param {String} mode: blending, either "alpha", "add" or undefined
+   * @param {String} mode: blending, either "alpha", "add" or falsy
    */
   blendMode: function(mode) {
     var gl = this.gl;
@@ -6865,9 +6909,11 @@ Tilt.Renderer.prototype = {
    * @param {Array} v2: the [x, y, z] position of the third triangle point
    */
   triangle: function(v0, v1, v2) {
-    var vertices = new Tilt.VertexBuffer(v0.concat(v1, v2), 3),
-      fill = this.$fillColor,
-      stroke = this.$strokeColor;
+    var fill = this.$fillColor,
+      stroke = this.$strokeColor,
+      vertices = new Tilt.VertexBuffer([v0[0], v0[1], v0[2] || 0,
+                                        v1[0], v1[1], v1[2] || 0,
+                                        v2[0], v2[1], v2[2] || 0], 3);
 
     // draw the triangle only if the fill alpha channel is not transparent
     if (fill[3]) {
@@ -6899,10 +6945,10 @@ Tilt.Renderer.prototype = {
   quad: function(v0, v1, v2, v3) {
     var fill = this.$fillColor,
       stroke = this.$strokeColor,
-      vertices = new Tilt.VertexBuffer([v0[0], v0[1], v0[2],
-                                        v1[0], v1[1], v1[2],
-                                        v2[0], v2[1], v2[2],
-                                        v3[0], v3[1], v3[2]], 3);
+      vertices = new Tilt.VertexBuffer([v0[0], v0[1], v0[2] || 0,
+                                        v1[0], v1[1], v1[2] || 0,
+                                        v2[0], v2[1], v2[2] || 0,
+                                        v3[0], v3[1], v3[2] || 0], 3);
 
     // draw the quad only if the fill alpha channel is not transparent
     if (fill[3]) {
@@ -7124,7 +7170,7 @@ Tilt.Renderer.prototype = {
     var names = ["experimental-webgl", "webgl", "webkit-3d", "moz-webgl"],
       context, i, len;
 
-    for (i = 0, len = names.length; i < len; ++i) {
+    for (i = 0, len = names.length; i < len; i++) {
       try {
         context = canvas.getContext(names[i], opt_attribs);
       }
@@ -7224,7 +7270,7 @@ Tilt.Renderer.prototype = {
  ***** END LICENSE BLOCK *****/
 "use strict";
 
-window.requestAnimFrame = (function() {
+window.requestAnimFrame = function() {
   return window.requestAnimationFrame ||
          window.webkitRequestAnimationFrame ||
          window.mozRequestAnimationFrame ||
@@ -7233,7 +7279,7 @@ window.requestAnimFrame = (function() {
          function(callback, element) {
            window.setTimeout(callback, 1000 / 60);
          };
-})();
+}();
 /***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -8929,6 +8975,7 @@ Tilt.UI = [];
 Tilt.UI.mouseX = 0;
 Tilt.UI.mouseY = 0;
 Tilt.UI.mousePressed = false;
+Tilt.UI.mouseOver = false;
 Tilt.UI.mouseScrollAmmount = 0;
 Tilt.UI.keyPressed = [];
 Tilt.UI.requestRedraw = function() {};
@@ -9704,12 +9751,14 @@ Tilt.Document = {
    */
   getContentWindowDimensions: function(contentWindow) {
     var coords,
-      pageWidth = contentWindow.innerWidth + contentWindow.scrollMaxX,
-      pageHeight = contentWindow.innerHeight + contentWindow.scrollMaxY,
-      size = { width: pageWidth, height: pageHeight };
+      size = {
+        width: contentWindow.innerWidth + contentWindow.scrollMaxX,
+        height: contentWindow.innerHeight + contentWindow.scrollMaxY
+      };
 
     this.traverse(function(child) {
       coords = this.getNodeCoordinates(child);
+
       size.width = Math.max(size.width, coords.x||0 + coords.width||0);
       size.height = Math.max(size.height, coords.y||0 + coords.height||0);
     }.bind(this), null, contentWindow.document);
@@ -9736,9 +9785,8 @@ Tilt.Document = {
     var x, y, w, h, clientRect;
 
     try {
-      if (node.localName === "head" ||
-          node.localName === "body") {
-            throw new Exception();
+      if (node.localName === "head" || node.localName === "body") {
+          throw new Exception();
       }
 
       // this is the preferred way of getting the bounding client rectangle
@@ -9853,7 +9901,8 @@ Tilt.Document = {
    * @return {String} the custom attributes text
    */
   getAttributesString: function(attributes) {
-    var attText = [], i, len;
+    var attText = [],
+      i, len;
 
     for (i = 0, len = attributes.length; i < len; i++) {
       attText.push(attributes[i].name + " = \"" + attributes[i].value + "\"");
@@ -10119,7 +10168,7 @@ var EXPORTED_SYMBOLS = ["Tilt.File"];
 Tilt.File = {
 
   /**
-   * Shows a file picker and returns the result.
+   * Shows a file or folder picker and returns the result.
    *
    * @param {String} message: the title for the picker
    * @param {String} type: either "file" or "folder"
@@ -10353,10 +10402,10 @@ Tilt.Math = {
     angle *= 0.5;
 
     var sin = Math.sin(angle),
+        w = Math.cos(angle),
         x = (axis[0] * sin),
         y = (axis[1] * sin),
-        z = (axis[2] * sin),
-        w = Math.cos(angle);
+        z = (axis[2] * sin);
 
     if ("undefined" === typeof out) {
       return [x, y, z, w];
@@ -10386,12 +10435,15 @@ Tilt.Math = {
       x = pitch * 0.5,
       y = yaw   * 0.5,
       z = roll  * 0.5,
-      sinr = Math.sin(x),
-      sinp = Math.sin(y),
-      siny = Math.sin(z),
-      cosr = Math.cos(x),
-      cosp = Math.cos(y),
-      cosy = Math.cos(z);
+
+      sin = Math.sin,
+      cos = Math.cos,
+      sinr = sin(x),
+      sinp = sin(y),
+      siny = sin(z),
+      cosr = cos(x),
+      cosp = cos(y),
+      cosy = cos(z);
 
     x = sinr * cosp * cosy - cosr * sinp * siny;
     y = cosr * sinp * cosy + sinr * cosp * siny;
@@ -10528,9 +10580,13 @@ Tilt.Math = {
    *                   2 the ray and the triangle are in the same plane
    */
   intersectRayTriangle: function(v0, v1, v2, ray, intersection) {
-    var u = vec3.create(), v = vec3.create(), n = vec3.create(),
-        w = vec3.create(), w0 = vec3.create(),
-        pos = ray.position, dir = ray.direction,
+    var u = vec3.create(),
+        v = vec3.create(),
+        n = vec3.create(),
+        w = vec3.create(),
+        w0 = vec3.create(),
+        pos = ray.position,
+        dir = ray.direction,
         a, b, r, uu, uv, vv, wu, wv, D, s, t;
 
     if ("undefined" === typeof intersection) {
@@ -11058,11 +11114,7 @@ Tilt.WebGL = {
       return canvas;
     }
     else {
-      try {
-        if ("undefined" === typeof this.$canvas) {
-          this.$canvas = Tilt.Document.initCanvas();
-        }
-
+      if (this.$canvas) {
         this.$canvas.width = width;
         this.$canvas.height = height;
 
@@ -11071,13 +11123,17 @@ Tilt.WebGL = {
 
         return this.$canvas;
       }
-      catch(e) {
+      else if ("undefined" === typeof this.$canvas) {
+        this.$canvas = Tilt.Document.initCanvas();
+        return this.refreshDocumentImage(contentWindow, canvas, rect);
+      }
+      else {
         this.$canvas = null;
         delete this.$canvas;
-
-        return null;
       }
     }
+
+    return null;
   }
 };
 
