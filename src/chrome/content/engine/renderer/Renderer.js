@@ -61,10 +61,7 @@ Tilt.Renderer = function(canvas, properties) {
    * The WebGL context obtained from the canvas element, used for drawing.
    */
   this.canvas = canvas;
-  this.gl = this.create3DContext(canvas, {
-    antialias: true,
-    stencil: true
-  });
+  this.gl = this.create3DContext(canvas);
 
   // first, clear the cache
   Tilt.clearCache();
@@ -252,9 +249,7 @@ Tilt.Renderer.prototype = {
     }
 
     // clear the color and depth buffers
-    gl.clear(gl.COLOR_BUFFER_BIT |
-             gl.DEPTH_BUFFER_BIT |
-             gl.STENCIL_BUFFER_BIT);
+    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
   },
 
   /**
@@ -494,7 +489,7 @@ Tilt.Renderer.prototype = {
    * Sets blending, either "alpha" or "add" (additive blending).
    * Anything else disables blending.
    *
-   * @param {String} mode: blending, either "alpha", "add" or undefined
+   * @param {String} mode: blending, either "alpha", "add" or falsy
    */
   blendMode: function(mode) {
     var gl = this.gl;
@@ -608,9 +603,11 @@ Tilt.Renderer.prototype = {
    * @param {Array} v2: the [x, y, z] position of the third triangle point
    */
   triangle: function(v0, v1, v2) {
-    var vertices = new Tilt.VertexBuffer(v0.concat(v1, v2), 3),
-      fill = this.$fillColor,
-      stroke = this.$strokeColor;
+    var fill = this.$fillColor,
+      stroke = this.$strokeColor,
+      vertices = new Tilt.VertexBuffer([v0[0], v0[1], v0[2] || 0,
+                                        v1[0], v1[1], v1[2] || 0,
+                                        v2[0], v2[1], v2[2] || 0], 3);
 
     // draw the triangle only if the fill alpha channel is not transparent
     if (fill[3]) {
@@ -642,10 +639,10 @@ Tilt.Renderer.prototype = {
   quad: function(v0, v1, v2, v3) {
     var fill = this.$fillColor,
       stroke = this.$strokeColor,
-      vertices = new Tilt.VertexBuffer([v0[0], v0[1], v0[2],
-                                        v1[0], v1[1], v1[2],
-                                        v2[0], v2[1], v2[2],
-                                        v3[0], v3[1], v3[2]], 3);
+      vertices = new Tilt.VertexBuffer([v0[0], v0[1], v0[2] || 0,
+                                        v1[0], v1[1], v1[2] || 0,
+                                        v2[0], v2[1], v2[2] || 0,
+                                        v3[0], v3[1], v3[2] || 0], 3);
 
     // draw the quad only if the fill alpha channel is not transparent
     if (fill[3]) {
@@ -867,7 +864,7 @@ Tilt.Renderer.prototype = {
     var names = ["experimental-webgl", "webgl", "webkit-3d", "moz-webgl"],
       context, i, len;
 
-    for (i = 0, len = names.length; i < len; ++i) {
+    for (i = 0, len = names.length; i < len; i++) {
       try {
         context = canvas.getContext(names[i], opt_attribs);
       }
