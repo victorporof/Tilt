@@ -133,10 +133,10 @@ Tilt.Math = {
     angle *= 0.5;
 
     var sin = Math.sin(angle),
+        w = Math.cos(angle),
         x = (axis[0] * sin),
         y = (axis[1] * sin),
-        z = (axis[2] * sin),
-        w = Math.cos(angle);
+        z = (axis[2] * sin);
 
     if ("undefined" === typeof out) {
       return [x, y, z, w];
@@ -166,12 +166,15 @@ Tilt.Math = {
       x = pitch * 0.5,
       y = yaw   * 0.5,
       z = roll  * 0.5,
-      sinr = Math.sin(x),
-      sinp = Math.sin(y),
-      siny = Math.sin(z),
-      cosr = Math.cos(x),
-      cosp = Math.cos(y),
-      cosy = Math.cos(z);
+
+      sin = Math.sin,
+      cos = Math.cos,
+      sinr = sin(x),
+      sinp = sin(y),
+      siny = sin(z),
+      cosr = cos(x),
+      cosp = cos(y),
+      cosy = cos(z);
 
     x = sinr * cosp * cosy - cosr * sinp * siny;
     y = cosr * sinp * cosy + sinr * cosp * siny;
@@ -308,9 +311,13 @@ Tilt.Math = {
    *                   2 the ray and the triangle are in the same plane
    */
   intersectRayTriangle: function(v0, v1, v2, ray, intersection) {
-    var u = vec3.create(), v = vec3.create(), n = vec3.create(),
-        w = vec3.create(), w0 = vec3.create(),
-        pos = ray.position, dir = ray.direction,
+    var u = vec3.create(),
+        v = vec3.create(),
+        n = vec3.create(),
+        w = vec3.create(),
+        w0 = vec3.create(),
+        pos = ray.position,
+        dir = ray.direction,
         a, b, r, uu, uv, vv, wu, wv, D, s, t;
 
     if ("undefined" === typeof intersection) {
