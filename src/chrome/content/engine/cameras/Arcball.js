@@ -69,9 +69,9 @@ Tilt.Arcball = function(width, height, radius) {
    */
   this.$mouseButton = -1;
   this.$scrollValue = 0;
-  this.scrollMin = -3000;
-  this.scrollMax = 500;
-  this.scrollSpeed = 1;
+  this.$scrollSpeed = 1;
+  this.$scrollMin = -3000;
+  this.$scrollMax = 500;
 
   /**
    * Array retaining the current pressed key codes.
@@ -352,9 +352,9 @@ Tilt.Arcball.prototype = {
    * @param {Number} scroll: the mouse wheel direction and speed
    */
   mouseScroll: function(scroll) {
-    var speed = this.scrollSpeed,
-      min = this.scrollMin,
-      max = this.scrollMax;
+    var speed = this.$scrollSpeed,
+      min = this.$scrollMin,
+      max = this.$scrollMax;
 
     // clear any interval resetting or manipulating the arcball if set
     this.$clearInterval();
@@ -424,6 +424,25 @@ Tilt.Arcball.prototype = {
       sphereVec[1] = y;
       sphereVec[2] = Math.sqrt(1 - sqlength);
     }
+  },
+
+  /**
+   * Sets the minimum and maximum scrolling bounds.
+   *
+   * @param {Number} min: the minimum scrolling bounds
+   * @param {Number} max: the maximum scrolling bounds
+   */
+  setScrollBounds: function(min, max) {
+    this.$scrollMin = min;
+    this.$scrollMax = max;
+  },
+
+  /**
+   * Sets the scrolling (zooming) speed.
+   * @param {Number} speed: the speed
+   */
+  setScrollSpeed: function(speed) {
+    this.$scrollSpeed = speed;
   },
 
   /**
