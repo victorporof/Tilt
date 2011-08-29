@@ -52,7 +52,10 @@ Tilt.destroyObject = function(scope) {
     }
     catch(e) {}
     finally {
-      scope[i] = null;
+      try {
+        scope[i] = null;
+      }
+      catch(e) {}
       delete scope[i];
     }
   }
