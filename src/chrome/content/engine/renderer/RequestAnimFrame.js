@@ -35,7 +35,7 @@
  ***** END LICENSE BLOCK *****/
 "use strict";
 
-window.requestAnimFrame = (function() {
+window.requestAnimFrame = function() {
   return window.requestAnimationFrame ||
          window.webkitRequestAnimationFrame ||
          window.mozRequestAnimationFrame ||
@@ -44,4 +44,4 @@ window.requestAnimFrame = (function() {
          function(callback, element) {
            window.setTimeout(callback, 1000 / 60);
          };
-})();
+}();
