@@ -45,6 +45,7 @@ Tilt.UI = [];
 Tilt.UI.mouseX = 0;
 Tilt.UI.mouseY = 0;
 Tilt.UI.mousePressed = false;
+Tilt.UI.mouseOver = false;
 Tilt.UI.mouseScrollAmmount = 0;
 Tilt.UI.keyPressed = [];
 Tilt.UI.requestRedraw = function() {};
