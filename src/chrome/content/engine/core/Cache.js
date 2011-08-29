@@ -76,6 +76,12 @@ Tilt.$loadedTextures = {};
  * Clears the cache and sets all the variables to default.
  */
 Tilt.clearCache = function() {
+  Tilt.destroyObject(Tilt.$gl);
+  Tilt.destroyObject(Tilt.$renderer);
+  Tilt.destroyObject(Tilt.$activeShader);
+  Tilt.destroyObject(Tilt.$enabledAttributes);
+  Tilt.destroyObject(Tilt.$loadedTextures);
+
   Tilt.$gl = null;
   Tilt.$renderer = null;
   Tilt.$activeShader = -1;
