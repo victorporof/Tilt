@@ -69,11 +69,12 @@ Tilt.Profiler = {
    * @param {Function} duringCall: optional, custom logic for interception
    */
   intercept: function(ns, object, name, beforeCall, afterCall, duringCall) {
-    var method, index, i;
-
+    // the profiler must be enabled to intercept functions
     if (!this.enabled) {
       return;
     }
+
+    var method, index, i;
 
     // if the function name is falsy, intercept all the object functions
     if (!name) {
