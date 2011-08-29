@@ -116,11 +116,7 @@ Tilt.WebGL = {
       return canvas;
     }
     else {
-      try {
-        if ("undefined" === typeof this.$canvas) {
-          this.$canvas = Tilt.Document.initCanvas();
-        }
-
+      if (this.$canvas) {
         this.$canvas.width = width;
         this.$canvas.height = height;
 
@@ -129,13 +125,17 @@ Tilt.WebGL = {
 
         return this.$canvas;
       }
-      catch(e) {
+      else if ("undefined" === typeof this.$canvas) {
+        this.$canvas = Tilt.Document.initCanvas();
+        return this.refreshDocumentImage(contentWindow, canvas, rect);
+      }
+      else {
         this.$canvas = null;
         delete this.$canvas;
-
-        return null;
       }
     }
+
+    return null;
   }
 };
 
