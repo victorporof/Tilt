@@ -43,7 +43,7 @@ var EXPORTED_SYMBOLS = ["Tilt.File"];
 Tilt.File = {
 
   /**
-   * Shows a file picker and returns the result.
+   * Shows a file or folder picker and returns the result.
    *
    * @param {String} message: the title for the picker
    * @param {String} type: either "file" or "folder"
