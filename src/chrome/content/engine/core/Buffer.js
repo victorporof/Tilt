@@ -116,7 +116,11 @@ Tilt.VertexBuffer.prototype = {
    * Destroys this object and sets all members to null.
    */
   destroy: function() {
-    Tilt.$gl.deleteBuffer(this.$ref);
+    try {
+      Tilt.$gl.deleteBuffer(this.$ref);
+    }
+    catch(e) {}
+
     Tilt.destroyObject(this);
   }
 };
@@ -197,7 +201,11 @@ Tilt.IndexBuffer.prototype = {
    * Destroys this object and deletes all members.
    */
   destroy: function() {
-    Tilt.$gl.deleteBuffer(this.$ref);
+    try {
+      Tilt.$gl.deleteBuffer(this.$ref);
+    }
+    catch(e) {}
+
     Tilt.destroyObject(this);
   }
 };
