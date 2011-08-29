@@ -113,7 +113,8 @@
             label="Close"/>
         </hbox>
 
-        <iframe id="tilt-sourceeditor-iframe"
+        <iframe type="chrome"
+          id="tilt-sourceeditor-iframe"
           src="chrome://tilt/content/ace/editor.html"
           width="450"
           height="300"/>
@@ -121,13 +122,16 @@
     </panel>
 
     <panel id="tilt-colorpicker">
-      <iframe id="tilt-colorpicker-iframe"
+      <iframe type="chrome"
+        id="tilt-colorpicker-iframe"
         src="chrome://tilt/content/acolorjack/picker.html"
         width="219"
         height="203"/>
     </panel>
 
-    <iframe id="tilt-iframe" style="visibility: collapse;" type="chrome"/>
-  </window>
+    <iframe type="chrome"
+      id="tilt-iframe"
+      style="visibility: collapse;"/>
 
+  </window>
 </overlay>
