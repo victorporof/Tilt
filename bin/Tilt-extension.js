@@ -177,13 +177,13 @@ TiltChrome.BrowserOverlay = {
 
       // if specified, do a garbage collection when everything is over
       if (gc) {
-        window.setTimeout(this.performGC, 100);
+        window.setTimeout(function() { this.performGC(); }.bind(this), 100);
       }
     }.bind(this);
 
     // finishing the cleanup may take some time, so set a small timeout
     if (timeout) {
-      window.setTimeout(finish, 100);
+      window.setTimeout(function() { finish(); }, 100);
     }
     else {
       // the finish timeout wasn't explicitly requested, continue normally
