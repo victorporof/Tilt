@@ -356,7 +356,7 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
       return;
     }
 
-    var random = new Alea(0),
+    var random = Tilt.Random.next.bind(Tilt.Random),
       vertices = [],
       texCoord = [],
       indices = [],
