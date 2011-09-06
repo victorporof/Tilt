@@ -13319,46 +13319,20 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
 
         // we'll need to calculate the quad corners to draw a highlighted area
         // around the currently selected node
-        var project = Tilt.Math.project,
-          mvMatrix = mesh.mvMatrix,
-          vertices = mesh.vertices.components,
-          indices = mesh.indices.components,
-          i = highlightQuad.index * 30,
-
-        // the first triangle vertex
-        v0 = [vertices[indices[i    ] * 3    ],
-              vertices[indices[i    ] * 3 + 1],
-              vertices[indices[i    ] * 3 + 2]],
-
-        // the second triangle vertex
-        v1 = [vertices[indices[i + 1] * 3    ],
-              vertices[indices[i + 1] * 3 + 1],
-              vertices[indices[i + 1] * 3 + 2]],
-
-        // the third triangle vertex
-        v2 = [vertices[indices[i + 2] * 3    ],
-              vertices[indices[i + 2] * 3 + 1],
-              vertices[indices[i + 2] * 3 + 2]],
-
-        // the fourth triangle vertex
-        v3 = [vertices[indices[i + 5] * 3    ],
-              vertices[indices[i + 5] * 3 + 1],
-              vertices[indices[i + 5] * 3 + 2]];
-
-        project(v0, null, mvMatrix, null, highlightQuad.v0);
-        project(v1, null, mvMatrix, null, highlightQuad.v1);
-        project(v2, null, mvMatrix, null, highlightQuad.v2);
-        project(v3, null, mvMatrix, null, highlightQuad.v3);
+        var transf = mat4.multiplyVec4,
+          mvMatrix = mesh.mvMatrix;
 
         tilt.perspective();
         tilt.depthTest(false);
         tilt.fill(highlightQuad.fill);
         tilt.stroke(highlightQuad.stroke);
         tilt.strokeWeight(highlightQuad.strokeWeight);
-        tilt.quad(highlightQuad.v0,
-                  highlightQuad.v1,
-                  highlightQuad.v2,
-                  highlightQuad.v3);
+
+        // draw the quad along the corresponding transformed stack vertices
+        tilt.quad(transf(mvMatrix, highlightQuad.$v0, highlightQuad.v0),
+                  transf(mvMatrix, highlightQuad.$v1, highlightQuad.v1),
+                  transf(mvMatrix, highlightQuad.$v2, highlightQuad.v2),
+                  transf(mvMatrix, highlightQuad.$v3, highlightQuad.v3));
       }
 
       // draw the ui on top of the visualization
@@ -14049,6 +14023,37 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
           highlightQuad.index = index;
           highlightQuad.fill = settings.fill + "55";
           highlightQuad.stroke = settings.fill + "AA";
+
+          // we'll need to calculate the quad corners to draw a highlighted 
+          // area around the currently selected node
+          var i = highlightQuad.index * 30,
+            vertices = mesh.vertices.components,
+            indices = mesh.indices.components,
+
+          // the first triangle vertex
+          v0 = [vertices[indices[i    ] * 3    ],
+                vertices[indices[i    ] * 3 + 1],
+                vertices[indices[i    ] * 3 + 2], 1],
+
+          // the second triangle vertex
+          v1 = [vertices[indices[i + 1] * 3    ],
+                vertices[indices[i + 1] * 3 + 1],
+                vertices[indices[i + 1] * 3 + 2], 1],
+
+          // the third triangle vertex
+          v2 = [vertices[indices[i + 2] * 3    ],
+                vertices[indices[i + 2] * 3 + 1],
+                vertices[indices[i + 2] * 3 + 2], 1],
+
+          // the fourth triangle vertex
+          v3 = [vertices[indices[i + 5] * 3    ],
+                vertices[indices[i + 5] * 3 + 1],
+                vertices[indices[i + 5] * 3 + 2], 1];
+
+          highlightQuad.$v0 = v0;
+          highlightQuad.$v1 = v1;
+          highlightQuad.$v2 = v2;
+          highlightQuad.$v3 = v3;
         }
       }.bind(this),
 
