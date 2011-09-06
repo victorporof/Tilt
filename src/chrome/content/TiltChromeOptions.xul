@@ -6,48 +6,48 @@
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
   <groupbox>
-      <caption>
-          <checkbox label="Refresh visualization"
-            checked="true"/>
-      </caption>
+    <caption>
+      <checkbox label="Refresh visualization"
+        checked="true"/>
+    </caption>
 
-      <radiogroup>
-          <radio label="Document texture only (fastest)"
-            selected="false"/>
+    <radiogroup>
+      <radio label="Document texture only (fastest)"
+        selected="false"/>
 
-          <radio label="Texture and some DOM elements (recommended)"
-            selected="true"/>
+      <radio label="Texture and some DOM elements (recommended)"
+        selected="true"/>
 
-          <radio label="Everything (slowest)"
-            selected="false"/>
-      </radiogroup>
+      <radio label="Everything (slowest)"
+        selected="false"/>
+    </radiogroup>
   </groupbox>
 
   <groupbox>
-      <checkbox label="Escape key closes the visualization"
-        checked="true"/>
+    <checkbox label="Escape key closes the visualization"
+      checked="true"/>
 
-      <checkbox label="Show the user interface at initialization" 
-        checked="true"/>
+    <checkbox label="Show the user interface at initialization" 
+      checked="true"/>
 
-      <checkbox label="Disable the 'minidom' strips tree view" 
-        checked="false"/>
+    <checkbox label="Disable the 'minidom' strips tree view" 
+      checked="false"/>
 
-      <checkbox label="Enable joystick controller"
-        selected="false" 
-        disabled="true"/>
+    <checkbox label="Enable joystick controller"
+      selected="false" 
+      disabled="true"/>
 
-      <checkbox label="Use accelerometer if available"
-        selected="false" 
-        disabled="true"/>
+    <checkbox label="Use accelerometer if available"
+      selected="false" 
+      disabled="true"/>
   </groupbox>
 
   <groupbox>
-      <hbox align="center">
-          <label value="Open &amp; close Tilt" width="110"/>
-          <textbox value="Ctrl+Shift+M"/>
-          <button label="Reset"/>
-      </hbox>
+    <hbox align="center">
+      <label value="Open &amp; close Tilt" width="110"/>
+      <textbox value="Ctrl+Shift+M"/>
+      <button label="Reset"/>
+    </hbox>
   </groupbox>
 
 </window>
