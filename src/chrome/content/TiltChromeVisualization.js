@@ -105,7 +105,8 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
    */
   transforms = {
     translation: vec3.create(), // scene translation, on the [x, y, z] axis
-    rotation: quat4.create()    // scene rotation, expressed as a quaternion
+    rotation: quat4.create(),   // scene rotation, expressed as a quaternion
+    tilt: vec3.create()         // accelerometer rotation, if available
   },
 
   /**
@@ -143,6 +144,7 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
     // set the transformations at initialization
     transforms.translation = [0, 0, 0];
     transforms.rotation = [0, 0, 0, 1];
+    transforms.tilt = [0, 0, 0];
 
     // this is because of some weird behavior on Windows, if the visualization
     // has been started from the application menu, the width and height gets
@@ -188,6 +190,13 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
       // apply the preliminary transformations to the model view
       tilt.translate(tilt.width * 0.5 + 100,
                      tilt.height * 0.5 - 50, -thickness * 30);
+
+      // transform the tilting representing the device orientation
+      tilt.transform(quat4.toMat4(
+        Tilt.Math.quat4fromEuler(0,
+          Tilt.Math.map(transforms.tilt[0], -1, 1, Math.PI / 2, -Math.PI / 2),
+          Tilt.Math.map(transforms.tilt[2], -1, 1, -Math.PI / 2, Math.PI / 2)
+      )));
 
       // calculate the camera matrix using the rotation and translation
       tilt.translate(transforms.translation[0],
@@ -555,6 +564,7 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
 
     // useful for updating the visualization
     window.addEventListener("MozAfterPaint", gAfterPaint, false);
+    window.addEventListener("devicemotion", gDeviceMotion, false);
 
     // when the tab is closed or the url changes, destroy visualization
     tabContainer.addEventListener("TabClose", gClose, false);
@@ -606,6 +616,22 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
         catch(e) {}
       }.bind(this), 10);
     }
+  }.bind(this);
+
+  /**
+   * Event handling orientation changes if the device supports them.
+   */
+  var gDeviceMotion = function(e) {
+    var accelerationIncludingGravity = e.accelerationIncludingGravity,
+      x = accelerationIncludingGravity.x - Math.PI * 0.01,
+      y = accelerationIncludingGravity.y - Math.PI * 0.01,
+      z = accelerationIncludingGravity.z;
+
+    transforms.tilt[0] += (y - transforms.tilt[0]) * 0.5;
+    transforms.tilt[1] += (z - transforms.tilt[1]) * 0.5;
+    transforms.tilt[2] += (x - transforms.tilt[2]) * 0.5;
+
+    this.requestRedraw();
   }.bind(this);
 
   /**
@@ -1302,6 +1328,10 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
     if (gAfterPaint !== null) {
       window.removeEventListener("MozAfterPaint", gAfterPaint, false);
       gAfterPaint = null;
+    }
+    if (gDeviceMotion !== null) {   
+      window.addEventListener("devicemotion", gDeviceMotion, false);
+      gDeviceMotion = null;
     }
     if (gClose !== null) {
       tabContainer.removeEventListener("TabClose", gClose, false);
