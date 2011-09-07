@@ -407,6 +407,19 @@ Tilt.Renderer.prototype = {
   },
 
   /**
+   * Rotates the model view by specified angles on the x, y, and z axis.
+   *
+   * @param {Number} x: the x axis rotation
+   * @param {Number} y: the y axis rotation
+   * @param {Number} z: the z axis rotation
+   */
+  rotateXYZ: function(x, y, z) {
+    mat4.rotateX(this.mvMatrix, x);
+    mat4.rotateY(this.mvMatrix, y);
+    mat4.rotateZ(this.mvMatrix, z);
+  },
+
+  /**
    * Scales the model view by the x, y and z coordinates.
    *
    * @param {Number} x: the x amount of scaling
