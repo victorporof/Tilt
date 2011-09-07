@@ -6637,6 +6637,19 @@ Tilt.Renderer.prototype = {
   },
 
   /**
+   * Rotates the model view by specified angles on the x, y, and z axis.
+   *
+   * @param {Number} x: the x axis rotation
+   * @param {Number} y: the y axis rotation
+   * @param {Number} z: the z axis rotation
+   */
+  rotateXYZ: function(x, y, z) {
+    mat4.rotateX(this.mvMatrix, x);
+    mat4.rotateY(this.mvMatrix, y);
+    mat4.rotateZ(this.mvMatrix, z);
+  },
+
+  /**
    * Scales the model view by the x, y and z coordinates.
    *
    * @param {Number} x: the x amount of scaling
@@ -11115,23 +11128,25 @@ Tilt.WebGL = {
 
     // create the WebGL context
     gl = Tilt.Renderer.prototype.create3DContext(canvasgl);
-    maxSize = gl.getParameter(gl.MAX_TEXTURE_SIZE);
+    maxSize = gl ? gl.getParameter(gl.MAX_TEXTURE_SIZE) : 0;
 
-    // calculate the total width and height of the content page
-    size = Tilt.Document.getContentWindowDimensions(contentWindow);
+    if (maxSize > 0) {
+      // calculate the total width and height of the content page
+      size = Tilt.Document.getContentWindowDimensions(contentWindow);
 
-    // calculate the valid width and height of the content page
-    width = Tilt.Math.clamp(size.width, 0, maxSize);
-    height = Tilt.Math.clamp(size.height, 0, maxSize);
+      // calculate the valid width and height of the content page
+      width = Tilt.Math.clamp(size.width, 0, maxSize);
+      height = Tilt.Math.clamp(size.height, 0, maxSize);
 
-    canvas.width = width;
-    canvas.height = height;
+      canvas.width = width;
+      canvas.height = height;
 
-    // use the 2d context.drawWindow() magic
-    ctx = canvas.getContext("2d");
-    ctx.fillStyle = "#fff";
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-    ctx.drawWindow(contentWindow, 0, 0, width, height, "#fff");
+      // use the 2d context.drawWindow() magic
+      ctx = canvas.getContext("2d");
+      ctx.fillStyle = "#fff";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.drawWindow(contentWindow, 0, 0, width, height, "#fff");
+    }
 
     try {
       return canvas;
