@@ -91,6 +91,7 @@ canvas.getContext("2d").drawWindow;
 canvas.offsetTop;
 canvas.offsetLeft;
 e.boundingClientRect;
+e.accelerationIncludingGravity
 
 iframe.contentWindow.refreshCodeEditor;
 iframe.contentWindow.refreshColorPicker;
