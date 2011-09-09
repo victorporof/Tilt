@@ -241,6 +241,11 @@ TiltChrome.Controller.MouseAndKeyboard = function() {
   var keyDown = function(e) {
     var code = e.keyCode || e.which;
 
+    if (code >= 37 && code <= 40) { // up, down, left or right keys
+      e.preventDefault();
+      e.stopPropagation();     
+    }
+
     // handle key events only if the source editor is not open
     if ("open" === TiltChrome.BrowserOverlay.sourceEditor.panel.state) {
       return;
@@ -258,7 +263,11 @@ TiltChrome.Controller.MouseAndKeyboard = function() {
   var keyUp = function(e) {
     var code = e.keyCode || e.which;
 
-    if (code === 27) { // escape keyCode
+    if (code >= 37 && code <= 40) { // up, down, left or right keys
+      e.preventDefault();
+      e.stopPropagation();     
+    }
+    else if (code === 27) { // escape key
       if ("open" === TiltChrome.BrowserOverlay.sourceEditor.panel.state) {
         TiltChrome.BrowserOverlay.sourceEditor.panel.hidePopup();
       }
