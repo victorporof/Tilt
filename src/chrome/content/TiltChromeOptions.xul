@@ -62,23 +62,23 @@
 
   <groupbox>
     <checkbox label="Escape key closes the visualization"
-      checked="true" 
+      checked="true"
       disabled="false"/>
 
     <checkbox label="Show the user interface at initialization" 
-      checked="true" 
+      checked="true"
       disabled="false"/>
 
     <checkbox label="Disable the 'minidom' strips tree view" 
-      checked="false" 
+      checked="false"
       disabled="false"/>
 
     <checkbox label="Enable joystick controller"
-      selected="false" 
+      checked="false"
       disabled="true"/>
 
     <checkbox label="Use accelerometer if available"
-      selected="true" 
+      checked="true"
       disabled="false"/>
   </groupbox>
 
