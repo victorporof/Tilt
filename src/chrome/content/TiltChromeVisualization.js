@@ -63,7 +63,7 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
 
       // show a corresponding prompt message and open a tab to troubleshooting
       gBrowser.selectedTab =
-        gBrowser.addTab("http://get.webgl.org/troubleshooting/");
+        gBrowser.addTab("http://get.webgl.org/");
     }
   }),
 
@@ -438,14 +438,14 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
         // they can be reused from the bottom and top faces; we do, however,
         // duplicate some vertices from front face, because it has custom
         // texture coordinates which are not shared by the other faces
-                        x,     y + h, z - thickness,       /* top */    // 4
-                        x + w, y + h, z - thickness,                    // 5
-                        x + w, y + h, z,                                // 6
-                        x,     y + h, z,                                // 7
-                        x,     y,     z,                   /* bottom */ // 8
-                        x + w, y,     z,                                // 9
-                        x + w, y,     z - thickness,                    // 10
-                        x,     y,     z - thickness);                   // 11
+                        x,     y + h, z - thickness,        /* top */    // 4
+                        x + w, y + h, z - thickness,                     // 5
+                        x + w, y + h, z,                                 // 6
+                        x,     y + h, z,                                 // 7
+                        x,     y,     z,                    /* bottom */ // 8
+                        x + w, y,     z,                                 // 9
+                        x + w, y,     z - thickness,                     // 10
+                        x,     y,     z - thickness);                    // 11
 
         // compute the texture coordinates
         texCoord.unshift((x + tilt.width  * 0.5    ) / texture.width,
@@ -1344,7 +1344,7 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
       gAfterPaint = null;
     }
     if (gDeviceMotion !== null) {   
-      window.addEventListener("devicemotion", gDeviceMotion, false);
+      window.removeEventListener("devicemotion", gDeviceMotion, false);
       gDeviceMotion = null;
     }
     if (gClose !== null) {
