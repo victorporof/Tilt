@@ -48,6 +48,7 @@ Tilt.WebGL = {
    * maximum width and height of the canvas to MAX_TEXTURE_SIZE.
    *
    * @param {Window} contentWindow: the window content to draw
+   * @return {HTMLCanvasElement} the document image canvas
    */
   initDocumentImage: function(contentWindow) {
     var canvasgl, canvas, gl, ctx, maxSize, size, width, height;
@@ -93,7 +94,7 @@ Tilt.WebGL = {
 
 
   /**
-   * Refreshes a sub area of a canvas with new pixel information from a 
+   * Refreshes a sub area of a canvas with new pixel information from a
    * content window.
    *
    * @param {Window} contentWindow: the window content to draw
