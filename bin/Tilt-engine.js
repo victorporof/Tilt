@@ -1877,26 +1877,29 @@ Tilt.Texture.prototype = {
   initTexture: function(image, parameters) {
     this.$ref = Tilt.TextureUtils.create(image, parameters);
 
-    // cache for faster access
-    this.$id = this.$ref.id;
-    this.width = this.$ref.width;
-    this.height = this.$ref.height;
-    this.loaded = true;
+    if ("undefined" !== typeof this.$ref && this.$ref !== null) {
+      // cache for faster access
+      this.$id = this.$ref.id;
+      this.width = this.$ref.width;
+      this.height = this.$ref.height;
+      this.loaded = true;
 
-    // if the onload event function is specified, call it now
-    if ("function" === typeof this.onload) {
-      this.onload();
+      // if the onload event function is specified, call it now
+      if ("function" === typeof this.onload) {
+        this.onload();
+      }
+
+      // cleanup
+      this.$ref.id = null;
+      this.$ref.width = null;
+      this.$ref.height = null;
+
+      delete this.$ref.id;
+      delete this.$ref.width;
+      delete this.$ref.height;
     }
 
-    // cleanup
-    this.$ref.id = null;
-    this.$ref.width = null;
-    this.$ref.height = null;
     this.onload = null;
-
-    delete this.$ref.id;
-    delete this.$ref.width;
-    delete this.$ref.height;
     delete this.onload;
 
     image = null;
@@ -2006,6 +2009,10 @@ Tilt.TextureUtils = {
    * @return {WebGLTexture} the created texture
    */
   create: function(image, parameters) {
+    if ("undefined" === typeof image || image === null) {
+      return;
+    }
+
     // make sure the parameters argument is an object
     parameters = parameters || {};
 
@@ -2131,7 +2138,7 @@ Tilt.TextureUtils = {
    *  @param {Number} strokeWeight: optional, the width of the outline
    * @return {Image} the resized image
    */
-  resizeImageToPowerOfTwo: function(image, parameters) { 
+  resizeImageToPowerOfTwo: function(image, parameters) {
     // make sure the parameters argument is an object
     parameters = parameters || {};
 
@@ -7551,21 +7558,6 @@ Tilt.Container.prototype.getHeight = function() {
  * @param {Tilt.Renderer} tilt: optional, a reference to a Tilt.Renderer
  */
 Tilt.Container.prototype.update = function(frameDelta, tilt) {
-  var element, i, len;
-
-  // a view has multiple elements attach, browse and handle each one
-  for (i = 0, len = this.length; i < len; i++) {
-    element = this[i];
-
-    // some elements don't require an update function, check for it first
-    if ("function" === typeof element.update) {
-
-      // update only if the element is visible and enabled
-      if (!element.hidden && !element.disabled) {
-        element.update(frameDelta, tilt);
-      }
-    }
-  }
 };
 
 /**
@@ -7613,6 +7605,15 @@ Tilt.Container.prototype.draw = function(frameDelta, tilt) {
 
     // draw only if the element is visible (it may be enabled or not)
     if (!element.hidden) {
+
+      // some elements don't require an update function, check for it first
+      if ("function" === typeof element.update) {
+
+        // update only if the element is visible and enabled
+        if (!element.hidden && !element.disabled) {
+          element.update(frameDelta, tilt);
+        }
+      }
 
       // if the current view bounds do not restrict drawing the child elements
       if (width === 0 || height === 0) {
@@ -9722,8 +9723,11 @@ Tilt.Document = {
     var x, y, w, h, clientRect;
 
     try {
-      if (node.localName === "head" || node.localName === "body") {
-          throw new Exception();
+      if (window.content.location.href === "about:blank" &&
+          (node.localName === "head" ||
+           node.localName === "body")) {
+
+        throw new Exception();
       }
 
       // this is the preferred way of getting the bounding client rectangle
@@ -11116,6 +11120,7 @@ Tilt.WebGL = {
    * maximum width and height of the canvas to MAX_TEXTURE_SIZE.
    *
    * @param {Window} contentWindow: the window content to draw
+   * @return {HTMLCanvasElement} the document image canvas
    */
   initDocumentImage: function(contentWindow) {
     var canvasgl, canvas, gl, ctx, maxSize, size, width, height;
@@ -11161,7 +11166,7 @@ Tilt.WebGL = {
 
 
   /**
-   * Refreshes a sub area of a canvas with new pixel information from a 
+   * Refreshes a sub area of a canvas with new pixel information from a
    * content window.
    *
    * @param {Window} contentWindow: the window content to draw

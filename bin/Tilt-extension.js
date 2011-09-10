@@ -2079,26 +2079,29 @@ Tilt.Texture.prototype = {
   initTexture: function(image, parameters) {
     this.$ref = Tilt.TextureUtils.create(image, parameters);
 
-    // cache for faster access
-    this.$id = this.$ref.id;
-    this.width = this.$ref.width;
-    this.height = this.$ref.height;
-    this.loaded = true;
+    if ("undefined" !== typeof this.$ref && this.$ref !== null) {
+      // cache for faster access
+      this.$id = this.$ref.id;
+      this.width = this.$ref.width;
+      this.height = this.$ref.height;
+      this.loaded = true;
 
-    // if the onload event function is specified, call it now
-    if ("function" === typeof this.onload) {
-      this.onload();
+      // if the onload event function is specified, call it now
+      if ("function" === typeof this.onload) {
+        this.onload();
+      }
+
+      // cleanup
+      this.$ref.id = null;
+      this.$ref.width = null;
+      this.$ref.height = null;
+
+      delete this.$ref.id;
+      delete this.$ref.width;
+      delete this.$ref.height;
     }
 
-    // cleanup
-    this.$ref.id = null;
-    this.$ref.width = null;
-    this.$ref.height = null;
     this.onload = null;
-
-    delete this.$ref.id;
-    delete this.$ref.width;
-    delete this.$ref.height;
     delete this.onload;
 
     image = null;
@@ -2208,6 +2211,10 @@ Tilt.TextureUtils = {
    * @return {WebGLTexture} the created texture
    */
   create: function(image, parameters) {
+    if ("undefined" === typeof image || image === null) {
+      return;
+    }
+
     // make sure the parameters argument is an object
     parameters = parameters || {};
 
@@ -2333,7 +2340,7 @@ Tilt.TextureUtils = {
    *  @param {Number} strokeWeight: optional, the width of the outline
    * @return {Image} the resized image
    */
-  resizeImageToPowerOfTwo: function(image, parameters) { 
+  resizeImageToPowerOfTwo: function(image, parameters) {
     // make sure the parameters argument is an object
     parameters = parameters || {};
 
@@ -7753,21 +7760,6 @@ Tilt.Container.prototype.getHeight = function() {
  * @param {Tilt.Renderer} tilt: optional, a reference to a Tilt.Renderer
  */
 Tilt.Container.prototype.update = function(frameDelta, tilt) {
-  var element, i, len;
-
-  // a view has multiple elements attach, browse and handle each one
-  for (i = 0, len = this.length; i < len; i++) {
-    element = this[i];
-
-    // some elements don't require an update function, check for it first
-    if ("function" === typeof element.update) {
-
-      // update only if the element is visible and enabled
-      if (!element.hidden && !element.disabled) {
-        element.update(frameDelta, tilt);
-      }
-    }
-  }
 };
 
 /**
@@ -7815,6 +7807,15 @@ Tilt.Container.prototype.draw = function(frameDelta, tilt) {
 
     // draw only if the element is visible (it may be enabled or not)
     if (!element.hidden) {
+
+      // some elements don't require an update function, check for it first
+      if ("function" === typeof element.update) {
+
+        // update only if the element is visible and enabled
+        if (!element.hidden && !element.disabled) {
+          element.update(frameDelta, tilt);
+        }
+      }
 
       // if the current view bounds do not restrict drawing the child elements
       if (width === 0 || height === 0) {
@@ -9924,8 +9925,11 @@ Tilt.Document = {
     var x, y, w, h, clientRect;
 
     try {
-      if (node.localName === "head" || node.localName === "body") {
-          throw new Exception();
+      if (window.content.location.href === "about:blank" &&
+          (node.localName === "head" ||
+           node.localName === "body")) {
+
+        throw new Exception();
       }
 
       // this is the preferred way of getting the bounding client rectangle
@@ -11318,6 +11322,7 @@ Tilt.WebGL = {
    * maximum width and height of the canvas to MAX_TEXTURE_SIZE.
    *
    * @param {Window} contentWindow: the window content to draw
+   * @return {HTMLCanvasElement} the document image canvas
    */
   initDocumentImage: function(contentWindow) {
     var canvasgl, canvas, gl, ctx, maxSize, size, width, height;
@@ -11363,7 +11368,7 @@ Tilt.WebGL = {
 
 
   /**
-   * Refreshes a sub area of a canvas with new pixel information from a 
+   * Refreshes a sub area of a canvas with new pixel information from a
    * content window.
    *
    * @param {Window} contentWindow: the window content to draw
@@ -11685,7 +11690,7 @@ TiltChrome.Config.UI = {
       fill: "#85004B"
     },
     "other": {
-      fill: "#444"
+      fill: "#666"
     }
   }
 };
@@ -11955,7 +11960,9 @@ TiltChrome.Controller.MouseAndKeyboard = function() {
       return;
     }
 
-    if (!this.$browserBarFocus) {
+    if (!this.$browserBarFocus &&
+        window.content.document.activeElement instanceof HTMLBodyElement) {
+
       ui.keyDown(code);
       arcball.keyDown(code);
     }
@@ -12002,7 +12009,7 @@ TiltChrome.Controller.MouseAndKeyboard = function() {
    * Called when the url or search bar are unfocused.
    */
   var browserBarBlur = function() {
-    this.$browserBarFocus = false;    
+    this.$browserBarFocus = false;
   }.bind(this);
 
   /**
@@ -12080,6 +12087,51 @@ TiltChrome.Controller.MouseAndKeyboard = function() {
   // intercept this object using a profiler when building in debug mode
   Tilt.Profiler.intercept(
     "TiltChrome.Controller.MouseAndKeyboard", this);
+};
+/***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is Tilt: A WebGL-based 3D visualization of a webpage.
+ *
+ * The Initial Developer of the Original Code is The Mozilla Foundation.
+ * Portions created by the Initial Developer are Copyright (C) 2011
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *   Victor Porof <victor.porof@gmail.com> (original author)
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the LGPL or the GPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ ***** END LICENSE BLOCK *****/
+"use strict";
+
+var TiltChrome = TiltChrome || {};
+var EXPORTED_SYMBOLS = ["TiltChrome.Options"];
+
+/**
+ * Default options implementation.
+ */
+TiltChrome.Options = function() {
 };
 /***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
@@ -12296,7 +12348,7 @@ TiltChrome.UI.Default = function() {
       y: -5,
       padding: [0, 0, 0, 5],
       onclick: function() {
-        window.open("chrome://tilt/content/TiltChromeOptions.xul", "Options", 
+        window.open("chrome://tilt/content/TiltChromeOptions.xul", "Options",
           "chrome, modal, centerscreen, width=410, height=325");
       }.bind(this)
     });
@@ -13222,7 +13274,7 @@ TiltChrome.UI.Default = function() {
 var TiltChrome = TiltChrome || {};
 var EXPORTED_SYMBOLS = ["TiltChrome.Visualization"];
 
-/*global Tilt, gBrowser, vec3, mat3, mat4, quat4 */
+/*global Tilt, gBrowser, vec3, mat3, mat4, quat4, style_html, js_beautify */
 /*jshint sub: true, undef: false */
 
 /**
@@ -13288,6 +13340,7 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
    * Modified by events in the controller through delegate functions.
    */
   transforms = {
+    offset: vec3.create(),      // mesh offset, aligned to the viewport center
     translation: vec3.create(), // scene translation, on the [x, y, z] axis
     rotation: quat4.create(),   // scene rotation, expressed as a quaternion
     tilt: vec3.create()         // accelerometer rotation, if available
@@ -13326,9 +13379,10 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
     setupBrowserEvents();
 
     // set the transformations at initialization
-    transforms.translation = [0, 0, 0];
-    transforms.rotation = [0, 0, 0, 1];
-    transforms.tilt = [0, 0, 0];
+    vec3.set([0, 0, 0], transforms.offset);
+    vec3.set([0, 0, 0], transforms.translation);
+    quat4.set([0, 0, 0, 1], transforms.rotation);
+    vec3.set([0, 0, 0],  transforms.tilt);
 
     // this is because of some weird behavior on Windows, if the visualization
     // has been started from the application menu, the width and height gets
@@ -13376,7 +13430,8 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
 
       // apply the preliminary transformations to the model view
       tilt.translate(tilt.width * 0.5 + 100,
-                     tilt.height * 0.5 - 50, -thickness * 30);
+                     tilt.height * 0.5 - 50,
+                     -thickness * 30);
 
       // transform the tilting representing the device orientation
       tilt.transform(quat4.toMat4(
@@ -13391,6 +13446,7 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
                      transforms.translation[2]);
 
       tilt.transform(quat4.toMat4(transforms.rotation));
+      tilt.translate(transforms.offset[0], transforms.offset[1], 0);
 
       // draw the visualization mesh
       tilt.blendMode("alpha");
@@ -13485,11 +13541,11 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
   var setupTexture = function() {
     var rect = this.$refreshBoundingClientRect;
 
+    // use an extension to get the image representation of the document
+    // this will be removed once the MOZ_window_region_texture extension
+    // is finished; currently converting the document image to a texture
+    // bug #653656
     if ("undefined" === typeof rect || rect === null) {
-      // use an extension to get the image representation of the document
-      // this will be removed once the MOZ_window_region_texture extension
-      // is finished; currently converting the document image to a texture
-      // bug #653656
       image = Tilt.WebGL.initDocumentImage(window.content);
 
       if (texture !== null) {
@@ -13511,7 +13567,7 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
 
       // update the texture with the refreshed sub-image
       if (ref) {
-        texture.updateSubImage2D(ref, rect.left, rect.top);        
+        texture.updateSubImage2D(ref, rect.left, rect.top);
       }
     }
   }.bind(this);
@@ -13532,7 +13588,9 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
       indices = [],
       wireframeIndices = [],
       visibleNodes = [],
-      hiddenNodes = [];
+      hiddenNodes = [],
+      maxWidth = 0,
+      maxHeight = 0;
 
     if (mesh !== null) {
       mesh.texture = null;
@@ -13585,7 +13643,11 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
           localName === "style" ||
           localName === "script" ||
           localName === "noscript" ||
-          localName === "option") {
+          localName === "option" ||
+          localName === "strong" ||
+          localName === "em" ||
+          localName === "ins" ||
+          localName === "del") {
 
         // information about these nodes should still be accessible, despite
         // the fact that they're not rendered
@@ -13599,7 +13661,7 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
         coordHeight = coord.height;
 
       // use this node only if it actually has visible dimensions
-      if (coordWidth > 4 && coordHeight > 4) {
+      if (coordWidth > 1 && coordHeight > 1) {
 
         // information about these nodes should still be accessible
         info.index = visibleNodes.length;
@@ -13608,12 +13670,16 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
         // number of vertex points, used for creating the indices array
         var i = vertices.length / 3, // a vertex has 3 coords: x, y & z
 
-        // the entire mesh's pivot is the screen center
+        // calculate the stack x, y, z, width and height coordinates
         z = depth * thickness + random() * 0.1,
-        x = coord.x - tilt.width / 2 + left + random() * 0.1,
-        y = coord.y - tilt.height / 2 + top + random() * 0.1,
+        x = coord.x + left + random() * 0.1,
+        y = coord.y + top + random() * 0.1,
         w = coordWidth,
         h = coordHeight;
+
+        // set the maximum mesh width and height to calculate the center offset
+        maxWidth = Math.max(maxWidth, w);
+        maxHeight = Math.max(maxHeight, h);
 
         // compute the vertices
         vertices.unshift(x,     y,     z,                    /* front */ // 0
@@ -13635,14 +13701,14 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
                         x,     y,     z - thickness);                    // 11
 
         // compute the texture coordinates
-        texCoord.unshift((x + tilt.width  * 0.5    ) / texture.width,
-                         (y + tilt.height * 0.5    ) / texture.height,
-                         (x + tilt.width  * 0.5 + w) / texture.width,
-                         (y + tilt.height * 0.5    ) / texture.height,
-                         (x + tilt.width  * 0.5 + w) / texture.width,
-                         (y + tilt.height * 0.5 + h) / texture.height,
-                         (x + tilt.width  * 0.5    ) / texture.width,
-                         (y + tilt.height * 0.5 + h) / texture.height,
+        texCoord.unshift((x    ) / texture.width,
+                         (y    ) / texture.height,
+                         (x + w) / texture.width,
+                         (y    ) / texture.height,
+                         (x + w) / texture.width,
+                         (y + h) / texture.height,
+                         (x    ) / texture.width,
+                         (y + h) / texture.height,
                          -1, -1, -1, -1, -1, -1, -1, -1,
                          -1, -1, -1, -1, -1, -1, -1, -1);
 
@@ -13736,6 +13802,12 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
       drawMode: tilt.LINES
     });
 
+    // set the necessary mesh offsets
+    maxWidth = Math.min(maxWidth, window.content.innerWidth);
+    maxHeight = Math.min(maxHeight, window.content.innerHeight);
+    transforms.offset[0] = -maxWidth * 0.5;
+    transforms.offset[1] = -maxHeight * 0.5;
+
     // call any necessary additional mesh initialization functions
     this.performMeshColorbufferRefresh();
   }.bind(this);
@@ -13823,16 +13895,16 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
    * Event handling orientation changes if the device supports them.
    */
   var gDeviceMotion = function(e) {
-    var accelerationIncludingGravity = e.accelerationIncludingGravity,
-      x = accelerationIncludingGravity.x - Math.PI * 0.01,
-      y = accelerationIncludingGravity.y - Math.PI * 0.01,
-      z = accelerationIncludingGravity.z;
+    // var accelerationIncludingGravity = e.accelerationIncludingGravity,
+    //   x = accelerationIncludingGravity.x - Math.PI * 0.01,
+    //   y = accelerationIncludingGravity.y - Math.PI * 0.01,
+    //   z = accelerationIncludingGravity.z;
 
-    transforms.tilt[0] += (y - transforms.tilt[0]) * 0.5;
-    transforms.tilt[1] += (z - transforms.tilt[1]) * 0.5;
-    transforms.tilt[2] += (x - transforms.tilt[2]) * 0.5;
+    // transforms.tilt[0] += (y - transforms.tilt[0]) * 0.5;
+    // transforms.tilt[1] += (z - transforms.tilt[1]) * 0.5;
+    // transforms.tilt[2] += (x - transforms.tilt[2]) * 0.5;
 
-    this.requestRedraw();
+    // this.requestRedraw();
   }.bind(this);
 
   /**
@@ -13941,7 +14013,7 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
         try {
           if (!refreshMesh && !refreshTexture) {
             this.requestRefreshTexture(null);
-            this.requestRefreshMesh();               
+            this.requestRefreshMesh();
           }
         }
         catch(e) {}
@@ -14139,36 +14211,38 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
           highlightQuad.fill = settings.fill + "55";
           highlightQuad.stroke = settings.fill + "AA";
 
-          // we'll need to calculate the quad corners to draw a highlighted 
+          // we'll need to calculate the quad corners to draw a highlighted
           // area around the currently selected node
-          var i = highlightQuad.index * 30,
+          var v = highlightQuad.index * 30,
             vertices = mesh.vertices.components,
             indices = mesh.indices.components,
 
           // the first triangle vertex
-          v0 = [vertices[indices[i    ] * 3    ],
-                vertices[indices[i    ] * 3 + 1],
-                vertices[indices[i    ] * 3 + 2], 1],
+          v0 = [vertices[indices[v    ] * 3    ],
+                vertices[indices[v    ] * 3 + 1],
+                vertices[indices[v    ] * 3 + 2], 1],
 
           // the second triangle vertex
-          v1 = [vertices[indices[i + 1] * 3    ],
-                vertices[indices[i + 1] * 3 + 1],
-                vertices[indices[i + 1] * 3 + 2], 1],
+          v1 = [vertices[indices[v + 1] * 3    ],
+                vertices[indices[v + 1] * 3 + 1],
+                vertices[indices[v + 1] * 3 + 2], 1],
 
           // the third triangle vertex
-          v2 = [vertices[indices[i + 2] * 3    ],
-                vertices[indices[i + 2] * 3 + 1],
-                vertices[indices[i + 2] * 3 + 2], 1],
+          v2 = [vertices[indices[v + 2] * 3    ],
+                vertices[indices[v + 2] * 3 + 1],
+                vertices[indices[v + 2] * 3 + 2], 1],
 
           // the fourth triangle vertex
-          v3 = [vertices[indices[i + 5] * 3    ],
-                vertices[indices[i + 5] * 3 + 1],
-                vertices[indices[i + 5] * 3 + 2], 1];
+          v3 = [vertices[indices[v + 5] * 3    ],
+                vertices[indices[v + 5] * 3 + 1],
+                vertices[indices[v + 5] * 3 + 2], 1];
 
           highlightQuad.$v0 = v0;
           highlightQuad.$v1 = v1;
           highlightQuad.$v2 = v2;
           highlightQuad.$v3 = v3;
+
+          this.requestRedraw();
         }
       }.bind(this),
 
@@ -14196,6 +14270,11 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
       onfail: function() {
         if ("open" === TiltChrome.BrowserOverlay.sourceEditor.panel.state) {
           TiltChrome.BrowserOverlay.sourceEditor.panel.hidePopup();
+          return;
+        }
+        if ("open" === TiltChrome.BrowserOverlay.colorPicker.panel.state){
+          TiltChrome.BrowserOverlay.colorPicker.panel.hidePopup();
+          return;
         }
       }
     });
@@ -14391,6 +14470,37 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
         highlightQuad.fill = settings.fill + "55";
         highlightQuad.stroke = settings.fill + "AA";
 
+        // we'll need to calculate the quad corners to draw a highlighted
+        // area around the currently selected node
+        var v = highlightQuad.index * 30,
+          vertices = mesh.vertices.components,
+          indices = mesh.indices.components,
+
+        // the first triangle vertex
+        v0 = [vertices[indices[v    ] * 3    ],
+              vertices[indices[v    ] * 3 + 1],
+              vertices[indices[v    ] * 3 + 2], 1],
+
+        // the second triangle vertex
+        v1 = [vertices[indices[v + 1] * 3    ],
+              vertices[indices[v + 1] * 3 + 1],
+              vertices[indices[v + 1] * 3 + 2], 1],
+
+        // the third triangle vertex
+        v2 = [vertices[indices[v + 2] * 3    ],
+              vertices[indices[v + 2] * 3 + 1],
+              vertices[indices[v + 2] * 3 + 2], 1],
+
+        // the fourth triangle vertex
+        v3 = [vertices[indices[v + 5] * 3    ],
+              vertices[indices[v + 5] * 3 + 1],
+              vertices[indices[v + 5] * 3 + 2], 1];
+
+        highlightQuad.$v0 = v0;
+        highlightQuad.$v1 = v1;
+        highlightQuad.$v2 = v2;
+        highlightQuad.$v3 = v3;
+
         this.requestRedraw();
       }
     }
@@ -14530,7 +14640,7 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
       window.removeEventListener("MozAfterPaint", gAfterPaint, false);
       gAfterPaint = null;
     }
-    if (gDeviceMotion !== null) {   
+    if (gDeviceMotion !== null) {
       window.removeEventListener("devicemotion", gDeviceMotion, false);
       gDeviceMotion = null;
     }
