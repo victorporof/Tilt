@@ -38,7 +38,7 @@
 var TiltChrome = TiltChrome || {};
 var EXPORTED_SYMBOLS = ["TiltChrome.Visualization"];
 
-/*global Tilt, gBrowser, vec3, mat3, mat4, quat4 */
+/*global Tilt, gBrowser, vec3, mat3, mat4, quat4, style_html, js_beautify */
 /*jshint sub: true, undef: false */
 
 /**
@@ -301,11 +301,11 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
   var setupTexture = function() {
     var rect = this.$refreshBoundingClientRect;
 
+    // use an extension to get the image representation of the document
+    // this will be removed once the MOZ_window_region_texture extension
+    // is finished; currently converting the document image to a texture
+    // bug #653656
     if ("undefined" === typeof rect || rect === null) {
-      // use an extension to get the image representation of the document
-      // this will be removed once the MOZ_window_region_texture extension
-      // is finished; currently converting the document image to a texture
-      // bug #653656
       image = Tilt.WebGL.initDocumentImage(window.content);
 
       if (texture !== null) {
@@ -327,7 +327,7 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
 
       // update the texture with the refreshed sub-image
       if (ref) {
-        texture.updateSubImage2D(ref, rect.left, rect.top);        
+        texture.updateSubImage2D(ref, rect.left, rect.top);
       }
     }
   }.bind(this);
@@ -757,7 +757,7 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
         try {
           if (!refreshMesh && !refreshTexture) {
             this.requestRefreshTexture(null);
-            this.requestRefreshMesh();               
+            this.requestRefreshMesh();
           }
         }
         catch(e) {}
@@ -955,7 +955,7 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
           highlightQuad.fill = settings.fill + "55";
           highlightQuad.stroke = settings.fill + "AA";
 
-          // we'll need to calculate the quad corners to draw a highlighted 
+          // we'll need to calculate the quad corners to draw a highlighted
           // area around the currently selected node
           var i = highlightQuad.index * 30,
             vertices = mesh.vertices.components,
@@ -1346,7 +1346,7 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
       window.removeEventListener("MozAfterPaint", gAfterPaint, false);
       gAfterPaint = null;
     }
-    if (gDeviceMotion !== null) {   
+    if (gDeviceMotion !== null) {
       window.removeEventListener("devicemotion", gDeviceMotion, false);
       gDeviceMotion = null;
     }
