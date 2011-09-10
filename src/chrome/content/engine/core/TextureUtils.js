@@ -51,6 +51,10 @@ Tilt.TextureUtils = {
    * @return {WebGLTexture} the created texture
    */
   create: function(image, parameters) {
+    if ("undefined" === typeof image || image === null) {
+      return;
+    }
+
     // make sure the parameters argument is an object
     parameters = parameters || {};
 
@@ -176,7 +180,7 @@ Tilt.TextureUtils = {
    *  @param {Number} strokeWeight: optional, the width of the outline
    * @return {Image} the resized image
    */
-  resizeImageToPowerOfTwo: function(image, parameters) { 
+  resizeImageToPowerOfTwo: function(image, parameters) {
     // make sure the parameters argument is an object
     parameters = parameters || {};
 

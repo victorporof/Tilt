@@ -118,26 +118,29 @@ Tilt.Texture.prototype = {
   initTexture: function(image, parameters) {
     this.$ref = Tilt.TextureUtils.create(image, parameters);
 
-    // cache for faster access
-    this.$id = this.$ref.id;
-    this.width = this.$ref.width;
-    this.height = this.$ref.height;
-    this.loaded = true;
+    if ("undefined" !== typeof this.$ref && this.$ref !== null) {
+      // cache for faster access
+      this.$id = this.$ref.id;
+      this.width = this.$ref.width;
+      this.height = this.$ref.height;
+      this.loaded = true;
 
-    // if the onload event function is specified, call it now
-    if ("function" === typeof this.onload) {
-      this.onload();
+      // if the onload event function is specified, call it now
+      if ("function" === typeof this.onload) {
+        this.onload();
+      }
+
+      // cleanup
+      this.$ref.id = null;
+      this.$ref.width = null;
+      this.$ref.height = null;
+
+      delete this.$ref.id;
+      delete this.$ref.width;
+      delete this.$ref.height;
     }
 
-    // cleanup
-    this.$ref.id = null;
-    this.$ref.width = null;
-    this.$ref.height = null;
     this.onload = null;
-
-    delete this.$ref.id;
-    delete this.$ref.width;
-    delete this.$ref.height;
     delete this.onload;
 
     image = null;
