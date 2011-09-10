@@ -104,6 +104,7 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
    * Modified by events in the controller through delegate functions.
    */
   transforms = {
+    offset: vec3.create(),      // mesh offset, aligned to the viewport center
     translation: vec3.create(), // scene translation, on the [x, y, z] axis
     rotation: quat4.create(),   // scene rotation, expressed as a quaternion
     tilt: vec3.create()         // accelerometer rotation, if available
@@ -142,9 +143,10 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
     setupBrowserEvents();
 
     // set the transformations at initialization
-    transforms.translation = [0, 0, 0];
-    transforms.rotation = [0, 0, 0, 1];
-    transforms.tilt = [0, 0, 0];
+    vec3.set([0, 0, 0], transforms.offset);
+    vec3.set([0, 0, 0], transforms.translation);
+    quat4.set([0, 0, 0, 1], transforms.rotation);
+    vec3.set([0, 0, 0],  transforms.tilt);
 
     // this is because of some weird behavior on Windows, if the visualization
     // has been started from the application menu, the width and height gets
@@ -192,7 +194,8 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
 
       // apply the preliminary transformations to the model view
       tilt.translate(tilt.width * 0.5 + 100,
-                     tilt.height * 0.5 - 50, -thickness * 30);
+                     tilt.height * 0.5 - 50,
+                     -thickness * 30);
 
       // transform the tilting representing the device orientation
       tilt.transform(quat4.toMat4(
@@ -207,6 +210,7 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
                      transforms.translation[2]);
 
       tilt.transform(quat4.toMat4(transforms.rotation));
+      tilt.translate(transforms.offset[0], transforms.offset[1], 0);
 
       // draw the visualization mesh
       tilt.blendMode("alpha");
@@ -348,7 +352,9 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
       indices = [],
       wireframeIndices = [],
       visibleNodes = [],
-      hiddenNodes = [];
+      hiddenNodes = [],
+      maxWidth = 0,
+      maxHeight = 0;
 
     if (mesh !== null) {
       mesh.texture = null;
@@ -401,7 +407,11 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
           localName === "style" ||
           localName === "script" ||
           localName === "noscript" ||
-          localName === "option") {
+          localName === "option" ||
+          localName === "strong" ||
+          localName === "em" ||
+          localName === "ins" ||
+          localName === "del") {
 
         // information about these nodes should still be accessible, despite
         // the fact that they're not rendered
@@ -415,7 +425,7 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
         coordHeight = coord.height;
 
       // use this node only if it actually has visible dimensions
-      if (coordWidth > 4 && coordHeight > 4) {
+      if (coordWidth > 1 && coordHeight > 1) {
 
         // information about these nodes should still be accessible
         info.index = visibleNodes.length;
@@ -424,12 +434,16 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
         // number of vertex points, used for creating the indices array
         var i = vertices.length / 3, // a vertex has 3 coords: x, y & z
 
-        // the entire mesh's pivot is the screen center
+        // calculate the stack x, y, z, width and height coordinates
         z = depth * thickness + random() * 0.1,
-        x = coord.x - tilt.width / 2 + left + random() * 0.1,
-        y = coord.y - tilt.height / 2 + top + random() * 0.1,
+        x = coord.x + left + random() * 0.1,
+        y = coord.y + top + random() * 0.1,
         w = coordWidth,
         h = coordHeight;
+
+        // set the maximum mesh width and height to calculate the center offset
+        maxWidth = Math.max(maxWidth, w);
+        maxHeight = Math.max(maxHeight, h);
 
         // compute the vertices
         vertices.unshift(x,     y,     z,                    /* front */ // 0
@@ -451,14 +465,14 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
                         x,     y,     z - thickness);                    // 11
 
         // compute the texture coordinates
-        texCoord.unshift((x + tilt.width  * 0.5    ) / texture.width,
-                         (y + tilt.height * 0.5    ) / texture.height,
-                         (x + tilt.width  * 0.5 + w) / texture.width,
-                         (y + tilt.height * 0.5    ) / texture.height,
-                         (x + tilt.width  * 0.5 + w) / texture.width,
-                         (y + tilt.height * 0.5 + h) / texture.height,
-                         (x + tilt.width  * 0.5    ) / texture.width,
-                         (y + tilt.height * 0.5 + h) / texture.height,
+        texCoord.unshift((x    ) / texture.width,
+                         (y    ) / texture.height,
+                         (x + w) / texture.width,
+                         (y    ) / texture.height,
+                         (x + w) / texture.width,
+                         (y + h) / texture.height,
+                         (x    ) / texture.width,
+                         (y + h) / texture.height,
                          -1, -1, -1, -1, -1, -1, -1, -1,
                          -1, -1, -1, -1, -1, -1, -1, -1);
 
@@ -552,6 +566,12 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
       drawMode: tilt.LINES
     });
 
+    // set the necessary mesh offsets
+    maxWidth = Math.min(maxWidth, window.content.innerWidth);
+    maxHeight = Math.min(maxHeight, window.content.innerHeight);
+    transforms.offset[0] = -maxWidth * 0.5;
+    transforms.offset[1] = -maxHeight * 0.5;
+
     // call any necessary additional mesh initialization functions
     this.performMeshColorbufferRefresh();
   }.bind(this);
@@ -639,16 +659,16 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
    * Event handling orientation changes if the device supports them.
    */
   var gDeviceMotion = function(e) {
-    var accelerationIncludingGravity = e.accelerationIncludingGravity,
-      x = accelerationIncludingGravity.x - Math.PI * 0.01,
-      y = accelerationIncludingGravity.y - Math.PI * 0.01,
-      z = accelerationIncludingGravity.z;
+    // var accelerationIncludingGravity = e.accelerationIncludingGravity,
+    //   x = accelerationIncludingGravity.x - Math.PI * 0.01,
+    //   y = accelerationIncludingGravity.y - Math.PI * 0.01,
+    //   z = accelerationIncludingGravity.z;
 
-    transforms.tilt[0] += (y - transforms.tilt[0]) * 0.5;
-    transforms.tilt[1] += (z - transforms.tilt[1]) * 0.5;
-    transforms.tilt[2] += (x - transforms.tilt[2]) * 0.5;
+    // transforms.tilt[0] += (y - transforms.tilt[0]) * 0.5;
+    // transforms.tilt[1] += (z - transforms.tilt[1]) * 0.5;
+    // transforms.tilt[2] += (x - transforms.tilt[2]) * 0.5;
 
-    this.requestRedraw();
+    // this.requestRedraw();
   }.bind(this);
 
   /**
@@ -957,34 +977,36 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
 
           // we'll need to calculate the quad corners to draw a highlighted
           // area around the currently selected node
-          var i = highlightQuad.index * 30,
+          var v = highlightQuad.index * 30,
             vertices = mesh.vertices.components,
             indices = mesh.indices.components,
 
           // the first triangle vertex
-          v0 = [vertices[indices[i    ] * 3    ],
-                vertices[indices[i    ] * 3 + 1],
-                vertices[indices[i    ] * 3 + 2], 1],
+          v0 = [vertices[indices[v    ] * 3    ],
+                vertices[indices[v    ] * 3 + 1],
+                vertices[indices[v    ] * 3 + 2], 1],
 
           // the second triangle vertex
-          v1 = [vertices[indices[i + 1] * 3    ],
-                vertices[indices[i + 1] * 3 + 1],
-                vertices[indices[i + 1] * 3 + 2], 1],
+          v1 = [vertices[indices[v + 1] * 3    ],
+                vertices[indices[v + 1] * 3 + 1],
+                vertices[indices[v + 1] * 3 + 2], 1],
 
           // the third triangle vertex
-          v2 = [vertices[indices[i + 2] * 3    ],
-                vertices[indices[i + 2] * 3 + 1],
-                vertices[indices[i + 2] * 3 + 2], 1],
+          v2 = [vertices[indices[v + 2] * 3    ],
+                vertices[indices[v + 2] * 3 + 1],
+                vertices[indices[v + 2] * 3 + 2], 1],
 
           // the fourth triangle vertex
-          v3 = [vertices[indices[i + 5] * 3    ],
-                vertices[indices[i + 5] * 3 + 1],
-                vertices[indices[i + 5] * 3 + 2], 1];
+          v3 = [vertices[indices[v + 5] * 3    ],
+                vertices[indices[v + 5] * 3 + 1],
+                vertices[indices[v + 5] * 3 + 2], 1];
 
           highlightQuad.$v0 = v0;
           highlightQuad.$v1 = v1;
           highlightQuad.$v2 = v2;
           highlightQuad.$v3 = v3;
+
+          this.requestRedraw();
         }
       }.bind(this),
 
@@ -1012,6 +1034,11 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
       onfail: function() {
         if ("open" === TiltChrome.BrowserOverlay.sourceEditor.panel.state) {
           TiltChrome.BrowserOverlay.sourceEditor.panel.hidePopup();
+          return;
+        }
+        if ("open" === TiltChrome.BrowserOverlay.colorPicker.panel.state){
+          TiltChrome.BrowserOverlay.colorPicker.panel.hidePopup();
+          return;
         }
       }
     });
@@ -1206,6 +1233,37 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
         highlightQuad.index = index;
         highlightQuad.fill = settings.fill + "55";
         highlightQuad.stroke = settings.fill + "AA";
+
+        // we'll need to calculate the quad corners to draw a highlighted
+        // area around the currently selected node
+        var v = highlightQuad.index * 30,
+          vertices = mesh.vertices.components,
+          indices = mesh.indices.components,
+
+        // the first triangle vertex
+        v0 = [vertices[indices[v    ] * 3    ],
+              vertices[indices[v    ] * 3 + 1],
+              vertices[indices[v    ] * 3 + 2], 1],
+
+        // the second triangle vertex
+        v1 = [vertices[indices[v + 1] * 3    ],
+              vertices[indices[v + 1] * 3 + 1],
+              vertices[indices[v + 1] * 3 + 2], 1],
+
+        // the third triangle vertex
+        v2 = [vertices[indices[v + 2] * 3    ],
+              vertices[indices[v + 2] * 3 + 1],
+              vertices[indices[v + 2] * 3 + 2], 1],
+
+        // the fourth triangle vertex
+        v3 = [vertices[indices[v + 5] * 3    ],
+              vertices[indices[v + 5] * 3 + 1],
+              vertices[indices[v + 5] * 3 + 2], 1];
+
+        highlightQuad.$v0 = v0;
+        highlightQuad.$v1 = v1;
+        highlightQuad.$v2 = v2;
+        highlightQuad.$v3 = v3;
 
         this.requestRedraw();
       }
