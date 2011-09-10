@@ -166,7 +166,7 @@ TiltChrome.Config.UI = {
       fill: "#85004B"
     },
     "other": {
-      fill: "#444"
+      fill: "#666"
     }
   }
 };
