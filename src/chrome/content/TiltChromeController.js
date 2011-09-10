@@ -311,7 +311,7 @@ TiltChrome.Controller.MouseAndKeyboard = function() {
    * Called when the url or search bar are unfocused.
    */
   var browserBarBlur = function() {
-    this.$browserBarFocus = false;    
+    this.$browserBarFocus = false;
   }.bind(this);
 
   /**
