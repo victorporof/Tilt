@@ -11778,6 +11778,15 @@ TiltChrome.Controller.MouseAndKeyboard = function() {
     canvas.addEventListener("MozMousePixelScroll", mouseScroll, false);
     window.addEventListener("keydown", keyDown, false);
     window.addEventListener("keyup", keyUp, false);
+
+    // check the url and search bars for focus
+    var urlbar = document.getElementById("urlbar"),
+      searchbar = document.getElementById("searchbar");
+
+    urlbar.addEventListener("focus", browserBarFocus, false);
+    urlbar.addEventListener("blur", browserBarBlur, false);
+    searchbar.addEventListener("focus", browserBarFocus, false);
+    searchbar.addEventListener("blur", browserBarBlur, false);
   };
 
   /**
@@ -11858,6 +11867,9 @@ TiltChrome.Controller.MouseAndKeyboard = function() {
         this.visualization.performMeshPickHighlight(clickX, clickY);
       }
     }
+
+    // set the focus back to the window content if it was somewhere else
+    window.content.focus();
   }.bind(this);
 
   /**
@@ -11934,19 +11946,20 @@ TiltChrome.Controller.MouseAndKeyboard = function() {
 
     if (code >= 37 && code <= 40) { // up, down, left or right keys
       e.preventDefault();
-      e.stopPropagation();     
+      e.stopPropagation();
     }
 
     // handle key events only if the source editor is not open
-    if ("open" === TiltChrome.BrowserOverlay.sourceEditor.panel.state) {
+    if ("open" === TiltChrome.BrowserOverlay.sourceEditor.panel.state ||
+        "open" === TiltChrome.BrowserOverlay.colorPicker.panel.state) {
       return;
     }
 
-    if (window.content.document.activeElement instanceof HTMLBodyElement) {
+    if (!this.$browserBarFocus) {
       ui.keyDown(code);
       arcball.keyDown(code);
     }
-  };
+  }.bind(this);
 
   /**
    * Called when a key is released.
@@ -11956,11 +11969,14 @@ TiltChrome.Controller.MouseAndKeyboard = function() {
 
     if (code >= 37 && code <= 40) { // up, down, left or right keys
       e.preventDefault();
-      e.stopPropagation();     
+      e.stopPropagation();
     }
     else if (code === 27) { // escape key
       if ("open" === TiltChrome.BrowserOverlay.sourceEditor.panel.state) {
         TiltChrome.BrowserOverlay.sourceEditor.panel.hidePopup();
+      }
+      else if ("open" === TiltChrome.BrowserOverlay.colorPicker.panel.state) {
+        TiltChrome.BrowserOverlay.colorPicker.panel.hidePopup();
       }
       else {
         // escape key also closes the visualization if no other panel is open
@@ -11969,9 +11985,25 @@ TiltChrome.Controller.MouseAndKeyboard = function() {
       }
     }
 
-    ui.keyUp(code);
-    arcball.keyUp(code);
-  };
+    if (!this.$browserBarFocus) {
+      ui.keyUp(code);
+      arcball.keyUp(code);
+    }
+  }.bind(this);
+
+  /**
+   * Called when the url or search bar are focused.
+   */
+  var browserBarFocus = function() {
+    this.$browserBarFocus = true;
+  }.bind(this);
+
+  /**
+   * Called when the url or search bar are unfocused.
+   */
+  var browserBarBlur = function() {
+    this.$browserBarFocus = false;    
+  }.bind(this);
 
   /**
    * Destroys this object and sets all members to null.
@@ -12018,11 +12050,27 @@ TiltChrome.Controller.MouseAndKeyboard = function() {
       keyUp = null;
     }
 
+    var urlbar = document.getElementById("urlbar"),
+      searchbar = document.getElementById("searchbar");
+
+    if (browserBarFocus !== null) {
+      urlbar.removeEventListener("focus", browserBarFocus, false);
+      searchbar.removeEventListener("focus", browserBarFocus, false);
+      browserBarFocus = null;
+    }
+    if (browserBarBlur !== null) {
+      urlbar.removeEventListener("focus", browserBarBlur, false);
+      searchbar.removeEventListener("focus", browserBarBlur, false);
+      browserBarBlur = null;
+    }
+
     if (arcball !== null) {
       arcball.destroy();
       arcball = null;
     }
 
+    urlbar = null;
+    searchbar = null;
     downX = null;
     downY = null;
 
@@ -13289,6 +13337,9 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
       gResize();
       gMouseOver();
     }.bind(this), 100);
+
+    // set the focus back to the window content if it was somewhere else
+    window.content.focus();
   }.bind(this);
 
   /**
