@@ -264,7 +264,9 @@ TiltChrome.Controller.MouseAndKeyboard = function() {
       return;
     }
 
-    if (!this.$browserBarFocus) {
+    if (!this.$browserBarFocus &&
+        window.content.document.activeElement instanceof HTMLBodyElement) {
+
       ui.keyDown(code);
       arcball.keyDown(code);
     }
