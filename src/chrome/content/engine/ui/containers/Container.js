@@ -201,21 +201,6 @@ Tilt.Container.prototype.getHeight = function() {
  * @param {Tilt.Renderer} tilt: optional, a reference to a Tilt.Renderer
  */
 Tilt.Container.prototype.update = function(frameDelta, tilt) {
-  var element, i, len;
-
-  // a view has multiple elements attach, browse and handle each one
-  for (i = 0, len = this.length; i < len; i++) {
-    element = this[i];
-
-    // some elements don't require an update function, check for it first
-    if ("function" === typeof element.update) {
-
-      // update only if the element is visible and enabled
-      if (!element.hidden && !element.disabled) {
-        element.update(frameDelta, tilt);
-      }
-    }
-  }
 };
 
 /**
@@ -263,6 +248,15 @@ Tilt.Container.prototype.draw = function(frameDelta, tilt) {
 
     // draw only if the element is visible (it may be enabled or not)
     if (!element.hidden) {
+
+      // some elements don't require an update function, check for it first
+      if ("function" === typeof element.update) {
+
+        // update only if the element is visible and enabled
+        if (!element.hidden && !element.disabled) {
+          element.update(frameDelta, tilt);
+        }
+      }
 
       // if the current view bounds do not restrict drawing the child elements
       if (width === 0 || height === 0) {
