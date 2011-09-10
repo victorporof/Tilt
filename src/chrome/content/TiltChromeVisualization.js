@@ -153,6 +153,9 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
       gResize();
       gMouseOver();
     }.bind(this), 100);
+
+    // set the focus back to the window content if it was somewhere else
+    window.content.focus();
   }.bind(this);
 
   /**
