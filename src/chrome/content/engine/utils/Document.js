@@ -264,8 +264,11 @@ Tilt.Document = {
     var x, y, w, h, clientRect;
 
     try {
-      if (node.localName === "head" || node.localName === "body") {
-          throw new Exception();
+      if (window.content.location.href === "about:blank" &&
+          (node.localName === "head" ||
+           node.localName === "body")) {
+
+        throw new Exception();
       }
 
       // this is the preferred way of getting the bounding client rectangle
