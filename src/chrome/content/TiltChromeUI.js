@@ -213,7 +213,7 @@ TiltChrome.UI.Default = function() {
       y: -5,
       padding: [0, 0, 0, 5],
       onclick: function() {
-        window.open("chrome://tilt/content/TiltChromeOptions.xul", "Options", 
+        window.open("chrome://tilt/content/TiltChromeOptions.xul", "Options",
           "chrome, modal, centerscreen, width=410, height=325");
       }.bind(this)
     });
