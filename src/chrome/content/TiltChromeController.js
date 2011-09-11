@@ -299,7 +299,7 @@ TiltChrome.Controller.MouseAndKeyboard = function() {
         if ("open" === TiltChrome.BrowserOverlay.sourceEditor.panel.state) {
           TiltChrome.BrowserOverlay.sourceEditor.panel.hidePopup();
         }
-        else if ("open" === TiltChrome.BrowserOverlay.colorPicker.panel.state) {
+        else if ("open" === TiltChrome.BrowserOverlay.colorPicker.panel.state){
           TiltChrome.BrowserOverlay.colorPicker.panel.hidePopup();
         }
         else {
