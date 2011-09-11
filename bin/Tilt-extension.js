@@ -12955,7 +12955,7 @@ TiltChrome.UI.Default = function() {
   };
 
   /**
-   * EFunction called automatically when the color picker panel popup hiding.
+   * Function called automatically when the color picker panel popup hiding.
    */
   this.panelPickerHidden = function() {
     var hex = TiltChrome.BrowserOverlay.colorPicker.
