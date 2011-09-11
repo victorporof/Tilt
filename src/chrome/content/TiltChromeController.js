@@ -67,6 +67,10 @@ TiltChrome.Controller.MouseAndKeyboard = function() {
    * @param {HTMLCanvasElement} canvas: the canvas element
    */
   this.init = function(canvas) {
+    if (!canvas) {
+      return;
+    }
+
     arcball = new Tilt.Arcball(canvas.width, canvas.height);
 
     // bind some closures to more easily handle the arcball
@@ -89,13 +93,17 @@ TiltChrome.Controller.MouseAndKeyboard = function() {
     window.addEventListener("keyup", keyUp, false);
 
     // check the url and search bars for focus
-    var urlbar = document.getElementById("urlbar"),
-      searchbar = document.getElementById("searchbar");
+    var url = document.getElementById("urlbar"),
+      search = document.getElementById("searchbar");
 
-    urlbar.addEventListener("focus", browserBarFocus, false);
-    urlbar.addEventListener("blur", browserBarBlur, false);
-    searchbar.addEventListener("focus", browserBarFocus, false);
-    searchbar.addEventListener("blur", browserBarBlur, false);
+    if ("undefined" !== typeof url && url !== null) {
+      url.addEventListener("focus", browserBarFocus, false);
+      url.addEventListener("blur", browserBarBlur, false);
+    }
+    if ("undefined" !== typeof search && search !== null) {
+      search.addEventListener("focus", browserBarFocus, false);
+      search.addEventListener("blur", browserBarBlur, false);
+    }
   };
 
   /**
@@ -257,11 +265,15 @@ TiltChrome.Controller.MouseAndKeyboard = function() {
       e.preventDefault();
       e.stopPropagation();
     }
-
-    // handle key events only if the source editor is not open
-    if ("open" === TiltChrome.BrowserOverlay.sourceEditor.panel.state ||
-        "open" === TiltChrome.BrowserOverlay.colorPicker.panel.state) {
-      return;
+    else {
+      try {
+        // handle key events only if the source editor is not open
+        if ("open" === TiltChrome.BrowserOverlay.sourceEditor.panel.state ||
+            "open" === TiltChrome.BrowserOverlay.colorPicker.panel.state) {
+          return;
+        }
+      }
+      catch(e) {}
     }
 
     if (!this.$browserBarFocus &&
@@ -283,17 +295,20 @@ TiltChrome.Controller.MouseAndKeyboard = function() {
       e.stopPropagation();
     }
     else if (code === 27) { // escape key
-      if ("open" === TiltChrome.BrowserOverlay.sourceEditor.panel.state) {
-        TiltChrome.BrowserOverlay.sourceEditor.panel.hidePopup();
+      try {
+        if ("open" === TiltChrome.BrowserOverlay.sourceEditor.panel.state) {
+          TiltChrome.BrowserOverlay.sourceEditor.panel.hidePopup();
+        }
+        else if ("open" === TiltChrome.BrowserOverlay.colorPicker.panel.state) {
+          TiltChrome.BrowserOverlay.colorPicker.panel.hidePopup();
+        }
+        else {
+          // escape key also closes the visualization if no other panel is open
+          TiltChrome.BrowserOverlay.destroy(true, true);
+          TiltChrome.BrowserOverlay.href = null;
+        }
       }
-      else if ("open" === TiltChrome.BrowserOverlay.colorPicker.panel.state) {
-        TiltChrome.BrowserOverlay.colorPicker.panel.hidePopup();
-      }
-      else {
-        // escape key also closes the visualization if no other panel is open
-        TiltChrome.BrowserOverlay.destroy(true, true);
-        TiltChrome.BrowserOverlay.href = null;
-      }
+      catch(e) {}
     }
 
     if (!this.$browserBarFocus) {
@@ -323,6 +338,10 @@ TiltChrome.Controller.MouseAndKeyboard = function() {
   this.destroy = function(canvas) {
     this.visualization = null;
     ui = null;
+
+    if (!canvas) {
+      return;
+    }
 
     if (mouseDown !== null) {
       canvas.removeEventListener("mousedown", mouseDown, false);
@@ -361,17 +380,17 @@ TiltChrome.Controller.MouseAndKeyboard = function() {
       keyUp = null;
     }
 
-    var urlbar = document.getElementById("urlbar"),
-      searchbar = document.getElementById("searchbar");
+    var url = document.getElementById("urlbar"),
+      search = document.getElementById("searchbar");
 
     if (browserBarFocus !== null) {
-      urlbar.removeEventListener("focus", browserBarFocus, false);
-      searchbar.removeEventListener("focus", browserBarFocus, false);
+      url && url.removeEventListener("focus", browserBarFocus, false);
+      search && search.removeEventListener("focus", browserBarFocus, false);
       browserBarFocus = null;
     }
     if (browserBarBlur !== null) {
-      urlbar.removeEventListener("focus", browserBarBlur, false);
-      searchbar.removeEventListener("focus", browserBarBlur, false);
+      url && url.removeEventListener("focus", browserBarBlur, false);
+      search && search.removeEventListener("focus", browserBarBlur, false);
       browserBarBlur = null;
     }
 
@@ -380,8 +399,8 @@ TiltChrome.Controller.MouseAndKeyboard = function() {
       arcball = null;
     }
 
-    urlbar = null;
-    searchbar = null;
+    url = null;
+    search = null;
     downX = null;
     downY = null;
 

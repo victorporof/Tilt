@@ -148,6 +148,10 @@ TiltChrome.UI.Default = function() {
    * @param {HTMLCanvasElement} canvas: the canvas element
    */
   this.init = function(canvas) {
+    if (!canvas) {
+      return;
+    }
+
     t = new Tilt.Texture("chrome://tilt/skin/tilt-ui.png", {
       minFilter: "nearest",
       magFilter: "nearest",
@@ -1015,6 +1019,10 @@ TiltChrome.UI.Default = function() {
     this.controller = null;
     ui = null;
     config = null;
+
+    if (!canvas) {
+      return;
+    }
 
     if (alwaysVisibleElements !== null) {
       alwaysVisibleElements.destroy();
