@@ -58,63 +58,63 @@ TiltChrome.Options = {
   },
 
   /**
-   *
+   * Event fired when the sender radio button is pressed.
    * @param {XULElement} sender: the xul element calling this delegate
    */
   refreshFastestRadioPressed: function(sender) {
   },
 
   /**
-   *
+   * Event fired when the sender radio button is pressed.
    * @param {XULElement} sender: the xul element calling this delegate
    */
   refreshRecommendedRadioPressed: function(sender) {
   },
 
   /**
-   *
+   * Event fired when the sender radio button is pressed.
    * @param {XULElement} sender: the xul element calling this delegate
    */
   refreshSlowestRadioPressed: function(sender) {
   },
 
   /**
-   *
+   * Event fired when the sender checkbox is pressed.
    * @param {XULElement} sender: the xul element calling this delegate
    */
   escapeKeyCheckboxPressed: function(sender) {
   },
 
   /**
-   *
+   * Event fired when the sender checkbox is pressed.
    * @param {XULElement} sender: the xul element calling this delegate
    */
   hideUICheckboxPressed: function(sender) {
   },
 
   /**
-   *
+   * Event fired when the sender checkbox is pressed.
    * @param {XULElement} sender: the xul element calling this delegate
    */
   disableMinidomCheckboxPressed: function(sender) {
   },
 
   /**
-   *
+   * Event fired when the sender checkbox is pressed.
    * @param {XULElement} sender: the xul element calling this delegate
    */
   enableJoystickCheckboxPressed: function(sender) {
   },
 
   /**
-   *
+   * Event fired when the sender checkbox is pressed.
    * @param {XULElement} sender: the xul element calling this delegate
    */
   useAccelerometerCheckboxPressed: function(sender) {
   },
 
   /**
-   *
+   * Event fired when the sender textbox is focused.
    * @param {XULElement} sender: the xul element calling this delegate
    */
   openCloseTextboxFocus: function(sender) {
@@ -122,6 +122,7 @@ TiltChrome.Options = {
   },
 
   /**
+   * Event fired when the sender textbox is pressed.
    *
    * @param {XULElement} sender: the xul element calling this delegate
    * @param {KeyboardEvent} e: the keyboard event
@@ -136,11 +137,14 @@ TiltChrome.Options = {
     var value = sender.value,
       code = e.keyCode || e.which;
 
+    if (value.substr(-1) !== "+") {
+      value = "";
+    }
     if (code === 8 || code === 45 || code === 46) { // escape, delete or insert
       value = "";
     }
-    if (value.substr(-1) !== "+") {
-      value = "";
+    if (code >= 65 && code <= 90) { // lowercase a..z
+      value += String.fromCharCode(code);
     }
     if (value.match(/shift/i) === null && code === 16) {
       value += "Shift+";
@@ -151,7 +155,7 @@ TiltChrome.Options = {
     if (value.match(/alt|option/i) === null && code === 18) {
       value += "Alt+";
     }
-    if (value.match(/accel|win|cmd|super/i) === null && code === 224) {
+    if (value.match(/accel|cmd/i) === null && code === 224) {
       value += "Accel+";
     }
     if (value.match(/space/i) === null && code === 32) {
@@ -192,14 +196,15 @@ TiltChrome.Options = {
                    })()).
                    replace(/accel/i, (function() {
                      var app = navigator.appVersion;
-                     if (app.indexOf("Win") !== -1) { return "Win"; }
+                     if (app.indexOf("Win") !== -1) { return "Ctrl"; }
                      else if (app.indexOf("Mac") !== -1) { return "Cmd"; }
-                     else if (app.indexOf("X11") !== -1) { return "Super"; }
+                     else if (app.indexOf("X11") !== -1) { return "Ctrl"; }
                      else if (app.indexOf("Linux") !== -1) { return "Ctrl"; }
                      else { return "Accel"; }
                    })());
 
-    if (code >= 32 && code <= 40) {
+    if ((code >= 32 && code <= 40) ||
+        (code >= 65 && code <= 90)) {
       e.preventDefault();
       e.stopPropagation();
     }
