@@ -59,11 +59,21 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
     onfail: function() {
       TiltChrome.BrowserOverlay.destroy(true, true);
       TiltChrome.BrowserOverlay.href = null;
-      Tilt.Console.alert("Firefox", Tilt.StringBundle.get("initWebGL.error"));
+      window.content.location.href = "http://get.webgl.org/";
+    },
 
-      // show a corresponding prompt message and open a tab to troubleshooting
-      gBrowser.selectedTab =
-        gBrowser.addTab("http://get.webgl.org/");
+    // WebGL was initialized, but other unforseen consequences may occur
+    onsuccess: function() {
+      window.setTimeout(function() {
+        // check if rendering is working as expected
+        if (tilt.frameCount < 1) {
+          TiltChrome.BrowserOverlay.destroy(true, true);
+          TiltChrome.BrowserOverlay.href = null;
+
+          window.content.location.href ="http://get.webgl.org/troubleshooting";
+          Tilt.Console.alert("Firefox", Tilt.StringBundle.get("tilt.error"));
+        }
+      }, 1000);
     }
   }),
 
@@ -631,7 +641,7 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
       this.requestRefreshTexture(boundingClientRect);
     }
     // the entire dom tree has likely changed, so refresh everything
-    else {
+    else if (tilt.frameCount > 100) {
       innerWidth = window.content.innerWidth;
       innerHeight = window.content.innerHeight;
 
@@ -730,12 +740,15 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
     }
 
     // hide the panel with the editor & picker (to avoid wrong positioning)
-    if ("open" === TiltChrome.BrowserOverlay.sourceEditor.panel.state) {
-      TiltChrome.BrowserOverlay.sourceEditor.panel.hidePopup();
+    try {
+      if ("open" === TiltChrome.BrowserOverlay.sourceEditor.panel.state) {
+        TiltChrome.BrowserOverlay.sourceEditor.panel.hidePopup();
+      }
+      if ("open" === TiltChrome.BrowserOverlay.colorPicker.panel.state) {
+        TiltChrome.BrowserOverlay.colorPicker.panel.hidePopup();
+      }
     }
-    if ("open" === TiltChrome.BrowserOverlay.colorPicker.panel.state) {
-      TiltChrome.BrowserOverlay.colorPicker.panel.hidePopup();
-    }
+    catch(e) {}
   }.bind(this);
 
   /**
