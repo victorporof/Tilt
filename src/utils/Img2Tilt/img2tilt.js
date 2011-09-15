@@ -36,7 +36,7 @@
 (function() {
   "use strict";
 
-  var detail = 40,
+  var detail = 30,
       elevation = -1,
       sensitivity = 4,
       negative = false;
