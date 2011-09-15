@@ -273,7 +273,7 @@ TiltChrome.Controller.MouseAndKeyboard = function() {
           return;
         }
       }
-      catch(e) {}
+      catch(_e) {}
     }
 
     if (!this.$browserBarFocus &&
@@ -308,7 +308,7 @@ TiltChrome.Controller.MouseAndKeyboard = function() {
           TiltChrome.BrowserOverlay.href = null;
         }
       }
-      catch(e) {}
+      catch(_e) {}
     }
 
     if (!this.$browserBarFocus) {
@@ -384,13 +384,13 @@ TiltChrome.Controller.MouseAndKeyboard = function() {
       search = document.getElementById("searchbar");
 
     if (browserBarFocus !== null) {
-      url && url.removeEventListener("focus", browserBarFocus, false);
-      search && search.removeEventListener("focus", browserBarFocus, false);
+      if (url) url.removeEventListener("focus", browserBarFocus, false);
+      if (search) search.removeEventListener("focus", browserBarFocus, false);
       browserBarFocus = null;
     }
     if (browserBarBlur !== null) {
-      url && url.removeEventListener("focus", browserBarBlur, false);
-      search && search.removeEventListener("focus", browserBarBlur, false);
+      if (url) url.removeEventListener("focus", browserBarBlur, false);
+      if (search) search.removeEventListener("focus", browserBarBlur, false);
       browserBarBlur = null;
     }
 
