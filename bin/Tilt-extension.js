@@ -6510,6 +6510,11 @@ Tilt.Renderer = function(canvas, properties) {
   // check if the context was created successfully
   if ("undefined" !== typeof this.gl && this.gl !== null) {
 
+    // if successful, run a success callback function if available
+    if ("function" === typeof properties.onsuccess) {
+      properties.onsuccess();
+    }
+
     // set up some global enums
     this.TRIANGLES = this.gl.TRIANGLES;
     this.TRIANGLE_STRIP = this.gl.TRIANGLE_STRIP;
@@ -6522,14 +6527,9 @@ Tilt.Renderer = function(canvas, properties) {
     this.DEPTH_BUFFER_BIT = this.gl.DEPTH_BUFFER_BIT;
     this.STENCIL_BUFFER_BIT = this.gl.STENCIL_BUFFER_BIT;
 
+    // set the default clear color and depth buffers
     this.gl.clearColor(0, 0, 0, 1);
     this.gl.clearDepth(1);
-    this.gl.clearStencil(0);
-
-    // if successful, run a success callback function if available
-    if ("function" === typeof properties.onsuccess) {
-      properties.onsuccess();
-    }
   }
   else {
     // if unsuccessful, log the error and run a fail callback if available
@@ -6540,6 +6540,34 @@ Tilt.Renderer = function(canvas, properties) {
       return;
     }
   }
+
+  /**
+   * Helpers for managing variables like frameCount, frameRate, frameDelta,
+   * used internally, in the requestAnimFrame function.
+   */
+  this.$lastTime = 0;
+  this.$currentTime = null;
+
+  /**
+   * Time passed since initialization.
+   */
+  this.elapsedTime = 0;
+
+  /**
+   * Counter for the number of frames passed since initialization.
+   */
+  this.frameCount = 0;
+
+  /**
+   * Variable retaining the current frame rate.
+   */
+  this.frameRate = 0;
+
+  /**
+   * Variable representing the delta time elapsed between frames.
+   * Use this to create smooth animations regardless of the frame rate.
+   */
+  this.frameDelta = 0;
 
   /**
    * Variables representing the current framebuffer width and height.
@@ -6614,34 +6642,6 @@ Tilt.Renderer = function(canvas, properties) {
    */
   this.$cube = new Tilt.Cube();
   this.$cubeWireframe = new Tilt.CubeWireframe();
-
-  /**
-   * Helpers for managing variables like frameCount, frameRate, frameDelta,
-   * used internally, in the requestAnimFrame function.
-   */
-  this.$lastTime = 0;
-  this.$currentTime = null;
-
-  /**
-   * Time passed since initialization.
-   */
-  this.elapsedTime = 0;
-
-  /**
-   * Counter for the number of frames passed since initialization.
-   */
-  this.frameCount = 0;
-
-  /**
-   * Variable retaining the current frame rate.
-   */
-  this.frameRate = 0;
-
-  /**
-   * Variable representing the delta time elapsed between frames.
-   * Use this to create smooth animations regardless of the frame rate.
-   */
-  this.frameDelta = 0;
 
   // set the default model view and projection matrices
   this.origin();
@@ -7344,7 +7344,7 @@ Tilt.Renderer.prototype = {
    *      draw();
    *
    * @param {Function} draw: the function to be called each frame
-   * @param {Boolean} debug: true if params like frame rate and frame delta 
+   * @param {Boolean} debug: true if params like frame rate and frame delta
    * should be calculated
    */
   loop: function(draw, debug) {
@@ -10322,7 +10322,7 @@ Tilt.File = {
 
     fp = Cc["@mozilla.org/filepicker;1"].createInstance(Ci.nsIFilePicker);
 
-    fp.init(window, message, type === "folder" ? 
+    fp.init(window, message, type === "folder" ?
       Ci.nsIFilePicker.modeGetFolder :
       Ci.nsIFilePicker.modeOpen);
 
@@ -10353,7 +10353,7 @@ Tilt.File = {
 
     converter = Cc["@mozilla.org/intl/scriptableunicodeconverter"].
       createInstance(Ci.nsIScriptableUnicodeConverter);
-  
+
     converter.charset = "UTF-8";
     istream = converter.convertToInputStream(data);
 
@@ -11969,7 +11969,7 @@ TiltChrome.Controller.MouseAndKeyboard = function() {
           return;
         }
       }
-      catch(e) {}
+      catch(_e) {}
     }
 
     if (!this.$browserBarFocus &&
@@ -11995,7 +11995,7 @@ TiltChrome.Controller.MouseAndKeyboard = function() {
         if ("open" === TiltChrome.BrowserOverlay.sourceEditor.panel.state) {
           TiltChrome.BrowserOverlay.sourceEditor.panel.hidePopup();
         }
-        else if ("open" === TiltChrome.BrowserOverlay.colorPicker.panel.state) {
+        else if ("open" === TiltChrome.BrowserOverlay.colorPicker.panel.state){
           TiltChrome.BrowserOverlay.colorPicker.panel.hidePopup();
         }
         else {
@@ -12004,7 +12004,7 @@ TiltChrome.Controller.MouseAndKeyboard = function() {
           TiltChrome.BrowserOverlay.href = null;
         }
       }
-      catch(e) {}
+      catch(_e) {}
     }
 
     if (!this.$browserBarFocus) {
@@ -12080,13 +12080,13 @@ TiltChrome.Controller.MouseAndKeyboard = function() {
       search = document.getElementById("searchbar");
 
     if (browserBarFocus !== null) {
-      url && url.removeEventListener("focus", browserBarFocus, false);
-      search && search.removeEventListener("focus", browserBarFocus, false);
+      if (url) url.removeEventListener("focus", browserBarFocus, false);
+      if (search) search.removeEventListener("focus", browserBarFocus, false);
       browserBarFocus = null;
     }
     if (browserBarBlur !== null) {
-      url && url.removeEventListener("focus", browserBarBlur, false);
-      search && search.removeEventListener("focus", browserBarBlur, false);
+      if (url) url.removeEventListener("focus", browserBarBlur, false);
+      if (search) search.removeEventListener("focus", browserBarBlur, false);
       browserBarBlur = null;
     }
 
@@ -12150,7 +12150,169 @@ var EXPORTED_SYMBOLS = ["TiltChrome.Options"];
 /**
  * Default options implementation.
  */
-TiltChrome.Options = function() {
+TiltChrome.Options = {
+
+  /**
+   * Event fired when a key is released and the windows is focused.
+   *
+   * @param {XULElement} sender: the xul element calling this delegate
+   * @param {KeyboardEvent} e: the keyboard event
+   */
+  windowKeyUp: function(sender, e) {
+    var code = e.keyCode || e.which;
+
+    if (code === 27) { // escape key
+      sender.close();
+    }
+  },
+
+  /**
+   *
+   * @param {XULElement} sender: the xul element calling this delegate
+   */
+  refreshFastestRadioPressed: function(sender) {
+  },
+
+  /**
+   *
+   * @param {XULElement} sender: the xul element calling this delegate
+   */
+  refreshRecommendedRadioPressed: function(sender) {
+  },
+
+  /**
+   *
+   * @param {XULElement} sender: the xul element calling this delegate
+   */
+  refreshSlowestRadioPressed: function(sender) {
+  },
+
+  /**
+   *
+   * @param {XULElement} sender: the xul element calling this delegate
+   */
+  escapeKeyCheckboxPressed: function(sender) {
+  },
+
+  /**
+   *
+   * @param {XULElement} sender: the xul element calling this delegate
+   */
+  hideUICheckboxPressed: function(sender) {
+  },
+
+  /**
+   *
+   * @param {XULElement} sender: the xul element calling this delegate
+   */
+  disableMinidomCheckboxPressed: function(sender) {
+  },
+
+  /**
+   *
+   * @param {XULElement} sender: the xul element calling this delegate
+   */
+  enableJoystickCheckboxPressed: function(sender) {
+  },
+
+  /**
+   *
+   * @param {XULElement} sender: the xul element calling this delegate
+   */
+  useAccelerometerCheckboxPressed: function(sender) {
+  },
+
+  /**
+   *
+   * @param {XULElement} sender: the xul element calling this delegate
+   */
+  openCloseTextboxFocus: function(sender) {
+    sender.focused = true;
+  },
+
+  /**
+   *
+   * @param {XULElement} sender: the xul element calling this delegate
+   * @param {KeyboardEvent} e: the keyboard event
+   */
+  openCloseTextboxKeyDown: function(sender, e) {
+    if (sender.focused) {
+      sender.value = "";
+      sender.focused = null;
+      delete sender.focused;
+    }
+
+    var value = sender.value,
+      code = e.keyCode || e.which;
+
+    if (code === 8 || code === 45 || code === 46) { // escape, delete or insert
+      value = "";
+    }
+    if (value.substr(-1) !== "+") {
+      value = "";
+    }
+    if (value.match(/shift/i) === null && code === 16) {
+      value += "Shift+";
+    }
+    if (value.match(/ctrl/i) === null && code === 17) {
+      value += "Ctrl+";
+    }
+    if (value.match(/alt|option/i) === null && code === 18) {
+      value += "Alt+";
+    }
+    if (value.match(/accel|win|cmd|super/i) === null && code === 224) {
+      value += "Accel+";
+    }
+    if (value.match(/space/i) === null && code === 32) {
+      value += "Space";
+    }
+    if (value.match(/pgup/i) === null && code === 33) {
+      value += "PgUp+";
+    }
+    if (value.match(/pgdown/i) === null && code === 34) {
+      value += "PgDown+";
+    }
+    if (value.match(/end/i) === null && code === 35) {
+      value += "End+";
+    }
+    if (value.match(/home/i) === null && code === 36) {
+      value += "Home+";
+    }
+    if (value.match(/left/i) === null && code === 37) {
+      value += "Left+";
+    }
+    if (value.match(/up/i) === null && code === 38) {
+      value += "Up+";
+    }
+    if (value.match(/right/i) === null && code === 39) {
+      value += "Right+";
+    }
+    if (value.match(/down/i) === null && code === 40) {
+      value += "Down+";
+    }
+
+    sender.value = value.replace(/alt/i, (function() {
+                     var app = navigator.appVersion;
+                     if (app.indexOf("Win") !== -1) { return "Alt"; }
+                     else if (app.indexOf("Mac") !== -1) { return "Option"; }
+                     else if (app.indexOf("X11") !== -1) { return "Alt"; }
+                     else if (app.indexOf("Linux") !== -1) { return "Alt"; }
+                     else { return "Alt"; }
+                   })()).
+                   replace(/accel/i, (function() {
+                     var app = navigator.appVersion;
+                     if (app.indexOf("Win") !== -1) { return "Win"; }
+                     else if (app.indexOf("Mac") !== -1) { return "Cmd"; }
+                     else if (app.indexOf("X11") !== -1) { return "Super"; }
+                     else if (app.indexOf("Linux") !== -1) { return "Ctrl"; }
+                     else { return "Accel"; }
+                   })());
+
+    if (code >= 32 && code <= 40) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+  }
 };
 /***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
@@ -12436,7 +12598,8 @@ TiltChrome.UI.Default = function() {
 
     arcballSprite = new Tilt.Sprite(t, [0, 0, 145, 145], {
       x: 0,
-      y: 0
+      y: 0,
+      disabled: true
     });
 
     arcballUpButton = new Tilt.Button(null, {
@@ -13322,11 +13485,21 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
     onfail: function() {
       TiltChrome.BrowserOverlay.destroy(true, true);
       TiltChrome.BrowserOverlay.href = null;
-      Tilt.Console.alert("Firefox", Tilt.StringBundle.get("initWebGL.error"));
+      window.content.location.href = "http://get.webgl.org/";
+    },
 
-      // show a corresponding prompt message and open a tab to troubleshooting
-      gBrowser.selectedTab =
-        gBrowser.addTab("http://get.webgl.org/");
+    // WebGL was initialized, but other unforseen consequences may occur
+    onsuccess: function() {
+      window.setTimeout(function() {
+        // check if rendering is working as expected
+        if (tilt.frameCount < 1) {
+          TiltChrome.BrowserOverlay.destroy(true, true);
+          TiltChrome.BrowserOverlay.href = null;
+
+          window.content.location.href ="http://get.webgl.org/troubleshooting";
+          Tilt.Console.alert("Firefox", Tilt.StringBundle.get("tilt.error"));
+        }
+      }, 1000);
     }
   }),
 
@@ -13894,7 +14067,7 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
       this.requestRefreshTexture(boundingClientRect);
     }
     // the entire dom tree has likely changed, so refresh everything
-    else {
+    else if (tilt.frameCount > 100) {
       innerWidth = window.content.innerWidth;
       innerHeight = window.content.innerHeight;
 
@@ -13993,12 +14166,15 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
     }
 
     // hide the panel with the editor & picker (to avoid wrong positioning)
-    if ("open" === TiltChrome.BrowserOverlay.sourceEditor.panel.state) {
-      TiltChrome.BrowserOverlay.sourceEditor.panel.hidePopup();
+    try {
+      if ("open" === TiltChrome.BrowserOverlay.sourceEditor.panel.state) {
+        TiltChrome.BrowserOverlay.sourceEditor.panel.hidePopup();
+      }
+      if ("open" === TiltChrome.BrowserOverlay.colorPicker.panel.state) {
+        TiltChrome.BrowserOverlay.colorPicker.panel.hidePopup();
+      }
     }
-    if ("open" === TiltChrome.BrowserOverlay.colorPicker.panel.state) {
-      TiltChrome.BrowserOverlay.colorPicker.panel.hidePopup();
-    }
+    catch(e) {}
   }.bind(this);
 
   /**

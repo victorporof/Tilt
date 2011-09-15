@@ -9,8 +9,22 @@ gBrowser.selectedBrowser["markupDocumentViewer"] = gBrowser.selectedBrowser.mark
 gBrowser.selectedBrowser.markupDocumentViewer["fullZoom"] = gBrowser.selectedBrowser.markupDocumentViewer.fullZoom;
 
 window["TiltChrome"] = TiltChrome;
+
 TiltChrome["BrowserOverlay"] = TiltChrome.BrowserOverlay;
 TiltChrome.BrowserOverlay["initialize"] = TiltChrome.BrowserOverlay.initialize;
+
+TiltChrome["Options"] = TiltChrome.Options;
+TiltChrome.Options["windowKeyUp"] = TiltChrome.Options.windowKeyUp;
+TiltChrome.Options["refreshFastestRadioPressed"] = TiltChrome.Options.refreshFastestRadioPressed;
+TiltChrome.Options["refreshRecommendedRadioPressed"] = TiltChrome.Options.refreshRecommendedRadioPressed;
+TiltChrome.Options["refreshSlowestRadioPressed"] = TiltChrome.Options.refreshSlowestRadioPressed;
+TiltChrome.Options["escapeKeyCheckboxPressed"] = TiltChrome.Options.escapeKeyCheckboxPressed;
+TiltChrome.Options["hideUICheckboxPressed"] = TiltChrome.Options.hideUICheckboxPressed;
+TiltChrome.Options["disableMinidomCheckboxPressed"] = TiltChrome.Options.disableMinidomCheckboxPressed;
+TiltChrome.Options["enableJoystickCheckboxPressed"] = TiltChrome.Options.enableJoystickCheckboxPressed;
+TiltChrome.Options["useAccelerometerCheckboxPressed"] = TiltChrome.Options.useAccelerometerCheckboxPressed;
+TiltChrome.Options["openCloseTextboxFocus"] = TiltChrome.Options.openCloseTextboxFocus;
+TiltChrome.Options["openCloseTextboxKeyDown"] = TiltChrome.Options.openCloseTextboxKeyDown;
 
 
 window["Components"] = Components;
