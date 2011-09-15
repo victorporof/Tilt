@@ -37,10 +37,10 @@ Alternatively, you can just use the `engine` or `extension` param to build only 
 ./build extension
 ```
 
-You can append the `minify` parameter to minify the sources when building, but this is recommended only when building a final release, as it takes quite a lot of time.
-The compiled files are in the [bin](https://github.com/victorporof/Tilt/tree/master/bin) folder. If the extension was also built, inside [build](https://github.com/victorporof/Tilt/tree/master/bin/build) you can find the unpacked [Tilt.xpi](https://github.com/victorporof/Tilt/raw/master/bin/Tilt.xpi) archive.
+You can append the `minify` and/or `optimize` parameter to minify and optimize the sources when building, but this is recommended only for a final release, as it takes quite a lot of time.
+The output files are in the [bin](https://github.com/victorporof/Tilt/tree/master/bin) folder. If the extension was also built, inside [build](https://github.com/victorporof/Tilt/tree/master/bin/build) you can find the unpacked [Tilt.xpi](https://github.com/victorporof/Tilt/raw/master/bin/Tilt.xpi) archive.
 
-Tilt uses the [Google Closure compiler](https://github.com/victorporof/Tilt/tree/master/bin/google-closure) to minify the Javascript files, with the `--compilation_level ADVANCED_OPTIMIZATIONS` flag. Therefore, some [Javascript externs](https://github.com/victorporof/Tilt/blob/master/bin/google-closure/tilt-externs.jsext) must be specified so important variable names are not renamed.
+Tilt uses the [Google Closure compiler](https://github.com/victorporof/Tilt/tree/master/bin/google-closure) to optimize the Javascript files, with the `--compilation_level ADVANCED_OPTIMIZATIONS` flag. Therefore, some [Javascript externs](https://github.com/victorporof/Tilt/blob/master/bin/google-closure/tilt-externs.jsext) must be specified so important variable names are not renamed.
 
 ## How to automatically install
 To install the extension automatically in Firefox with the `make install` or `./build` command, first edit the [makefile](https://github.com/victorporof/Tilt/blob/master/src/Makefile) and change the `profile_dir` to match your profile in Firefox. If you don't do this, installation will fail. Additionally, you may need to have the `tilt@mozilla.com` folder created in the extension profile directory, depending on the OS and Firefox version. After this quick setup (provided you already compiled everything with `./build`), run the following command to install the extension:
@@ -49,10 +49,10 @@ To install the extension automatically in Firefox with the `make install` or `./
 export OSTYPE; make install;
 ```
 
-Or, to automatically compile everything, minify and also install:
+Or, to automatically minify everything, optimize and also install:
 
 ```
-./build all minify install
+./build all minify optimize install
 ```
 
 ## WebGL engine
@@ -138,7 +138,7 @@ TiltChrome.Controller.MyCustomController = function() {
 ```
 
 ## Implement a custom UI
-Just like the controller, the user interface is initialized when constructing the visualization. The current <b>work in progress</b> implementation is in [TiltChromeUI.js](https://github.com/victorporof/Tilt/blob/master/src/chrome/content/TiltChromeUI.js). You can implement your own user interface by creating a new object respecting a predefined interface. 
+Just like the controller, the user interface is initialized when constructing the visualization. The current <b>work in progress</b> implementation is in [TiltChromeUI.js](https://github.com/victorporof/Tilt/blob/master/src/chrome/content/TiltChromeUI.js). You can implement your own user interface by creating a new object respecting a predefined interface.
 
 Each UI should have the `init`, `draw`, `resize` and `destroy` functions. Moreover, you can specify events like `domVisualizationMeshNodeCallback` or `meshNodeCallback`, or `meshReadyCallback` handled automatically by the visualization.
 
