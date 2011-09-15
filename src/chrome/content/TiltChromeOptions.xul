@@ -37,10 +37,14 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  ***** END LICENSE BLOCK *****/ -->
- 
+
 <window id="tilt-options"
   title="Options"
-  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+  onkeyup="TiltChrome.Options.windowKeyUp(this, event);">
+
+  <script type="application/x-javascript"
+    src="chrome://tilt/content/Tilt-extension.js"/>
 
   <groupbox>
     <caption>
@@ -50,42 +54,55 @@
 
     <radiogroup>
       <radio label="Document texture only (fastest)"
-        selected="false"/>
+        selected="false"
+        oncommand="TiltChrome.Options.refreshFastestRadioPressed(this);"/>
 
       <radio label="Texture and some DOM elements (recommended)"
-        selected="true"/>
+        selected="true"
+        oncommand="TiltChrome.Options.refreshRecommendedRadioPressed(this);"/>
 
       <radio label="Everything (slowest)"
-        selected="false"/>
+        selected="false"
+        oncommand="TiltChrome.Options.refreshSlowestRadioPressed(this);"/>
     </radiogroup>
   </groupbox>
 
   <groupbox>
     <checkbox label="Escape key closes the visualization"
       checked="true"
-      disabled="false"/>
+      disabled="false"
+      oncommand="TiltChrome.Options.escapeKeyCheckboxPressed(this);"/>
 
-    <checkbox label="Show the user interface at initialization" 
-      checked="true"
-      disabled="false"/>
-
-    <checkbox label="Disable the 'minidom' strips tree view" 
+    <checkbox label="Hide the user interface at initialization (better performance)"
       checked="false"
-      disabled="false"/>
+      disabled="false"
+      oncommand="TiltChrome.Options.hideUICheckboxPressed(this);"/>
+
+    <checkbox label="Disable the 'minidom' strips tree view (requires restart)"
+      checked="false"
+      disabled="false"
+      oncommand="TiltChrome.Options.disableMinidomCheckboxPressed(this);"/>
 
     <checkbox label="Enable joystick controller"
       checked="false"
-      disabled="true"/>
+      disabled="true"
+      oncommand="TiltChrome.Options.enableJoystickCheckboxPressed(this);"/>
 
     <checkbox label="Use accelerometer if available"
-      checked="true"
-      disabled="false"/>
+      checked="false"
+      disabled="false"
+      oncommand="TiltChrome.Options.useAccelerometerCheckboxPressed(this);"/>
   </groupbox>
 
   <groupbox>
     <hbox align="center">
-      <label value="Open &amp; close Tilt" width="110"/>
-      <textbox value="Ctrl+Shift+M"/>
+      <label value="Open &amp; close Tilt" width="90"/>
+      <textbox value="Ctrl+Shift+M"
+        flex="1"
+        clickSelectsAll="true"
+        onfocus="TiltChrome.Options.openCloseTextboxFocus(this);"
+        onkeydown="TiltChrome.Options.openCloseTextboxKeyDown(this, event);"/>
+
       <button label="Reset"/>
     </hbox>
   </groupbox>
