@@ -71,6 +71,11 @@ Tilt.Renderer = function(canvas, properties) {
   // check if the context was created successfully
   if ("undefined" !== typeof this.gl && this.gl !== null) {
 
+    // if successful, run a success callback function if available
+    if ("function" === typeof properties.onsuccess) {
+      properties.onsuccess();
+    }
+
     // set up some global enums
     this.TRIANGLES = this.gl.TRIANGLES;
     this.TRIANGLE_STRIP = this.gl.TRIANGLE_STRIP;
@@ -83,14 +88,9 @@ Tilt.Renderer = function(canvas, properties) {
     this.DEPTH_BUFFER_BIT = this.gl.DEPTH_BUFFER_BIT;
     this.STENCIL_BUFFER_BIT = this.gl.STENCIL_BUFFER_BIT;
 
+    // set the default clear color and depth buffers
     this.gl.clearColor(0, 0, 0, 1);
     this.gl.clearDepth(1);
-    this.gl.clearStencil(0);
-
-    // if successful, run a success callback function if available
-    if ("function" === typeof properties.onsuccess) {
-      properties.onsuccess();
-    }
   }
   else {
     // if unsuccessful, log the error and run a fail callback if available
@@ -101,6 +101,34 @@ Tilt.Renderer = function(canvas, properties) {
       return;
     }
   }
+
+  /**
+   * Helpers for managing variables like frameCount, frameRate, frameDelta,
+   * used internally, in the requestAnimFrame function.
+   */
+  this.$lastTime = 0;
+  this.$currentTime = null;
+
+  /**
+   * Time passed since initialization.
+   */
+  this.elapsedTime = 0;
+
+  /**
+   * Counter for the number of frames passed since initialization.
+   */
+  this.frameCount = 0;
+
+  /**
+   * Variable retaining the current frame rate.
+   */
+  this.frameRate = 0;
+
+  /**
+   * Variable representing the delta time elapsed between frames.
+   * Use this to create smooth animations regardless of the frame rate.
+   */
+  this.frameDelta = 0;
 
   /**
    * Variables representing the current framebuffer width and height.
@@ -175,34 +203,6 @@ Tilt.Renderer = function(canvas, properties) {
    */
   this.$cube = new Tilt.Cube();
   this.$cubeWireframe = new Tilt.CubeWireframe();
-
-  /**
-   * Helpers for managing variables like frameCount, frameRate, frameDelta,
-   * used internally, in the requestAnimFrame function.
-   */
-  this.$lastTime = 0;
-  this.$currentTime = null;
-
-  /**
-   * Time passed since initialization.
-   */
-  this.elapsedTime = 0;
-
-  /**
-   * Counter for the number of frames passed since initialization.
-   */
-  this.frameCount = 0;
-
-  /**
-   * Variable retaining the current frame rate.
-   */
-  this.frameRate = 0;
-
-  /**
-   * Variable representing the delta time elapsed between frames.
-   * Use this to create smooth animations regardless of the frame rate.
-   */
-  this.frameDelta = 0;
 
   // set the default model view and projection matrices
   this.origin();
@@ -905,7 +905,7 @@ Tilt.Renderer.prototype = {
    *      draw();
    *
    * @param {Function} draw: the function to be called each frame
-   * @param {Boolean} debug: true if params like frame rate and frame delta 
+   * @param {Boolean} debug: true if params like frame rate and frame delta
    * should be calculated
    */
   loop: function(draw, debug) {
