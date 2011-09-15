@@ -1,32 +1,37 @@
 #!/bin/bash
 
 if [[ $# > 0 && $1 == "engine" || $1 == "all" ]];
-  then
-    find chrome/content/engine -name \*.js -exec cat > ../bin/Tilt-engine.js {} \;
+then
+  find chrome/content/engine -name \*.js -exec cat > ../bin/Tilt-engine.js {} \;
 
-    if [[ $# > 1 && $2 == "minify" ]];
-      then
-        java -jar ../bin/google-closure/compiler.jar --language_in ECMASCRIPT5_STRICT --compilation_level SIMPLE_OPTIMIZATIONS --warning_level QUIET --js ../bin/Tilt-engine.js --js_output_file ../bin/Tilt-engine-min.js
-    fi
+  if [[ $# > 1 && $2 == "minify" ]];
+  then
+    java -jar ../bin/google-closure/compiler.jar --language_in ECMASCRIPT5_STRICT --compilation_level SIMPLE_OPTIMIZATIONS --warning_level QUIET --js ../bin/Tilt-engine.js --js_output_file ../bin/Tilt-engine-min.js
+  fi
 fi
 
 if [[ $# > 0 && $1 == "extension" || $1 == "all" ]];
+then
+  find chrome/content -name \*.js ! -path \*ace\/\* ! -path \*acolorjack\/\* ! -name Tilt-loader.js -exec cat > ../bin/Tilt-extension.js {} \;
+
+  if [[ $# > 1 && $2 == "minify" ]];
   then
-    find chrome/content -name \*.js ! -path \*ace\/\* ! -path \*acolorjack\/\* ! -name browserEntryPoint.js -exec cat > ../bin/Tilt-extension.js {} \;
-
-    if [[ $# > 1 && $2 == "minify" ]];
-      then
-        java -jar ../bin/google-closure/compiler.jar --language_in ECMASCRIPT5_STRICT --compilation_level ADVANCED_OPTIMIZATIONS --warning_level QUIET --externs ../bin/google-closure/tilt-externs.jsext --js ../bin/Tilt-extension.js --js_output_file chrome/content/Tilt-extension.js
-        cp chrome/content/Tilt-extension.js ../bin/Tilt-extension-min.js
+    if [[ $# > 2 && $3 == "optimize" ]];
+    then
+      java -jar ../bin/google-closure/compiler.jar --language_in ECMASCRIPT5_STRICT --compilation_level ADVANCED_OPTIMIZATIONS --warning_level QUIET --externs ../bin/google-closure/tilt-externs.jsext --js ../bin/Tilt-extension.js --js_output_file chrome/content/Tilt-extension.js
     else
-        cp ../bin/Tilt-extension.js chrome/content/Tilt-extension.js
+      java -jar ../bin/google-closure/compiler.jar --language_in ECMASCRIPT5_STRICT --compilation_level SIMPLE_OPTIMIZATIONS --warning_level QUIET --externs ../bin/google-closure/tilt-externs.jsext --js ../bin/Tilt-extension.js --js_output_file chrome/content/Tilt-extension.js
     fi
+    cp chrome/content/Tilt-extension.js ../bin/Tilt-extension-min.js
+  else
+    cp ../bin/Tilt-extension.js chrome/content/Tilt-extension.js
+  fi
 
-    export OSTYPE; make clean; make; 
-    rm chrome/content/Tilt-extension.js
+  export OSTYPE; make clean; make;
+  rm chrome/content/Tilt-extension.js
 
-    if [[ $# > 1 && $2 == "install" || $3 == "install" ]];
-      then
-        export OSTYPE; make install;
-    fi
+  if [[ $# > 1 && $2 == "install" || $3 == "install" || $4 == "install" ]];
+  then
+    export OSTYPE; make install;
+  fi
 fi
