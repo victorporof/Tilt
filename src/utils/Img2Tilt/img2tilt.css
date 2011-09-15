@@ -36,16 +36,16 @@ body {
 }
 
 .about-title {
-  font-family: 'Lobster', cursive;
+  font-family: 'Lobster', serif;
   margin-top: 200px;
   text-align: center;
   text-shadow: 0 1px white;
-  font-size: 2.5em;
+  font-size: 2.6em;
   color: #100;
 }
 
 .about-description {
-  font-family: 'Lobster Two', 'Lobster', cursive;
+  font-family: 'Lobster Two', 'Lobster', serif;
   margin-top: 20px;
   text-align: center;
   text-shadow: 0 1px white;
@@ -54,7 +54,7 @@ body {
 }
 
 .about-strong {
-  font-family: 'Lobster', cursive;
+  font-family: 'Lobster', serif;
   color: #700;
 }
 
