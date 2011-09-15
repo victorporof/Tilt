@@ -45,7 +45,7 @@
   xmlns:html="http://www.w3.org/1999/xhtml">
 
   <script type="application/x-javascript"
-    src="chrome://tilt/content/browserEntryPoint.js"/>
+    src="chrome://tilt/content/Tilt-loader.js"/>
 
   <stringbundleset id="stringbundleset">
     <stringbundle id="tilt-string-bundle"
