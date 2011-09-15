@@ -48,7 +48,7 @@ TiltChrome.EntryPoint = {
   /**
    * Function called automatically at browser initialization.
    */
-  includeScripts: function() {
+  includeScripts: (function() {
     // the script loader responsible with loading a Javascript file
     var scriptLoader = Cc["@mozilla.org/moz/jssubscript-loader;1"].
       getService(Ci.mozIJSSubScriptLoader);
@@ -61,5 +61,5 @@ TiltChrome.EntryPoint = {
     window.setTimeout(function() {
       scriptLoader.loadSubScript("chrome://tilt/content/Tilt-extension.js");
     }, 500);
-  }()
+  })()
 };
