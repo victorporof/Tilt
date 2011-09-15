@@ -282,7 +282,8 @@ TiltChrome.UI.Default = function() {
 
     arcballSprite = new Tilt.Sprite(t, [0, 0, 145, 145], {
       x: 0,
-      y: 0
+      y: 0,
+      disabled: true
     });
 
     arcballUpButton = new Tilt.Button(null, {
