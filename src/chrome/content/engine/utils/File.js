@@ -54,7 +54,7 @@ Tilt.File = {
 
     fp = Cc["@mozilla.org/filepicker;1"].createInstance(Ci.nsIFilePicker);
 
-    fp.init(window, message, type === "folder" ? 
+    fp.init(window, message, type === "folder" ?
       Ci.nsIFilePicker.modeGetFolder :
       Ci.nsIFilePicker.modeOpen);
 
@@ -85,7 +85,7 @@ Tilt.File = {
 
     converter = Cc["@mozilla.org/intl/scriptableunicodeconverter"].
       createInstance(Ci.nsIScriptableUnicodeConverter);
-  
+
     converter.charset = "UTF-8";
     istream = converter.convertToInputStream(data);
 
