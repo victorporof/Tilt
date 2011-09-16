@@ -36,12 +36,16 @@
 "use strict";
 
 var Tilt = Tilt || {};
-var EXPORTED_SYMBOLS = ["Tilt.destroyObject"];
+var EXPORTED_SYMBOLS = [
+  "Tilt.destroyObject",
+  "Tilt.bindObjectFunc"
+];
 
 /*jshint forin: false */
 
 /**
  * Destroys an object and deletes all members.
+ * @param {Object} scope: the object
  */
 Tilt.destroyObject = function(scope) {
   for (var i in scope) {
@@ -55,8 +59,25 @@ Tilt.destroyObject = function(scope) {
       try {
         scope[i] = null;
       }
-      catch(e) {}
+      catch(_e) {}
       delete scope[i];
     }
+  }
+};
+
+/**
+ * Binds a new owner object to the child functions.
+ *
+ * @param {Object} scope: the object
+ * @param {Object} parent: the new parent for the object's functions
+ */
+Tilt.bindObjectFunc = function(scope, parent) {
+  for (var i in scope) {
+    try {
+      if ("function" === typeof scope[i]) {
+        scope[i] = scope[i].bind(parent || scope);
+      }
+    }
+    catch(e) {}
   }
 };
