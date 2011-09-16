@@ -110,6 +110,8 @@ Tilt.WebGL = {
       width = rect.width,
       height = rect.height;
 
+    // we can just overwrite the existing canvas with the new image data for a
+    // specific rectangular region
     if (overwrite) {
       ctx = canvas.getContext("2d");
       ctx.translate(left, top);
@@ -118,20 +120,26 @@ Tilt.WebGL = {
 
       return canvas;
     }
+    // or, use a new canvas with the necessary width and height and image data
+    // drawn from the top left corner
     else {
+      // we'll cache a canvas to avoid creating it every single time
       if (this.$canvas) {
         this.$canvas.width = width;
         this.$canvas.height = height;
 
+        // use a 2d context to draw the window
         ctx = this.$canvas.getContext("2d");
         ctx.drawWindow(contentWindow, left, top, width, height, "#fff");
 
         return this.$canvas;
       }
+      // if the canvas wasn't already created, create it & continue refreshing
       else if ("undefined" === typeof this.$canvas) {
         this.$canvas = Tilt.Document.initCanvas();
         return this.refreshDocumentImage(contentWindow, canvas, rect);
       }
+      // something went horribly wrong, clean up the mess if there was any
       else {
         this.$canvas = null;
         delete this.$canvas;
@@ -141,6 +149,9 @@ Tilt.WebGL = {
     return null;
   }
 };
+
+// bind the owner object to the necessary functions
+Tilt.bindObjectFunc(Tilt.WebGL);
 
 // intercept this object using a profiler when building in debug mode
 Tilt.Profiler.intercept("Tilt.WebGL", Tilt.WebGL);
