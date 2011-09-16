@@ -72,9 +72,9 @@ TiltChrome.BrowserOverlay = {
 
   /**
    * Initializes Tilt.
-   * @param {object} event: the event firing this function
+   * @param {Event} e: the event firing this function
    */
-  initialize: function(event) {
+  initialize: function(e) {
     // first, close the visualization and clean up any mess if there was any
     this.destroy(true);
 
@@ -1144,12 +1144,16 @@ Tilt.clearCache = function() {
 "use strict";
 
 var Tilt = Tilt || {};
-var EXPORTED_SYMBOLS = ["Tilt.destroyObject"];
+var EXPORTED_SYMBOLS = [
+  "Tilt.destroyObject",
+  "Tilt.bindObjectFunc"
+];
 
 /*jshint forin: false */
 
 /**
  * Destroys an object and deletes all members.
+ * @param {Object} scope: the object
  */
 Tilt.destroyObject = function(scope) {
   for (var i in scope) {
@@ -1163,9 +1167,26 @@ Tilt.destroyObject = function(scope) {
       try {
         scope[i] = null;
       }
-      catch(e) {}
+      catch(_e) {}
       delete scope[i];
     }
+  }
+};
+
+/**
+ * Binds a new owner object to the child functions.
+ *
+ * @param {Object} scope: the object
+ * @param {Object} parent: the new parent for the object's functions
+ */
+Tilt.bindObjectFunc = function(scope, parent) {
+  for (var i in scope) {
+    try {
+      if ("function" === typeof scope[i]) {
+        scope[i] = scope[i].bind(parent || scope);
+      }
+    }
+    catch(e) {}
   }
 };
 /***** BEGIN LICENSE BLOCK *****
@@ -9466,6 +9487,54 @@ Tilt.Profiler.intercept("Tilt.UI", Tilt.UI);
  ***** END LICENSE BLOCK *****/
 "use strict";
 
+/*global Components */
+
+if ("undefined" === typeof Cc) {
+  var Cc = Components.classes;
+}
+if ("undefined" === typeof Ci) {
+  var Ci = Components.interfaces;
+}
+if ("undefined" === typeof Cu) {
+  var Cu = Components.utils;
+}
+/***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is Tilt: A WebGL-based 3D visualization of a webpage.
+ *
+ * The Initial Developer of the Original Code is The Mozilla Foundation.
+ * Portions created by the Initial Developer are Copyright (C) 2011
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *   Victor Porof <victor.porof@gmail.com> (original author)
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the LGPL or the GPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ ***** END LICENSE BLOCK *****/
+"use strict";
+
 var Tilt = Tilt || {};
 var EXPORTED_SYMBOLS = ["Tilt.Console", "Tilt.StringBundle"];
 
@@ -9659,6 +9728,12 @@ Tilt.StringBundle = {
     }
   }
 };
+
+// bind the owner object to the necessary functions
+Tilt.bindObjectFunc(Tilt.Console);
+
+// intercept this object using a profiler when building in debug mode
+Tilt.Profiler.intercept("Tilt.Console", Tilt.Console);
 /***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -10264,6 +10339,9 @@ Tilt.Document = {
   }
 };
 
+// bind the owner object to the necessary functions
+Tilt.bindObjectFunc(Tilt.Document);
+
 // intercept this object using a profiler when building in debug mode
 Tilt.Profiler.intercept("Tilt.Document", Tilt.Document);
 /***** BEGIN LICENSE BLOCK *****
@@ -10320,16 +10398,22 @@ Tilt.File = {
   showPicker: function(message, type) {
     var fp, res, folder;
 
-    fp = Cc["@mozilla.org/filepicker;1"].createInstance(Ci.nsIFilePicker);
+    try {
+      fp = Cc["@mozilla.org/filepicker;1"].createInstance(Ci.nsIFilePicker);
+      fp.init(window, message, type === "folder" ?
+        Ci.nsIFilePicker.modeGetFolder :
+        Ci.nsIFilePicker.modeOpen);
 
-    fp.init(window, message, type === "folder" ?
-      Ci.nsIFilePicker.modeGetFolder :
-      Ci.nsIFilePicker.modeOpen);
-
-    if ((res = fp.show()) == Ci.nsIFilePicker.returnOK) {
-      return fp.file;
+      if ((res = fp.show()) == Ci.nsIFilePicker.returnOK) {
+        return fp.file;
+      }
+      else {
+        return null;
+      }
     }
-    else {
+    catch(e) {
+      // running from an unprivileged environment
+      Tilt.Console.error(e.message);
       return null;
     }
   },
@@ -10339,29 +10423,40 @@ Tilt.File = {
    *
    * @param {String} data: the contents
    * @param {String} path: the path of the file
+   * @return {Boolean} true if the save operation was succesful
    */
   save: function(data, path) {
     var file, ostream, istream, converter;
 
-    Cu.import("resource://gre/modules/FileUtils.jsm");
-    Cu.import("resource://gre/modules/NetUtil.jsm");
+    try {
+      Cu.import("resource://gre/modules/FileUtils.jsm");
+      Cu.import("resource://gre/modules/NetUtil.jsm");
 
-    file = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsILocalFile);
-    file.initWithPath(path);
+      file = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsILocalFile);
+      file.initWithPath(path);
 
-    ostream = FileUtils.openSafeFileOutputStream(file);
+      ostream = FileUtils.openSafeFileOutputStream(file);
 
-    converter = Cc["@mozilla.org/intl/scriptableunicodeconverter"].
-      createInstance(Ci.nsIScriptableUnicodeConverter);
+      converter = Cc["@mozilla.org/intl/scriptableunicodeconverter"].
+        createInstance(Ci.nsIScriptableUnicodeConverter);
 
-    converter.charset = "UTF-8";
-    istream = converter.convertToInputStream(data);
+      converter.charset = "UTF-8";
+      istream = converter.convertToInputStream(data);
 
-    NetUtil.asyncCopy(istream, ostream, function(status) {
-      if (!Components.isSuccessCode(status)) {
-        return;
-      }
-    });
+      NetUtil.asyncCopy(istream, ostream, function(status) {
+        if (!Components.isSuccessCode(status)) {
+          return true;
+        }
+        else {
+          return false;
+        }
+      });
+    }
+    catch(e) {
+      // running from an unprivileged environment
+      Tilt.Console.error(e.message);
+      return false;
+    }
   },
 
   /**
@@ -10369,31 +10464,40 @@ Tilt.File = {
    *
    * @param {String} canvas: the contents
    * @param {String} path: the path of the file
+   * @return {Boolean} true if the save operation was succesful
    */
   saveImage: function(canvas, path) {
     var file, io, source, target, persist;
 
-    Cu.import("resource://gre/modules/FileUtils.jsm");
-    Cu.import("resource://gre/modules/NetUtil.jsm");
+    try {
+      Cu.import("resource://gre/modules/FileUtils.jsm");
+      Cu.import("resource://gre/modules/NetUtil.jsm");
 
-    file = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsILocalFile);
-    file.initWithPath(path);
+      file = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsILocalFile);
+      file.initWithPath(path);
 
-    io = Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService);
+      io = Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService);
 
-    source = io.newURI(canvas.toDataURL("image/png", ""), "UTF8", null);
-    target = io.newFileURI(file);
+      source = io.newURI(canvas.toDataURL("image/png", ""), "UTF8", null);
+      target = io.newFileURI(file);
 
-    persist = Cc["@mozilla.org/embedding/browser/nsWebBrowserPersist;1"].
-      createInstance(Ci.nsIWebBrowserPersist);
+      persist = Cc["@mozilla.org/embedding/browser/nsWebBrowserPersist;1"].
+        createInstance(Ci.nsIWebBrowserPersist);
 
-    persist.persistFlags = Ci.nsIWebBrowserPersist.
-      PERSIST_FLAGS_REPLACE_EXISTING_FILES;
+      persist.persistFlags = Ci.nsIWebBrowserPersist.
+        PERSIST_FLAGS_REPLACE_EXISTING_FILES;
 
-    persist.persistFlags |= Ci.nsIWebBrowserPersist.
-      PERSIST_FLAGS_AUTODETECT_APPLY_CONVERSION;
+      persist.persistFlags |= Ci.nsIWebBrowserPersist.
+        PERSIST_FLAGS_AUTODETECT_APPLY_CONVERSION;
 
-    persist.saveURI(source, null, null, null, null, file);
+      persist.saveURI(source, null, null, null, null, file);
+      return true;
+    }
+    catch(e) {
+      // running from an unprivileged environment
+      Tilt.Console.error(e.message);
+      return false;
+    }
   },
 
   /**
@@ -10407,6 +10511,9 @@ Tilt.File = {
     else { return "/"; }
   })()
 };
+
+// bind the owner object to the necessary functions
+Tilt.bindObjectFunc(Tilt.File);
 
 // intercept this object using a profiler when building in debug mode
 Tilt.Profiler.intercept("Tilt.File", Tilt.File);
@@ -11059,8 +11166,148 @@ Tilt.Math = {
   }
 };
 
+// bind the owner object to the necessary functions
+Tilt.bindObjectFunc(Tilt.Math);
+
 // intercept this object using a profiler when building in debug mode
 Tilt.Profiler.intercept("Tilt.Math", Tilt.Math);
+/***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is Tilt: A WebGL-based 3D visualization of a webpage.
+ *
+ * The Initial Developer of the Original Code is The Mozilla Foundation.
+ * Portions created by the Initial Developer are Copyright (C) 2011
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *   Victor Porof <victor.porof@gmail.com> (original author)
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the LGPL or the GPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ ***** END LICENSE BLOCK *****/
+"use strict";
+
+var Tilt = Tilt || {};
+var EXPORTED_SYMBOLS = ["Tilt.Preferences"];
+
+/*global Cc, Ci, Cu */
+
+Tilt.Preferences = {
+
+  /**
+   * Gets a custom extension preference.
+   * If the preference does not exist, undefined is returned. If it does exist,
+   * but the type is not correctly specified, null is returned.
+   *
+   * @param {String} pref: the preference name
+   * @param {String} type: either "boolean", "string" or "integer"
+   * @return {Boolean | String | Number} the requested extension preference
+   */
+  get: function(pref, type) {
+    var prefs;
+
+    try {
+      prefs = Cc["@mozilla.org/preferences-service;1"].
+        getService(Ci.nsIPrefService).getBranch(this.$branch);
+
+      return !prefs.prefHasUserValue(pref) ? undefined :
+             (type === "boolean") ? prefs.getBoolPref(pref) :
+             (type === "string") ? prefs.getCharPref(pref) :
+             (type === "integer") ? prefs.getIntPref(pref) : null;
+    }
+    catch(e) {
+      // running from an unprivileged environment
+      Tilt.Console.error(e.message);
+      return null;
+    }
+  },
+
+  /**
+   * Sets a custom extension preference.
+   *
+   * @param {String} pref: the preference name
+   * @param {String} type: either "boolean", "string" or "integer"
+   * @param {String} value: a new preference value
+   * @return {Boolean} true if the preference was set succesfully
+   */
+  set: function(pref, type, value) {
+    var prefs;
+
+    try {
+      prefs = Cc["@mozilla.org/preferences-service;1"].
+        getService(Ci.nsIPrefService).getBranch(this.$branch);
+
+      return (type === "boolean") ? prefs.setBoolPref(pref, value) :
+             (type === "string") ? prefs.setCharPref(pref, value) :
+             (type === "integer") ? prefs.setIntPref(pref, value) : false;
+    }
+    catch(e) {
+      // running from an unprivileged environment
+      Tilt.Console.error(e.message);
+      return false;
+    }
+  },
+
+  /**
+   * Creates a custom extension preference.
+   * If the preference already exists, it is left unchanged.
+   *
+   * @param {String} pref: the preference name
+   * @param {String} type: either "boolean", "string" or "integer"
+   * @param {String} value: the initial preference value
+   * @return {Boolean} true if the preference was initialized succesfully
+   */
+  create: function(pref, type, value) {
+    var prefs;
+
+    try {
+      prefs = Cc["@mozilla.org/preferences-service;1"].
+        getService(Ci.nsIPrefService).getBranch(this.$branch);
+
+      return prefs.prefHasUserValue(pref) ? false :
+             (type === "boolean") ? prefs.setBoolPref(pref, value) :
+             (type === "string") ? prefs.setCharPref(pref, value) :
+             (type === "integer") ? prefs.setIntPref(pref, value) : false;
+    }
+    catch(e) {
+      // running from an unprivileged environment
+      Tilt.Console.error(e.message);
+      return false;
+    }
+  },
+
+  /**
+   * The preferences branch for this extension.
+   */
+  $branch: "extensions.tilt."
+};
+
+// bind the owner object to the necessary functions
+Tilt.bindObjectFunc(Tilt.Preferences);
+
+// intercept this object using a profiler when building in debug mode
+Tilt.Profiler.intercept("Tilt.Preferences", Tilt.Preferences);
 /***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -11161,7 +11408,7 @@ Tilt.Random = {
         return random() * 0x100000000; // 2^32
       };
       random.fract53 = function() {
-        return random() + 
+        return random() +
               (random() * 0x200000 | 0) * 1.1102230246251565e-16; // 2^-53
       };
 
@@ -11192,8 +11439,14 @@ Tilt.Random = {
   }
 };
 
+// bind the owner object to the necessary functions
+Tilt.bindObjectFunc(Tilt.Random);
+
 // automatically seed the random function with a specified value
 Tilt.Random.seed(0);
+
+// intercept this object using a profiler when building in debug mode
+Tilt.Profiler.intercept("Tilt.Random", Tilt.Random);
 /***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -11384,6 +11637,8 @@ Tilt.WebGL = {
       width = rect.width,
       height = rect.height;
 
+    // we can just overwrite the existing canvas with the new image data for a
+    // specific rectangular region
     if (overwrite) {
       ctx = canvas.getContext("2d");
       ctx.translate(left, top);
@@ -11392,20 +11647,26 @@ Tilt.WebGL = {
 
       return canvas;
     }
+    // or, use a new canvas with the necessary width and height and image data
+    // drawn from the top left corner
     else {
+      // we'll cache a canvas to avoid creating it every single time
       if (this.$canvas) {
         this.$canvas.width = width;
         this.$canvas.height = height;
 
+        // use a 2d context to draw the window
         ctx = this.$canvas.getContext("2d");
         ctx.drawWindow(contentWindow, left, top, width, height, "#fff");
 
         return this.$canvas;
       }
+      // if the canvas wasn't already created, create it & continue refreshing
       else if ("undefined" === typeof this.$canvas) {
         this.$canvas = Tilt.Document.initCanvas();
         return this.refreshDocumentImage(contentWindow, canvas, rect);
       }
+      // something went horribly wrong, clean up the mess if there was any
       else {
         this.$canvas = null;
         delete this.$canvas;
@@ -11415,6 +11676,9 @@ Tilt.WebGL = {
     return null;
   }
 };
+
+// bind the owner object to the necessary functions
+Tilt.bindObjectFunc(Tilt.WebGL);
 
 // intercept this object using a profiler when building in debug mode
 Tilt.Profiler.intercept("Tilt.WebGL", Tilt.WebGL);
@@ -11519,6 +11783,9 @@ Tilt.Xhr = {
     }
   }
 };
+
+// bind the owner object to the necessary functions
+Tilt.bindObjectFunc(Tilt.Xhr);
 
 // intercept this object using a profiler when building in debug mode
 Tilt.Profiler.intercept("Tilt.Xhr", Tilt.Xhr);
@@ -12147,18 +12414,144 @@ TiltChrome.Controller.MouseAndKeyboard = function() {
 var TiltChrome = TiltChrome || {};
 var EXPORTED_SYMBOLS = ["TiltChrome.Options"];
 
+/*global Tilt */
+
 /**
  * Default options implementation.
  */
 TiltChrome.Options = {
 
   /**
+   * Event fired when the options window is loaded.
+   *
+   * @param {Event} e: the event firing this function
+   * @param {XULElement} sender: the xul element calling this delegate
+   */
+  windowLoad: function(e, sender) {
+    var pref = Tilt.Preferences,
+      d = sender.document,
+      ns = "tilt-options-",
+
+    refreshVisualization = {
+      checkbox: d.getElementById(ns + "refreshVisualizationCheckbox"),
+      radiogroup: d.getElementById(ns + "refreshVisualizationRadiogroup")
+    },
+    escapeKeyCloses = d.getElementById(ns + "escapeKeyCloses"),
+    hideUserInterfaceAtInit = d.getElementById(ns + "hideUserInterfaceAtInit"),
+    disableMinidomAtInit = d.getElementById(ns + "disableMinidomAtInit"),
+    enableJoystick = d.getElementById(ns + "enableJoystick"),
+    useAccelerometer = d.getElementById(ns + "useAccelerometer"),
+    keyShortcutOpenClose = d.getElementById(ns + "keyShortcutOpenClose");
+
+    switch (pref.get("options.refreshVisualization", "integer")) {
+      case 0:
+        refreshVisualization.checkbox.checked = true;
+        refreshVisualization.radiogroup.selectedIndex = 0;
+        break;
+      case 1:
+        refreshVisualization.checkbox.checked = true;
+        refreshVisualization.radiogroup.selectedIndex = 1;
+        break;
+      case 2:
+        refreshVisualization.checkbox.checked = true;
+        refreshVisualization.radiogroup.selectedIndex = 2;
+        break;
+      default:
+        refreshVisualization.checkbox.checked = false;
+        refreshVisualization.radiogroup.selectedIndex = -1;
+        refreshVisualization.radiogroup.disabled = true;
+        break;
+    }
+
+    escapeKeyCloses.checked =
+      pref.get("options.escapeKeyCloses", "boolean");
+
+    hideUserInterfaceAtInit.checked =
+      pref.get("options.hideUserInterfaceAtInit", "boolean");
+
+    disableMinidomAtInit.checked =
+      pref.get("options.disableMinidomAtInit", "boolean");
+
+    enableJoystick.disabled = true;
+    enableJoystick.checked =
+      pref.get("options.enableJoystick", "boolean");
+
+    useAccelerometer.checked =
+      pref.get("options.useAccelerometer", "boolean");
+
+    keyShortcutOpenClose.value =
+      pref.get("options.keyShortcutOpenClose", "string");
+
+    this.$openCloseTextboxValidate(keyShortcutOpenClose);
+  },
+
+  /**
+   * Event fired when the options window is unloaded.
+   *
+   * @param {Event} e: the event firing this function
+   * @param {XULElement} sender: the xul element calling this delegate
+   */
+  windowUnload: function(e, sender) {
+    var pref = Tilt.Preferences,
+      d = sender.document,
+      ns = "tilt-options-",
+
+    refreshVisualization = {
+      checkbox: d.getElementById(ns + "refreshVisualizationCheckbox"),
+      radiogroup: d.getElementById(ns + "refreshVisualizationRadiogroup")
+    },
+    escapeKeyCloses = d.getElementById(ns + "escapeKeyCloses"),
+    hideUserInterfaceAtInit = d.getElementById(ns + "hideUserInterfaceAtInit"),
+    disableMinidomAtInit = d.getElementById(ns + "disableMinidomAtInit"),
+    enableJoystick = d.getElementById(ns + "enableJoystick"),
+    useAccelerometer = d.getElementById(ns + "useAccelerometer"),
+    keyShortcutOpenClose = d.getElementById(ns + "keyShortcutOpenClose");
+
+    pref.set("options.refreshVisualization", "integer",
+      refreshVisualization.radiogroup.selectedIndex);
+
+    pref.set("options.escapeKeyCloses", "boolean",
+      escapeKeyCloses.checked);
+
+    pref.set("options.hideUserInterfaceAtInit", "boolean",
+      hideUserInterfaceAtInit.checked);
+
+    pref.set("options.disableMinidomAtInit", "boolean",
+      disableMinidomAtInit.checked);
+
+    pref.set("options.enableJoystick", "boolean",
+      enableJoystick.checked);
+
+    pref.set("options.useAccelerometer", "boolean",
+      useAccelerometer.checked);
+
+    pref.set("options.keyShortcutOpenClose", "string",
+      (function() {
+        return keyShortcutOpenClose.value.toUpperCase().
+          replace(/\+/g, " ").
+          replace(/shift/i, "shift").
+          replace(/ctrl/i, "ctrl").
+          replace(/alt/i, "alt").
+          replace(/cmd/i, "accel").
+          replace(/space/i, "space").
+          replace(/pgup/i, "pgup").
+          replace(/pgdown/i, "pgdown").
+          replace(/end/i, "end").
+          replace(/home/i, "home").
+          replace(/left/i, "left").
+          replace(/up/i, "up").
+          replace(/right/i, "right").
+          replace(/down/i, "down");
+      })());
+  },
+
+  /**
    * Event fired when a key is released and the windows is focused.
    *
+   * @param {Event} e: the event firing this function
    * @param {XULElement} sender: the xul element calling this delegate
-   * @param {KeyboardEvent} e: the keyboard event
    */
-  windowKeyUp: function(sender, e) {
+  windowKeyUp: function(e, sender) {
     var code = e.keyCode || e.which;
 
     if (code === 27) { // escape key
@@ -12167,151 +12560,208 @@ TiltChrome.Options = {
   },
 
   /**
-   *
-   * @param {XULElement} sender: the xul element calling this delegate
+   * Event fired when the sender checkbox is pressed.
+   * @param {Event} e: the event firing this function
    */
-  refreshFastestRadioPressed: function(sender) {
+  refreshVisualizationCheckboxPressed: function(e) {
+    var pref = Tilt.Preferences,
+      d = e.view.document,
+      ns = "tilt-options-",
+
+    refreshVisualization = {
+      checkbox: d.getElementById(ns + "refreshVisualizationCheckbox"),
+      radiogroup: d.getElementById(ns + "refreshVisualizationRadiogroup")
+    };
+
+    if (e.target.checked) {
+      refreshVisualization.radiogroup.selectedIndex = 1;
+      refreshVisualization.radiogroup.disabled = false;
+    }
+    else {
+      refreshVisualization.radiogroup.selectedIndex = -1;
+      refreshVisualization.radiogroup.disabled = true;
+    }
   },
 
   /**
-   *
-   * @param {XULElement} sender: the xul element calling this delegate
+   * Event fired when the sender radio button is pressed.
+   * @param {Event} e: the event firing this function
    */
-  refreshRecommendedRadioPressed: function(sender) {
+  refreshFastestRadioPressed: function(e) {
   },
 
   /**
-   *
-   * @param {XULElement} sender: the xul element calling this delegate
+   * Event fired when the sender radio button is pressed.
+   * @param {Event} e: the event firing this function
    */
-  refreshSlowestRadioPressed: function(sender) {
+  refreshRecommendedRadioPressed: function(e) {
   },
 
   /**
-   *
-   * @param {XULElement} sender: the xul element calling this delegate
+   * Event fired when the sender radio button is pressed.
+   * @param {Event} e: the event firing this function
    */
-  escapeKeyCheckboxPressed: function(sender) {
+  refreshSlowestRadioPressed: function(e) {
   },
 
   /**
-   *
-   * @param {XULElement} sender: the xul element calling this delegate
+   * Event fired when the sender checkbox is pressed.
+   * @param {Event} e: the event firing this function
    */
-  hideUICheckboxPressed: function(sender) {
+  escapeKeyCheckboxPressed: function(e) {
   },
 
   /**
-   *
-   * @param {XULElement} sender: the xul element calling this delegate
+   * Event fired when the sender checkbox is pressed.
+   * @param {Event} e: the event firing this function
    */
-  disableMinidomCheckboxPressed: function(sender) {
+  hideUICheckboxPressed: function(e) {
   },
 
   /**
-   *
-   * @param {XULElement} sender: the xul element calling this delegate
+   * Event fired when the sender checkbox is pressed.
+   * @param {Event} e: the event firing this function
    */
-  enableJoystickCheckboxPressed: function(sender) {
+  disableMinidomCheckboxPressed: function(e) {
   },
 
   /**
-   *
-   * @param {XULElement} sender: the xul element calling this delegate
+   * Event fired when the sender checkbox is pressed.
+   * @param {Event} e: the event firing this function
    */
-  useAccelerometerCheckboxPressed: function(sender) {
+  enableJoystickCheckboxPressed: function(e) {
   },
 
   /**
-   *
-   * @param {XULElement} sender: the xul element calling this delegate
+   * Event fired when the sender checkbox is pressed.
+   * @param {Event} e: the event firing this function
    */
-  openCloseTextboxFocus: function(sender) {
-    sender.focused = true;
+  useAccelerometerCheckboxPressed: function(e) {
   },
 
   /**
-   *
-   * @param {XULElement} sender: the xul element calling this delegate
-   * @param {KeyboardEvent} e: the keyboard event
+   * Event fired when the sender textbox is focused.
+   * @param {Event} e: the event firing this function
    */
-  openCloseTextboxKeyDown: function(sender, e) {
-    if (sender.focused) {
-      sender.value = "";
-      sender.focused = null;
-      delete sender.focused;
-    }
+  openCloseTextboxFocus: function(e) {
+    e.target.focused = true;
+  },
 
-    var value = sender.value,
-      code = e.keyCode || e.which;
+  /**
+   * Event fired when the sender textbox is pressed.
+   * @param {Event} e: the event firing this function
+   */
+  openCloseTextboxKeyDown: function(e) {
+    var code = e.keyCode || e.which;
 
-    if (code === 8 || code === 45 || code === 46) { // escape, delete or insert
-      value = "";
+    if (code === 27) { // escape key
+      return;
     }
-    if (value.substr(-1) !== "+") {
-      value = "";
+    if (e.target.focused) {
+      e.target.value = "";
+      e.target.focused = null;
+      delete e.target.focused;
     }
-    if (value.match(/shift/i) === null && code === 16) {
-      value += "Shift+";
-    }
-    if (value.match(/ctrl/i) === null && code === 17) {
-      value += "Ctrl+";
-    }
-    if (value.match(/alt|option/i) === null && code === 18) {
-      value += "Alt+";
-    }
-    if (value.match(/accel|win|cmd|super/i) === null && code === 224) {
-      value += "Accel+";
-    }
-    if (value.match(/space/i) === null && code === 32) {
-      value += "Space";
-    }
-    if (value.match(/pgup/i) === null && code === 33) {
-      value += "PgUp+";
-    }
-    if (value.match(/pgdown/i) === null && code === 34) {
-      value += "PgDown+";
-    }
-    if (value.match(/end/i) === null && code === 35) {
-      value += "End+";
-    }
-    if (value.match(/home/i) === null && code === 36) {
-      value += "Home+";
-    }
-    if (value.match(/left/i) === null && code === 37) {
-      value += "Left+";
-    }
-    if (value.match(/up/i) === null && code === 38) {
-      value += "Up+";
-    }
-    if (value.match(/right/i) === null && code === 39) {
-      value += "Right+";
-    }
-    if (value.match(/down/i) === null && code === 40) {
-      value += "Down+";
-    }
-
-    sender.value = value.replace(/alt/i, (function() {
-                     var app = navigator.appVersion;
-                     if (app.indexOf("Win") !== -1) { return "Alt"; }
-                     else if (app.indexOf("Mac") !== -1) { return "Option"; }
-                     else if (app.indexOf("X11") !== -1) { return "Alt"; }
-                     else if (app.indexOf("Linux") !== -1) { return "Alt"; }
-                     else { return "Alt"; }
-                   })()).
-                   replace(/accel/i, (function() {
-                     var app = navigator.appVersion;
-                     if (app.indexOf("Win") !== -1) { return "Win"; }
-                     else if (app.indexOf("Mac") !== -1) { return "Cmd"; }
-                     else if (app.indexOf("X11") !== -1) { return "Super"; }
-                     else if (app.indexOf("Linux") !== -1) { return "Ctrl"; }
-                     else { return "Accel"; }
-                   })());
-
-    if (code >= 32 && code <= 40) {
+    if ((code >= 32 && code <= 40) ||
+        (code >= 65 && code <= 90)) {
       e.preventDefault();
       e.stopPropagation();
     }
+
+    if (e.target.value.substr(-1) !== "+") {
+      e.target.value = "";
+    }
+    if (code === 8 || code === 45 || code === 46) { // backspace delete insert
+      e.target.value = "";
+    }
+    if (code >= 65 && code <= 90) { // a..z
+      e.target.value += String.fromCharCode(code);
+    }
+    if (e.target.value.match(/shift/i) === null && code === 16) {
+      e.target.value += "shift+";
+    }
+    if (e.target.value.match(/ctrl/i) === null && code === 17) {
+      e.target.value += "ctrl+";
+    }
+    if (e.target.value.match(/alt/i) === null && code === 18) {
+      e.target.value += "alt+";
+    }
+    if (e.target.value.match(/cmd/i) === null && code === 224) {
+      e.target.value += "cmd+";
+    }
+    if (e.target.value.match(/space/i) === null && code === 32) {
+      e.target.value += "space";
+    }
+    if (e.target.value.match(/pgup/i) === null && code === 33) {
+      e.target.value += "pgup+";
+    }
+    if (e.target.value.match(/pgdown/i) === null && code === 34) {
+      e.target.value += "pgdown+";
+    }
+    if (e.target.value.match(/end/i) === null && code === 35) {
+      e.target.value += "end+";
+    }
+    if (e.target.value.match(/home/i) === null && code === 36) {
+      e.target.value += "home+";
+    }
+    if (e.target.value.match(/left/i) === null && code === 37) {
+      e.target.value += "left+";
+    }
+    if (e.target.value.match(/up/i) === null && code === 38) {
+      e.target.value += "up+";
+    }
+    if (e.target.value.match(/right/i) === null && code === 39) {
+      e.target.value += "right+";
+    }
+    if (e.target.value.match(/down/i) === null && code === 40) {
+      e.target.value += "down+";
+    }
+
+    this.$openCloseTextboxValidate(e.target);
+  },
+
+  /**
+   * Event fired when the sender button is pressed.
+   * @param {Event} e: the event firing this function
+   */
+  openCloseResetButtonPressed: function(e) {
+    var pref = Tilt.Preferences,
+      d = e.view.document,
+      ns = "tilt-options-",
+
+    keyShortcutOpenClose = d.getElementById(ns + "keyShortcutOpenClose");
+    keyShortcutOpenClose.value = "accel+shift+M";
+    this.$openCloseTextboxValidate(keyShortcutOpenClose);
+  },
+
+  /**
+   * Validates the value for a specific element.
+   * @param {XULElement} element: the required element
+   */
+  $openCloseTextboxValidate: function(element) {
+    element.value = element.value.toUpperCase().
+      replace(/\ /g, "+").
+      replace(/shift/i, "Shift").
+      replace(/ctrl/i, "Ctrl").
+      replace(/alt/i, "Alt").
+      replace(/cmd/i, "Cmd").
+      replace(/space/i, "Space").
+      replace(/pgup/i, "PgUp").
+      replace(/pgdown/i, "PgDown").
+      replace(/end/i, "End").
+      replace(/home/i, "Home").
+      replace(/left/i, "Left").
+      replace(/up/i, "Up").
+      replace(/right/i, "Right").
+      replace(/down/i, "Down").
+      replace(/accel/i, (function() {
+        var app = navigator.appVersion;
+        if (app.indexOf("Win") !== -1) { return "Ctrl"; }
+        else if (app.indexOf("Mac") !== -1) { return "Cmd"; }
+        else if (app.indexOf("X11") !== -1) { return "Ctrl"; }
+        else if (app.indexOf("Linux") !== -1) { return "Ctrl"; }
+        else { return "Accel"; }
+      })());
   }
 };
 /***** BEGIN LICENSE BLOCK *****
@@ -13492,7 +13942,7 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
     onsuccess: function() {
       window.setTimeout(function() {
         // check if rendering is working as expected
-        if (tilt.frameCount < 1) {
+        if (tilt && tilt.frameCount < 1) {
           TiltChrome.BrowserOverlay.destroy(true, true);
           TiltChrome.BrowserOverlay.href = null;
 
@@ -13572,6 +14022,9 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
       TiltChrome.Shaders.Visualization.vs,
       TiltChrome.Shaders.Visualization.fs);
 
+    // get the preferences for this extension
+    setupPreferences();
+
     // setup the controller, user interface, visualization mesh, and the
     // browser event handlers
     setupController();
@@ -13588,8 +14041,11 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
     // has been started from the application menu, the width and height gets
     // messed up, so we need to update almost immediately after it starts
     window.setTimeout(function() {
-      gResize();
-      gMouseOver();
+      try {
+        gResize();
+        gMouseOver();
+      }
+      catch(e) {}
     }.bind(this), 100);
 
     // set the focus back to the window content if it was somewhere else
@@ -13694,6 +14150,21 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
   }.bind(this);
 
   /**
+   * Get the preferences for this extension.
+   */
+  var setupPreferences = function() {
+    var pref = Tilt.Preferences;
+
+    pref.create("options.refreshVisualization", "integer", 1);
+    pref.create("options.escapeKeyCloses", "boolean", true);
+    pref.create("options.hideUserInterfaceAtInit", "boolean", false);
+    pref.create("options.disableMinidomAtInit", "boolean", false);
+    pref.create("options.enableJoystick", "boolean", false);
+    pref.create("options.useAccelerometer", "boolean", false);
+    pref.create("options.keyShortcutOpenClose", "string", "accel+shift+M");
+  }.bind(this);
+
+  /**
    * Setup the controller, referencing this visualization.
    */
   var setupController = function() {
@@ -13713,7 +14184,7 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
   }.bind(this);
 
   /**
-   * Setup the user interface, referencing this visualization.
+   * Setup the user interface, referencing this visualization and controller.
    */
   var setupUI = function() {
     // we might have the interface undefined (not passed as a parameter in
@@ -13753,10 +14224,9 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
       }
 
       // create a static texture using the previously created document image
-      texture = new Tilt.Texture(image, {
-        fill: "white", stroke: "#aaa", strokeWeight: 8, preserve: true
-      });
+      texture = new Tilt.Texture(image, { preserve: true });
 
+      // update the mesh texture with the new object
       if (mesh !== null) {
         mesh.texture = texture;
       }
@@ -13782,7 +14252,7 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
       return;
     }
 
-    var random = Tilt.Random.next.bind(Tilt.Random),
+    var random = Tilt.Random.next,
       vertices = [],
       texCoord = [],
       indices = [],
@@ -13861,7 +14331,7 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
         coordHeight = coord.height;
 
       // use this node only if it actually has visible dimensions
-      if (coordWidth > 1 && coordHeight > 1) {
+      if (coordWidth > 2 && coordHeight > 2) {
 
         // information about these nodes should still be accessible
         info.index = visibleNodes.length;
@@ -14325,8 +14795,8 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
     this.requestRedraw();
 
     var domStrips = TiltChrome.Config.UI.domStrips,
-      clamp = Tilt.Math.clamp.bind(Tilt.Math),
-      hex2rgba = Tilt.Math.hex2rgba.bind(Tilt.Math),
+      clamp = Tilt.Math.clamp,
+      hex2rgba = Tilt.Math.hex2rgba,
       floor = Math.floor,
 
       indices = mesh.indices.components,

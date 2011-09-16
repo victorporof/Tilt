@@ -8,13 +8,17 @@ gBrowser.selectedBrowser["parentNode"] = gBrowser.selectedBrowser.parentNode;
 gBrowser.selectedBrowser["markupDocumentViewer"] = gBrowser.selectedBrowser.markupDocumentViewer;
 gBrowser.selectedBrowser.markupDocumentViewer["fullZoom"] = gBrowser.selectedBrowser.markupDocumentViewer.fullZoom;
 
+
 window["TiltChrome"] = TiltChrome;
 
 TiltChrome["BrowserOverlay"] = TiltChrome.BrowserOverlay;
 TiltChrome.BrowserOverlay["initialize"] = TiltChrome.BrowserOverlay.initialize;
 
 TiltChrome["Options"] = TiltChrome.Options;
+TiltChrome.Options["windowLoad"] = TiltChrome.Options.windowLoad;
+TiltChrome.Options["windowUnload"] = TiltChrome.Options.windowUnload;
 TiltChrome.Options["windowKeyUp"] = TiltChrome.Options.windowKeyUp;
+TiltChrome.Options["refreshVisualizationCheckboxPressed"] = TiltChrome.Options.refreshVisualizationCheckboxPressed;
 TiltChrome.Options["refreshFastestRadioPressed"] = TiltChrome.Options.refreshFastestRadioPressed;
 TiltChrome.Options["refreshRecommendedRadioPressed"] = TiltChrome.Options.refreshRecommendedRadioPressed;
 TiltChrome.Options["refreshSlowestRadioPressed"] = TiltChrome.Options.refreshSlowestRadioPressed;
@@ -25,6 +29,7 @@ TiltChrome.Options["enableJoystickCheckboxPressed"] = TiltChrome.Options.enableJ
 TiltChrome.Options["useAccelerometerCheckboxPressed"] = TiltChrome.Options.useAccelerometerCheckboxPressed;
 TiltChrome.Options["openCloseTextboxFocus"] = TiltChrome.Options.openCloseTextboxFocus;
 TiltChrome.Options["openCloseTextboxKeyDown"] = TiltChrome.Options.openCloseTextboxKeyDown;
+TiltChrome.Options["openCloseResetButtonPressed"] = TiltChrome.Options.openCloseResetButtonPressed;
 
 
 window["Components"] = Components;
@@ -40,14 +45,26 @@ Components["isSuccessCode"] = Components.isSuccessCode;
 Cu["import"] = Cu.import;
 
 
+Ci["nsIPrefService"] = Ci.nsIPrefService;
 Ci["nsIPromptService"] = Ci.nsIPromptService;
 Ci["nsIConsoleService"] = Ci.nsIConsoleService;
 Ci["nsIScriptError"] = Ci.nsIScriptError;
+
+Cc["@mozilla.org/preferences-service;1"]["getService"] = Cc["@mozilla.org/preferences-service;1"].getService;
+Cc["@mozilla.org/preferences-service;1"].getService(Ci.nsIPrefService)["getBranch"] = Cc["@mozilla.org/preferences-service;1"].getService(Ci.nsIPrefService).getBranch;
 
 Cc["@mozilla.org/embedcomp/prompt-service;1"]["getService"] = Cc["@mozilla.org/embedcomp/prompt-service;1"].getService;
 Cc["@mozilla.org/consoleservice;1"]["getService"] = Cc["@mozilla.org/consoleservice;1"].getService;
 Cc["@mozilla.org/scripterror;1"]["createInstance"] = Cc["@mozilla.org/scripterror;1"].createInstance;
 
+Cc["@mozilla.org/preferences-service;1"].getService(Ci.nsIPrefService)["getBranch"] = Cc["@mozilla.org/preferences-service;1"].getService(Ci.nsIPrefService).getBranch;
+Cc["@mozilla.org/preferences-service;1"].getService(Ci.nsIPrefService).getBranch["prefHasUserValue"] = Cc["@mozilla.org/preferences-service;1"].getService(Ci.nsIPrefService).getBranch.prefHasUserValue;
+Cc["@mozilla.org/preferences-service;1"].getService(Ci.nsIPrefService).getBranch["getBoolPref"] = Cc["@mozilla.org/preferences-service;1"].getService(Ci.nsIPrefService).getBranch.getBoolPref;
+Cc["@mozilla.org/preferences-service;1"].getService(Ci.nsIPrefService).getBranch["getCharPref"] = Cc["@mozilla.org/preferences-service;1"].getService(Ci.nsIPrefService).getBranch.getCharPref;
+Cc["@mozilla.org/preferences-service;1"].getService(Ci.nsIPrefService).getBranch["getIntPref"] = Cc["@mozilla.org/preferences-service;1"].getService(Ci.nsIPrefService).getBranch.getIntPref;
+Cc["@mozilla.org/preferences-service;1"].getService(Ci.nsIPrefService).getBranch["setBoolPref"] = Cc["@mozilla.org/preferences-service;1"].getService(Ci.nsIPrefService).getBranch.setBoolPref;
+Cc["@mozilla.org/preferences-service;1"].getService(Ci.nsIPrefService).getBranch["setCharPref"] = Cc["@mozilla.org/preferences-service;1"].getService(Ci.nsIPrefService).getBranch.setCharPref;
+Cc["@mozilla.org/preferences-service;1"].getService(Ci.nsIPrefService).getBranch["setIntPref"] = Cc["@mozilla.org/preferences-service;1"].getService(Ci.nsIPrefService).getBranch.setIntPref;
 Cc["@mozilla.org/embedcomp/prompt-service;1"].getService(Ci.nsIPromptService)["alert"] = Cc["@mozilla.org/embedcomp/prompt-service;1"].getService(Ci.nsIPromptService).alert;
 Cc["@mozilla.org/scripterror;1"].createInstance(Ci.nsIScriptError)["init"] = Cc["@mozilla.org/scripterror;1"].createInstance(Ci.nsIScriptError).init;
 Cc["@mozilla.org/consoleservice;1"].getService(Ci.nsIConsoleService)["logMessage"] = Cc["@mozilla.org/consoleservice;1"].getService(Ci.nsIConsoleService).logMessage;
@@ -98,7 +115,11 @@ QueryInterface(Ci.nsIInterfaceRequestor)["getInterface"] = QueryInterface(Ci.nsI
 QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils)["garbageCollect"] = QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils).garbageCollect;
 
 
-window.parseInt;
+window["isNaN"] = window.isNaN;
+window["parseInt"] = window.parseInt;
+window["parseFloat"] = window.parseFloat;
+
+
 panel.openPopup;
 panel.hidePopup;
 canvas.getContext("2d").drawWindow;

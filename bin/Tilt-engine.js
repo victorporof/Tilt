@@ -942,12 +942,16 @@ Tilt.clearCache = function() {
 "use strict";
 
 var Tilt = Tilt || {};
-var EXPORTED_SYMBOLS = ["Tilt.destroyObject"];
+var EXPORTED_SYMBOLS = [
+  "Tilt.destroyObject",
+  "Tilt.bindObjectFunc"
+];
 
 /*jshint forin: false */
 
 /**
  * Destroys an object and deletes all members.
+ * @param {Object} scope: the object
  */
 Tilt.destroyObject = function(scope) {
   for (var i in scope) {
@@ -961,9 +965,26 @@ Tilt.destroyObject = function(scope) {
       try {
         scope[i] = null;
       }
-      catch(e) {}
+      catch(_e) {}
       delete scope[i];
     }
+  }
+};
+
+/**
+ * Binds a new owner object to the child functions.
+ *
+ * @param {Object} scope: the object
+ * @param {Object} parent: the new parent for the object's functions
+ */
+Tilt.bindObjectFunc = function(scope, parent) {
+  for (var i in scope) {
+    try {
+      if ("function" === typeof scope[i]) {
+        scope[i] = scope[i].bind(parent || scope);
+      }
+    }
+    catch(e) {}
   }
 };
 /***** BEGIN LICENSE BLOCK *****
@@ -9264,6 +9285,54 @@ Tilt.Profiler.intercept("Tilt.UI", Tilt.UI);
  ***** END LICENSE BLOCK *****/
 "use strict";
 
+/*global Components */
+
+if ("undefined" === typeof Cc) {
+  var Cc = Components.classes;
+}
+if ("undefined" === typeof Ci) {
+  var Ci = Components.interfaces;
+}
+if ("undefined" === typeof Cu) {
+  var Cu = Components.utils;
+}
+/***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is Tilt: A WebGL-based 3D visualization of a webpage.
+ *
+ * The Initial Developer of the Original Code is The Mozilla Foundation.
+ * Portions created by the Initial Developer are Copyright (C) 2011
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *   Victor Porof <victor.porof@gmail.com> (original author)
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the LGPL or the GPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ ***** END LICENSE BLOCK *****/
+"use strict";
+
 var Tilt = Tilt || {};
 var EXPORTED_SYMBOLS = ["Tilt.Console", "Tilt.StringBundle"];
 
@@ -9457,6 +9526,12 @@ Tilt.StringBundle = {
     }
   }
 };
+
+// bind the owner object to the necessary functions
+Tilt.bindObjectFunc(Tilt.Console);
+
+// intercept this object using a profiler when building in debug mode
+Tilt.Profiler.intercept("Tilt.Console", Tilt.Console);
 /***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -10062,6 +10137,9 @@ Tilt.Document = {
   }
 };
 
+// bind the owner object to the necessary functions
+Tilt.bindObjectFunc(Tilt.Document);
+
 // intercept this object using a profiler when building in debug mode
 Tilt.Profiler.intercept("Tilt.Document", Tilt.Document);
 /***** BEGIN LICENSE BLOCK *****
@@ -10118,16 +10196,22 @@ Tilt.File = {
   showPicker: function(message, type) {
     var fp, res, folder;
 
-    fp = Cc["@mozilla.org/filepicker;1"].createInstance(Ci.nsIFilePicker);
+    try {
+      fp = Cc["@mozilla.org/filepicker;1"].createInstance(Ci.nsIFilePicker);
+      fp.init(window, message, type === "folder" ?
+        Ci.nsIFilePicker.modeGetFolder :
+        Ci.nsIFilePicker.modeOpen);
 
-    fp.init(window, message, type === "folder" ?
-      Ci.nsIFilePicker.modeGetFolder :
-      Ci.nsIFilePicker.modeOpen);
-
-    if ((res = fp.show()) == Ci.nsIFilePicker.returnOK) {
-      return fp.file;
+      if ((res = fp.show()) == Ci.nsIFilePicker.returnOK) {
+        return fp.file;
+      }
+      else {
+        return null;
+      }
     }
-    else {
+    catch(e) {
+      // running from an unprivileged environment
+      Tilt.Console.error(e.message);
       return null;
     }
   },
@@ -10137,29 +10221,40 @@ Tilt.File = {
    *
    * @param {String} data: the contents
    * @param {String} path: the path of the file
+   * @return {Boolean} true if the save operation was succesful
    */
   save: function(data, path) {
     var file, ostream, istream, converter;
 
-    Cu.import("resource://gre/modules/FileUtils.jsm");
-    Cu.import("resource://gre/modules/NetUtil.jsm");
+    try {
+      Cu.import("resource://gre/modules/FileUtils.jsm");
+      Cu.import("resource://gre/modules/NetUtil.jsm");
 
-    file = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsILocalFile);
-    file.initWithPath(path);
+      file = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsILocalFile);
+      file.initWithPath(path);
 
-    ostream = FileUtils.openSafeFileOutputStream(file);
+      ostream = FileUtils.openSafeFileOutputStream(file);
 
-    converter = Cc["@mozilla.org/intl/scriptableunicodeconverter"].
-      createInstance(Ci.nsIScriptableUnicodeConverter);
+      converter = Cc["@mozilla.org/intl/scriptableunicodeconverter"].
+        createInstance(Ci.nsIScriptableUnicodeConverter);
 
-    converter.charset = "UTF-8";
-    istream = converter.convertToInputStream(data);
+      converter.charset = "UTF-8";
+      istream = converter.convertToInputStream(data);
 
-    NetUtil.asyncCopy(istream, ostream, function(status) {
-      if (!Components.isSuccessCode(status)) {
-        return;
-      }
-    });
+      NetUtil.asyncCopy(istream, ostream, function(status) {
+        if (!Components.isSuccessCode(status)) {
+          return true;
+        }
+        else {
+          return false;
+        }
+      });
+    }
+    catch(e) {
+      // running from an unprivileged environment
+      Tilt.Console.error(e.message);
+      return false;
+    }
   },
 
   /**
@@ -10167,31 +10262,40 @@ Tilt.File = {
    *
    * @param {String} canvas: the contents
    * @param {String} path: the path of the file
+   * @return {Boolean} true if the save operation was succesful
    */
   saveImage: function(canvas, path) {
     var file, io, source, target, persist;
 
-    Cu.import("resource://gre/modules/FileUtils.jsm");
-    Cu.import("resource://gre/modules/NetUtil.jsm");
+    try {
+      Cu.import("resource://gre/modules/FileUtils.jsm");
+      Cu.import("resource://gre/modules/NetUtil.jsm");
 
-    file = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsILocalFile);
-    file.initWithPath(path);
+      file = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsILocalFile);
+      file.initWithPath(path);
 
-    io = Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService);
+      io = Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService);
 
-    source = io.newURI(canvas.toDataURL("image/png", ""), "UTF8", null);
-    target = io.newFileURI(file);
+      source = io.newURI(canvas.toDataURL("image/png", ""), "UTF8", null);
+      target = io.newFileURI(file);
 
-    persist = Cc["@mozilla.org/embedding/browser/nsWebBrowserPersist;1"].
-      createInstance(Ci.nsIWebBrowserPersist);
+      persist = Cc["@mozilla.org/embedding/browser/nsWebBrowserPersist;1"].
+        createInstance(Ci.nsIWebBrowserPersist);
 
-    persist.persistFlags = Ci.nsIWebBrowserPersist.
-      PERSIST_FLAGS_REPLACE_EXISTING_FILES;
+      persist.persistFlags = Ci.nsIWebBrowserPersist.
+        PERSIST_FLAGS_REPLACE_EXISTING_FILES;
 
-    persist.persistFlags |= Ci.nsIWebBrowserPersist.
-      PERSIST_FLAGS_AUTODETECT_APPLY_CONVERSION;
+      persist.persistFlags |= Ci.nsIWebBrowserPersist.
+        PERSIST_FLAGS_AUTODETECT_APPLY_CONVERSION;
 
-    persist.saveURI(source, null, null, null, null, file);
+      persist.saveURI(source, null, null, null, null, file);
+      return true;
+    }
+    catch(e) {
+      // running from an unprivileged environment
+      Tilt.Console.error(e.message);
+      return false;
+    }
   },
 
   /**
@@ -10205,6 +10309,9 @@ Tilt.File = {
     else { return "/"; }
   })()
 };
+
+// bind the owner object to the necessary functions
+Tilt.bindObjectFunc(Tilt.File);
 
 // intercept this object using a profiler when building in debug mode
 Tilt.Profiler.intercept("Tilt.File", Tilt.File);
@@ -10857,8 +10964,148 @@ Tilt.Math = {
   }
 };
 
+// bind the owner object to the necessary functions
+Tilt.bindObjectFunc(Tilt.Math);
+
 // intercept this object using a profiler when building in debug mode
 Tilt.Profiler.intercept("Tilt.Math", Tilt.Math);
+/***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is Tilt: A WebGL-based 3D visualization of a webpage.
+ *
+ * The Initial Developer of the Original Code is The Mozilla Foundation.
+ * Portions created by the Initial Developer are Copyright (C) 2011
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *   Victor Porof <victor.porof@gmail.com> (original author)
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the LGPL or the GPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ ***** END LICENSE BLOCK *****/
+"use strict";
+
+var Tilt = Tilt || {};
+var EXPORTED_SYMBOLS = ["Tilt.Preferences"];
+
+/*global Cc, Ci, Cu */
+
+Tilt.Preferences = {
+
+  /**
+   * Gets a custom extension preference.
+   * If the preference does not exist, undefined is returned. If it does exist,
+   * but the type is not correctly specified, null is returned.
+   *
+   * @param {String} pref: the preference name
+   * @param {String} type: either "boolean", "string" or "integer"
+   * @return {Boolean | String | Number} the requested extension preference
+   */
+  get: function(pref, type) {
+    var prefs;
+
+    try {
+      prefs = Cc["@mozilla.org/preferences-service;1"].
+        getService(Ci.nsIPrefService).getBranch(this.$branch);
+
+      return !prefs.prefHasUserValue(pref) ? undefined :
+             (type === "boolean") ? prefs.getBoolPref(pref) :
+             (type === "string") ? prefs.getCharPref(pref) :
+             (type === "integer") ? prefs.getIntPref(pref) : null;
+    }
+    catch(e) {
+      // running from an unprivileged environment
+      Tilt.Console.error(e.message);
+      return null;
+    }
+  },
+
+  /**
+   * Sets a custom extension preference.
+   *
+   * @param {String} pref: the preference name
+   * @param {String} type: either "boolean", "string" or "integer"
+   * @param {String} value: a new preference value
+   * @return {Boolean} true if the preference was set succesfully
+   */
+  set: function(pref, type, value) {
+    var prefs;
+
+    try {
+      prefs = Cc["@mozilla.org/preferences-service;1"].
+        getService(Ci.nsIPrefService).getBranch(this.$branch);
+
+      return (type === "boolean") ? prefs.setBoolPref(pref, value) :
+             (type === "string") ? prefs.setCharPref(pref, value) :
+             (type === "integer") ? prefs.setIntPref(pref, value) : false;
+    }
+    catch(e) {
+      // running from an unprivileged environment
+      Tilt.Console.error(e.message);
+      return false;
+    }
+  },
+
+  /**
+   * Creates a custom extension preference.
+   * If the preference already exists, it is left unchanged.
+   *
+   * @param {String} pref: the preference name
+   * @param {String} type: either "boolean", "string" or "integer"
+   * @param {String} value: the initial preference value
+   * @return {Boolean} true if the preference was initialized succesfully
+   */
+  create: function(pref, type, value) {
+    var prefs;
+
+    try {
+      prefs = Cc["@mozilla.org/preferences-service;1"].
+        getService(Ci.nsIPrefService).getBranch(this.$branch);
+
+      return prefs.prefHasUserValue(pref) ? false :
+             (type === "boolean") ? prefs.setBoolPref(pref, value) :
+             (type === "string") ? prefs.setCharPref(pref, value) :
+             (type === "integer") ? prefs.setIntPref(pref, value) : false;
+    }
+    catch(e) {
+      // running from an unprivileged environment
+      Tilt.Console.error(e.message);
+      return false;
+    }
+  },
+
+  /**
+   * The preferences branch for this extension.
+   */
+  $branch: "extensions.tilt."
+};
+
+// bind the owner object to the necessary functions
+Tilt.bindObjectFunc(Tilt.Preferences);
+
+// intercept this object using a profiler when building in debug mode
+Tilt.Profiler.intercept("Tilt.Preferences", Tilt.Preferences);
 /***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -10959,7 +11206,7 @@ Tilt.Random = {
         return random() * 0x100000000; // 2^32
       };
       random.fract53 = function() {
-        return random() + 
+        return random() +
               (random() * 0x200000 | 0) * 1.1102230246251565e-16; // 2^-53
       };
 
@@ -10990,8 +11237,14 @@ Tilt.Random = {
   }
 };
 
+// bind the owner object to the necessary functions
+Tilt.bindObjectFunc(Tilt.Random);
+
 // automatically seed the random function with a specified value
 Tilt.Random.seed(0);
+
+// intercept this object using a profiler when building in debug mode
+Tilt.Profiler.intercept("Tilt.Random", Tilt.Random);
 /***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -11182,6 +11435,8 @@ Tilt.WebGL = {
       width = rect.width,
       height = rect.height;
 
+    // we can just overwrite the existing canvas with the new image data for a
+    // specific rectangular region
     if (overwrite) {
       ctx = canvas.getContext("2d");
       ctx.translate(left, top);
@@ -11190,20 +11445,26 @@ Tilt.WebGL = {
 
       return canvas;
     }
+    // or, use a new canvas with the necessary width and height and image data
+    // drawn from the top left corner
     else {
+      // we'll cache a canvas to avoid creating it every single time
       if (this.$canvas) {
         this.$canvas.width = width;
         this.$canvas.height = height;
 
+        // use a 2d context to draw the window
         ctx = this.$canvas.getContext("2d");
         ctx.drawWindow(contentWindow, left, top, width, height, "#fff");
 
         return this.$canvas;
       }
+      // if the canvas wasn't already created, create it & continue refreshing
       else if ("undefined" === typeof this.$canvas) {
         this.$canvas = Tilt.Document.initCanvas();
         return this.refreshDocumentImage(contentWindow, canvas, rect);
       }
+      // something went horribly wrong, clean up the mess if there was any
       else {
         this.$canvas = null;
         delete this.$canvas;
@@ -11213,6 +11474,9 @@ Tilt.WebGL = {
     return null;
   }
 };
+
+// bind the owner object to the necessary functions
+Tilt.bindObjectFunc(Tilt.WebGL);
 
 // intercept this object using a profiler when building in debug mode
 Tilt.Profiler.intercept("Tilt.WebGL", Tilt.WebGL);
@@ -11317,6 +11581,9 @@ Tilt.Xhr = {
     }
   }
 };
+
+// bind the owner object to the necessary functions
+Tilt.bindObjectFunc(Tilt.Xhr);
 
 // intercept this object using a profiler when building in debug mode
 Tilt.Profiler.intercept("Tilt.Xhr", Tilt.Xhr);
