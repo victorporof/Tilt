@@ -64,16 +64,6 @@
       oncommand="TiltChrome.BrowserOverlay.initialize(event);"/>
   </keyset>
 
-  <!-- <menupopup id="menu_ToolsPopup">
-    <menuitem id="tilt-menu"
-      key="tilt-menu-key"
-      label="&tilt.menu.label;"
-      accesskey="&tilt.menu.accesskey;"
-      insertafter="devToolsSeparator"
-      oncommand="TiltChrome.BrowserOverlay.initialize(event);">
-    </menuitem>
-  </menupopup> -->
-
   <menupopup id="menuWebDeveloperPopup">
     <menuitem id="tilt-menu"
       key="tilt-menu-key"
@@ -109,8 +99,10 @@
           <spacer flex="1"/>
 
           <button id="tilt-sourceeditor-close"
-            oncommand="document.getElementById('tilt-sourceeditor').hidePopup();"
-            label="Close"/>
+            label="&tilt.sourceeditor.closeButton.label;"
+            accesskey="&tilt.sourceeditor.closeButton.accesskey;"
+            oncommand=
+              "document.getElementById('tilt-sourceeditor').hidePopup();"/>
         </hbox>
 
         <iframe type="chrome"
