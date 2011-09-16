@@ -647,5 +647,8 @@ Tilt.Math = {
   }
 };
 
+// bind the owner object to the necessary functions
+Tilt.bindObjectFunc(Tilt.Math);
+
 // intercept this object using a profiler when building in debug mode
 Tilt.Profiler.intercept("Tilt.Math", Tilt.Math);
