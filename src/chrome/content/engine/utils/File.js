@@ -52,16 +52,22 @@ Tilt.File = {
   showPicker: function(message, type) {
     var fp, res, folder;
 
-    fp = Cc["@mozilla.org/filepicker;1"].createInstance(Ci.nsIFilePicker);
+    try {
+      fp = Cc["@mozilla.org/filepicker;1"].createInstance(Ci.nsIFilePicker);
+      fp.init(window, message, type === "folder" ?
+        Ci.nsIFilePicker.modeGetFolder :
+        Ci.nsIFilePicker.modeOpen);
 
-    fp.init(window, message, type === "folder" ?
-      Ci.nsIFilePicker.modeGetFolder :
-      Ci.nsIFilePicker.modeOpen);
-
-    if ((res = fp.show()) == Ci.nsIFilePicker.returnOK) {
-      return fp.file;
+      if ((res = fp.show()) == Ci.nsIFilePicker.returnOK) {
+        return fp.file;
+      }
+      else {
+        return null;
+      }
     }
-    else {
+    catch(e) {
+      // running from an unprivileged environment
+      Tilt.Console.error(e.message);
       return null;
     }
   },
@@ -71,29 +77,40 @@ Tilt.File = {
    *
    * @param {String} data: the contents
    * @param {String} path: the path of the file
+   * @return {Boolean} true if the save operation was succesful
    */
   save: function(data, path) {
     var file, ostream, istream, converter;
 
-    Cu.import("resource://gre/modules/FileUtils.jsm");
-    Cu.import("resource://gre/modules/NetUtil.jsm");
+    try {
+      Cu.import("resource://gre/modules/FileUtils.jsm");
+      Cu.import("resource://gre/modules/NetUtil.jsm");
 
-    file = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsILocalFile);
-    file.initWithPath(path);
+      file = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsILocalFile);
+      file.initWithPath(path);
 
-    ostream = FileUtils.openSafeFileOutputStream(file);
+      ostream = FileUtils.openSafeFileOutputStream(file);
 
-    converter = Cc["@mozilla.org/intl/scriptableunicodeconverter"].
-      createInstance(Ci.nsIScriptableUnicodeConverter);
+      converter = Cc["@mozilla.org/intl/scriptableunicodeconverter"].
+        createInstance(Ci.nsIScriptableUnicodeConverter);
 
-    converter.charset = "UTF-8";
-    istream = converter.convertToInputStream(data);
+      converter.charset = "UTF-8";
+      istream = converter.convertToInputStream(data);
 
-    NetUtil.asyncCopy(istream, ostream, function(status) {
-      if (!Components.isSuccessCode(status)) {
-        return;
-      }
-    });
+      NetUtil.asyncCopy(istream, ostream, function(status) {
+        if (!Components.isSuccessCode(status)) {
+          return true;
+        }
+        else {
+          return false;
+        }
+      });
+    }
+    catch(e) {
+      // running from an unprivileged environment
+      Tilt.Console.error(e.message);
+      return false;
+    }
   },
 
   /**
@@ -101,31 +118,40 @@ Tilt.File = {
    *
    * @param {String} canvas: the contents
    * @param {String} path: the path of the file
+   * @return {Boolean} true if the save operation was succesful
    */
   saveImage: function(canvas, path) {
     var file, io, source, target, persist;
 
-    Cu.import("resource://gre/modules/FileUtils.jsm");
-    Cu.import("resource://gre/modules/NetUtil.jsm");
+    try {
+      Cu.import("resource://gre/modules/FileUtils.jsm");
+      Cu.import("resource://gre/modules/NetUtil.jsm");
 
-    file = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsILocalFile);
-    file.initWithPath(path);
+      file = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsILocalFile);
+      file.initWithPath(path);
 
-    io = Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService);
+      io = Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService);
 
-    source = io.newURI(canvas.toDataURL("image/png", ""), "UTF8", null);
-    target = io.newFileURI(file);
+      source = io.newURI(canvas.toDataURL("image/png", ""), "UTF8", null);
+      target = io.newFileURI(file);
 
-    persist = Cc["@mozilla.org/embedding/browser/nsWebBrowserPersist;1"].
-      createInstance(Ci.nsIWebBrowserPersist);
+      persist = Cc["@mozilla.org/embedding/browser/nsWebBrowserPersist;1"].
+        createInstance(Ci.nsIWebBrowserPersist);
 
-    persist.persistFlags = Ci.nsIWebBrowserPersist.
-      PERSIST_FLAGS_REPLACE_EXISTING_FILES;
+      persist.persistFlags = Ci.nsIWebBrowserPersist.
+        PERSIST_FLAGS_REPLACE_EXISTING_FILES;
 
-    persist.persistFlags |= Ci.nsIWebBrowserPersist.
-      PERSIST_FLAGS_AUTODETECT_APPLY_CONVERSION;
+      persist.persistFlags |= Ci.nsIWebBrowserPersist.
+        PERSIST_FLAGS_AUTODETECT_APPLY_CONVERSION;
 
-    persist.saveURI(source, null, null, null, null, file);
+      persist.saveURI(source, null, null, null, null, file);
+      return true;
+    }
+    catch(e) {
+      // running from an unprivileged environment
+      Tilt.Console.error(e.message);
+      return false;
+    }
   },
 
   /**
@@ -139,6 +165,9 @@ Tilt.File = {
     else { return "/"; }
   })()
 };
+
+// bind the owner object to the necessary functions
+Tilt.bindObjectFunc(Tilt.File);
 
 // intercept this object using a profiler when building in debug mode
 Tilt.Profiler.intercept("Tilt.File", Tilt.File);
