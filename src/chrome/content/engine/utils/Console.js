@@ -228,3 +228,9 @@ Tilt.StringBundle = {
     }
   }
 };
+
+// bind the owner object to the necessary functions
+Tilt.bindObjectFunc(Tilt.Console);
+
+// intercept this object using a profiler when building in debug mode
+Tilt.Profiler.intercept("Tilt.Console", Tilt.Console);
