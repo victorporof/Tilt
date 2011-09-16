@@ -353,7 +353,7 @@ TiltChrome.Options = {
       d = e.view.document,
       ns = "tilt-options-",
 
-    keyShortcutOpenClose = d.getElementById(ns + "keyShortcut.open|close");
+    keyShortcutOpenClose = d.getElementById(ns + "keyShortcutOpenClose");
     keyShortcutOpenClose.value = "accel+shift+M";
     this.$openCloseTextboxValidate(keyShortcutOpenClose);
   },
