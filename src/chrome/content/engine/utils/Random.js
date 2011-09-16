@@ -98,7 +98,7 @@ Tilt.Random = {
         return random() * 0x100000000; // 2^32
       };
       random.fract53 = function() {
-        return random() + 
+        return random() +
               (random() * 0x200000 | 0) * 1.1102230246251565e-16; // 2^-53
       };
 
@@ -129,5 +129,11 @@ Tilt.Random = {
   }
 };
 
+// bind the owner object to the necessary functions
+Tilt.bindObjectFunc(Tilt.Random);
+
 // automatically seed the random function with a specified value
 Tilt.Random.seed(0);
+
+// intercept this object using a profiler when building in debug mode
+Tilt.Profiler.intercept("Tilt.Random", Tilt.Random);
