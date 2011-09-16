@@ -66,7 +66,7 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
     onsuccess: function() {
       window.setTimeout(function() {
         // check if rendering is working as expected
-        if (tilt.frameCount < 1) {
+        if (tilt && tilt.frameCount < 1) {
           TiltChrome.BrowserOverlay.destroy(true, true);
           TiltChrome.BrowserOverlay.href = null;
 
@@ -146,6 +146,9 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
       TiltChrome.Shaders.Visualization.vs,
       TiltChrome.Shaders.Visualization.fs);
 
+    // get the preferences for this extension
+    setupPreferences();
+
     // setup the controller, user interface, visualization mesh, and the
     // browser event handlers
     setupController();
@@ -162,8 +165,11 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
     // has been started from the application menu, the width and height gets
     // messed up, so we need to update almost immediately after it starts
     window.setTimeout(function() {
-      gResize();
-      gMouseOver();
+      try {
+        gResize();
+        gMouseOver();
+      }
+      catch(e) {}
     }.bind(this), 100);
 
     // set the focus back to the window content if it was somewhere else
@@ -268,6 +274,21 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
   }.bind(this);
 
   /**
+   * Get the preferences for this extension.
+   */
+  var setupPreferences = function() {
+    var pref = Tilt.Preferences;
+
+    pref.create("options.refreshVisualization", "integer", 1);
+    pref.create("options.escapeKeyCloses", "boolean", true);
+    pref.create("options.hideUserInterfaceAtInit", "boolean", false);
+    pref.create("options.disableMinidomAtInit", "boolean", false);
+    pref.create("options.enableJoystick", "boolean", false);
+    pref.create("options.useAccelerometer", "boolean", false);
+    pref.create("options.keyShortcutOpenClose", "string", "accel+shift+M");
+  }.bind(this);
+
+  /**
    * Setup the controller, referencing this visualization.
    */
   var setupController = function() {
@@ -287,7 +308,7 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
   }.bind(this);
 
   /**
-   * Setup the user interface, referencing this visualization.
+   * Setup the user interface, referencing this visualization and controller.
    */
   var setupUI = function() {
     // we might have the interface undefined (not passed as a parameter in
@@ -327,10 +348,9 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
       }
 
       // create a static texture using the previously created document image
-      texture = new Tilt.Texture(image, {
-        fill: "white", stroke: "#aaa", strokeWeight: 8, preserve: true
-      });
+      texture = new Tilt.Texture(image, { preserve: true });
 
+      // update the mesh texture with the new object
       if (mesh !== null) {
         mesh.texture = texture;
       }
@@ -356,7 +376,7 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
       return;
     }
 
-    var random = Tilt.Random.next.bind(Tilt.Random),
+    var random = Tilt.Random.next,
       vertices = [],
       texCoord = [],
       indices = [],
@@ -435,7 +455,7 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
         coordHeight = coord.height;
 
       // use this node only if it actually has visible dimensions
-      if (coordWidth > 1 && coordHeight > 1) {
+      if (coordWidth > 2 && coordHeight > 2) {
 
         // information about these nodes should still be accessible
         info.index = visibleNodes.length;
@@ -899,8 +919,8 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
     this.requestRedraw();
 
     var domStrips = TiltChrome.Config.UI.domStrips,
-      clamp = Tilt.Math.clamp.bind(Tilt.Math),
-      hex2rgba = Tilt.Math.hex2rgba.bind(Tilt.Math),
+      clamp = Tilt.Math.clamp,
+      hex2rgba = Tilt.Math.hex2rgba,
       floor = Math.floor,
 
       indices = mesh.indices.components,
