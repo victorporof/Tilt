@@ -72,9 +72,9 @@ TiltChrome.BrowserOverlay = {
 
   /**
    * Initializes Tilt.
-   * @param {object} event: the event firing this function
+   * @param {Event} e: the event firing this function
    */
-  initialize: function(event) {
+  initialize: function(e) {
     // first, close the visualization and clean up any mess if there was any
     this.destroy(true);
 
