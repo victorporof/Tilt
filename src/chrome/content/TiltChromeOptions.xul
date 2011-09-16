@@ -38,72 +38,73 @@
  *
  ***** END LICENSE BLOCK *****/ -->
 
+<!DOCTYPE overlay SYSTEM "chrome://tilt/locale/browserOverlay.dtd">
+
 <window id="tilt-options"
-  title="Options"
+  title="&tilt.options.windowTitle;"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-  onkeyup="TiltChrome.Options.windowKeyUp(this, event);">
+  onload="TiltChrome.Options.windowLoad(event, this);"
+  onunload="TiltChrome.Options.windowUnload(event, this);"
+  onkeyup="TiltChrome.Options.windowKeyUp(event, this);">
 
   <script type="application/x-javascript"
     src="chrome://tilt/content/Tilt-extension.js"/>
 
   <groupbox>
     <caption>
-      <checkbox label="Refresh visualization"
-        checked="true"/>
+      <checkbox id="tilt-options-refreshVisualizationCheckbox"
+        label="&tilt.options.refreshVisualizationCheckbox;"
+        oncommand=
+          "TiltChrome.Options.refreshVisualizationCheckboxPressed(event);"/>
     </caption>
 
-    <radiogroup>
-      <radio label="Document texture only (fastest)"
-        selected="false"
-        oncommand="TiltChrome.Options.refreshFastestRadioPressed(this);"/>
+    <radiogroup id="tilt-options-refreshVisualizationRadiogroup">
+      <radio label="&tilt.options.refreshVisualizationRadio0;"
+        oncommand="TiltChrome.Options.refreshFastestRadioPressed(event);"/>
 
-      <radio label="Texture and some DOM elements (recommended)"
-        selected="true"
-        oncommand="TiltChrome.Options.refreshRecommendedRadioPressed(this);"/>
+      <radio label="&tilt.options.refreshVisualizationRadio1;"
+        oncommand="TiltChrome.Options.refreshRecommendedRadioPressed(event);"/>
 
-      <radio label="Everything (slowest)"
-        selected="false"
-        oncommand="TiltChrome.Options.refreshSlowestRadioPressed(this);"/>
+      <radio label="&tilt.options.refreshVisualizationRadio2;"
+        oncommand="TiltChrome.Options.refreshSlowestRadioPressed(event);"/>
     </radiogroup>
   </groupbox>
 
   <groupbox>
-    <checkbox label="Escape key closes the visualization"
-      checked="true"
-      disabled="false"
-      oncommand="TiltChrome.Options.escapeKeyCheckboxPressed(this);"/>
+    <checkbox id="tilt-options-escapeKeyCloses"
+      label="&tilt.options.escapeKeyCloses;"
+      oncommand="TiltChrome.Options.escapeKeyCheckboxPressed(event);"/>
 
-    <checkbox label="Hide the user interface at initialization (better performance)"
-      checked="false"
-      disabled="false"
-      oncommand="TiltChrome.Options.hideUICheckboxPressed(this);"/>
+    <checkbox id="tilt-options-hideUserInterfaceAtInit"
+      label="&tilt.options.hideUserInterfaceAtInit;"
+      oncommand="TiltChrome.Options.hideUICheckboxPressed(event);"/>
 
-    <checkbox label="Disable the 'minidom' strips tree view (requires restart)"
-      checked="false"
-      disabled="false"
-      oncommand="TiltChrome.Options.disableMinidomCheckboxPressed(this);"/>
+    <checkbox  id="tilt-options-disableMinidomAtInit"
+      label="&tilt.options.disableMinidomAtInit;"
+      oncommand="TiltChrome.Options.disableMinidomCheckboxPressed(event);"/>
 
-    <checkbox label="Enable joystick controller"
-      checked="false"
-      disabled="true"
-      oncommand="TiltChrome.Options.enableJoystickCheckboxPressed(this);"/>
+    <checkbox id="tilt-options-enableJoystick"
+      label="&tilt.options.enableJoystick;"
+      oncommand="TiltChrome.Options.enableJoystickCheckboxPressed(event);"/>
 
-    <checkbox label="Use accelerometer if available"
-      checked="false"
-      disabled="false"
-      oncommand="TiltChrome.Options.useAccelerometerCheckboxPressed(this);"/>
+    <checkbox id="tilt-options-useAccelerometer"
+      label="&tilt.options.useAccelerometer;"
+      oncommand="TiltChrome.Options.useAccelerometerCheckboxPressed(event);"/>
   </groupbox>
 
   <groupbox>
     <hbox align="center">
-      <label value="Open &amp; close Tilt" width="90"/>
-      <textbox value="Ctrl+Shift+M"
+      <label value="&tilt.options.keyShortcutOpenClose;"
+        width="90"/>
+
+      <textbox id="tilt-options-keyShortcutOpenClose"
         flex="1"
         clickSelectsAll="true"
-        onfocus="TiltChrome.Options.openCloseTextboxFocus(this);"
-        onkeydown="TiltChrome.Options.openCloseTextboxKeyDown(this, event);"/>
+        onfocus="TiltChrome.Options.openCloseTextboxFocus(event);"
+        onkeydown="TiltChrome.Options.openCloseTextboxKeyDown(event);"/>
 
-      <button label="Reset"/>
+      <button label="&tilt.options.resetButton;"
+        oncommand="TiltChrome.Options.openCloseResetButtonPressed(event);"/>
     </hbox>
   </groupbox>
 

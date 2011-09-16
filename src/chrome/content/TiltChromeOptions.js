@@ -38,18 +38,144 @@
 var TiltChrome = TiltChrome || {};
 var EXPORTED_SYMBOLS = ["TiltChrome.Options"];
 
+/*global Tilt */
+
 /**
  * Default options implementation.
  */
 TiltChrome.Options = {
 
   /**
+   * Event fired when the options window is loaded.
+   *
+   * @param {Event} e: the event firing this function
+   * @param {XULElement} sender: the xul element calling this delegate
+   */
+  windowLoad: function(e, sender) {
+    var pref = Tilt.Preferences,
+      d = sender.document,
+      ns = "tilt-options-",
+
+    refreshVisualization = {
+      checkbox: d.getElementById(ns + "refreshVisualizationCheckbox"),
+      radiogroup: d.getElementById(ns + "refreshVisualizationRadiogroup")
+    },
+    escapeKeyCloses = d.getElementById(ns + "escapeKeyCloses"),
+    hideUserInterfaceAtInit = d.getElementById(ns + "hideUserInterfaceAtInit"),
+    disableMinidomAtInit = d.getElementById(ns + "disableMinidomAtInit"),
+    enableJoystick = d.getElementById(ns + "enableJoystick"),
+    useAccelerometer = d.getElementById(ns + "useAccelerometer"),
+    keyShortcutOpenClose = d.getElementById(ns + "keyShortcutOpenClose");
+
+    switch (pref.get("options.refreshVisualization", "integer")) {
+      case 0:
+        refreshVisualization.checkbox.checked = true;
+        refreshVisualization.radiogroup.selectedIndex = 0;
+        break;
+      case 1:
+        refreshVisualization.checkbox.checked = true;
+        refreshVisualization.radiogroup.selectedIndex = 1;
+        break;
+      case 2:
+        refreshVisualization.checkbox.checked = true;
+        refreshVisualization.radiogroup.selectedIndex = 2;
+        break;
+      default:
+        refreshVisualization.checkbox.checked = false;
+        refreshVisualization.radiogroup.selectedIndex = -1;
+        refreshVisualization.radiogroup.disabled = true;
+        break;
+    }
+
+    escapeKeyCloses.checked =
+      pref.get("options.escapeKeyCloses", "boolean");
+
+    hideUserInterfaceAtInit.checked =
+      pref.get("options.hideUserInterfaceAtInit", "boolean");
+
+    disableMinidomAtInit.checked =
+      pref.get("options.disableMinidomAtInit", "boolean");
+
+    enableJoystick.disabled = true;
+    enableJoystick.checked =
+      pref.get("options.enableJoystick", "boolean");
+
+    useAccelerometer.checked =
+      pref.get("options.useAccelerometer", "boolean");
+
+    keyShortcutOpenClose.value =
+      pref.get("options.keyShortcutOpenClose", "string");
+
+    this.$openCloseTextboxValidate(keyShortcutOpenClose);
+  },
+
+  /**
+   * Event fired when the options window is unloaded.
+   *
+   * @param {Event} e: the event firing this function
+   * @param {XULElement} sender: the xul element calling this delegate
+   */
+  windowUnload: function(e, sender) {
+    var pref = Tilt.Preferences,
+      d = sender.document,
+      ns = "tilt-options-",
+
+    refreshVisualization = {
+      checkbox: d.getElementById(ns + "refreshVisualizationCheckbox"),
+      radiogroup: d.getElementById(ns + "refreshVisualizationRadiogroup")
+    },
+    escapeKeyCloses = d.getElementById(ns + "escapeKeyCloses"),
+    hideUserInterfaceAtInit = d.getElementById(ns + "hideUserInterfaceAtInit"),
+    disableMinidomAtInit = d.getElementById(ns + "disableMinidomAtInit"),
+    enableJoystick = d.getElementById(ns + "enableJoystick"),
+    useAccelerometer = d.getElementById(ns + "useAccelerometer"),
+    keyShortcutOpenClose = d.getElementById(ns + "keyShortcutOpenClose");
+
+    pref.set("options.refreshVisualization", "integer",
+      refreshVisualization.radiogroup.selectedIndex);
+
+    pref.set("options.escapeKeyCloses", "boolean",
+      escapeKeyCloses.checked);
+
+    pref.set("options.hideUserInterfaceAtInit", "boolean",
+      hideUserInterfaceAtInit.checked);
+
+    pref.set("options.disableMinidomAtInit", "boolean",
+      disableMinidomAtInit.checked);
+
+    pref.set("options.enableJoystick", "boolean",
+      enableJoystick.checked);
+
+    pref.set("options.useAccelerometer", "boolean",
+      useAccelerometer.checked);
+
+    pref.set("options.keyShortcutOpenClose", "string",
+      (function() {
+        return keyShortcutOpenClose.value.toUpperCase().
+          replace(/\+/g, " ").
+          replace(/shift/i, "shift").
+          replace(/ctrl/i, "ctrl").
+          replace(/alt/i, "alt").
+          replace(/cmd/i, "accel").
+          replace(/space/i, "space").
+          replace(/pgup/i, "pgup").
+          replace(/pgdown/i, "pgdown").
+          replace(/end/i, "end").
+          replace(/home/i, "home").
+          replace(/left/i, "left").
+          replace(/up/i, "up").
+          replace(/right/i, "right").
+          replace(/down/i, "down");
+      })());
+  },
+
+  /**
    * Event fired when a key is released and the windows is focused.
    *
+   * @param {Event} e: the event firing this function
    * @param {XULElement} sender: the xul element calling this delegate
-   * @param {KeyboardEvent} e: the keyboard event
    */
-  windowKeyUp: function(sender, e) {
+  windowKeyUp: function(e, sender) {
     var code = e.keyCode || e.which;
 
     if (code === 27) { // escape key
@@ -58,155 +184,207 @@ TiltChrome.Options = {
   },
 
   /**
+   * Event fired when the sender checkbox is pressed.
+   * @param {Event} e: the event firing this function
+   */
+  refreshVisualizationCheckboxPressed: function(e) {
+    var pref = Tilt.Preferences,
+      d = e.view.document,
+      ns = "tilt-options-",
+
+    refreshVisualization = {
+      checkbox: d.getElementById(ns + "refreshVisualizationCheckbox"),
+      radiogroup: d.getElementById(ns + "refreshVisualizationRadiogroup")
+    };
+
+    if (e.target.checked) {
+      refreshVisualization.radiogroup.selectedIndex = 1;
+      refreshVisualization.radiogroup.disabled = false;
+    }
+    else {
+      refreshVisualization.radiogroup.selectedIndex = -1;
+      refreshVisualization.radiogroup.disabled = true;
+    }
+  },
+
+  /**
    * Event fired when the sender radio button is pressed.
-   * @param {XULElement} sender: the xul element calling this delegate
+   * @param {Event} e: the event firing this function
    */
-  refreshFastestRadioPressed: function(sender) {
+  refreshFastestRadioPressed: function(e) {
   },
 
   /**
    * Event fired when the sender radio button is pressed.
-   * @param {XULElement} sender: the xul element calling this delegate
+   * @param {Event} e: the event firing this function
    */
-  refreshRecommendedRadioPressed: function(sender) {
+  refreshRecommendedRadioPressed: function(e) {
   },
 
   /**
    * Event fired when the sender radio button is pressed.
-   * @param {XULElement} sender: the xul element calling this delegate
+   * @param {Event} e: the event firing this function
    */
-  refreshSlowestRadioPressed: function(sender) {
+  refreshSlowestRadioPressed: function(e) {
   },
 
   /**
    * Event fired when the sender checkbox is pressed.
-   * @param {XULElement} sender: the xul element calling this delegate
+   * @param {Event} e: the event firing this function
    */
-  escapeKeyCheckboxPressed: function(sender) {
+  escapeKeyCheckboxPressed: function(e) {
   },
 
   /**
    * Event fired when the sender checkbox is pressed.
-   * @param {XULElement} sender: the xul element calling this delegate
+   * @param {Event} e: the event firing this function
    */
-  hideUICheckboxPressed: function(sender) {
+  hideUICheckboxPressed: function(e) {
   },
 
   /**
    * Event fired when the sender checkbox is pressed.
-   * @param {XULElement} sender: the xul element calling this delegate
+   * @param {Event} e: the event firing this function
    */
-  disableMinidomCheckboxPressed: function(sender) {
+  disableMinidomCheckboxPressed: function(e) {
   },
 
   /**
    * Event fired when the sender checkbox is pressed.
-   * @param {XULElement} sender: the xul element calling this delegate
+   * @param {Event} e: the event firing this function
    */
-  enableJoystickCheckboxPressed: function(sender) {
+  enableJoystickCheckboxPressed: function(e) {
   },
 
   /**
    * Event fired when the sender checkbox is pressed.
-   * @param {XULElement} sender: the xul element calling this delegate
+   * @param {Event} e: the event firing this function
    */
-  useAccelerometerCheckboxPressed: function(sender) {
+  useAccelerometerCheckboxPressed: function(e) {
   },
 
   /**
    * Event fired when the sender textbox is focused.
-   * @param {XULElement} sender: the xul element calling this delegate
+   * @param {Event} e: the event firing this function
    */
-  openCloseTextboxFocus: function(sender) {
-    sender.focused = true;
+  openCloseTextboxFocus: function(e) {
+    e.target.focused = true;
   },
 
   /**
    * Event fired when the sender textbox is pressed.
-   *
-   * @param {XULElement} sender: the xul element calling this delegate
-   * @param {KeyboardEvent} e: the keyboard event
+   * @param {Event} e: the event firing this function
    */
-  openCloseTextboxKeyDown: function(sender, e) {
-    if (sender.focused) {
-      sender.value = "";
-      sender.focused = null;
-      delete sender.focused;
-    }
+  openCloseTextboxKeyDown: function(e) {
+    var code = e.keyCode || e.which;
 
-    var value = sender.value,
-      code = e.keyCode || e.which;
-
-    if (value.substr(-1) !== "+") {
-      value = "";
+    if (code === 27) { // escape key
+      return;
     }
-    if (code === 8 || code === 45 || code === 46) { // escape, delete or insert
-      value = "";
+    if (e.target.focused) {
+      e.target.value = "";
+      e.target.focused = null;
+      delete e.target.focused;
     }
-    if (code >= 65 && code <= 90) { // lowercase a..z
-      value += String.fromCharCode(code);
-    }
-    if (value.match(/shift/i) === null && code === 16) {
-      value += "Shift+";
-    }
-    if (value.match(/ctrl/i) === null && code === 17) {
-      value += "Ctrl+";
-    }
-    if (value.match(/alt|option/i) === null && code === 18) {
-      value += "Alt+";
-    }
-    if (value.match(/accel|cmd/i) === null && code === 224) {
-      value += "Accel+";
-    }
-    if (value.match(/space/i) === null && code === 32) {
-      value += "Space";
-    }
-    if (value.match(/pgup/i) === null && code === 33) {
-      value += "PgUp+";
-    }
-    if (value.match(/pgdown/i) === null && code === 34) {
-      value += "PgDown+";
-    }
-    if (value.match(/end/i) === null && code === 35) {
-      value += "End+";
-    }
-    if (value.match(/home/i) === null && code === 36) {
-      value += "Home+";
-    }
-    if (value.match(/left/i) === null && code === 37) {
-      value += "Left+";
-    }
-    if (value.match(/up/i) === null && code === 38) {
-      value += "Up+";
-    }
-    if (value.match(/right/i) === null && code === 39) {
-      value += "Right+";
-    }
-    if (value.match(/down/i) === null && code === 40) {
-      value += "Down+";
-    }
-
-    sender.value = value.replace(/alt/i, (function() {
-                     var app = navigator.appVersion;
-                     if (app.indexOf("Win") !== -1) { return "Alt"; }
-                     else if (app.indexOf("Mac") !== -1) { return "Option"; }
-                     else if (app.indexOf("X11") !== -1) { return "Alt"; }
-                     else if (app.indexOf("Linux") !== -1) { return "Alt"; }
-                     else { return "Alt"; }
-                   })()).
-                   replace(/accel/i, (function() {
-                     var app = navigator.appVersion;
-                     if (app.indexOf("Win") !== -1) { return "Ctrl"; }
-                     else if (app.indexOf("Mac") !== -1) { return "Cmd"; }
-                     else if (app.indexOf("X11") !== -1) { return "Ctrl"; }
-                     else if (app.indexOf("Linux") !== -1) { return "Ctrl"; }
-                     else { return "Accel"; }
-                   })());
-
     if ((code >= 32 && code <= 40) ||
         (code >= 65 && code <= 90)) {
       e.preventDefault();
       e.stopPropagation();
     }
+
+    if (e.target.value.substr(-1) !== "+") {
+      e.target.value = "";
+    }
+    if (code === 8 || code === 45 || code === 46) { // backspace delete insert
+      e.target.value = "";
+    }
+    if (code >= 65 && code <= 90) { // a..z
+      e.target.value += String.fromCharCode(code);
+    }
+    if (e.target.value.match(/shift/i) === null && code === 16) {
+      e.target.value += "shift+";
+    }
+    if (e.target.value.match(/ctrl/i) === null && code === 17) {
+      e.target.value += "ctrl+";
+    }
+    if (e.target.value.match(/alt/i) === null && code === 18) {
+      e.target.value += "alt+";
+    }
+    if (e.target.value.match(/cmd/i) === null && code === 224) {
+      e.target.value += "cmd+";
+    }
+    if (e.target.value.match(/space/i) === null && code === 32) {
+      e.target.value += "space";
+    }
+    if (e.target.value.match(/pgup/i) === null && code === 33) {
+      e.target.value += "pgup+";
+    }
+    if (e.target.value.match(/pgdown/i) === null && code === 34) {
+      e.target.value += "pgdown+";
+    }
+    if (e.target.value.match(/end/i) === null && code === 35) {
+      e.target.value += "end+";
+    }
+    if (e.target.value.match(/home/i) === null && code === 36) {
+      e.target.value += "home+";
+    }
+    if (e.target.value.match(/left/i) === null && code === 37) {
+      e.target.value += "left+";
+    }
+    if (e.target.value.match(/up/i) === null && code === 38) {
+      e.target.value += "up+";
+    }
+    if (e.target.value.match(/right/i) === null && code === 39) {
+      e.target.value += "right+";
+    }
+    if (e.target.value.match(/down/i) === null && code === 40) {
+      e.target.value += "down+";
+    }
+
+    this.$openCloseTextboxValidate(e.target);
+  },
+
+  /**
+   * Event fired when the sender button is pressed.
+   * @param {Event} e: the event firing this function
+   */
+  openCloseResetButtonPressed: function(e) {
+    var pref = Tilt.Preferences,
+      d = e.view.document,
+      ns = "tilt-options-",
+
+    keyShortcutOpenClose = d.getElementById(ns + "keyShortcut.open|close");
+    keyShortcutOpenClose.value = "accel+shift+M";
+    this.$openCloseTextboxValidate(keyShortcutOpenClose);
+  },
+
+  /**
+   * Validates the value for a specific element.
+   * @param {XULElement} element: the required element
+   */
+  $openCloseTextboxValidate: function(element) {
+    element.value = element.value.toUpperCase().
+      replace(/\ /g, "+").
+      replace(/shift/i, "Shift").
+      replace(/ctrl/i, "Ctrl").
+      replace(/alt/i, "Alt").
+      replace(/cmd/i, "Cmd").
+      replace(/space/i, "Space").
+      replace(/pgup/i, "PgUp").
+      replace(/pgdown/i, "PgDown").
+      replace(/end/i, "End").
+      replace(/home/i, "Home").
+      replace(/left/i, "Left").
+      replace(/up/i, "Up").
+      replace(/right/i, "Right").
+      replace(/down/i, "Down").
+      replace(/accel/i, (function() {
+        var app = navigator.appVersion;
+        if (app.indexOf("Win") !== -1) { return "Ctrl"; }
+        else if (app.indexOf("Mac") !== -1) { return "Cmd"; }
+        else if (app.indexOf("X11") !== -1) { return "Ctrl"; }
+        else if (app.indexOf("Linux") !== -1) { return "Ctrl"; }
+        else { return "Accel"; }
+      })());
   }
 };
