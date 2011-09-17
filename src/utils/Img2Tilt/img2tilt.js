@@ -36,10 +36,10 @@
 (function() {
   "use strict";
 
-  var detail = 30,
-      elevation = -1,
-      sensitivity = 4,
-      negative = false;
+  var detail = 30,      // how big is one dom pixel relative to the image size
+      elevation = -1,   // maximum elevation, -1 means unlimited
+      sensitivity = 4,  // steepness based on pixel brightness
+      negative = false; // set true to invert brightness
 
   function createDocument(canvas, data, width, height) {
     var html = [],
