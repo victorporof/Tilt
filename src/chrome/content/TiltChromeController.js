@@ -71,7 +71,8 @@ TiltChrome.Controller.MouseAndKeyboard = function() {
       return;
     }
 
-    arcball = new Tilt.Arcball(canvas.width, canvas.height);
+    arcball = new Tilt.Arcball(canvas.width, canvas.height, 0,
+      [-window.content.pageXOffset, -window.content.pageYOffset], [0, 0]);
 
     // bind some closures to more easily handle the arcball
     this.stop = arcball.stop.bind(arcball);
