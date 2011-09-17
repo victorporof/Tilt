@@ -232,13 +232,6 @@ TiltChrome.Options = {
    * Event fired when the sender checkbox is pressed.
    * @param {Event} e: the event firing this function
    */
-  escapeKeyCheckboxPressed: function(e) {
-  },
-
-  /**
-   * Event fired when the sender checkbox is pressed.
-   * @param {Event} e: the event firing this function
-   */
   hideUICheckboxPressed: function(e) {
   },
 
@@ -261,6 +254,13 @@ TiltChrome.Options = {
    * @param {Event} e: the event firing this function
    */
   useAccelerometerCheckboxPressed: function(e) {
+  },
+
+  /**
+   * Event fired when the sender checkbox is pressed.
+   * @param {Event} e: the event firing this function
+   */
+  escapeKeyCheckboxPressed: function(e) {
   },
 
   /**
