@@ -2,7 +2,6 @@
 <html lang="en">
   <head>
     <title>Tilt Editor</title>
-
     <style type="text/css">
       body {
         overflow: hidden;
@@ -12,15 +11,16 @@
         margin: 0px;
         top: 0px;
         bottom: 0px;
-        left: -22px;
+        left: -20px;
         right: 0px;
       }
     </style>
+  </head>
+  <body>
+    <pre id="code"/>
     <script type="text/javascript" src="src/ace.js"></script>
-    <script type="text/javascript" src="src/theme-dawn.js"></script>
-    <script type="text/javascript" src="src/mode-html.js"></script>
-    <script type="text/javascript" src="src/mode-scss.js"></script>
-    <script type="text/javascript" src="src/mode-javascript.js"></script>
+    <script type="text/javascript" src="src/themes.js"></script>
+    <script type="text/javascript" src="src/modes.js"></script>
     <script>
       window.refreshCodeEditor = function(type) {
         var editor = ace.edit("code");
@@ -40,8 +40,5 @@
         }
       };
     </script>
-  </head>
-  <body>
-    <pre id="code"/>
   </body>
 </html>
