@@ -70,7 +70,7 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
           TiltChrome.BrowserOverlay.destroy(true, true);
           TiltChrome.BrowserOverlay.href = null;
 
-          window.content.location.href ="http://get.webgl.org/troubleshooting";
+          window.content.location.href="http://get.webgl.org/troubleshooting/";
           Tilt.Console.alert("Firefox", Tilt.StringBundle.get("tilt.error"));
         }
       }, 1000);
@@ -102,7 +102,7 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
     index: -1,
     fill: "#fff",
     stroke: "000",
-    strokeWeight: 3,
+    strokeWeight: 1,
     v0: vec3.create(),
     v1: vec3.create(),
     v2: vec3.create(),
@@ -188,7 +188,7 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
     // prepare for the next frame of the animation loop
     // behind the scenes, this issues a requestAnimFrame call and updates some
     // timing variables, frame count, frame rate etc.
-    tilt.loop(draw);
+    tilt.loop(draw, true);
 
     if (refreshTexture) {
       refreshTexture = false;
@@ -210,8 +210,7 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
 
       // apply the preliminary transformations to the model view
       tilt.translate(tilt.width * 0.5 + 100,
-                     tilt.height * 0.5 - 50,
-                     -thickness * 30);
+                     tilt.height * 0.5 - 50, -thickness * 30);
 
       // transform the tilting representing the device orientation
       tilt.transform(quat4.toMat4(
@@ -221,11 +220,11 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
       )));
 
       // calculate the camera matrix using the rotation and translation
-      tilt.translate(transforms.translation[0],
-                     transforms.translation[1],
-                     transforms.translation[2]);
-
+      tilt.translate(transforms.translation[0], 0, transforms.translation[2]);
       tilt.transform(quat4.toMat4(transforms.rotation));
+      tilt.translate(0, transforms.translation[1], 0);
+
+      // offset the visualization mesh to center
       tilt.translate(transforms.offset[0], transforms.offset[1], 0);
 
       // draw the visualization mesh
@@ -280,11 +279,11 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
     var pref = Tilt.Preferences;
 
     pref.create("options.refreshVisualization", "integer", 1);
-    pref.create("options.escapeKeyCloses", "boolean", true);
     pref.create("options.hideUserInterfaceAtInit", "boolean", false);
     pref.create("options.disableMinidomAtInit", "boolean", false);
     pref.create("options.enableJoystick", "boolean", false);
     pref.create("options.useAccelerometer", "boolean", false);
+    pref.create("options.escapeKeyCloses", "boolean", true);
     pref.create("options.keyShortcutOpenClose", "string", "accel+shift+M");
   }.bind(this);
 
@@ -376,6 +375,9 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
       return;
     }
 
+    // seed the random function to get the same values each time
+    Tilt.Random.seed(0);
+
     var random = Tilt.Random.next,
       vertices = [],
       texCoord = [],
@@ -438,8 +440,6 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
           localName === "script" ||
           localName === "noscript" ||
           localName === "option" ||
-          localName === "strong" ||
-          localName === "em" ||
           localName === "ins" ||
           localName === "del") {
 
@@ -722,7 +722,7 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
     // set a flag to signal that the window has stopped unfocusing
     window.setTimeout(function() {
       this.$gBlurring = false;
-    }.bind(this), 100);
+    }.bind(this), 250);
   }.bind(this);
 
   /**
@@ -736,7 +736,7 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
     // set a flag to signal that the window has stopped focusing
     window.setTimeout(function() {
       this.$gFocusing = false;
-    }.bind(this), 100);
+    }.bind(this), 250);
   }.bind(this);
 
   /**
@@ -1005,8 +1005,7 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
 
         if (name !== "html") {
           highlightQuad.index = index;
-          highlightQuad.fill = settings.fill + "55";
-          highlightQuad.stroke = settings.fill + "AA";
+          highlightQuad.fill = settings.fill + "66";
 
           // we'll need to calculate the quad corners to draw a highlighted
           // area around the currently selected node
@@ -1264,8 +1263,7 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
 
       if (name !== "html") {
         highlightQuad.index = index;
-        highlightQuad.fill = settings.fill + "55";
-        highlightQuad.stroke = settings.fill + "AA";
+        highlightQuad.fill = settings.fill + "66";
 
         // we'll need to calculate the quad corners to draw a highlighted
         // area around the currently selected node
