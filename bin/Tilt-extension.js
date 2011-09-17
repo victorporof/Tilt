@@ -251,9 +251,11 @@ var EXPORTED_SYMBOLS = ["Tilt.Arcball"];
  * @param {Number} width: the width of canvas
  * @param {Number} height: the height of canvas
  * @param {Number} radius: optional, the radius of the arcball
+ * @param {Array} initialTrans: initial [x, y] translation
+ * @param {Array} initialRot: initial [x, y] rotation
  * @return {Tilt.Arcball} the newly created object
  */
-Tilt.Arcball = function(width, height, radius) {
+Tilt.Arcball = function(width, height, radius, initialTrans, initialRot) {
 
   // intercept this object using a profiler when building in debug mode
   Tilt.Profiler.intercept("Tilt.Arcball", this);
@@ -306,8 +308,8 @@ Tilt.Arcball = function(width, height, radius) {
   /**
    * Additional rotation and translation vectors.
    */
-  this.$addKeyRot = [0, 0];
-  this.$addKeyTrans = [0, 0];
+  this.$addKeyRot = initialRot || [0, 0];
+  this.$addKeyTrans = initialTrans || [0, 0];
   this.$deltaKeyRot = quat4.create([0, 0, 0, 1]);
   this.$deltaKeyTrans = vec3.create();
 
@@ -501,7 +503,7 @@ Tilt.Arcball.prototype = {
     var radius = this.$radius,
       width = this.$width,
       height = this.$height;
-    
+
     // find the sphere coordinates of the mouse positions
     this.pointToSphere(x, y, width, height, radius, this.$startVec);
     quat4.set(this.$currentRot, this.$lastRot);
@@ -648,22 +650,6 @@ Tilt.Arcball.prototype = {
   },
 
   /**
-   * Resize this implementation to use different bounds.
-   * This function is automatically called when the arcball is created.
-   *
-   * @param {Number} width: the width of canvas
-   * @param {Number} height: the height of canvas
-   * @param {Number} radius: optional, the radius of the arcball
-   */
-  resize: function(newWidth, newHeight, newRadius) {
-    // set the new width, height and radius dimensions
-    this.$width = newWidth;
-    this.$height = newHeight;
-    this.$radius = "undefined" !== typeof newRadius ? newRadius : newHeight;
-    this.$save();
-  },
-
-  /**
    * Moves the camera on the x and y axis depending on the passed ammounts.
    *
    * @param {Number} x: the translation along the x axis
@@ -700,6 +686,22 @@ Tilt.Arcball.prototype = {
     this.$clearInterval();
     this.$save();
     this.$mouseButton = -1;
+  },
+
+  /**
+   * Resize this implementation to use different bounds.
+   * This function is automatically called when the arcball is created.
+   *
+   * @param {Number} width: the width of canvas
+   * @param {Number} height: the height of canvas
+   * @param {Number} radius: optional, the radius of the arcball
+   */
+  resize: function(newWidth, newHeight, newRadius) {
+    // set the new width, height and radius dimensions
+    this.$width = newWidth;
+    this.$height = newHeight;
+    this.$radius = newRadius ? newRadius : newHeight;
+    this.$save();
   },
 
   /**
@@ -12034,7 +12036,8 @@ TiltChrome.Controller.MouseAndKeyboard = function() {
       return;
     }
 
-    arcball = new Tilt.Arcball(canvas.width, canvas.height);
+    arcball = new Tilt.Arcball(canvas.width, canvas.height, 0,
+      [-window.content.pageXOffset, -window.content.pageYOffset], [0, 0]);
 
     // bind some closures to more easily handle the arcball
     this.stop = arcball.stop.bind(arcball);
@@ -12608,13 +12611,6 @@ TiltChrome.Options = {
    * Event fired when the sender checkbox is pressed.
    * @param {Event} e: the event firing this function
    */
-  escapeKeyCheckboxPressed: function(e) {
-  },
-
-  /**
-   * Event fired when the sender checkbox is pressed.
-   * @param {Event} e: the event firing this function
-   */
   hideUICheckboxPressed: function(e) {
   },
 
@@ -12637,6 +12633,13 @@ TiltChrome.Options = {
    * @param {Event} e: the event firing this function
    */
   useAccelerometerCheckboxPressed: function(e) {
+  },
+
+  /**
+   * Event fired when the sender checkbox is pressed.
+   * @param {Event} e: the event firing this function
+   */
+  escapeKeyCheckboxPressed: function(e) {
   },
 
   /**
@@ -12984,7 +12987,7 @@ TiltChrome.UI.Default = function() {
       padding: [0, 0, 0, 5],
       onclick: function() {
         window.open("chrome://tilt/content/TiltChromeOptions.xul", "Options",
-          "chrome, modal, centerscreen, width=410, height=325");
+          "chrome, modal, centerscreen, width=410, height=350");
       }.bind(this)
     });
 
@@ -13147,9 +13150,9 @@ TiltChrome.UI.Default = function() {
       }.bind(this)
     });
 
-    domStripsLegend = new Tilt.Sprite(t, [1, 365, 88, 353], {
+    domStripsLegend = new Tilt.Sprite(t, [1, 324, 89, 354], {
       x: 0,
-      y: 292,
+      y: 293,
       disabled: true
     });
 
@@ -13160,13 +13163,13 @@ TiltChrome.UI.Default = function() {
       height: canvas.height - 310,
       background: "#0001",
       scrollable: [0, Math.MAX_VALUE],
-      top: new Tilt.Sprite(t, [506, 69, 33, 30], {
+      top: new Tilt.Sprite(t, [45, 222, 33, 30], {
         padding: [2, 2, 2, 4]
       }),
-      bottom: new Tilt.Sprite(t, [506, 102, 33, 30], {
+      bottom: new Tilt.Sprite(t, [45, 255, 33, 30], {
         padding: [2, 2, 2, 4]
       }),
-      reset: new Tilt.Sprite(t, [506, 134, 33, 30], {
+      reset: new Tilt.Sprite(t, [45, 289, 33, 30], {
         padding: [2, 4, 2, 2]
       })
     });
@@ -13946,7 +13949,7 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
           TiltChrome.BrowserOverlay.destroy(true, true);
           TiltChrome.BrowserOverlay.href = null;
 
-          window.content.location.href ="http://get.webgl.org/troubleshooting";
+          window.content.location.href="http://get.webgl.org/troubleshooting/";
           Tilt.Console.alert("Firefox", Tilt.StringBundle.get("tilt.error"));
         }
       }, 1000);
@@ -13978,7 +13981,7 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
     index: -1,
     fill: "#fff",
     stroke: "000",
-    strokeWeight: 3,
+    strokeWeight: 1,
     v0: vec3.create(),
     v1: vec3.create(),
     v2: vec3.create(),
@@ -14064,7 +14067,7 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
     // prepare for the next frame of the animation loop
     // behind the scenes, this issues a requestAnimFrame call and updates some
     // timing variables, frame count, frame rate etc.
-    tilt.loop(draw);
+    tilt.loop(draw, true);
 
     if (refreshTexture) {
       refreshTexture = false;
@@ -14086,8 +14089,7 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
 
       // apply the preliminary transformations to the model view
       tilt.translate(tilt.width * 0.5 + 100,
-                     tilt.height * 0.5 - 50,
-                     -thickness * 30);
+                     tilt.height * 0.5 - 50, -thickness * 30);
 
       // transform the tilting representing the device orientation
       tilt.transform(quat4.toMat4(
@@ -14097,11 +14099,11 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
       )));
 
       // calculate the camera matrix using the rotation and translation
-      tilt.translate(transforms.translation[0],
-                     transforms.translation[1],
-                     transforms.translation[2]);
-
+      tilt.translate(transforms.translation[0], 0, transforms.translation[2]);
       tilt.transform(quat4.toMat4(transforms.rotation));
+      tilt.translate(0, transforms.translation[1], 0);
+
+      // offset the visualization mesh to center
       tilt.translate(transforms.offset[0], transforms.offset[1], 0);
 
       // draw the visualization mesh
@@ -14156,11 +14158,11 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
     var pref = Tilt.Preferences;
 
     pref.create("options.refreshVisualization", "integer", 1);
-    pref.create("options.escapeKeyCloses", "boolean", true);
     pref.create("options.hideUserInterfaceAtInit", "boolean", false);
     pref.create("options.disableMinidomAtInit", "boolean", false);
     pref.create("options.enableJoystick", "boolean", false);
     pref.create("options.useAccelerometer", "boolean", false);
+    pref.create("options.escapeKeyCloses", "boolean", true);
     pref.create("options.keyShortcutOpenClose", "string", "accel+shift+M");
   }.bind(this);
 
@@ -14252,6 +14254,9 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
       return;
     }
 
+    // seed the random function to get the same values each time
+    Tilt.Random.seed(0);
+
     var random = Tilt.Random.next,
       vertices = [],
       texCoord = [],
@@ -14314,8 +14319,6 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
           localName === "script" ||
           localName === "noscript" ||
           localName === "option" ||
-          localName === "strong" ||
-          localName === "em" ||
           localName === "ins" ||
           localName === "del") {
 
@@ -14598,7 +14601,7 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
     // set a flag to signal that the window has stopped unfocusing
     window.setTimeout(function() {
       this.$gBlurring = false;
-    }.bind(this), 100);
+    }.bind(this), 250);
   }.bind(this);
 
   /**
@@ -14612,7 +14615,7 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
     // set a flag to signal that the window has stopped focusing
     window.setTimeout(function() {
       this.$gFocusing = false;
-    }.bind(this), 100);
+    }.bind(this), 250);
   }.bind(this);
 
   /**
@@ -14881,8 +14884,7 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
 
         if (name !== "html") {
           highlightQuad.index = index;
-          highlightQuad.fill = settings.fill + "55";
-          highlightQuad.stroke = settings.fill + "AA";
+          highlightQuad.fill = settings.fill + "66";
 
           // we'll need to calculate the quad corners to draw a highlighted
           // area around the currently selected node
@@ -15140,8 +15142,7 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
 
       if (name !== "html") {
         highlightQuad.index = index;
-        highlightQuad.fill = settings.fill + "55";
-        highlightQuad.stroke = settings.fill + "AA";
+        highlightQuad.fill = settings.fill + "66";
 
         // we'll need to calculate the quad corners to draw a highlighted
         // area around the currently selected node
@@ -15530,12 +15531,12 @@ TiltChrome.Shaders.Visualization = {
 "varying vec3 color;",
 
 "void main(void) {",
-"  if (texCoord.s < 0.0) {",
+"  if (texCoord.x < 0.0) {",
 "    gl_FragColor = vec4(color.r, color.g, color.b, tint.a);",
 "  }",
 "  else {",
-"    vec4 texture = texture2D(sampler, texCoord);",
-"    gl_FragColor = tint * texture * alpha + tint * (1.0 - alpha);",
+"    vec3 texture = texture2D(sampler, texCoord).rgb;",
+"    gl_FragColor = tint * alpha * vec4(texture, 1.0) + tint * (1.0 - alpha);",
 "  }",
 "}"
 ].join("\n")
