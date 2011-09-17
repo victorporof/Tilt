@@ -1,18 +1,33 @@
-<!ENTITY tilt.menu.label     "Tilt">
-<!ENTITY tilt.menu.accesskey "T">
+<!ENTITY tilt.menu.label                           "Tilt">
+<!ENTITY tilt.menu.accesskey                       "T">
 
-<!ENTITY tilt.sourceeditor.closeButton.label     "Close">
-<!ENTITY tilt.sourceeditor.closeButton.accesskey "C">
+<!ENTITY tilt.sourceeditor.closeButton.label       "Close">
+<!ENTITY tilt.sourceeditor.closeButton.accesskey   "C">
 
 <!ENTITY tilt.options.windowTitle                  "Options">
 <!ENTITY tilt.options.refreshVisualizationCheckbox "Refresh visualization">
 <!ENTITY tilt.options.refreshVisualizationRadio0   "Document texture only (fastest)">
 <!ENTITY tilt.options.refreshVisualizationRadio1   "Texture and some DOM elements (recommended)">
 <!ENTITY tilt.options.refreshVisualizationRadio2   "Everything (slowest)">
-<!ENTITY tilt.options.escapeKeyCloses              "Escape key closes the visualization">
+<!ENTITY tilt.options.elementSourceTheme           "Element source code popup theme">
+<!ENTITY tilt.options.cloudsTheme                  "Clouds">
+<!ENTITY tilt.options.cloudsMidnightTheme          "Clouds Midnight">
+<!ENTITY tilt.options.cobaltTheme                  "Cobalt">
+<!ENTITY tilt.options.dawnTheme                    "Dawn">
+<!ENTITY tilt.options.eclipseTheme                 "Eclipse">
+<!ENTITY tilt.options.idleFingersTheme             "IDLE Fingers">
+<!ENTITY tilt.options.krTheme                      "Kr Theme">
+<!ENTITY tilt.options.merbivoreTheme               "Merbivore">
+<!ENTITY tilt.options.merbivoreSoftTheme           "Merbivore Soft">
+<!ENTITY tilt.options.monoIndustrialTheme          "Mono Industrial">
+<!ENTITY tilt.options.monokaiTheme                 "Monokai">
+<!ENTITY tilt.options.pastelOnDarkTheme            "Pastel On Dark">
+<!ENTITY tilt.options.twilightTheme                "Twilight">
+<!ENTITY tilt.options.vibrantInkTheme              "Vibrant Ink">
 <!ENTITY tilt.options.hideUserInterfaceAtInit      "Hide the user interface at initialization (better performance)">
 <!ENTITY tilt.options.disableMinidomAtInit         "Disable the 'minidom' strips tree view (requires restart)">
 <!ENTITY tilt.options.enableJoystick               "Enable joystick controller">
 <!ENTITY tilt.options.useAccelerometer             "Use accelerometer if available">
+<!ENTITY tilt.options.escapeKeyCloses              "Escape key closes the visualization">
 <!ENTITY tilt.options.keyShortcutOpenClose         "Open &amp; close Tilt">
 <!ENTITY tilt.options.resetButton                  "Reset">
