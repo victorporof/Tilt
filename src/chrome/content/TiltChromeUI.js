@@ -218,7 +218,7 @@ TiltChrome.UI.Default = function() {
       padding: [0, 0, 0, 5],
       onclick: function() {
         window.open("chrome://tilt/content/TiltChromeOptions.xul", "Options",
-          "chrome, modal, centerscreen, width=410, height=325");
+          "chrome, modal, centerscreen, width=410, height=350");
       }.bind(this)
     });
 
@@ -381,9 +381,9 @@ TiltChrome.UI.Default = function() {
       }.bind(this)
     });
 
-    domStripsLegend = new Tilt.Sprite(t, [1, 365, 88, 353], {
+    domStripsLegend = new Tilt.Sprite(t, [1, 324, 89, 354], {
       x: 0,
-      y: 292,
+      y: 293,
       disabled: true
     });
 
@@ -394,13 +394,13 @@ TiltChrome.UI.Default = function() {
       height: canvas.height - 310,
       background: "#0001",
       scrollable: [0, Math.MAX_VALUE],
-      top: new Tilt.Sprite(t, [506, 69, 33, 30], {
+      top: new Tilt.Sprite(t, [45, 222, 33, 30], {
         padding: [2, 2, 2, 4]
       }),
-      bottom: new Tilt.Sprite(t, [506, 102, 33, 30], {
+      bottom: new Tilt.Sprite(t, [45, 255, 33, 30], {
         padding: [2, 2, 2, 4]
       }),
-      reset: new Tilt.Sprite(t, [506, 134, 33, 30], {
+      reset: new Tilt.Sprite(t, [45, 289, 33, 30], {
         padding: [2, 4, 2, 2]
       })
     });
