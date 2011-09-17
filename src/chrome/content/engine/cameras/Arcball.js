@@ -49,9 +49,11 @@ var EXPORTED_SYMBOLS = ["Tilt.Arcball"];
  * @param {Number} width: the width of canvas
  * @param {Number} height: the height of canvas
  * @param {Number} radius: optional, the radius of the arcball
+ * @param {Array} initialTrans: initial [x, y] translation
+ * @param {Array} initialRot: initial [x, y] rotation
  * @return {Tilt.Arcball} the newly created object
  */
-Tilt.Arcball = function(width, height, radius) {
+Tilt.Arcball = function(width, height, radius, initialTrans, initialRot) {
 
   // intercept this object using a profiler when building in debug mode
   Tilt.Profiler.intercept("Tilt.Arcball", this);
@@ -104,8 +106,8 @@ Tilt.Arcball = function(width, height, radius) {
   /**
    * Additional rotation and translation vectors.
    */
-  this.$addKeyRot = [0, 0];
-  this.$addKeyTrans = [0, 0];
+  this.$addKeyRot = initialRot || [0, 0];
+  this.$addKeyTrans = initialTrans || [0, 0];
   this.$deltaKeyRot = quat4.create([0, 0, 0, 1]);
   this.$deltaKeyTrans = vec3.create();
 
@@ -299,7 +301,7 @@ Tilt.Arcball.prototype = {
     var radius = this.$radius,
       width = this.$width,
       height = this.$height;
-    
+
     // find the sphere coordinates of the mouse positions
     this.pointToSphere(x, y, width, height, radius, this.$startVec);
     quat4.set(this.$currentRot, this.$lastRot);
@@ -446,22 +448,6 @@ Tilt.Arcball.prototype = {
   },
 
   /**
-   * Resize this implementation to use different bounds.
-   * This function is automatically called when the arcball is created.
-   *
-   * @param {Number} width: the width of canvas
-   * @param {Number} height: the height of canvas
-   * @param {Number} radius: optional, the radius of the arcball
-   */
-  resize: function(newWidth, newHeight, newRadius) {
-    // set the new width, height and radius dimensions
-    this.$width = newWidth;
-    this.$height = newHeight;
-    this.$radius = "undefined" !== typeof newRadius ? newRadius : newHeight;
-    this.$save();
-  },
-
-  /**
    * Moves the camera on the x and y axis depending on the passed ammounts.
    *
    * @param {Number} x: the translation along the x axis
@@ -498,6 +484,22 @@ Tilt.Arcball.prototype = {
     this.$clearInterval();
     this.$save();
     this.$mouseButton = -1;
+  },
+
+  /**
+   * Resize this implementation to use different bounds.
+   * This function is automatically called when the arcball is created.
+   *
+   * @param {Number} width: the width of canvas
+   * @param {Number} height: the height of canvas
+   * @param {Number} radius: optional, the radius of the arcball
+   */
+  resize: function(newWidth, newHeight, newRadius) {
+    // set the new width, height and radius dimensions
+    this.$width = newWidth;
+    this.$height = newHeight;
+    this.$radius = newRadius ? newRadius : newHeight;
+    this.$save();
   },
 
   /**
