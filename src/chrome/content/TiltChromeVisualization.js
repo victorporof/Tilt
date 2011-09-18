@@ -397,7 +397,8 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
     }
 
     // traverse the document and issue a callback for each node in the dom
-    Tilt.Document.traverse(function(node, depth, index, uid, left, top) {
+    Tilt.Document.traverse(function(node, depth, index, uid,
+                                    offsetX, offsetY, sliceWidth, sliceHeight){
 
       // call the node callback in the ui
       // this is done (in the default implementation) to create a tree-like
@@ -406,14 +407,16 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
         ui.meshNodeCallback(node, depth, index, uid);
       }
 
+      // the maximum texture size slices the visualization mesh where needed
+      var maxSize = tilt.gl.getParameter(tilt.gl.MAX_TEXTURE_SIZE),
+
       // save some information about each node in the dom
       // this will be used when showing the source editor panel popup
-      var innerHTML = node.innerHTML,
-        attributes = node.attributes,
-        localName = node.localName,
-        className = node.className,
-        id = node.id,
-
+      innerHTML = node.innerHTML,
+      attributes = node.attributes,
+      localName = node.localName,
+      className = node.className,
+      id = node.id,
       info = {
         innerHTML: innerHTML,
         attributes: attributes,
@@ -466,14 +469,25 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
 
         // calculate the stack x, y, z, width and height coordinates
         z = depth * thickness + random() * 0.1,
-        x = coord.x + left + random() * 0.1,
-        y = coord.y + top + random() * 0.1,
-        w = coordWidth,
-        h = coordHeight;
+        x = coord.x + offsetX + random() * 0.1,
+        y = coord.y + offsetY + random() * 0.1,
+        w = Math.min(sliceWidth, coordWidth),
+        h = Math.min(sliceHeight, coordHeight);
+
+        // the maximum texture size slices the visualization mesh where needed
+        if (x > maxSize || y > maxSize) {
+          return;
+        }
+        if (x + w > maxSize) {
+          w = Math.max(maxSize - x, 0);
+        }
+        if (y + h > maxSize) {
+          h = Math.max(maxSize - y, 0);
+        }
 
         // set the maximum mesh width and height to calculate the center offset
-        maxWidth = Math.max(maxWidth, w);
-        maxHeight = Math.max(maxHeight, h);
+        maxWidth = Math.max(w, maxWidth);
+        maxHeight = Math.max(h, maxHeight);
 
         // compute the vertices
         vertices.unshift(x,     y,     z,                    /* front */ // 0
