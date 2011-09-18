@@ -72,7 +72,7 @@ Tilt.Container = function(properties) {
   this.disabled = properties.disabled || false;
 
   /**
-   *
+   * Specifies if the container should respond to events.
    */
   this.standby = properties.standby || false;
 
