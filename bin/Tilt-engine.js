@@ -9708,8 +9708,10 @@ Tilt.Document = {
    */
   traverse: function(nodeCallback, readyCallback, traverseChildIframes, dom) {
     this.uid = 0;
-    this.left = 0;
-    this.top = 0;
+    this.offsetX = 0;
+    this.offsetY = 0;
+    this.sliceWidth = Number.MAX_VALUE;
+    this.sliceHeight = Number.MAX_VALUE;
 
     // used to calculate the maximum depth of a dom node
     var maxDepth = 0,
@@ -9717,7 +9719,7 @@ Tilt.Document = {
 
     // used internally for recursively traversing a document object model
     recursive = function(parent, depth) {
-      var i, len, child, coord;
+      var i, len, child, coord, offsetX, offsetY, sliceWidth, sliceHeight;
 
       for (i = 0, len = parent.childNodes.length; i < len; i++) {
         child = parent.childNodes[i];
@@ -9728,19 +9730,30 @@ Tilt.Document = {
         totalNodes++;
         this.uid++;
 
-        // run the node callback function for each node, pass the depth, and
+        // run the node callback function for each node, pass the depth
+        nodeCallback(child, depth, totalNodes, this.uid,
+          this.offsetX, this.offsetY, this.sliceWidth, this.sliceHeight);
+
         // also continue the recursion with all the children
-        nodeCallback(child, depth, totalNodes, this.uid, this.left, this.top);
         recursive(child, depth + 1);
 
+        // iframes requrie special handling
         if (traverseChildIframes && child.localName === "iframe") {
           coord = Tilt.Document.getNodeCoordinates(child);
+          offsetX = coord.x - window.content.pageXOffset;
+          offsetY = coord.y - window.content.pageYOffset;
+          sliceWidth = coord.width;
+          sliceHeight = coord.height;
 
-          this.left += coord.x;
-          this.top += coord.y;
+          this.offsetX += offsetX;
+          this.offsetY += offsetY;
+          this.sliceWidth = sliceWidth;
+          this.sliceHeight = sliceHeight;
           recursive(child.contentDocument, depth + 1);
-          this.left -= coord.x;
-          this.top -= coord.y;
+          this.offsetX -= offsetX;
+          this.offsetY -= offsetY;
+          this.sliceWidth = Number.MAX_VALUE;
+          this.sliceHeight = Number.MAX_VALUE;
         }
       }
     }.bind(this);
