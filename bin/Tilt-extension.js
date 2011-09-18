@@ -6897,7 +6897,13 @@ Tilt.Renderer.prototype = {
    * @param {String} color: the color, defined in hex or as rgb() or rgba()
    */
   tint: function(color) {
-    this.$tintColor = Tilt.Math.hex2rgba(color);
+    var rgba = Tilt.Math.hex2rgba(color),
+      tint = this.$tintColor;
+
+    tint[0] = rgba[0];
+    tint[1] = rgba[1];
+    tint[2] = rgba[2];
+    tint[3] = rgba[3];
   },
 
   /**
@@ -6916,7 +6922,13 @@ Tilt.Renderer.prototype = {
    * @param {String} color: the color, defined in hex or as rgb() or rgba()
    */
   fill: function(color) {
-    this.$fillColor = Tilt.Math.hex2rgba(color);
+    var rgba = Tilt.Math.hex2rgba(color),
+      fill = this.$fillColor;
+
+    fill[0] = rgba[0];
+    fill[1] = rgba[1];
+    fill[2] = rgba[2];
+    fill[3] = rgba[3];
   },
 
   /**
@@ -6935,7 +6947,13 @@ Tilt.Renderer.prototype = {
    * @param {String} color: the color, defined in hex or as rgb() or rgba()
    */
   stroke: function(color) {
-    this.$strokeColor = Tilt.Math.hex2rgba(color);
+    var rgba = Tilt.Math.hex2rgba(color),
+      stroke = this.$strokeColor;
+
+    stroke[0] = rgba[0];
+    stroke[1] = rgba[1];
+    stroke[2] = rgba[2];
+    stroke[3] = rgba[3];
   },
 
   /**
@@ -7654,7 +7672,7 @@ Tilt.Container = function(properties) {
   this.disabled = properties.disabled || false;
 
   /**
-   *
+   * Specifies if the container should respond to events.
    */
   this.standby = properties.standby || false;
 
