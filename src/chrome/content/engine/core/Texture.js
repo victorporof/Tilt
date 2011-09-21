@@ -180,7 +180,6 @@ Tilt.Texture.prototype = {
     }
 
     var gl = Tilt.$gl;
-
     gl.bindTexture(gl.TEXTURE_2D, this.$ref);
     gl.texSubImage2D(gl.TEXTURE_2D, 0, x, y, gl.RGBA, gl.UNSIGNED_BYTE, img);
   },
@@ -189,11 +188,7 @@ Tilt.Texture.prototype = {
    * Destroys this object and deletes all members.
    */
   destroy: function() {
-    try {
-      Tilt.$gl.deleteTexture(this.$ref);
-    }
-    catch(e) {}
-
+    try { Tilt.$gl.deleteTexture(this.$ref); } catch(e) {}
     Tilt.destroyObject(this);
   }
 };

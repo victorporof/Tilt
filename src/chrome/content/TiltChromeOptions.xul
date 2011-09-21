@@ -74,7 +74,9 @@
     <hbox align="center">
       <label value="&tilt.options.elementSourceTheme;"/>
 
-      <menulist width="180">
+      <menulist id="tilt-options-sourceEditorTheme"
+        width="180">
+
         <menupopup selected="3">
           <menuitem label="&tilt.options.cloudsTheme;"/>
           <menuitem label="&tilt.options.cloudsMidnightTheme;"/>
@@ -104,6 +106,7 @@
 
     <checkbox id="tilt-options-enableJoystick"
       label="&tilt.options.enableJoystick;"
+      disabled="true"
       oncommand="TiltChrome.Options.enableJoystickCheckboxPressed(event);"/>
 
     <checkbox id="tilt-options-useAccelerometer"

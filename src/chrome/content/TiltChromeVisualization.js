@@ -190,6 +190,7 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
     // timing variables, frame count, frame rate etc.
     tilt.loop(draw, true);
 
+    // recreate the visualization texture if necessary
     if (refreshTexture) {
       refreshTexture = false;
       setupTexture();
@@ -213,11 +214,13 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
                      tilt.height * 0.5 - 50, -thickness * 30);
 
       // transform the tilting representing the device orientation
-      tilt.transform(quat4.toMat4(
-        Tilt.Math.quat4fromEuler(0,
-          Tilt.Math.map(transforms.tilt[0], -1, 1, Math.PI / 2, -Math.PI / 2),
-          Tilt.Math.map(transforms.tilt[2], -1, 1, -Math.PI / 2, Math.PI / 2)
-      )));
+      if (TiltChrome.Config.Visualization.useAccelerometer) {
+        tilt.transform(quat4.toMat4(
+          Tilt.Math.quat4fromEuler(0,
+            Tilt.Math.map(transforms.tilt[0], -1, 1, 1.57079633, -1.57079633),
+            Tilt.Math.map(transforms.tilt[2], -1, 1, -1.57079633, 1.57079633)
+        )));
+      }
 
       // calculate the camera matrix using the rotation and translation
       tilt.translate(transforms.translation[0], 0, transforms.translation[2]);
@@ -279,6 +282,7 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
     var pref = Tilt.Preferences;
 
     pref.create("options.refreshVisualization", "integer", 1);
+    pref.create("options.sourceEditorTheme", "integer", 3);
     pref.create("options.hideUserInterfaceAtInit", "boolean", false);
     pref.create("options.disableMinidomAtInit", "boolean", false);
     pref.create("options.enableJoystick", "boolean", false);
@@ -376,7 +380,7 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
     }
 
     // seed the random function to get the same values each time
-    Tilt.Random.seed(0);
+    Tilt.Random.seed(Math.PI);
 
     var random = Tilt.Random.next,
       vertices = [],
@@ -606,7 +610,7 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
     meshWireframe = new Tilt.Mesh({
       vertices: mesh.vertices,
       indices: new Tilt.IndexBuffer(wireframeIndices),
-      color: "#0004",
+      color: [0, 0, 0, 0.25],
       drawMode: tilt.LINES
     });
 
@@ -661,7 +665,8 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
     }
 
     // cache some necessary variables, like boundings, offsets etc.
-    var boundingClientRect = e.boundingClientRect,
+    var config = TiltChrome.Config.Visualization,
+      boundingClientRect = e.boundingClientRect,
       left = boundingClientRect.left,
       top = boundingClientRect.top,
       width = boundingClientRect.width,
@@ -670,18 +675,28 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
       offsetTop = canvas.offsetTop,
       innerWidth, innerHeight;
 
+    // don't refresh if we don't want to
+    if (config.refreshVisualization <= -1) {
+      return;
+    }
+
     // the refreshed area is inside the window content rectangle
-    if (top > offsetTop && left > offsetLeft && width > 4 && height > 4) {
+    if (config.refreshVisualization >= 0 &&
+        top > offsetTop && left > offsetLeft && width > 4 && height > 4) {
+
       this.requestRefreshTexture(boundingClientRect);
     }
     // the entire dom tree has likely changed, so refresh everything
-    else if (tilt.frameCount > 100) {
+    else if (config.refreshVisualization >= 1 &&
+             tilt.frameCount > 100) {
+
       innerWidth = window.content.innerWidth;
       innerHeight = window.content.innerHeight;
 
-      if (left <= 0 && top <= 0 &&
-         (left >= -innerWidth || top >= -innerHeight) &&
-         (width >= innerWidth || height >= innerHeight)) {
+      if (config.refreshVisualization >= 2 ||
+          ((left <= 0 && top <= 0) &&
+           (left >= -innerWidth || top >= -innerHeight) &&
+           (width >= innerWidth || height >= innerHeight))) {
 
         // multiple refresh events could be triggered at the same time, so in
         // order to minimize the reinitialization calls, set a timeout and
@@ -703,16 +718,19 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
    * Event handling orientation changes if the device supports them.
    */
   var gDeviceMotion = function(e) {
-    // var accelerationIncludingGravity = e.accelerationIncludingGravity,
-    //   x = accelerationIncludingGravity.x - Math.PI * 0.01,
-    //   y = accelerationIncludingGravity.y - Math.PI * 0.01,
-    //   z = accelerationIncludingGravity.z;
+    if (TiltChrome.Config.Visualization.useAccelerometer) {
 
-    // transforms.tilt[0] += (y - transforms.tilt[0]) * 0.5;
-    // transforms.tilt[1] += (z - transforms.tilt[1]) * 0.5;
-    // transforms.tilt[2] += (x - transforms.tilt[2]) * 0.5;
+      var accelerationIncludingGravity = e.accelerationIncludingGravity,
+        x = accelerationIncludingGravity.x - Math.PI * 0.01,
+        y = accelerationIncludingGravity.y - Math.PI * 0.01,
+        z = accelerationIncludingGravity.z;
 
-    // this.requestRedraw();
+      transforms.tilt[0] += (y - transforms.tilt[0]) * 0.5;
+      transforms.tilt[1] += (z - transforms.tilt[1]) * 0.5;
+      transforms.tilt[2] += (x - transforms.tilt[2]) * 0.5;
+
+      this.requestRedraw();
+    }
   }.bind(this);
 
   /**
@@ -1213,13 +1231,11 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
 
       // get and format the inner html text from the node
       html = Tilt.String.trim(style_html(node.innerHTML, {
-          'indent_size': 2,
-          'indent_char': ' ',
-          'max_char': 78,
-          'brace_style': 'collapse'
-        }).
-        replace(/</g, "&lt;").
-        replace(/>/g, "&gt;")) + "\n",
+        'indent_size': 2,
+        'indent_char': ' ',
+        'max_char': 78,
+        'brace_style': 'collapse'
+      })) + "\n",
 
       // compute the custom css and attributes text from all the properties
       css = Tilt.Document.getModifiedCss(node.style),
@@ -1244,6 +1260,7 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
       code.html = html;
       code.css = css;
       code.attr = attr;
+      code.theme = TiltChrome.Config.Visualization.sourceEditorTheme;
 
       // refresh the editor using specific syntax highlighting in each case
       if (node.localName === "img" ||
@@ -1251,16 +1268,13 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
           node.localName === "button" ||
           code.editorType === "attr") {
 
-        code.innerHTML = attr;
-        iframe.contentWindow.refreshCodeEditor("css");
+        iframe.contentWindow.refreshCodeEditor("css", code.attr, code.theme);
       }
       else if (code.editorType === "css") {
-        code.innerHTML = css;
-        iframe.contentWindow.refreshCodeEditor("css");
+        iframe.contentWindow.refreshCodeEditor("css", code.css, code.theme);
       }
       else {
-        code.innerHTML = html;
-        iframe.contentWindow.refreshCodeEditor("html");
+        iframe.contentWindow.refreshCodeEditor("html", code.html, code.theme);
       }
 
       var config = TiltChrome.Config.UI,
@@ -1322,9 +1336,8 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
     var iframe = document.getElementById("tilt-sourceeditor-iframe"),
       code = iframe.contentDocument.getElementById("code");
 
-    code.innerHTML = code.html;
     code.editorType = "html";
-    iframe.contentWindow.refreshCodeEditor("html");
+    iframe.contentWindow.refreshCodeEditor("html", code.html, code.theme);
   };
 
   /**
@@ -1334,9 +1347,8 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
     var iframe = document.getElementById("tilt-sourceeditor-iframe"),
       code = iframe.contentDocument.getElementById("code");
 
-    code.innerHTML = code.css;
     code.editorType = "css";
-    iframe.contentWindow.refreshCodeEditor("css");
+    iframe.contentWindow.refreshCodeEditor("css", code.css, code.theme);
   };
 
   /**
@@ -1346,9 +1358,8 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
     var iframe = document.getElementById("tilt-sourceeditor-iframe"),
       code = iframe.contentDocument.getElementById("code");
 
-    code.innerHTML = code.attr;
     code.editorType = "attr";
-    iframe.contentWindow.refreshCodeEditor("css");
+    iframe.contentWindow.refreshCodeEditor("css", code.attr, code.theme);
   };
 
   /**

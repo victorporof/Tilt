@@ -40,6 +40,7 @@ var EXPORTED_SYMBOLS = ["Tilt.VertexBuffer", "Tilt.IndexBuffer"];
 
 /**
  * Vertex buffer constructor.
+ * Creates a vertex buffer containing an array of elements.
  *
  * @param {Tilt.Renderer} renderer: an instance of Tilt.Renderer
  * @param {Array} elementsArray: an array of floats
@@ -116,17 +117,14 @@ Tilt.VertexBuffer.prototype = {
    * Destroys this object and sets all members to null.
    */
   destroy: function() {
-    try {
-      Tilt.$gl.deleteBuffer(this.$ref);
-    }
-    catch(e) {}
-
+    try { Tilt.$gl.deleteBuffer(this.$ref); } catch(e) {}
     Tilt.destroyObject(this);
   }
 };
 
 /**
  * IndexBuffer constructor.
+ * Creates an index buffer containing an array of indices.
  *
  * @param {Array} elementsArray: an array of unsigned integers
  * @param {Number} numItems: how many items to use from the array
@@ -201,11 +199,7 @@ Tilt.IndexBuffer.prototype = {
    * Destroys this object and deletes all members.
    */
   destroy: function() {
-    try {
-      Tilt.$gl.deleteBuffer(this.$ref);
-    }
-    catch(e) {}
-
+    try { Tilt.$gl.deleteBuffer(this.$ref); } catch(e) {}
     Tilt.destroyObject(this);
   }
 };

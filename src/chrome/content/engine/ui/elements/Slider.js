@@ -53,6 +53,7 @@ var EXPORTED_SYMBOLS = ["Tilt.Slider"];
  *  @param {Function} onmousedown: function called when the event is triggered
  *  @param {Function} onmouseup: function called when the event is triggered
  *  @param {Function} onclick: function called when the event is triggered
+ * @return {Tilt.Slider} the newly created object
  */
 Tilt.Slider = function(sprite, properties) {
 

@@ -890,22 +890,22 @@ Tilt.Renderer.prototype = {
    *
    * @param {HTMLCanvasElement} canvas: the canvas to get the WebGL context
    * @param {Object} opt_attribs: optional attributes used for initialization
+   * @reuturn {Object} the WebGL context, or undefined if anything failed
    */
   create3DContext: function(canvas, opt_attribs) {
     var names = ["experimental-webgl", "webgl", "webkit-3d", "moz-webgl"],
       context, i, len;
 
     for (i = 0, len = names.length; i < len; i++) {
-      try {
-        context = canvas.getContext(names[i], opt_attribs);
-      }
-      catch(e) {}
-
-      if (context) {
-        break;
+      try { context = canvas.getContext(names[i], opt_attribs); } catch(e) {}
+      finally {
+        if (context) {
+          return context;
+        }
       }
     }
-    return context;
+
+    return undefined;
   },
 
   /**
@@ -935,10 +935,11 @@ Tilt.Renderer.prototype = {
     // increment the total frame count
     this.frameCount++;
 
+    // only compute debugging variables if we really want to
     if (debug) {
+
       // calculate the frame delta and frame rate using the current time
       this.$currentTime = new Date().getTime();
-
       if (this.$lastTime !== 0) {
         this.frameDelta = this.$currentTime - this.$lastTime;
         this.frameRate = 1000 / this.frameDelta;

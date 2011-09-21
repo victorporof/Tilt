@@ -108,6 +108,7 @@ Tilt.GLSL = {
       return null;
     }
 
+    // return the newly compiled shader from the specified source
     return shader;
   },
 
@@ -120,7 +121,7 @@ Tilt.GLSL = {
    */
   link: function(vertShader, fragShader) {
     var gl = Tilt.$gl,
-      program, status, source, data;
+      program, status, source, data, cached;
 
     // create a program and attach the compiled vertex and fragment shaders
     program = gl.createProgram();
@@ -148,7 +149,9 @@ Tilt.GLSL = {
     source = [vertShader.src, fragShader.src].join(" ");
     data = source.replace(/#.*|[(){};,]/g, " ").split(" ");
 
-    return this.shaderIOCache(program, data);
+    // cache the io attributes and uniforms automatically
+    cached = this.shaderIOCache(program, data);
+    return cached;
   },
 
   /**
@@ -184,12 +187,13 @@ Tilt.GLSL = {
    */
   shaderIO: function(program, variable) {
     if ("string" === typeof variable) {
-      // careful! weird stuff happens on Windows with empty strings
+      // weird stuff can happen with empty strings
       if (variable.length < 1) {
         return null;
       }
 
       var io;
+
       // try to get a shader attribute
       if ((io = this.shaderAttribute(program, variable)) >= 0) {
         return io;
@@ -200,6 +204,7 @@ Tilt.GLSL = {
       }
     }
 
+    // no attribute or uniform was found, so we return null
     return null;
   },
 

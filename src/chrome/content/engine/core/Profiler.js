@@ -220,6 +220,7 @@ Tilt.Profiler = {
         continue;
       }
 
+      // log the necessary information about a function
       Tilt.Console.log(
         "function " + f.name + "\n" +
         "calls    " + f.calls + "\n" +

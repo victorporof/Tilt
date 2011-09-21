@@ -52,7 +52,7 @@ TiltChrome.Options = {
    * @param {XULElement} sender: the xul element calling this delegate
    */
   windowLoad: function(e, sender) {
-    var pref = Tilt.Preferences,
+    var conf = TiltChrome.Config.Visualization,
       d = sender.document,
       ns = "tilt-options-",
 
@@ -60,51 +60,30 @@ TiltChrome.Options = {
       checkbox: d.getElementById(ns + "refreshVisualizationCheckbox"),
       radiogroup: d.getElementById(ns + "refreshVisualizationRadiogroup")
     },
-    escapeKeyCloses = d.getElementById(ns + "escapeKeyCloses"),
+    sourceEditorTheme = d.getElementById(ns + "sourceEditorTheme"),
     hideUserInterfaceAtInit = d.getElementById(ns + "hideUserInterfaceAtInit"),
     disableMinidomAtInit = d.getElementById(ns + "disableMinidomAtInit"),
     enableJoystick = d.getElementById(ns + "enableJoystick"),
     useAccelerometer = d.getElementById(ns + "useAccelerometer"),
+    escapeKeyCloses = d.getElementById(ns + "escapeKeyCloses"),
     keyShortcutOpenClose = d.getElementById(ns + "keyShortcutOpenClose");
 
-    switch (pref.get("options.refreshVisualization", "integer")) {
-      case 0:
-        refreshVisualization.checkbox.checked = true;
-        refreshVisualization.radiogroup.selectedIndex = 0;
-        break;
-      case 1:
-        refreshVisualization.checkbox.checked = true;
-        refreshVisualization.radiogroup.selectedIndex = 1;
-        break;
-      case 2:
-        refreshVisualization.checkbox.checked = true;
-        refreshVisualization.radiogroup.selectedIndex = 2;
-        break;
-      default:
-        refreshVisualization.checkbox.checked = false;
-        refreshVisualization.radiogroup.selectedIndex = -1;
-        refreshVisualization.radiogroup.disabled = true;
-        break;
+    if (conf.refreshVisualization <= -1) {
+      refreshVisualization.checkbox.checked = false;
+      refreshVisualization.radiogroup.selectedIndex = -1;
+    }
+    else {
+      refreshVisualization.checkbox.checked = true;
+      refreshVisualization.radiogroup.selectedIndex = conf.refreshVisualization;
     }
 
-    escapeKeyCloses.checked =
-      pref.get("options.escapeKeyCloses", "boolean");
-
-    hideUserInterfaceAtInit.checked =
-      pref.get("options.hideUserInterfaceAtInit", "boolean");
-
-    disableMinidomAtInit.checked =
-      pref.get("options.disableMinidomAtInit", "boolean");
-
-    enableJoystick.disabled = true;
-    enableJoystick.checked =
-      pref.get("options.enableJoystick", "boolean");
-
-    useAccelerometer.checked =
-      pref.get("options.useAccelerometer", "boolean");
-
-    keyShortcutOpenClose.value =
-      pref.get("options.keyShortcutOpenClose", "string");
+    escapeKeyCloses.checked = conf.escapeKeyCloses;
+    sourceEditorTheme.selectedIndex = conf.sourceEditorTheme;
+    hideUserInterfaceAtInit.checked = conf.hideUserInterfaceAtInit;
+    disableMinidomAtInit.checked = conf.disableMinidomAtInit;
+    enableJoystick.checked = conf.enableJoystick;
+    useAccelerometer.checked = conf.useAccelerometer;
+    keyShortcutOpenClose.value = conf.keyShortcutOpenClose;
 
     this.$openCloseTextboxValidate(keyShortcutOpenClose);
   },
@@ -116,7 +95,7 @@ TiltChrome.Options = {
    * @param {XULElement} sender: the xul element calling this delegate
    */
   windowUnload: function(e, sender) {
-    var pref = Tilt.Preferences,
+    var conf = TiltChrome.Config.Visualization.Set,
       d = sender.document,
       ns = "tilt-options-",
 
@@ -124,32 +103,22 @@ TiltChrome.Options = {
       checkbox: d.getElementById(ns + "refreshVisualizationCheckbox"),
       radiogroup: d.getElementById(ns + "refreshVisualizationRadiogroup")
     },
-    escapeKeyCloses = d.getElementById(ns + "escapeKeyCloses"),
+    sourceEditorTheme = d.getElementById(ns + "sourceEditorTheme"),
     hideUserInterfaceAtInit = d.getElementById(ns + "hideUserInterfaceAtInit"),
     disableMinidomAtInit = d.getElementById(ns + "disableMinidomAtInit"),
     enableJoystick = d.getElementById(ns + "enableJoystick"),
     useAccelerometer = d.getElementById(ns + "useAccelerometer"),
+    escapeKeyCloses = d.getElementById(ns + "escapeKeyCloses"),
     keyShortcutOpenClose = d.getElementById(ns + "keyShortcutOpenClose");
 
-    pref.set("options.refreshVisualization", "integer",
-      refreshVisualization.radiogroup.selectedIndex);
-
-    pref.set("options.escapeKeyCloses", "boolean",
-      escapeKeyCloses.checked);
-
-    pref.set("options.hideUserInterfaceAtInit", "boolean",
-      hideUserInterfaceAtInit.checked);
-
-    pref.set("options.disableMinidomAtInit", "boolean",
-      disableMinidomAtInit.checked);
-
-    pref.set("options.enableJoystick", "boolean",
-      enableJoystick.checked);
-
-    pref.set("options.useAccelerometer", "boolean",
-      useAccelerometer.checked);
-
-    pref.set("options.keyShortcutOpenClose", "string",
+    conf.refreshVisualization(refreshVisualization.radiogroup.selectedIndex);
+    conf.sourceEditorTheme(sourceEditorTheme.selectedIndex);
+    conf.escapeKeyCloses(escapeKeyCloses.checked);
+    conf.hideUserInterfaceAtInit(hideUserInterfaceAtInit.checked);
+    conf.disableMinidomAtInit(disableMinidomAtInit.checked);
+    conf.enableJoystick(enableJoystick.checked);
+    conf.useAccelerometer(useAccelerometer.checked);
+    conf.keyShortcutOpenClose(
       (function() {
         return keyShortcutOpenClose.value.toUpperCase().
           replace(/\+/g, " ").
@@ -188,8 +157,7 @@ TiltChrome.Options = {
    * @param {Event} e: the event firing this function
    */
   refreshVisualizationCheckboxPressed: function(e) {
-    var pref = Tilt.Preferences,
-      d = e.view.document,
+    var d = e.view.document,
       ns = "tilt-options-",
 
     refreshVisualization = {
@@ -349,8 +317,7 @@ TiltChrome.Options = {
    * @param {Event} e: the event firing this function
    */
   openCloseResetButtonPressed: function(e) {
-    var pref = Tilt.Preferences,
-      d = e.view.document,
+    var d = e.view.document,
       ns = "tilt-options-",
 
     keyShortcutOpenClose = d.getElementById(ns + "keyShortcutOpenClose");

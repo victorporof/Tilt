@@ -259,6 +259,7 @@ Tilt.Arcball.prototype = {
       addKeyTrans[1] -= frameDelta * 50;
     }
 
+    // update the delta key rotations and translations
     deltaKeyRot[0] += (addKeyRot[0] - deltaKeyRot[0]) * frameDelta;
     deltaKeyRot[1] += (addKeyRot[1] - deltaKeyRot[1]) * frameDelta;
 
@@ -336,6 +337,15 @@ Tilt.Arcball.prototype = {
       this.$mouseMove[0] = x;
       this.$mouseMove[1] = y;
     }
+  },
+
+  /**
+   * Function handling the mouseOver event.
+   * Call this when the mouse enteres the context bounds.
+   */
+  mouseOver: function() {
+    // if the mouse just entered the parent bounds, stop the animation
+    this.$mouseButton = -1;
   },
 
   /**
@@ -507,8 +517,8 @@ Tilt.Arcball.prototype = {
    * @param {Number} factor: the reset interpolation factor between frames
    */
   reset: function(factor) {
-    var inverse,
-      scrollValue = this.$scrollValue,
+    // cache the variables which will be reset
+    var scrollValue = this.$scrollValue,
       lastRot = this.$lastRot,
       deltaRot = this.$deltaRot,
       currentRot = this.$currentRot,
@@ -518,14 +528,15 @@ Tilt.Arcball.prototype = {
       addKeyRot = this.$addKeyRot,
       addKeyTrans = this.$addKeyTrans,
 
-      quat4inverse = quat4.inverse,
-      quat4slerp = quat4.slerp,
-      vec3scale = vec3.scale,
-      vec3length = vec3.length;
+    // cache the vector and quaternion algebra functions
+    quat4inverse = quat4.inverse,
+    quat4slerp = quat4.slerp,
+    vec3scale = vec3.scale,
+    vec3length = vec3.length;
 
     // create an interval and smoothly reset all the values to identity
     this.$setInterval(function() {
-      inverse = quat4inverse(lastRot);
+      var inverse = quat4inverse(lastRot);
 
       // reset the rotation quaternion and translation vector
       quat4slerp(lastRot, inverse, 1 - factor);

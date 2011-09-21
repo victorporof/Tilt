@@ -81,7 +81,7 @@ Tilt.ScrollContainer = function(properties) {
   this.view.$offset[1] = this.top;
 
   /**
-   * The top, bottom and reset buttons.
+   * Button scrolling the content to top.
    */
   var topButton = new Tilt.Button(properties.top, {
     x: this.view.$x - 25,
@@ -90,6 +90,7 @@ Tilt.ScrollContainer = function(properties) {
     height: 30,
     fill: properties.top ? null : "#f00a",
     padding: properties.top ? properties.top.$padding : [0, 0, 0, 0],
+
     onmousedown: function() {
       window.clearInterval(this.$scrollTopReset);
       window.clearInterval(this.$scrollTop);
@@ -115,6 +116,9 @@ Tilt.ScrollContainer = function(properties) {
     }.bind(this)
   }),
 
+  /**
+   * Button scrolling the content to bottom.
+   */
   bottomButton = new Tilt.Button(properties.bottom, {
     x: this.view.$x - 25,
     y: this.view.$y + this.view.$height - 25,
@@ -122,6 +126,7 @@ Tilt.ScrollContainer = function(properties) {
     height: 30,
     fill: properties.bottom ? null : "#0f0a",
     padding: properties.bottom ? properties.bottom.$padding : [0, 0, 0, 0],
+
     onmousedown: function() {
       window.clearInterval(this.$scrollTopReset);
       window.clearInterval(this.$scrollTop);
@@ -147,6 +152,9 @@ Tilt.ScrollContainer = function(properties) {
     }.bind(this)
   }),
 
+  /**
+   * Button resetting the content scrolling to top.
+   */
   resetButton = new Tilt.Button(properties.reset, {
     x: this.view.$x - 25,
     y: this.view.$y + this.view.$height - 50,
@@ -154,6 +162,7 @@ Tilt.ScrollContainer = function(properties) {
     height: 30,
     fill: properties.reset ? null : "#0f0b",
     padding: properties.reset ? properties.reset.$padding : [0, 0, 0, 0],
+
     onmousedown: function() {
       window.clearInterval(this.$scrollTopReset);
       window.clearInterval(this.$scrollTop);

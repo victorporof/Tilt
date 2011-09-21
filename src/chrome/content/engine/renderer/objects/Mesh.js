@@ -50,6 +50,7 @@ var EXPORTED_SYMBOLS = ["Tilt.Mesh"];
  *  @param {Tilt.Texture} texture: optional texture to be used by the shader
  *  @param {Number} drawMode: WebGL enum, like tilt.TRIANGLES
  *  @param {Function} draw: optional function to handle custom drawing
+ * @return {Tilt.Mesh} the newly created object
  */
 Tilt.Mesh = function(parameters) {
 
@@ -66,10 +67,7 @@ Tilt.Mesh = function(parameters) {
   }
 
   // the color should be [r, g, b, a] array, check this now
-  if ("string" === typeof this.color) {
-    this.color = Tilt.Math.hex2rgba(this.color);
-  }
-  else if ("undefined" === typeof this.color) {
+  if ("undefined" === typeof this.color) {
     this.color = [1, 1, 1, 1];
   }
 
@@ -117,8 +115,6 @@ Tilt.Mesh.prototype = {
     else {
       tilt.drawVertices(drawMode, vertices.numItems);
     }
-
-    // TODO: use the normals buffer, add some lighting
   },
 
   /**

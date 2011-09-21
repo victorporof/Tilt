@@ -39,7 +39,7 @@ var Tilt = Tilt || {};
 var EXPORTED_SYMBOLS = ["Tilt.Program"];
 
 /**
- * Program constructor.
+ * Program constructor, composed of a vertex and a fragment shader.
  * To create a program using remote sources, use initProgramAt.
  *
  * @param {String} vertShaderSrc: optional, the vertex shader source code
@@ -133,6 +133,7 @@ Tilt.Program.prototype = {
       // continue initialization as usual
       this.initProgram(xhr[0].responseText, xhr[1].responseText);
 
+      // run a ready callback function when the program has initialized
       if ("function" === typeof readyCallback) {
         readyCallback();
       }
@@ -288,11 +289,7 @@ Tilt.Program.prototype = {
    * Destroys this object and deletes all members.
    */
   destroy: function() {
-    try {
-      Tilt.$gl.deleteShader(this.$ref);
-    }
-    catch(e) {}
-
+    try { Tilt.$gl.deleteShader(this.$ref); } catch(e) {}
     Tilt.destroyObject(this);
   }
 };

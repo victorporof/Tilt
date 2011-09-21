@@ -219,6 +219,9 @@ TiltChrome.UI.Default = function() {
       onclick: function() {
         window.open("chrome://tilt/content/TiltChromeOptions.xul", "Options",
           "chrome, modal, centerscreen, width=410, height=350");
+
+        TiltChrome.Config.Visualization.reload();
+        TiltChrome.EntryPoint.refreshKeyset();
       }.bind(this)
     });
 
@@ -790,6 +793,13 @@ TiltChrome.UI.Default = function() {
       imgStripButton,
       iframeStripButton,
       otherStripButton);
+
+    if (TiltChrome.Config.Visualization.hideUserInterfaceAtInit) {
+      eyeButton.onclick();
+    }
+    if (TiltChrome.Config.Visualization.disableMinidomAtInit) {
+      minidomContainer.view.hidden = true;
+    }
   };
 
   /**
@@ -847,6 +857,10 @@ TiltChrome.UI.Default = function() {
    * @param {Number} uid: a unique id for the node
    */
   this.meshNodeCallback = function(node, depth, index, uid) {
+    if (TiltChrome.Config.Visualization.disableMinidomAtInit) {
+      return;
+    }
+
     if (minidomContainer.$loaded) {
       minidomContainer.$loaded = false;
       minidomContainer.view.clear();
@@ -971,7 +985,9 @@ TiltChrome.UI.Default = function() {
    * @param {Number} totalNodes: the total nodes in the dom tree
    */
   this.meshReadyCallback = function(maxDepth, totalNodes) {
-    var name, domColor;
+    if (TiltChrome.Config.Visualization.disableMinidomAtInit) {
+      return;
+    }
 
     // for each element in the dom strips container, update it's fill to match
     // the strip color code for the correspoding dom element

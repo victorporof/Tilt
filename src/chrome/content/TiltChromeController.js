@@ -88,10 +88,12 @@ TiltChrome.Controller.MouseAndKeyboard = function() {
     canvas.addEventListener("click", click, false);
     canvas.addEventListener("dblclick", doubleClick, false);
     canvas.addEventListener("mousemove", mouseMove, false);
+    canvas.addEventListener("mouseover", mouseOver, false);
     canvas.addEventListener("mouseout", mouseOut, false);
     canvas.addEventListener("MozMousePixelScroll", mouseScroll, false);
     window.addEventListener("keydown", keyDown, false);
     window.addEventListener("keyup", keyUp, false);
+    window.addEventListener("focus", windowFocus, true);
 
     // check the url and search bars for focus
     var url = document.getElementById("urlbar"),
@@ -234,6 +236,17 @@ TiltChrome.Controller.MouseAndKeyboard = function() {
   /**
    * Called when the the mouse leaves the visualization bounds.
    */
+  var mouseOver = function(e) {
+    e.preventDefault();
+    e.stopPropagation();
+
+    ui.mouseOut();
+    arcball.mouseOut();
+  };
+
+  /**
+   * Called when the the mouse leaves the visualization bounds.
+   */
   var mouseOut = function(e) {
     e.preventDefault();
     e.stopPropagation();
@@ -303,7 +316,7 @@ TiltChrome.Controller.MouseAndKeyboard = function() {
         else if ("open" === TiltChrome.BrowserOverlay.colorPicker.panel.state){
           TiltChrome.BrowserOverlay.colorPicker.panel.hidePopup();
         }
-        else {
+        else if (TiltChrome.Config.Visualization.escapeKeyCloses) {
           // escape key also closes the visualization if no other panel is open
           TiltChrome.BrowserOverlay.destroy(true, true);
           TiltChrome.BrowserOverlay.href = null;
@@ -317,6 +330,16 @@ TiltChrome.Controller.MouseAndKeyboard = function() {
       arcball.keyUp(code);
     }
   }.bind(this);
+
+  /**
+   * Called when the the browser window is focused.
+   */
+  var windowFocus = function(e) {
+    e.preventDefault();
+    e.stopPropagation();
+
+    ui.windowFocus();
+  };
 
   /**
    * Called when the url or search bar are focused.
@@ -364,6 +387,10 @@ TiltChrome.Controller.MouseAndKeyboard = function() {
       canvas.removeEventListener("mousemove", mouseMove, false);
       mouseMove = null;
     }
+    if (mouseOver !== null) {
+      canvas.removeEventListener("mouseover", mouseOver, false);
+      mouseOver = null;
+    }
     if (mouseOut !== null) {
       canvas.removeEventListener("mouseout", mouseOut, false);
       mouseOut = null;
@@ -379,6 +406,10 @@ TiltChrome.Controller.MouseAndKeyboard = function() {
     if (keyUp !== null) {
       window.removeEventListener("keyup", keyUp, false);
       keyUp = null;
+    }
+    if (windowFocus !== null) {
+      window.removeEventListener("focus", windowFocus, true);
+      windowFocus = null;
     }
 
     var url = document.getElementById("urlbar"),

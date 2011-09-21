@@ -11,8 +11,23 @@ gBrowser.selectedBrowser.markupDocumentViewer["fullZoom"] = gBrowser.selectedBro
 
 window["TiltChrome"] = TiltChrome;
 
+TiltChrome["EntryPoint"] = TiltChrome.EntryPoint;
+TiltChrome.EntryPoint["includeScripts"] = TiltChrome.EntryPoint.includeScripts;
+TiltChrome.EntryPoint["refreshKeyset"] = TiltChrome.EntryPoint.refreshKeyset;
+
 TiltChrome["BrowserOverlay"] = TiltChrome.BrowserOverlay;
 TiltChrome.BrowserOverlay["initialize"] = TiltChrome.BrowserOverlay.initialize;
+
+TiltChrome["Config"] = TiltChrome.Config;
+TiltChrome.Config["Visualization"] = TiltChrome.Config.Visualization;
+TiltChrome.Config.Visualization["refreshVisualization"] = TiltChrome.Config.Visualization.refreshVisualization;
+TiltChrome.Config.Visualization["sourceEditorTheme"] = TiltChrome.Config.Visualization.sourceEditorTheme;
+TiltChrome.Config.Visualization["hideUserInterfaceAtInit"] = TiltChrome.Config.Visualization.hideUserInterfaceAtInit;
+TiltChrome.Config.Visualization["disableMinidomAtInit"] = TiltChrome.Config.Visualization.disableMinidomAtInit;
+TiltChrome.Config.Visualization["enableJoystick"] = TiltChrome.Config.Visualization.enableJoystick;
+TiltChrome.Config.Visualization["useAccelerometer"] = TiltChrome.Config.Visualization.useAccelerometer;
+TiltChrome.Config.Visualization["escapeKeyCloses"] = TiltChrome.Config.Visualization.escapeKeyCloses;
+TiltChrome.Config.Visualization["keyShortcutOpenClose"] = TiltChrome.Config.Visualization.keyShortcutOpenClose;
 
 TiltChrome["Options"] = TiltChrome.Options;
 TiltChrome.Options["windowLoad"] = TiltChrome.Options.windowLoad;

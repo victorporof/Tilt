@@ -40,6 +40,7 @@ var EXPORTED_SYMBOLS = ["Tilt.RectangleWireframe"];
 
 /**
  * Tilt.RectangleWireframe constructor.
+ * @return {Tilt.RectangleWireframe} the newly created object
  */
 Tilt.RectangleWireframe = function() {
 

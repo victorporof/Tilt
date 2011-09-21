@@ -35,7 +35,7 @@
  ***** END LICENSE BLOCK *****/
 "use strict";
 
-/*global Cc, Ci, Cu */
+/*global Cc, Ci, Cu, Tilt */
 
 var TiltChrome = TiltChrome || {};
 var EXPORTED_SYMBOLS = ["TiltChrome.EntryPoint"];
@@ -46,9 +46,9 @@ var EXPORTED_SYMBOLS = ["TiltChrome.EntryPoint"];
 TiltChrome.EntryPoint = {
 
   /**
-   * Function called automatically at browser initialization.
+   * Utility for loading the extensions scripts.
    */
-  includeScripts: (function() {
+  includeScripts: function() {
     // the script loader responsible with loading a Javascript file
     var scriptLoader = Cc["@mozilla.org/moz/jssubscript-loader;1"].
       getService(Ci.mozIJSSubScriptLoader);
@@ -56,10 +56,34 @@ TiltChrome.EntryPoint = {
     // the 'Tilt-extension.js' source file is created at build time, and it's
     // not part of the project; no other js files will be copied/archived in
     // the xpi archive
+    scriptLoader.loadSubScript("chrome://tilt/content/Tilt-extension.js");
+  },
+
+  /**
+   * Utility for refreshing the default shortcut key(s) used by this extension.
+   */
+   refreshKeyset: function() {
+      var config = TiltChrome.Config.Visualization,
+        openClose = config.keyShortcutOpenClose,
+        openCloseSplit = openClose.split(" "),
+        openCloseMenuKey = document.getElementById("tilt-menu-key");
+
+      openCloseMenuKey.setAttribute("key", openCloseSplit.pop());
+      openCloseMenuKey.setAttribute("modifiers", openCloseSplit.join(" "));
+   }
+};
+
+/**
+ * Function called automatically at browser initialization.
+ */
+(function() {
+  document.addEventListener("load", function load() {
+    document.removeEventListener("load", load, true);
 
     // load everything after a while, don't slow down the browser startup
     window.setTimeout(function() {
-      scriptLoader.loadSubScript("chrome://tilt/content/Tilt-extension.js");
+      TiltChrome.EntryPoint.includeScripts();
+      TiltChrome.EntryPoint.refreshKeyset();
     }, 500);
-  })()
-};
+  }, true);
+})();

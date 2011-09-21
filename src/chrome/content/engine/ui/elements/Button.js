@@ -55,6 +55,7 @@ var EXPORTED_SYMBOLS = ["Tilt.Button"];
  *  @param {Function} onmousedown: function called when the event is triggered
  *  @param {Function} onmouseup: function called when the event is triggered
  *  @param {Function} onclick: function called when the event is triggered
+ * @return {Tilt.Button} the newly created object
  */
 Tilt.Button = function(sprite, properties) {
 

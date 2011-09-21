@@ -12,7 +12,7 @@ fi
 
 if [[ $# > 0 && $1 == "extension" || $1 == "all" ]];
 then
-  find chrome/content -name \*.js ! -path \*ace\/\* ! -path \*acolorjack\/\* ! -name Tilt-loader.js -exec cat > ../bin/Tilt-extension.js {} \;
+  find chrome/content -name \*.js ! -path \*ace\/\* ! -path \*colorjack\/\* ! -name Tilt-loader.js -exec cat > ../bin/Tilt-extension.js {} \;
 
   if [[ $# > 1 && $2 == "minify" ]];
   then

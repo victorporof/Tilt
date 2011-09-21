@@ -41,9 +41,10 @@ var EXPORTED_SYMBOLS = ["Tilt.CubeWireframe"];
 /**
  * Tilt.CubeWireframe constructor.
  *
- * @param {number} width: the width of the cube
- * @param {number} height: the height of the cube
- * @param {number} depth: the depth of the cube
+ * @param {Number} width: the width of the cube
+ * @param {Number} height: the height of the cube
+ * @param {Number} depth: the depth of the cube
+ * @return {Tilt.CubeWireframe} the newly created object
  */
 Tilt.CubeWireframe = function(width, height, depth) {
 

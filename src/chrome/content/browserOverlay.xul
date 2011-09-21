@@ -107,7 +107,7 @@
 
         <iframe type="chrome"
           id="tilt-sourceeditor-iframe"
-          src="chrome://tilt/content/ace/editor.html"
+          src="chrome://tilt/content/libs/ace/editor.html"
           width="450"
           height="300"/>
       </vbox>
@@ -116,7 +116,7 @@
     <panel id="tilt-colorpicker">
       <iframe type="chrome"
         id="tilt-colorpicker-iframe"
-        src="chrome://tilt/content/acolorjack/picker.html"
+        src="chrome://tilt/content/libs/colorjack/picker.html"
         width="219"
         height="203"/>
     </panel>

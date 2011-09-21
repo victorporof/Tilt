@@ -44,6 +44,7 @@ var EXPORTED_SYMBOLS = ["Tilt.Cube"];
  * @param {Number} width: the width of the cube
  * @param {Number} height: the height of the cube
  * @param {Number} depth: the depth of the cube
+ * @return {Tilt.Cube} the newly created object
  */
 Tilt.Cube = function(width, height, depth) {
 

@@ -40,8 +40,9 @@ var EXPORTED_SYMBOLS = ["Tilt.Rectangle"];
 
 /**
  * Tilt.Rectangle constructor.
+ * @return {Tilt.Rectangle} the newly created object
  */
-Tilt.Rectangle = function(width, height, depth) {
+Tilt.Rectangle = function() {
 
   // intercept this object using a profiler when building in debug mode
   Tilt.Profiler.intercept("Tilt.Rectangle", this);

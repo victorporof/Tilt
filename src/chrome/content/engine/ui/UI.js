@@ -216,6 +216,14 @@ Tilt.UI.keyUp = function(code) {
 };
 
 /**
+ * Delegate focus method.
+ */
+Tilt.UI.windowFocus = function() {
+  this.mouseX = -Number.MAX_VALUE;
+  this.mouseY = -Number.MAX_VALUE;
+};
+
+/**
  * Internal function, handling a mouse event for each element in a view.
  * @param {String} name: the event name
  */
@@ -265,7 +273,9 @@ Tilt.UI.$handleMouseEvent = function(name, x, y, button) {
 
     // each view has multiple container attach, browse and handle each one
     for (e = 0, len2 = container.length; e < len2; e++) {
-      element = container[e];
+      if (!(element = container[e])) {
+        continue;
+      }
 
       // handle mouse events only if the element is visible and enabled
       if (element.hidden || element.disabled || !element.drawable) {
@@ -339,7 +349,9 @@ Tilt.UI.$handleKeyEvent = function(name, code) {
 
     // each view has multiple container attach, browse and handle each one
     for (e = 0, len2 = container.length; e < len2; e++) {
-      element = container[e];
+      if (!(element = container[e])) {
+        continue;
+      }
 
       // handle keyboard events only if the element is visible and enabled
       if (element.hidden || element.disabled) {

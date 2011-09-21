@@ -38,6 +38,8 @@
 var TiltChrome = TiltChrome || {};
 var EXPORTED_SYMBOLS = ["TiltChrome.Config.UI"];
 
+/*global Tilt */
+
 /**
  * Configuration parameters regarding the user interface.
  */
@@ -170,3 +172,91 @@ TiltChrome.Config.UI = {
     }
   }
 };
+
+/**
+ * Configuration parameters regarding the visualization functionality.
+ */
+TiltChrome.Config.Visualization = {
+
+  /**
+   * Specific settings for each element describing the visualization options.
+   */
+  refreshVisualization: null,
+  sourceEditorTheme: null,
+  hideUserInterfaceAtInit: null,
+  disableMinidomAtInit: null,
+  enableJoystick: null,
+  useAccelerometer: null,
+  escapeKeyCloses: null,
+  keyShortcutOpenClose: null,
+
+  /**
+   * Reloads all the visualization options from the preferences branch.
+   */
+  reload: function() {
+    this.refreshVisualization =
+      Tilt.Preferences.get("options.refreshVisualization", "integer");
+
+    this.sourceEditorTheme =
+      Tilt.Preferences.get("options.sourceEditorTheme", "integer");
+
+    this.hideUserInterfaceAtInit =
+      Tilt.Preferences.get("options.hideUserInterfaceAtInit", "boolean");
+
+    this.disableMinidomAtInit =
+      Tilt.Preferences.get("options.disableMinidomAtInit", "boolean");
+
+    this.enableJoystick =
+      Tilt.Preferences.get("options.enableJoystick", "boolean");
+
+    this.useAccelerometer =
+      Tilt.Preferences.get("options.useAccelerometer", "boolean");
+
+    this.escapeKeyCloses =
+      Tilt.Preferences.get("options.escapeKeyCloses", "boolean");
+
+    this.keyShortcutOpenClose =
+      Tilt.Preferences.get("options.keyShortcutOpenClose", "string");
+  }
+};
+
+/**
+ * Set the configuration parameters regarding the visualization functionality.
+ */
+TiltChrome.Config.Visualization.Set = {
+
+  refreshVisualization: function(value) {
+    Tilt.Preferences.set("options.refreshVisualization", "integer", value);
+  },
+
+  sourceEditorTheme: function(value) {
+    Tilt.Preferences.set("options.sourceEditorTheme", "integer", value);
+  },
+
+  hideUserInterfaceAtInit: function(value) {
+    Tilt.Preferences.set("options.hideUserInterfaceAtInit", "boolean", value);
+  },
+
+  disableMinidomAtInit: function(value) {
+    Tilt.Preferences.set("options.disableMinidomAtInit", "boolean", value);
+  },
+
+  enableJoystick: function(value) {
+    Tilt.Preferences.set("options.enableJoystick", "boolean", value);
+  },
+
+  useAccelerometer: function(value) {
+    Tilt.Preferences.set("options.useAccelerometer", "boolean", value);
+  },
+
+  escapeKeyCloses: function(value) {
+    Tilt.Preferences.set("options.escapeKeyCloses", "boolean", value);
+  },
+
+  keyShortcutOpenClose: function(value) {
+    Tilt.Preferences.set("options.keyShortcutOpenClose", "string", value);
+  }
+};
+
+// load the necessary configuration keys and values
+TiltChrome.Config.Visualization.reload();

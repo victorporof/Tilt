@@ -259,6 +259,7 @@ Tilt.Arcball.prototype = {
       addKeyTrans[1] -= frameDelta * 50;
     }
 
+    // update the delta key rotations and translations
     deltaKeyRot[0] += (addKeyRot[0] - deltaKeyRot[0]) * frameDelta;
     deltaKeyRot[1] += (addKeyRot[1] - deltaKeyRot[1]) * frameDelta;
 
@@ -336,6 +337,15 @@ Tilt.Arcball.prototype = {
       this.$mouseMove[0] = x;
       this.$mouseMove[1] = y;
     }
+  },
+
+  /**
+   * Function handling the mouseOver event.
+   * Call this when the mouse enteres the context bounds.
+   */
+  mouseOver: function() {
+    // if the mouse just entered the parent bounds, stop the animation
+    this.$mouseButton = -1;
   },
 
   /**
@@ -507,8 +517,8 @@ Tilt.Arcball.prototype = {
    * @param {Number} factor: the reset interpolation factor between frames
    */
   reset: function(factor) {
-    var inverse,
-      scrollValue = this.$scrollValue,
+    // cache the variables which will be reset
+    var scrollValue = this.$scrollValue,
       lastRot = this.$lastRot,
       deltaRot = this.$deltaRot,
       currentRot = this.$currentRot,
@@ -518,14 +528,15 @@ Tilt.Arcball.prototype = {
       addKeyRot = this.$addKeyRot,
       addKeyTrans = this.$addKeyTrans,
 
-      quat4inverse = quat4.inverse,
-      quat4slerp = quat4.slerp,
-      vec3scale = vec3.scale,
-      vec3length = vec3.length;
+    // cache the vector and quaternion algebra functions
+    quat4inverse = quat4.inverse,
+    quat4slerp = quat4.slerp,
+    vec3scale = vec3.scale,
+    vec3length = vec3.length;
 
     // create an interval and smoothly reset all the values to identity
     this.$setInterval(function() {
-      inverse = quat4inverse(lastRot);
+      var inverse = quat4inverse(lastRot);
 
       // reset the rotation quaternion and translation vector
       quat4slerp(lastRot, inverse, 1 - factor);
@@ -644,6 +655,7 @@ var EXPORTED_SYMBOLS = ["Tilt.VertexBuffer", "Tilt.IndexBuffer"];
 
 /**
  * Vertex buffer constructor.
+ * Creates a vertex buffer containing an array of elements.
  *
  * @param {Tilt.Renderer} renderer: an instance of Tilt.Renderer
  * @param {Array} elementsArray: an array of floats
@@ -720,17 +732,14 @@ Tilt.VertexBuffer.prototype = {
    * Destroys this object and sets all members to null.
    */
   destroy: function() {
-    try {
-      Tilt.$gl.deleteBuffer(this.$ref);
-    }
-    catch(e) {}
-
+    try { Tilt.$gl.deleteBuffer(this.$ref); } catch(e) {}
     Tilt.destroyObject(this);
   }
 };
 
 /**
  * IndexBuffer constructor.
+ * Creates an index buffer containing an array of indices.
  *
  * @param {Array} elementsArray: an array of unsigned integers
  * @param {Number} numItems: how many items to use from the array
@@ -805,11 +814,7 @@ Tilt.IndexBuffer.prototype = {
    * Destroys this object and deletes all members.
    */
   destroy: function() {
-    try {
-      Tilt.$gl.deleteBuffer(this.$ref);
-    }
-    catch(e) {}
-
+    try { Tilt.$gl.deleteBuffer(this.$ref); } catch(e) {}
     Tilt.destroyObject(this);
   }
 };
@@ -966,9 +971,9 @@ Tilt.destroyObject = function(scope) {
     finally {
       try {
         scope[i] = null;
+        delete scope[i];
       }
       catch(_e) {}
-      delete scope[i];
     }
   }
 };
@@ -1211,6 +1216,7 @@ Tilt.Profiler = {
         continue;
       }
 
+      // log the necessary information about a function
       Tilt.Console.log(
         "function " + f.name + "\n" +
         "calls    " + f.calls + "\n" +
@@ -1268,7 +1274,7 @@ var Tilt = Tilt || {};
 var EXPORTED_SYMBOLS = ["Tilt.Program"];
 
 /**
- * Program constructor.
+ * Program constructor, composed of a vertex and a fragment shader.
  * To create a program using remote sources, use initProgramAt.
  *
  * @param {String} vertShaderSrc: optional, the vertex shader source code
@@ -1362,6 +1368,7 @@ Tilt.Program.prototype = {
       // continue initialization as usual
       this.initProgram(xhr[0].responseText, xhr[1].responseText);
 
+      // run a ready callback function when the program has initialized
       if ("function" === typeof readyCallback) {
         readyCallback();
       }
@@ -1517,11 +1524,7 @@ Tilt.Program.prototype = {
    * Destroys this object and deletes all members.
    */
   destroy: function() {
-    try {
-      Tilt.$gl.deleteShader(this.$ref);
-    }
-    catch(e) {}
-
+    try { Tilt.$gl.deleteShader(this.$ref); } catch(e) {}
     Tilt.destroyObject(this);
   }
 };
@@ -1635,6 +1638,7 @@ Tilt.GLSL = {
       return null;
     }
 
+    // return the newly compiled shader from the specified source
     return shader;
   },
 
@@ -1647,7 +1651,7 @@ Tilt.GLSL = {
    */
   link: function(vertShader, fragShader) {
     var gl = Tilt.$gl,
-      program, status, source, data;
+      program, status, source, data, cached;
 
     // create a program and attach the compiled vertex and fragment shaders
     program = gl.createProgram();
@@ -1675,7 +1679,9 @@ Tilt.GLSL = {
     source = [vertShader.src, fragShader.src].join(" ");
     data = source.replace(/#.*|[(){};,]/g, " ").split(" ");
 
-    return this.shaderIOCache(program, data);
+    // cache the io attributes and uniforms automatically
+    cached = this.shaderIOCache(program, data);
+    return cached;
   },
 
   /**
@@ -1711,12 +1717,13 @@ Tilt.GLSL = {
    */
   shaderIO: function(program, variable) {
     if ("string" === typeof variable) {
-      // careful! weird stuff happens on Windows with empty strings
+      // weird stuff can happen with empty strings
       if (variable.length < 1) {
         return null;
       }
 
       var io;
+
       // try to get a shader attribute
       if ((io = this.shaderAttribute(program, variable)) >= 0) {
         return io;
@@ -1727,6 +1734,7 @@ Tilt.GLSL = {
       }
     }
 
+    // no attribute or uniform was found, so we return null
     return null;
   },
 
@@ -1962,7 +1970,6 @@ Tilt.Texture.prototype = {
     }
 
     var gl = Tilt.$gl;
-
     gl.bindTexture(gl.TEXTURE_2D, this.$ref);
     gl.texSubImage2D(gl.TEXTURE_2D, 0, x, y, gl.RGBA, gl.UNSIGNED_BYTE, img);
   },
@@ -1971,11 +1978,7 @@ Tilt.Texture.prototype = {
    * Destroys this object and deletes all members.
    */
   destroy: function() {
-    try {
-      Tilt.$gl.deleteTexture(this.$ref);
-    }
-    catch(e) {}
-
+    try { Tilt.$gl.deleteTexture(this.$ref); } catch(e) {}
     Tilt.destroyObject(this);
   }
 };
@@ -5749,6 +5752,7 @@ var EXPORTED_SYMBOLS = ["Tilt.Cube"];
  * @param {Number} width: the width of the cube
  * @param {Number} height: the height of the cube
  * @param {Number} depth: the depth of the cube
+ * @return {Tilt.Cube} the newly created object
  */
 Tilt.Cube = function(width, height, depth) {
 
@@ -5865,9 +5869,10 @@ var EXPORTED_SYMBOLS = ["Tilt.CubeWireframe"];
 /**
  * Tilt.CubeWireframe constructor.
  *
- * @param {number} width: the width of the cube
- * @param {number} height: the height of the cube
- * @param {number} depth: the depth of the cube
+ * @param {Number} width: the width of the cube
+ * @param {Number} height: the height of the cube
+ * @param {Number} depth: the depth of the cube
+ * @return {Tilt.CubeWireframe} the newly created object
  */
 Tilt.CubeWireframe = function(width, height, depth) {
 
@@ -5954,8 +5959,9 @@ var EXPORTED_SYMBOLS = ["Tilt.Rectangle"];
 
 /**
  * Tilt.Rectangle constructor.
+ * @return {Tilt.Rectangle} the newly created object
  */
-Tilt.Rectangle = function(width, height, depth) {
+Tilt.Rectangle = function() {
 
   // intercept this object using a profiler when building in debug mode
   Tilt.Profiler.intercept("Tilt.Rectangle", this);
@@ -6022,6 +6028,7 @@ var EXPORTED_SYMBOLS = ["Tilt.RectangleWireframe"];
 
 /**
  * Tilt.RectangleWireframe constructor.
+ * @return {Tilt.RectangleWireframe} the newly created object
  */
 Tilt.RectangleWireframe = function() {
 
@@ -6095,6 +6102,7 @@ var EXPORTED_SYMBOLS = ["Tilt.Mesh"];
  *  @param {Tilt.Texture} texture: optional texture to be used by the shader
  *  @param {Number} drawMode: WebGL enum, like tilt.TRIANGLES
  *  @param {Function} draw: optional function to handle custom drawing
+ * @return {Tilt.Mesh} the newly created object
  */
 Tilt.Mesh = function(parameters) {
 
@@ -6111,10 +6119,7 @@ Tilt.Mesh = function(parameters) {
   }
 
   // the color should be [r, g, b, a] array, check this now
-  if ("string" === typeof this.color) {
-    this.color = Tilt.Math.hex2rgba(this.color);
-  }
-  else if ("undefined" === typeof this.color) {
+  if ("undefined" === typeof this.color) {
     this.color = [1, 1, 1, 1];
   }
 
@@ -6162,8 +6167,6 @@ Tilt.Mesh.prototype = {
     else {
       tilt.drawVertices(drawMode, vertices.numItems);
     }
-
-    // TODO: use the normals buffer, add some lighting
   },
 
   /**
@@ -7150,22 +7153,22 @@ Tilt.Renderer.prototype = {
    *
    * @param {HTMLCanvasElement} canvas: the canvas to get the WebGL context
    * @param {Object} opt_attribs: optional attributes used for initialization
+   * @reuturn {Object} the WebGL context, or undefined if anything failed
    */
   create3DContext: function(canvas, opt_attribs) {
     var names = ["experimental-webgl", "webgl", "webkit-3d", "moz-webgl"],
       context, i, len;
 
     for (i = 0, len = names.length; i < len; i++) {
-      try {
-        context = canvas.getContext(names[i], opt_attribs);
-      }
-      catch(e) {}
-
-      if (context) {
-        break;
+      try { context = canvas.getContext(names[i], opt_attribs); } catch(e) {}
+      finally {
+        if (context) {
+          return context;
+        }
       }
     }
-    return context;
+
+    return undefined;
   },
 
   /**
@@ -7195,10 +7198,11 @@ Tilt.Renderer.prototype = {
     // increment the total frame count
     this.frameCount++;
 
+    // only compute debugging variables if we really want to
     if (debug) {
+
       // calculate the frame delta and frame rate using the current time
       this.$currentTime = new Date().getTime();
-
       if (this.$lastTime !== 0) {
         this.frameDelta = this.$currentTime - this.$lastTime;
         this.frameRate = 1000 / this.frameDelta;
@@ -7822,7 +7826,7 @@ Tilt.ScrollContainer = function(properties) {
   this.view.$offset[1] = this.top;
 
   /**
-   * The top, bottom and reset buttons.
+   * Button scrolling the content to top.
    */
   var topButton = new Tilt.Button(properties.top, {
     x: this.view.$x - 25,
@@ -7831,6 +7835,7 @@ Tilt.ScrollContainer = function(properties) {
     height: 30,
     fill: properties.top ? null : "#f00a",
     padding: properties.top ? properties.top.$padding : [0, 0, 0, 0],
+
     onmousedown: function() {
       window.clearInterval(this.$scrollTopReset);
       window.clearInterval(this.$scrollTop);
@@ -7856,6 +7861,9 @@ Tilt.ScrollContainer = function(properties) {
     }.bind(this)
   }),
 
+  /**
+   * Button scrolling the content to bottom.
+   */
   bottomButton = new Tilt.Button(properties.bottom, {
     x: this.view.$x - 25,
     y: this.view.$y + this.view.$height - 25,
@@ -7863,6 +7871,7 @@ Tilt.ScrollContainer = function(properties) {
     height: 30,
     fill: properties.bottom ? null : "#0f0a",
     padding: properties.bottom ? properties.bottom.$padding : [0, 0, 0, 0],
+
     onmousedown: function() {
       window.clearInterval(this.$scrollTopReset);
       window.clearInterval(this.$scrollTop);
@@ -7888,6 +7897,9 @@ Tilt.ScrollContainer = function(properties) {
     }.bind(this)
   }),
 
+  /**
+   * Button resetting the content scrolling to top.
+   */
   resetButton = new Tilt.Button(properties.reset, {
     x: this.view.$x - 25,
     y: this.view.$y + this.view.$height - 50,
@@ -7895,6 +7907,7 @@ Tilt.ScrollContainer = function(properties) {
     height: 30,
     fill: properties.reset ? null : "#0f0b",
     padding: properties.reset ? properties.reset.$padding : [0, 0, 0, 0],
+
     onmousedown: function() {
       window.clearInterval(this.$scrollTopReset);
       window.clearInterval(this.$scrollTop);
@@ -8036,6 +8049,7 @@ var EXPORTED_SYMBOLS = ["Tilt.Button"];
  *  @param {Function} onmousedown: function called when the event is triggered
  *  @param {Function} onmouseup: function called when the event is triggered
  *  @param {Function} onclick: function called when the event is triggered
+ * @return {Tilt.Button} the newly created object
  */
 Tilt.Button = function(sprite, properties) {
 
@@ -8360,6 +8374,7 @@ var EXPORTED_SYMBOLS = ["Tilt.Slider"];
  *  @param {Function} onmousedown: function called when the event is triggered
  *  @param {Function} onmouseup: function called when the event is triggered
  *  @param {Function} onclick: function called when the event is triggered
+ * @return {Tilt.Slider} the newly created object
  */
 Tilt.Slider = function(sprite, properties) {
 
@@ -8672,6 +8687,7 @@ var EXPORTED_SYMBOLS = ["Tilt.Sprite"];
  *  @param {Function} onmousedown: function called when the event is triggered
  *  @param {Function} onmouseup: function called when the event is triggered
  *  @param {Function} onclick: function called when the event is triggered
+ * @return {Tilt.Sprite} the newly created object
  */
 Tilt.Sprite = function(texture, region, properties) {
 
@@ -9125,6 +9141,14 @@ Tilt.UI.keyUp = function(code) {
 };
 
 /**
+ * Delegate focus method.
+ */
+Tilt.UI.windowFocus = function() {
+  this.mouseX = -Number.MAX_VALUE;
+  this.mouseY = -Number.MAX_VALUE;
+};
+
+/**
  * Internal function, handling a mouse event for each element in a view.
  * @param {String} name: the event name
  */
@@ -9174,7 +9198,9 @@ Tilt.UI.$handleMouseEvent = function(name, x, y, button) {
 
     // each view has multiple container attach, browse and handle each one
     for (e = 0, len2 = container.length; e < len2; e++) {
-      element = container[e];
+      if (!(element = container[e])) {
+        continue;
+      }
 
       // handle mouse events only if the element is visible and enabled
       if (element.hidden || element.disabled || !element.drawable) {
@@ -9248,7 +9274,9 @@ Tilt.UI.$handleKeyEvent = function(name, code) {
 
     // each view has multiple container attach, browse and handle each one
     for (e = 0, len2 = container.length; e < len2; e++) {
-      element = container[e];
+      if (!(element = container[e])) {
+        continue;
+      }
 
       // handle keyboard events only if the element is visible and enabled
       if (element.hidden || element.disabled) {
