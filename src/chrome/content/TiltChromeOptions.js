@@ -123,7 +123,7 @@ TiltChrome.Options = {
         return keyShortcutOpenClose.value.toUpperCase().
           replace(/\+/g, " ").
           replace(/shift/i, "shift").
-          replace(/ctrl/i, "ctrl").
+          replace(/ctrl/i, "control").
           replace(/alt/i, "alt").
           replace(/cmd/i, "accel").
           replace(/space/i, "space").

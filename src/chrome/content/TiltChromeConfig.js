@@ -258,5 +258,9 @@ TiltChrome.Config.Visualization.Set = {
   }
 };
 
+// bind the owner object to the necessary functions
+Tilt.bindObjectFunc(TiltChrome.Config.UI);
+Tilt.bindObjectFunc(TiltChrome.Config.Visualization);
+
 // load the necessary configuration keys and values
 TiltChrome.Config.Visualization.reload();

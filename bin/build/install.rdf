@@ -44,7 +44,7 @@
     <em:id>tilt@mozilla.com</em:id>
     <em:name>Tilt</em:name>
     <em:description>Tilt is a fun new Firefox extension focused on creating a 3D visualization of a webpage, drawn using WebGL. Since the DOM is essentially a tree-like representation of a document, this tool layers each node based on the nesting in the tree, creating stacks of elements, each having a corresponding depth and being textured according to the webpage rendering.</em:description>
-    <em:version>0.9.1</em:version>
+    <em:version>0.9.1.1</em:version>
     <em:creator>Victor Porof</em:creator>
     <em:homepageURL>http://blog.mozilla.com/tilt/</em:homepageURL>
     <em:type>2</em:type>

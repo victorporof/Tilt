@@ -9,7 +9,14 @@ gBrowser.selectedBrowser["markupDocumentViewer"] = gBrowser.selectedBrowser.mark
 gBrowser.selectedBrowser.markupDocumentViewer["fullZoom"] = gBrowser.selectedBrowser.markupDocumentViewer.fullZoom;
 
 
+window["Tilt"] = Tilt;
 window["TiltChrome"] = TiltChrome;
+
+
+Tilt["Preferences"] = Tilt.Preferences;
+Tilt.Preferences["get"] = Tilt.Preferences.get;
+Tilt.Preferences["set"] = Tilt.Preferences.set;
+Tilt.Preferences["create"] = Tilt.Preferences.create;
 
 TiltChrome["EntryPoint"] = TiltChrome.EntryPoint;
 TiltChrome.EntryPoint["includeScripts"] = TiltChrome.EntryPoint.includeScripts;

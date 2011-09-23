@@ -12110,6 +12110,10 @@ TiltChrome.Config.Visualization.Set = {
   }
 };
 
+// bind the owner object to the necessary functions
+Tilt.bindObjectFunc(TiltChrome.Config.UI);
+Tilt.bindObjectFunc(TiltChrome.Config.Visualization);
+
 // load the necessary configuration keys and values
 TiltChrome.Config.Visualization.reload();
 /***** BEGIN LICENSE BLOCK *****
@@ -12682,7 +12686,7 @@ TiltChrome.Options = {
         return keyShortcutOpenClose.value.toUpperCase().
           replace(/\+/g, " ").
           replace(/shift/i, "shift").
-          replace(/ctrl/i, "ctrl").
+          replace(/ctrl/i, "control").
           replace(/alt/i, "alt").
           replace(/cmd/i, "accel").
           replace(/space/i, "space").
@@ -14183,13 +14187,13 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
       return;
     }
 
+    // load the necessary configuration keys and values
+    TiltChrome.Config.Visualization.reload();
+
     // create the visualization shaders and program to draw the stacks mesh
     visualizationShader = new Tilt.Program(
       TiltChrome.Shaders.Visualization.vs,
       TiltChrome.Shaders.Visualization.fs);
-
-    // get the preferences for this extension
-    setupPreferences();
 
     // setup the controller, user interface, visualization mesh, and the
     // browser event handlers
@@ -14315,22 +14319,6 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
     if ((tilt.frameCount + 1) % 1000 === 0) {
       TiltChrome.BrowserOverlay.performGC();
     }
-  }.bind(this);
-
-  /**
-   * Get the preferences for this extension.
-   */
-  var setupPreferences = function() {
-    var pref = Tilt.Preferences;
-
-    pref.create("options.refreshVisualization", "integer", 1);
-    pref.create("options.sourceEditorTheme", "integer", 3);
-    pref.create("options.hideUserInterfaceAtInit", "boolean", false);
-    pref.create("options.disableMinidomAtInit", "boolean", false);
-    pref.create("options.enableJoystick", "boolean", false);
-    pref.create("options.useAccelerometer", "boolean", false);
-    pref.create("options.escapeKeyCloses", "boolean", true);
-    pref.create("options.keyShortcutOpenClose", "string", "accel+shift+M");
   }.bind(this);
 
   /**

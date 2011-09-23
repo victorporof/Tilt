@@ -60,9 +60,26 @@ TiltChrome.EntryPoint = {
   },
 
   /**
+   * Set the default preferences for this extension.
+   */
+  setupPreferences: function() {
+    var pref = Tilt.Preferences;
+
+    pref.create("options.refreshVisualization", "integer", 1);
+    pref.create("options.sourceEditorTheme", "integer", 3);
+    pref.create("options.hideUserInterfaceAtInit", "boolean", false);
+    pref.create("options.disableMinidomAtInit", "boolean", false);
+    pref.create("options.enableJoystick", "boolean", false);
+    pref.create("options.useAccelerometer", "boolean", false);
+    pref.create("options.escapeKeyCloses", "boolean", true);
+    pref.create("options.keyShortcutOpenClose", "string", "accel shift M");
+  },
+
+  /**
    * Utility for refreshing the default shortcut key(s) used by this extension.
    */
    refreshKeyset: function() {
+    try {
       var config = TiltChrome.Config.Visualization,
         openClose = config.keyShortcutOpenClose,
         openCloseSplit = openClose.split(" "),
@@ -70,7 +87,9 @@ TiltChrome.EntryPoint = {
 
       openCloseMenuKey.setAttribute("key", openCloseSplit.pop());
       openCloseMenuKey.setAttribute("modifiers", openCloseSplit.join(" "));
-   }
+    }
+    catch(e) {}
+  }
 };
 
 /**
@@ -83,6 +102,7 @@ TiltChrome.EntryPoint = {
     // load everything after a while, don't slow down the browser startup
     window.setTimeout(function() {
       TiltChrome.EntryPoint.includeScripts();
+      TiltChrome.EntryPoint.setupPreferences();
       TiltChrome.EntryPoint.refreshKeyset();
     }, 500);
   }, true);
