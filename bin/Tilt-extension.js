@@ -12686,9 +12686,9 @@ TiltChrome.Options = {
         return keyShortcutOpenClose.value.toUpperCase().
           replace(/\+/g, " ").
           replace(/shift/i, "shift").
-          replace(/ctrl/i, "control").
+          replace(/control/i, "control").
           replace(/alt/i, "alt").
-          replace(/cmd/i, "accel").
+          replace(/command/i, "accel").
           replace(/space/i, "space").
           replace(/pgup/i, "pgup").
           replace(/pgdown/i, "pgdown").
@@ -12835,14 +12835,14 @@ TiltChrome.Options = {
     if (e.target.value.match(/shift/i) === null && code === 16) {
       e.target.value += "shift+";
     }
-    if (e.target.value.match(/ctrl/i) === null && code === 17) {
-      e.target.value += "ctrl+";
+    if (e.target.value.match(/control/i) === null && code === 17) {
+      e.target.value += "control+";
     }
     if (e.target.value.match(/alt/i) === null && code === 18) {
       e.target.value += "alt+";
     }
-    if (e.target.value.match(/cmd/i) === null && code === 224) {
-      e.target.value += "cmd+";
+    if (e.target.value.match(/command/i) === null && code === 224) {
+      e.target.value += "command+";
     }
     if (e.target.value.match(/space/i) === null && code === 32) {
       e.target.value += "space";
@@ -12896,9 +12896,9 @@ TiltChrome.Options = {
     element.value = element.value.toUpperCase().
       replace(/\ /g, "+").
       replace(/shift/i, "Shift").
-      replace(/ctrl/i, "Ctrl").
+      replace(/control/i, "Control").
       replace(/alt/i, "Alt").
-      replace(/cmd/i, "Cmd").
+      replace(/command/i, "Command").
       replace(/space/i, "Space").
       replace(/pgup/i, "PgUp").
       replace(/pgdown/i, "PgDown").
@@ -12910,11 +12910,11 @@ TiltChrome.Options = {
       replace(/down/i, "Down").
       replace(/accel/i, (function() {
         var app = navigator.appVersion;
-        if (app.indexOf("Win") !== -1) { return "Ctrl"; }
-        else if (app.indexOf("Mac") !== -1) { return "Cmd"; }
-        else if (app.indexOf("X11") !== -1) { return "Ctrl"; }
-        else if (app.indexOf("Linux") !== -1) { return "Ctrl"; }
-        else { return "Accel"; }
+        if (app.indexOf("Win") !== -1) { return "Control"; }
+        else if (app.indexOf("Mac") !== -1) { return "Command"; }
+        else if (app.indexOf("X11") !== -1) { return "Control"; }
+        else if (app.indexOf("Linux") !== -1) { return "Control"; }
+        else { return "Control"; }
       })());
   }
 };
