@@ -16,7 +16,7 @@ then
 
   if [[ $# > 1 && $2 == "minify" ]];
   then
-    if [[ $# > 2 && $3 == "optimize" ]];
+    if [[ $# > 2 && $3 == "optimize" || $3 == "compile" ]];
     then
       java -jar ../bin/google-closure/compiler.jar --language_in ECMASCRIPT5_STRICT --compilation_level ADVANCED_OPTIMIZATIONS --warning_level QUIET --externs ../bin/google-closure/tilt-externs.jsext --js ../bin/Tilt-extension.js --js_output_file chrome/content/Tilt-extension.js
     else
