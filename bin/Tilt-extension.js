@@ -14675,7 +14675,7 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
     contentWindow.addEventListener("blur", gBlur, false);
     contentWindow.addEventListener("focus", gFocus, false);
     contentWindow.addEventListener("resize", gResize, false);
-    gBrowser.addEventListener("mouseover", gMouseOver, false);
+    gBrowser.addEventListener("mouseover", gMouseOver, true);
     gBrowser.addEventListener("load", gLoad, true);
 
     // internal events triggered by the popups used for the user interface
@@ -14868,6 +14868,11 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
       this.$gLoadFinished = true;
     }
     else {
+      // don't refresh if we don't want to
+      if (TiltChrome.Config.Visualization.refreshVisualization <= 0) {
+        return;
+      }
+
       window.setTimeout(function() {
         try {
           if (!refreshMesh && !refreshTexture) {
@@ -15512,7 +15517,7 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
       gResize = null;
     }
     if (gMouseOver !== null) {
-      gBrowser.removeEventListener("mouseover", gMouseOver, false);
+      gBrowser.removeEventListener("mouseover", gMouseOver, true);
       gMouseOver = null;
     }
     if (gLoad !== null) {
