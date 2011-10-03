@@ -12453,9 +12453,6 @@ TiltChrome.Controller.MouseAndKeyboard = function() {
    * Called when the the browser window is focused.
    */
   var windowFocus = function(e) {
-    e.preventDefault();
-    e.stopPropagation();
-
     ui.windowFocus();
   };
 
