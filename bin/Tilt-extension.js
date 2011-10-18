@@ -12620,7 +12620,6 @@ TiltChrome.Options = {
       checkbox: d.getElementById(ns + "refreshVisualizationCheckbox"),
       radiogroup: d.getElementById(ns + "refreshVisualizationRadiogroup")
     },
-    sourceEditorTheme = d.getElementById(ns + "sourceEditorTheme"),
     hideUserInterfaceAtInit = d.getElementById(ns + "hideUserInterfaceAtInit"),
     disableMinidomAtInit = d.getElementById(ns + "disableMinidomAtInit"),
     enableJoystick = d.getElementById(ns + "enableJoystick"),
@@ -12638,7 +12637,6 @@ TiltChrome.Options = {
     }
 
     escapeKeyCloses.checked = conf.escapeKeyCloses;
-    sourceEditorTheme.selectedIndex = conf.sourceEditorTheme;
     hideUserInterfaceAtInit.checked = conf.hideUserInterfaceAtInit;
     disableMinidomAtInit.checked = conf.disableMinidomAtInit;
     enableJoystick.checked = conf.enableJoystick;
@@ -12663,7 +12661,6 @@ TiltChrome.Options = {
       checkbox: d.getElementById(ns + "refreshVisualizationCheckbox"),
       radiogroup: d.getElementById(ns + "refreshVisualizationRadiogroup")
     },
-    sourceEditorTheme = d.getElementById(ns + "sourceEditorTheme"),
     hideUserInterfaceAtInit = d.getElementById(ns + "hideUserInterfaceAtInit"),
     disableMinidomAtInit = d.getElementById(ns + "disableMinidomAtInit"),
     enableJoystick = d.getElementById(ns + "enableJoystick"),
@@ -12672,7 +12669,6 @@ TiltChrome.Options = {
     keyShortcutOpenClose = d.getElementById(ns + "keyShortcutOpenClose");
 
     conf.refreshVisualization(refreshVisualization.radiogroup.selectedIndex);
-    conf.sourceEditorTheme(sourceEditorTheme.selectedIndex);
     conf.escapeKeyCloses(escapeKeyCloses.checked);
     conf.hideUserInterfaceAtInit(hideUserInterfaceAtInit.checked);
     conf.disableMinidomAtInit(disableMinidomAtInit.checked);
@@ -13135,7 +13131,7 @@ TiltChrome.UI.Default = function() {
       padding: [0, 0, 0, 5],
       onclick: function() {
         window.open("chrome://tilt/content/TiltChromeOptions.xul", "Options",
-          "chrome, modal, centerscreen, width=410, height=350");
+          "chrome, modal, centerscreen, width=410, height=320");
 
         TiltChrome.Config.Visualization.reload();
         TiltChrome.EntryPoint.refreshKeyset();
@@ -14082,7 +14078,7 @@ var TiltChrome = TiltChrome || {};
 var EXPORTED_SYMBOLS = ["TiltChrome.Visualization"];
 
 /*global Tilt, gBrowser, vec3, mat3, mat4, quat4, style_html, js_beautify */
-/*jshint sub: true, undef: false */
+/*jshint sub: true, undef: false, onevar: false */
 
 /**
  * TiltChrome visualization constructor.
@@ -15292,7 +15288,6 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
       code.html = html;
       code.css = css;
       code.attr = attr;
-      code.theme = TiltChrome.Config.Visualization.sourceEditorTheme;
 
       // refresh the editor using specific syntax highlighting in each case
       if (node.localName === "img" ||
@@ -15300,13 +15295,13 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
           node.localName === "button" ||
           code.editorType === "attr") {
 
-        iframe.contentWindow.refreshCodeEditor("css", code.attr, code.theme);
+        iframe.contentWindow.refreshCodeEditor("css", code.attr);
       }
       else if (code.editorType === "css") {
-        iframe.contentWindow.refreshCodeEditor("css", code.css, code.theme);
+        iframe.contentWindow.refreshCodeEditor("css", code.css);
       }
       else {
-        iframe.contentWindow.refreshCodeEditor("html", code.html, code.theme);
+        iframe.contentWindow.refreshCodeEditor("html", code.html);
       }
 
       var config = TiltChrome.Config.UI,
@@ -15369,7 +15364,7 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
       code = iframe.contentDocument.getElementById("code");
 
     code.editorType = "html";
-    iframe.contentWindow.refreshCodeEditor("html", code.html, code.theme);
+    iframe.contentWindow.refreshCodeEditor("html", code.html);
   };
 
   /**
@@ -15380,7 +15375,7 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
       code = iframe.contentDocument.getElementById("code");
 
     code.editorType = "css";
-    iframe.contentWindow.refreshCodeEditor("css", code.css, code.theme);
+    iframe.contentWindow.refreshCodeEditor("css", code.css);
   };
 
   /**
@@ -15391,7 +15386,7 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
       code = iframe.contentDocument.getElementById("code");
 
     code.editorType = "attr";
-    iframe.contentWindow.refreshCodeEditor("css", code.attr, code.theme);
+    iframe.contentWindow.refreshCodeEditor("css", code.attr);
   };
 
   /**
