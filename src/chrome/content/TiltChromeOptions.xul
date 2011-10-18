@@ -71,31 +71,6 @@
   </groupbox>
 
   <groupbox>
-    <hbox align="center">
-      <label value="&tilt.options.elementSourceTheme;"/>
-
-      <menulist id="tilt-options-sourceEditorTheme"
-        width="180">
-
-        <menupopup selected="3">
-          <menuitem label="&tilt.options.cloudsTheme;"/>
-          <menuitem label="&tilt.options.cloudsMidnightTheme;"/>
-          <menuitem label="&tilt.options.cobaltTheme;"/>
-          <menuitem label="&tilt.options.dawnTheme;"/>
-          <menuitem label="&tilt.options.eclipseTheme;"/>
-          <menuitem label="&tilt.options.idleFingersTheme;"/>
-          <menuitem label="&tilt.options.krTheme;"/>
-          <menuitem label="&tilt.options.merbivoreTheme;"/>
-          <menuitem label="&tilt.options.merbivoreSoftTheme;"/>
-          <menuitem label="&tilt.options.monoIndustrialTheme;"/>
-          <menuitem label="&tilt.options.monokaiTheme;"/>
-          <menuitem label="&tilt.options.pastelOnDarkTheme;"/>
-          <menuitem label="&tilt.options.twilightTheme;"/>
-          <menuitem label="&tilt.options.vibrantInkTheme;"/>
-        </menupopup>
-      </menulist>
-    </hbox>
-
     <checkbox id="tilt-options-hideUserInterfaceAtInit"
       label="&tilt.options.hideUserInterfaceAtInit;"
       oncommand="TiltChrome.Options.hideUICheckboxPressed(event);"/>

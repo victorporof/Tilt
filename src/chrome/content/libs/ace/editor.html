@@ -19,59 +19,29 @@
     </style>
   </head>
   <body>
-    <pre id="code"/>
+    <pre id="code"></pre>
     <script type="text/javascript" src="src/ace.js"></script>
+    <script type="text/javascript" src="src/mode-html.js"></script>
+    <script type="text/javascript" src="src/mode-scss.js"></script>
+    <script type="text/javascript" src="src/theme-dawn.js"></script>
+
     <script>
       var scripts = {};
-      var themes = [
-        "clouds",
-        "clouds_midnight",
-        "cobalt",
-        "dawn",
-        "eclipse",
-        "idle_fingers",
-        "kr_theme",
-        "merbivore",
-        "merbivore_soft",
-        "mono_industrial",
-        "monokai",
-        "pastel_on_dark",
-        "twilight",
-        "vibrant_ink",
-      ];
 
-      window.refreshCodeEditor = function(type, code, theme) {
-        loadScript("src/theme-" + themes[theme] + ".js", function() {
+      window.refreshCodeEditor = function(type, code) {
+        var editor = ace.edit("code");
+        editor.setReadOnly(true);
+        editor.setTheme("ace/theme/dawn");
+        editor.getSession().setValue(code);
 
-          var editor = ace.edit("code");
-          editor.getSession().setValue(code);
-          editor.setTheme("ace/theme/" + themes[theme]);
-          editor.setReadOnly(true);
-
-          if (type === "html") {
-            loadScript("src/mode-html.js", function() {
-              var HTMLMode = require("ace/mode/html").Mode;
-              editor.getSession().setMode(new HTMLMode());
-            });
-          }
-          else if (type === "css") {
-            loadScript("src/mode-scss.js", function() {
-              var CSSMode = require("ace/mode/scss").Mode;
-              editor.getSession().setMode(new CSSMode());
-            });
-          }
-        });
-      };
-
-      window.loadScript = function(path, callback) {
-        var head = document.getElementsByTagName('head')[0];
-        var s = document.createElement('script');
-
-        s.src = path;
-        head.appendChild(s);
-
-        s.onload = callback;
-        scripts[path] = true;
+        if (type === "html") {
+          var HTMLMode = require("ace/mode/html").Mode;
+          editor.getSession().setMode(new HTMLMode());
+        }
+        else if (type === "css") {
+          var CSSMode = require("ace/mode/scss").Mode;
+          editor.getSession().setMode(new CSSMode());
+        }
       };
     </script>
 

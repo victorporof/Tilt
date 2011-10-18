@@ -218,7 +218,7 @@ TiltChrome.UI.Default = function() {
       padding: [0, 0, 0, 5],
       onclick: function() {
         window.open("chrome://tilt/content/TiltChromeOptions.xul", "Options",
-          "chrome, modal, centerscreen, width=410, height=350");
+          "chrome, modal, centerscreen, width=410, height=320");
 
         TiltChrome.Config.Visualization.reload();
         TiltChrome.EntryPoint.refreshKeyset();

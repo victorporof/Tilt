@@ -60,7 +60,6 @@ TiltChrome.Options = {
       checkbox: d.getElementById(ns + "refreshVisualizationCheckbox"),
       radiogroup: d.getElementById(ns + "refreshVisualizationRadiogroup")
     },
-    sourceEditorTheme = d.getElementById(ns + "sourceEditorTheme"),
     hideUserInterfaceAtInit = d.getElementById(ns + "hideUserInterfaceAtInit"),
     disableMinidomAtInit = d.getElementById(ns + "disableMinidomAtInit"),
     enableJoystick = d.getElementById(ns + "enableJoystick"),
@@ -78,7 +77,6 @@ TiltChrome.Options = {
     }
 
     escapeKeyCloses.checked = conf.escapeKeyCloses;
-    sourceEditorTheme.selectedIndex = conf.sourceEditorTheme;
     hideUserInterfaceAtInit.checked = conf.hideUserInterfaceAtInit;
     disableMinidomAtInit.checked = conf.disableMinidomAtInit;
     enableJoystick.checked = conf.enableJoystick;
@@ -103,7 +101,6 @@ TiltChrome.Options = {
       checkbox: d.getElementById(ns + "refreshVisualizationCheckbox"),
       radiogroup: d.getElementById(ns + "refreshVisualizationRadiogroup")
     },
-    sourceEditorTheme = d.getElementById(ns + "sourceEditorTheme"),
     hideUserInterfaceAtInit = d.getElementById(ns + "hideUserInterfaceAtInit"),
     disableMinidomAtInit = d.getElementById(ns + "disableMinidomAtInit"),
     enableJoystick = d.getElementById(ns + "enableJoystick"),
@@ -112,7 +109,6 @@ TiltChrome.Options = {
     keyShortcutOpenClose = d.getElementById(ns + "keyShortcutOpenClose");
 
     conf.refreshVisualization(refreshVisualization.radiogroup.selectedIndex);
-    conf.sourceEditorTheme(sourceEditorTheme.selectedIndex);
     conf.escapeKeyCloses(escapeKeyCloses.checked);
     conf.hideUserInterfaceAtInit(hideUserInterfaceAtInit.checked);
     conf.disableMinidomAtInit(disableMinidomAtInit.checked);

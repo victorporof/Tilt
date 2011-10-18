@@ -65,8 +65,7 @@ TiltChrome.EntryPoint = {
   setupPreferences: function() {
     var pref = Tilt.Preferences;
 
-    pref.create("options.refreshVisualization", "integer", 1);
-    pref.create("options.sourceEditorTheme", "integer", 3);
+    pref.create("options.refreshVisualization", "integer", -1);
     pref.create("options.hideUserInterfaceAtInit", "boolean", false);
     pref.create("options.disableMinidomAtInit", "boolean", false);
     pref.create("options.enableJoystick", "boolean", false);
