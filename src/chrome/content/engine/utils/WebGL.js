@@ -62,6 +62,7 @@ Tilt.WebGL = {
     // create the WebGL context
     gl = Tilt.Renderer.prototype.create3DContext(canvasgl);
     maxSize = gl ? gl.getParameter(gl.MAX_TEXTURE_SIZE) : 0;
+    maxSize /= 2;
 
     if (maxSize > 0) {
       // calculate the total width and height of the content page
