@@ -1385,6 +1385,9 @@ Tilt.Program.prototype = {
     var id = this.$id,
       gl, i;
 
+    this.clearCache();
+    this.clearTextureCache();
+
     // check if the program wasn't already active
     if (Tilt.$activeShader !== id) {
       Tilt.$activeShader = id;
@@ -1393,9 +1396,6 @@ Tilt.Program.prototype = {
       // use the the program if it wasn't already set
       gl = Tilt.$gl;
       gl.useProgram(this.$ref);
-
-      // the texture cache needs to be cleared each time a program is used
-      this.clearTextureCache();
 
       // check if the required vertex attributes aren't already set
       if (Tilt.$enabledAttributes < this.$attributes.length) {
@@ -1434,18 +1434,7 @@ Tilt.Program.prototype = {
    * @param {Float32Array} m: the matrix to be bound
    */
   bindUniformMatrix: function(uniform, m) {
-    var cache = this.$cache,
-      m0 = m[0] + m[1] + m[2],
-      m1 = m[4] + m[5] + m[6],
-      m2 = m[8] + m[9] + m[10],
-      m3 = m[12] + m[13] + m[14],
-      hit = m0 * m1 * m2 * m3;
-
-    // check the cache to see if this uniform wasn't already set
-    if (cache[uniform] !== hit) {
-      cache[uniform] = hit;
-      Tilt.$gl.uniformMatrix4fv(this.$uniforms[uniform], false, m);
-    }
+    Tilt.$gl.uniformMatrix4fv(this.$uniforms[uniform], false, m);
   },
 
   /**
@@ -1455,18 +1444,7 @@ Tilt.Program.prototype = {
    * @param {Float32Array} v: the vector to be bound
    */
   bindUniformVec4: function(uniform, v) {
-    var cache = this.$cache,
-      a = v[3] * 255,
-      r = v[0] * 255,
-      g = v[1] * 255,
-      b = v[2] * 255,
-      hit = a << 24 | r << 16 | g << 8 | b;
-
-    // check the cache to see if this uniform wasn't already set
-    if (cache[uniform] !== hit) {
-      cache[uniform] = hit;
-      Tilt.$gl.uniform4fv(this.$uniforms[uniform], v);
-    }
+    Tilt.$gl.uniform4fv(this.$uniforms[uniform], v);
   },
 
   /**
@@ -1476,13 +1454,7 @@ Tilt.Program.prototype = {
    * @param {Number} variable: the variable to be bound
    */
   bindUniformFloat: function(uniform, variable) {
-    var cache = this.$cache;
-
-    // check the cache to see if this uniform wasn't already set
-    if (cache[uniform] !== variable) {
-      cache[uniform] = variable;
-      Tilt.$gl.uniform1f(this.$uniforms[uniform], variable);
-    }
+    Tilt.$gl.uniform1f(this.$uniforms[uniform], variable);
   },
 
   /**
@@ -1492,18 +1464,10 @@ Tilt.Program.prototype = {
    * @param {Tilt.Texture} texture: the texture to be bound
    */
   bindTexture: function(sampler, texture, unit) {
-    var cache = this.$texcache,
-      id = texture.$id,
-      gl;
+    var gl = Tilt.$gl;
 
-    // check the cache to see if this texture wasn't already set
-    if (cache[sampler] !== id) {
-      cache[sampler] = id;
-
-      gl = Tilt.$gl;
-      gl.bindTexture(gl.TEXTURE_2D, texture.$ref);
-      gl.uniform1i(this.$uniforms[sampler], 0);
-    }
+    gl.bindTexture(gl.TEXTURE_2D, texture.$ref);
+    gl.uniform1i(this.$uniforms[sampler], 0);
   },
 
   /**
@@ -11448,6 +11412,7 @@ Tilt.WebGL = {
     // create the WebGL context
     gl = Tilt.Renderer.prototype.create3DContext(canvasgl);
     maxSize = gl ? gl.getParameter(gl.MAX_TEXTURE_SIZE) : 0;
+    maxSize /= 2;
 
     if (maxSize > 0) {
       // calculate the total width and height of the content page
