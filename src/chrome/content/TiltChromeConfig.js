@@ -61,7 +61,7 @@ TiltChrome.Config.UI = {
         value: 100
       },
       alphaSlider: {
-        value: 80
+        value: 100
       },
       textureSlider: {
         value: 100
@@ -81,7 +81,7 @@ TiltChrome.Config.UI = {
         value: 100
       },
       alphaSlider: {
-        value: 80
+        value: 100
       },
       textureSlider: {
         value: 100
