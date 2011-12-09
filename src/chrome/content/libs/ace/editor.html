@@ -28,11 +28,10 @@
     <script>
       var scripts = {};
 
-      window.refreshCodeEditor = function(type, code) {
+      window.refreshCodeEditor = function(type) {
         var editor = ace.edit("code");
         editor.setReadOnly(true);
         editor.setTheme("ace/theme/dawn");
-        editor.getSession().setValue(code);
 
         if (type === "html") {
           var HTMLMode = require("ace/mode/html").Mode;
