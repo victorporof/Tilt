@@ -38,7 +38,7 @@
 var TiltChrome = TiltChrome || {};
 var EXPORTED_SYMBOLS = ["TiltChrome.BrowserOverlay"];
 
-/*global Cc, Ci, Cu, Tilt, gBrowser */
+/*global Cc, Ci, Cu, Services, Tilt, InspectorUI, gBrowser */
 
 /**
  * Controls the browser overlay for the Tilt extension.
@@ -75,6 +75,16 @@ TiltChrome.BrowserOverlay = {
    * @param {Event} e: the event firing this function
    */
   initialize: function(e) {
+    // reload the necessary configuration keys and values
+    TiltChrome.Config.Visualization.reload();
+
+    // open the native tilt implementation if available (Firefox >= 11)
+    if (TiltChrome.Config.Visualization.nativeTiltEnabled) {
+      return this.nativeImpl();
+    } else {
+      InspectorUI.closeInspectorUI();
+    }
+
     // first, close the visualization and clean up any mess if there was any
     this.destroy(true);
 
@@ -152,23 +162,26 @@ TiltChrome.BrowserOverlay = {
 
     // remove any remaining traces of popups and the visualization
     var finish = function() {
-      if (this.visualization !== null) {
-        this.visualization.destroy();
-        this.visualization = null;
+      try {
+        if (this.visualization !== null) {
+          this.visualization.destroy();
+          this.visualization = null;
+        }
+        if (this.sourceEditor !== null) {
+          this.sourceEditor.panel.hidePopup();
+          this.sourceEditor.panel = null;
+          this.sourceEditor.title = null;
+          this.sourceEditor.iframe = null;
+          this.sourceEditor = null;
+        }
+        if (this.colorPicker !== null) {
+          this.colorPicker.panel.hidePopup();
+          this.colorPicker.panel = null;
+          this.colorPicker.iframe = null;
+          this.colorPicker = null;
+        }
       }
-      if (this.sourceEditor !== null) {
-        this.sourceEditor.panel.hidePopup();
-        this.sourceEditor.panel = null;
-        this.sourceEditor.title = null;
-        this.sourceEditor.iframe = null;
-        this.sourceEditor = null;
-      }
-      if (this.colorPicker !== null) {
-        this.colorPicker.panel.hidePopup();
-        this.colorPicker.panel = null;
-        this.colorPicker.iframe = null;
-        this.colorPicker = null;
-      }
+      catch(e) {}
 
       // if the build was in debug mode (profiling enabled), log some
       // information about the intercepted function
@@ -189,6 +202,56 @@ TiltChrome.BrowserOverlay = {
       // the finish timeout wasn't explicitly requested, continue normally
       finish();
     }
+  },
+
+  /**
+   * Opens the native Tilt implementation instead of the extension.
+   */
+  nativeImpl: function() {
+    var INSPECTOR_OPENED = InspectorUI.INSPECTOR_NOTIFICATIONS.OPENED;
+
+    if (!this.visualization) {
+      this.visualization = Tilt;
+
+      Services.obs.addObserver(function onInspectorOpen() {
+        Services.obs.removeObserver(onInspectorOpen, INSPECTOR_OPENED);
+
+        InspectorUI.stopInspecting();
+        document.getElementById("highlighter-container").style.display="none";
+        document.getElementById("inspector-inspect-toolbutton").disabled=true;
+        document.getElementById("inspector-3D-button").checked=true;
+        window.setTimeout(function() { Tilt.initialize(); }.bind(this), 100);
+
+        if (TiltChrome.Config.Visualization.nativeTiltHello) {
+          window.setTimeout(function() {
+            if (Tilt.visualizers[Tilt.currentWindowId] &&
+                Tilt.visualizers[Tilt.currentWindowId].isInitialized()) {
+
+              var showAgain = { value: true };
+              var useNewVersion = Tilt.Console.confirmCheck(
+                Tilt.StringBundle.get("tilt.native.title"),
+                Tilt.StringBundle.get("tilt.native.text"),
+                Tilt.StringBundle.get("tilt.native.check"), showAgain);
+
+              TiltChrome.Config.Visualization.Set.nativeTiltHello(
+                showAgain.value);
+
+              TiltChrome.Config.Visualization.Set.nativeTiltEnabled(
+                useNewVersion);
+
+              if (!useNewVersion) {
+                TiltChrome.BrowserOverlay.initialize();
+              }
+            }
+          }.bind(this), 1500);
+        }
+      }, INSPECTOR_OPENED, false);
+    }
+    else {
+      this.visualization = null;
+    }
+
+    InspectorUI.toggleInspectorUI();
   },
 
   /**
@@ -9582,6 +9645,33 @@ Tilt.Console = {
   },
 
   /**
+   * Shows a modal confirm message popup.
+   *
+   * @param {String} title: the title of the popup
+   * @param {String} message: the message to be logged
+   * @param {String} checkMessage: text to appear with the checkbox
+   * @param {Boolean} checkState: the checked state of the checkbox
+   */
+  confirmCheck: function(title, message, checkMessage, checkState) {
+    var prompt;
+
+    if ("undefined" === typeof message) {
+      message = "undefined";
+    }
+    try {
+      prompt = Cc["@mozilla.org/embedcomp/prompt-service;1"].
+        getService(Ci.nsIPromptService);
+
+      return (
+        prompt.confirmCheck(null, title, message, checkMessage, checkState));
+    }
+    catch(e) {
+      // running from an unprivileged environment
+      window.alert(message);
+    }
+  },
+
+  /**
    * Logs a message to the console.
    * If this is not inside an extension environment, an alert() is used.
    *
@@ -11852,6 +11942,8 @@ Tilt.Profiler.intercept("Tilt.Xhr", Tilt.Xhr);
  ***** END LICENSE BLOCK *****/
 "use strict";
 
+Cu.import("resource://gre/modules/Services.jsm");
+
 var TiltChrome = TiltChrome || {};
 var EXPORTED_SYMBOLS = ["TiltChrome.Config.UI"];
 
@@ -11998,6 +12090,8 @@ TiltChrome.Config.Visualization = {
   /**
    * Specific settings for each element describing the visualization options.
    */
+  nativeTiltEnabled: null,
+  nativeTiltHello: null,
   refreshVisualization: null,
   sourceEditorTheme: null,
   hideUserInterfaceAtInit: null,
@@ -12011,6 +12105,15 @@ TiltChrome.Config.Visualization = {
    * Reloads all the visualization options from the preferences branch.
    */
   reload: function() {
+    try {
+      this.nativeTiltEnabled =
+        Services.prefs.getBoolPref("devtools.tilt.enabled");
+    }
+    catch(e) {}
+
+    this.nativeTiltHello =
+      Tilt.Preferences.get("options.nativeTiltHello", "boolean");
+
     this.refreshVisualization =
       Tilt.Preferences.get("options.refreshVisualization", "integer");
 
@@ -12041,6 +12144,17 @@ TiltChrome.Config.Visualization = {
  * Set the configuration parameters regarding the visualization functionality.
  */
 TiltChrome.Config.Visualization.Set = {
+
+  nativeTiltEnabled: function(value) {
+    try {
+      Services.prefs.setBoolPref("devtools.tilt.enabled", value);
+    }
+    catch(e) {}
+  },
+
+  nativeTiltHello: function(value) {
+    Tilt.Preferences.set("options.nativeTiltHello", "boolean", value);
+  },
 
   refreshVisualization: function(value) {
     Tilt.Preferences.set("options.refreshVisualization", "integer", value);
@@ -15228,7 +15342,9 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
         'indent_char': ' ',
         'max_char': 78,
         'brace_style': 'collapse'
-      })) + "\n",
+      })).
+        replace(/</g, "&lt;").
+        replace(/>/g, "&gt;") + "\n",
 
       // compute the custom css and attributes text from all the properties
       css = Tilt.Document.getModifiedCss(node.style),
@@ -15260,13 +15376,16 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
           node.localName === "button" ||
           code.editorType === "attr") {
 
-        iframe.contentWindow.refreshCodeEditor("css", code.attr);
+        code.innerHTML = attr;
+        iframe.contentWindow.refreshCodeEditor("css");
       }
       else if (code.editorType === "css") {
-        iframe.contentWindow.refreshCodeEditor("css", code.css);
+        code.innerHTML = css;
+        iframe.contentWindow.refreshCodeEditor("css");
       }
       else {
-        iframe.contentWindow.refreshCodeEditor("html", code.html);
+        code.innerHTML = html;
+        iframe.contentWindow.refreshCodeEditor("html");
       }
 
       var config = TiltChrome.Config.UI,
@@ -15328,8 +15447,9 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
     var iframe = document.getElementById("tilt-sourceeditor-iframe"),
       code = iframe.contentDocument.getElementById("code");
 
+    code.innerHTML = code.html;
     code.editorType = "html";
-    iframe.contentWindow.refreshCodeEditor("html", code.html);
+    iframe.contentWindow.refreshCodeEditor("html");
   };
 
   /**
@@ -15339,8 +15459,9 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
     var iframe = document.getElementById("tilt-sourceeditor-iframe"),
       code = iframe.contentDocument.getElementById("code");
 
+    code.innerHTML = code.css;
     code.editorType = "css";
-    iframe.contentWindow.refreshCodeEditor("css", code.css);
+    iframe.contentWindow.refreshCodeEditor("css");
   };
 
   /**
@@ -15350,8 +15471,9 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
     var iframe = document.getElementById("tilt-sourceeditor-iframe"),
       code = iframe.contentDocument.getElementById("code");
 
+    code.innerHTML = code.attr;
     code.editorType = "attr";
-    iframe.contentWindow.refreshCodeEditor("css", code.attr);
+    iframe.contentWindow.refreshCodeEditor("css");
   };
 
   /**

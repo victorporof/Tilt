@@ -9380,6 +9380,33 @@ Tilt.Console = {
   },
 
   /**
+   * Shows a modal confirm message popup.
+   *
+   * @param {String} title: the title of the popup
+   * @param {String} message: the message to be logged
+   * @param {String} checkMessage: text to appear with the checkbox
+   * @param {Boolean} checkState: the checked state of the checkbox
+   */
+  confirmCheck: function(title, message, checkMessage, checkState) {
+    var prompt;
+
+    if ("undefined" === typeof message) {
+      message = "undefined";
+    }
+    try {
+      prompt = Cc["@mozilla.org/embedcomp/prompt-service;1"].
+        getService(Ci.nsIPromptService);
+
+      return (
+        prompt.confirmCheck(null, title, message, checkMessage, checkState));
+    }
+    catch(e) {
+      // running from an unprivileged environment
+      window.alert(message);
+    }
+  },
+
+  /**
    * Logs a message to the console.
    * If this is not inside an extension environment, an alert() is used.
    *
