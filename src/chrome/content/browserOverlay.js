@@ -38,7 +38,7 @@
 var TiltChrome = TiltChrome || {};
 var EXPORTED_SYMBOLS = ["TiltChrome.BrowserOverlay"];
 
-/*global Cc, Ci, Cu, Tilt, gBrowser */
+/*global Cc, Ci, Cu, Services, Tilt, InspectorUI, gBrowser */
 
 /**
  * Controls the browser overlay for the Tilt extension.
@@ -75,6 +75,16 @@ TiltChrome.BrowserOverlay = {
    * @param {Event} e: the event firing this function
    */
   initialize: function(e) {
+    // reload the necessary configuration keys and values
+    TiltChrome.Config.Visualization.reload();
+
+    // open the native tilt implementation if available (Firefox >= 11)
+    if (TiltChrome.Config.Visualization.nativeTiltEnabled) {
+      return this.nativeImpl();
+    } else {
+      InspectorUI.closeInspectorUI();
+    }
+
     // first, close the visualization and clean up any mess if there was any
     this.destroy(true);
 
@@ -152,23 +162,26 @@ TiltChrome.BrowserOverlay = {
 
     // remove any remaining traces of popups and the visualization
     var finish = function() {
-      if (this.visualization !== null) {
-        this.visualization.destroy();
-        this.visualization = null;
+      try {
+        if (this.visualization !== null) {
+          this.visualization.destroy();
+          this.visualization = null;
+        }
+        if (this.sourceEditor !== null) {
+          this.sourceEditor.panel.hidePopup();
+          this.sourceEditor.panel = null;
+          this.sourceEditor.title = null;
+          this.sourceEditor.iframe = null;
+          this.sourceEditor = null;
+        }
+        if (this.colorPicker !== null) {
+          this.colorPicker.panel.hidePopup();
+          this.colorPicker.panel = null;
+          this.colorPicker.iframe = null;
+          this.colorPicker = null;
+        }
       }
-      if (this.sourceEditor !== null) {
-        this.sourceEditor.panel.hidePopup();
-        this.sourceEditor.panel = null;
-        this.sourceEditor.title = null;
-        this.sourceEditor.iframe = null;
-        this.sourceEditor = null;
-      }
-      if (this.colorPicker !== null) {
-        this.colorPicker.panel.hidePopup();
-        this.colorPicker.panel = null;
-        this.colorPicker.iframe = null;
-        this.colorPicker = null;
-      }
+      catch(e) {}
 
       // if the build was in debug mode (profiling enabled), log some
       // information about the intercepted function
@@ -189,6 +202,56 @@ TiltChrome.BrowserOverlay = {
       // the finish timeout wasn't explicitly requested, continue normally
       finish();
     }
+  },
+
+  /**
+   * Opens the native Tilt implementation instead of the extension.
+   */
+  nativeImpl: function() {
+    var INSPECTOR_OPENED = InspectorUI.INSPECTOR_NOTIFICATIONS.OPENED;
+
+    if (!this.visualization) {
+      this.visualization = Tilt;
+
+      Services.obs.addObserver(function onInspectorOpen() {
+        Services.obs.removeObserver(onInspectorOpen, INSPECTOR_OPENED);
+
+        InspectorUI.stopInspecting();
+        document.getElementById("highlighter-container").style.display="none";
+        document.getElementById("inspector-inspect-toolbutton").disabled=true;
+        document.getElementById("inspector-3D-button").checked=true;
+        window.setTimeout(function() { Tilt.initialize(); }.bind(this), 100);
+
+        if (TiltChrome.Config.Visualization.nativeTiltHello) {
+          window.setTimeout(function() {
+            if (Tilt.visualizers[Tilt.currentWindowId] &&
+                Tilt.visualizers[Tilt.currentWindowId].isInitialized()) {
+
+              var showAgain = { value: true };
+              var useNewVersion = Tilt.Console.confirmCheck(
+                Tilt.StringBundle.get("tilt.native.title"),
+                Tilt.StringBundle.get("tilt.native.text"),
+                Tilt.StringBundle.get("tilt.native.check"), showAgain);
+
+              TiltChrome.Config.Visualization.Set.nativeTiltHello(
+                showAgain.value);
+
+              TiltChrome.Config.Visualization.Set.nativeTiltEnabled(
+                useNewVersion);
+
+              if (!useNewVersion) {
+                TiltChrome.BrowserOverlay.initialize();
+              }
+            }
+          }.bind(this), 1500);
+        }
+      }, INSPECTOR_OPENED, false);
+    }
+    else {
+      this.visualization = null;
+    }
+
+    InspectorUI.toggleInspectorUI();
   },
 
   /**

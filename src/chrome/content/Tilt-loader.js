@@ -65,6 +65,7 @@ TiltChrome.EntryPoint = {
   setupPreferences: function() {
     var pref = Tilt.Preferences;
 
+    pref.create("options.nativeTiltHello", "boolean", true);
     pref.create("options.refreshVisualization", "integer", -1);
     pref.create("options.hideUserInterfaceAtInit", "boolean", false);
     pref.create("options.disableMinidomAtInit", "boolean", false);

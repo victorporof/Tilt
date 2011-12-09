@@ -35,6 +35,8 @@
  ***** END LICENSE BLOCK *****/
 "use strict";
 
+Cu.import("resource://gre/modules/Services.jsm");
+
 var TiltChrome = TiltChrome || {};
 var EXPORTED_SYMBOLS = ["TiltChrome.Config.UI"];
 
@@ -181,6 +183,8 @@ TiltChrome.Config.Visualization = {
   /**
    * Specific settings for each element describing the visualization options.
    */
+  nativeTiltEnabled: null,
+  nativeTiltHello: null,
   refreshVisualization: null,
   sourceEditorTheme: null,
   hideUserInterfaceAtInit: null,
@@ -194,6 +198,15 @@ TiltChrome.Config.Visualization = {
    * Reloads all the visualization options from the preferences branch.
    */
   reload: function() {
+    try {
+      this.nativeTiltEnabled =
+        Services.prefs.getBoolPref("devtools.tilt.enabled");
+    }
+    catch(e) {}
+
+    this.nativeTiltHello =
+      Tilt.Preferences.get("options.nativeTiltHello", "boolean");
+
     this.refreshVisualization =
       Tilt.Preferences.get("options.refreshVisualization", "integer");
 
@@ -224,6 +237,17 @@ TiltChrome.Config.Visualization = {
  * Set the configuration parameters regarding the visualization functionality.
  */
 TiltChrome.Config.Visualization.Set = {
+
+  nativeTiltEnabled: function(value) {
+    try {
+      Services.prefs.setBoolPref("devtools.tilt.enabled", value);
+    }
+    catch(e) {}
+  },
+
+  nativeTiltHello: function(value) {
+    Tilt.Preferences.set("options.nativeTiltHello", "boolean", value);
+  },
 
   refreshVisualization: function(value) {
     Tilt.Preferences.set("options.refreshVisualization", "integer", value);
