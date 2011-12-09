@@ -8,9 +8,31 @@ gBrowser.selectedBrowser["parentNode"] = gBrowser.selectedBrowser.parentNode;
 gBrowser.selectedBrowser["markupDocumentViewer"] = gBrowser.selectedBrowser.markupDocumentViewer;
 gBrowser.selectedBrowser.markupDocumentViewer["fullZoom"] = gBrowser.selectedBrowser.markupDocumentViewer.fullZoom;
 
-
+window["Services"] = Services;
 window["Tilt"] = Tilt;
 window["TiltChrome"] = TiltChrome;
+window["InspectorUI"] = InspectorUI;
+
+Services["obs"] = Services.obs;
+Services.obs["addObserver"] = Services.obs.addObserver;
+Services.obs["removeObserver"] = Services.obs.removeObserver;
+
+Services["prefs"] = Services.prefs;
+Services.prefs["getBoolPref"] = Services.prefs.getBoolPref;
+Services.prefs["setBoolPref"] = Services.prefs.setBoolPref;
+
+InspectorUI["stopInspecting"] = InspectorUI.stopInspecting;
+InspectorUI["openInspectorUI"] = InspectorUI.openInspectorUI;
+InspectorUI["closeInspectorUI"] = InspectorUI.closeInspectorUI;
+InspectorUI["toggleInspectorUI"] = InspectorUI.toggleInspectorUI;
+InspectorUI["INSPECTOR_NOTIFICATIONS"] = InspectorUI.INSPECTOR_NOTIFICATIONS;
+InspectorUI["INSPECTOR_NOTIFICATIONS"]["OPENED"] = InspectorUI.INSPECTOR_NOTIFICATIONS.OPENED;
+
+Tilt["initialize"] = Tilt.initialize;
+Tilt["visualizers"] = Tilt.visualizers;
+Tilt["currentWindowId"] = Tilt.currentWindowId;
+
+Tilt.visualizers[Tilt.currentWindowId].isInitialized;
 
 
 Tilt["Preferences"] = Tilt.Preferences;
@@ -24,9 +46,13 @@ TiltChrome.EntryPoint["refreshKeyset"] = TiltChrome.EntryPoint.refreshKeyset;
 
 TiltChrome["BrowserOverlay"] = TiltChrome.BrowserOverlay;
 TiltChrome.BrowserOverlay["initialize"] = TiltChrome.BrowserOverlay.initialize;
+TiltChrome.BrowserOverlay["destroy"] = TiltChrome.BrowserOverlay.destroy;
+TiltChrome.BrowserOverlay["nativeImpl"] = TiltChrome.BrowserOverlay.nativeImpl;
 
 TiltChrome["Config"] = TiltChrome.Config;
 TiltChrome.Config["Visualization"] = TiltChrome.Config.Visualization;
+TiltChrome.Config.Visualization["nativeTiltEnabled"] = TiltChrome.Config.Visualization.nativeTiltEnabled;
+TiltChrome.Config.Visualization["nativeTiltHello"] = TiltChrome.Config.Visualization.nativeTiltHello;
 TiltChrome.Config.Visualization["refreshVisualization"] = TiltChrome.Config.Visualization.refreshVisualization;
 TiltChrome.Config.Visualization["sourceEditorTheme"] = TiltChrome.Config.Visualization.sourceEditorTheme;
 TiltChrome.Config.Visualization["hideUserInterfaceAtInit"] = TiltChrome.Config.Visualization.hideUserInterfaceAtInit;
@@ -35,6 +61,19 @@ TiltChrome.Config.Visualization["enableJoystick"] = TiltChrome.Config.Visualizat
 TiltChrome.Config.Visualization["useAccelerometer"] = TiltChrome.Config.Visualization.useAccelerometer;
 TiltChrome.Config.Visualization["escapeKeyCloses"] = TiltChrome.Config.Visualization.escapeKeyCloses;
 TiltChrome.Config.Visualization["keyShortcutOpenClose"] = TiltChrome.Config.Visualization.keyShortcutOpenClose;
+TiltChrome.Config.Visualization["reload"] = TiltChrome.Config.Visualization.reload;
+
+TiltChrome.Config.Visualization["Set"] = TiltChrome.Config.Visualization.Set;
+TiltChrome.Config.Visualization.Set["nativeTiltEnabled"] = TiltChrome.Config.Visualization.Set.nativeTiltEnabled;
+TiltChrome.Config.Visualization.Set["nativeTiltHello"] = TiltChrome.Config.Visualization.Set.nativeTiltHello;
+TiltChrome.Config.Visualization.Set["refreshVisualization"] = TiltChrome.Config.Visualization.Set.refreshVisualization;
+TiltChrome.Config.Visualization.Set["sourceEditorTheme"] = TiltChrome.Config.Visualization.Set.sourceEditorTheme;
+TiltChrome.Config.Visualization.Set["hideUserInterfaceAtInit"] = TiltChrome.Config.Visualization.Set.hideUserInterfaceAtInit;
+TiltChrome.Config.Visualization.Set["disableMinidomAtInit"] = TiltChrome.Config.Visualization.Set.disableMinidomAtInit;
+TiltChrome.Config.Visualization.Set["enableJoystick"] = TiltChrome.Config.Visualization.Set.enableJoystick;
+TiltChrome.Config.Visualization.Set["useAccelerometer"] = TiltChrome.Config.Visualization.Set.useAccelerometer;
+TiltChrome.Config.Visualization.Set["escapeKeyCloses"] = TiltChrome.Config.Visualization.Set.escapeKeyCloses;
+TiltChrome.Config.Visualization.Set["keyShortcutOpenClose"] = TiltChrome.Config.Visualization.Set.keyShortcutOpenClose;
 
 TiltChrome["Options"] = TiltChrome.Options;
 TiltChrome.Options["windowLoad"] = TiltChrome.Options.windowLoad;
@@ -88,6 +127,7 @@ Cc["@mozilla.org/preferences-service;1"].getService(Ci.nsIPrefService).getBranch
 Cc["@mozilla.org/preferences-service;1"].getService(Ci.nsIPrefService).getBranch["setCharPref"] = Cc["@mozilla.org/preferences-service;1"].getService(Ci.nsIPrefService).getBranch.setCharPref;
 Cc["@mozilla.org/preferences-service;1"].getService(Ci.nsIPrefService).getBranch["setIntPref"] = Cc["@mozilla.org/preferences-service;1"].getService(Ci.nsIPrefService).getBranch.setIntPref;
 Cc["@mozilla.org/embedcomp/prompt-service;1"].getService(Ci.nsIPromptService)["alert"] = Cc["@mozilla.org/embedcomp/prompt-service;1"].getService(Ci.nsIPromptService).alert;
+Cc["@mozilla.org/embedcomp/prompt-service;1"].getService(Ci.nsIPromptService)["confirmCheck"] = Cc["@mozilla.org/embedcomp/prompt-service;1"].getService(Ci.nsIPromptService).confirmCheck;
 Cc["@mozilla.org/scripterror;1"].createInstance(Ci.nsIScriptError)["init"] = Cc["@mozilla.org/scripterror;1"].createInstance(Ci.nsIScriptError).init;
 Cc["@mozilla.org/consoleservice;1"].getService(Ci.nsIConsoleService)["logMessage"] = Cc["@mozilla.org/consoleservice;1"].getService(Ci.nsIConsoleService).logMessage;
 Cc["@mozilla.org/consoleservice;1"].getService(Ci.nsIConsoleService)["logStringMessage"] = Cc["@mozilla.org/consoleservice;1"].getService(Ci.nsIConsoleService).logStringMessage;
