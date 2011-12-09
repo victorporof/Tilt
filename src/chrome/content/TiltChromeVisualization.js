@@ -1224,7 +1224,9 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
         'indent_char': ' ',
         'max_char': 78,
         'brace_style': 'collapse'
-      })) + "\n",
+      })).
+        replace(/</g, "&lt;").
+        replace(/>/g, "&gt;") + "\n",
 
       // compute the custom css and attributes text from all the properties
       css = Tilt.Document.getModifiedCss(node.style),
@@ -1256,13 +1258,16 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
           node.localName === "button" ||
           code.editorType === "attr") {
 
-        iframe.contentWindow.refreshCodeEditor("css", code.attr);
+        code.innerHTML = attr;
+        iframe.contentWindow.refreshCodeEditor("css");
       }
       else if (code.editorType === "css") {
-        iframe.contentWindow.refreshCodeEditor("css", code.css);
+        code.innerHTML = css;
+        iframe.contentWindow.refreshCodeEditor("css");
       }
       else {
-        iframe.contentWindow.refreshCodeEditor("html", code.html);
+        code.innerHTML = html;
+        iframe.contentWindow.refreshCodeEditor("html");
       }
 
       var config = TiltChrome.Config.UI,
@@ -1324,8 +1329,9 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
     var iframe = document.getElementById("tilt-sourceeditor-iframe"),
       code = iframe.contentDocument.getElementById("code");
 
+    code.innerHTML = code.html;
     code.editorType = "html";
-    iframe.contentWindow.refreshCodeEditor("html", code.html);
+    iframe.contentWindow.refreshCodeEditor("html");
   };
 
   /**
@@ -1335,8 +1341,9 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
     var iframe = document.getElementById("tilt-sourceeditor-iframe"),
       code = iframe.contentDocument.getElementById("code");
 
+    code.innerHTML = code.css;
     code.editorType = "css";
-    iframe.contentWindow.refreshCodeEditor("css", code.css);
+    iframe.contentWindow.refreshCodeEditor("css");
   };
 
   /**
@@ -1346,8 +1353,9 @@ TiltChrome.Visualization = function(canvas, controller, ui) {
     var iframe = document.getElementById("tilt-sourceeditor-iframe"),
       code = iframe.contentDocument.getElementById("code");
 
+    code.innerHTML = code.attr;
     code.editorType = "attr";
-    iframe.contentWindow.refreshCodeEditor("css", code.attr);
+    iframe.contentWindow.refreshCodeEditor("css");
   };
 
   /**
