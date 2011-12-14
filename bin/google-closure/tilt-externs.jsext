@@ -27,6 +27,7 @@ InspectorUI["closeInspectorUI"] = InspectorUI.closeInspectorUI;
 InspectorUI["toggleInspectorUI"] = InspectorUI.toggleInspectorUI;
 InspectorUI["INSPECTOR_NOTIFICATIONS"] = InspectorUI.INSPECTOR_NOTIFICATIONS;
 InspectorUI["INSPECTOR_NOTIFICATIONS"]["OPENED"] = InspectorUI.INSPECTOR_NOTIFICATIONS.OPENED;
+InspectorUI["INSPECTOR_NOTIFICATIONS"]["CLOSED"] = InspectorUI.INSPECTOR_NOTIFICATIONS.CLOSED;
 
 Tilt["initialize"] = Tilt.initialize;
 Tilt["visualizers"] = Tilt.visualizers;
