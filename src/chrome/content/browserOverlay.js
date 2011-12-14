@@ -40,10 +40,6 @@ var EXPORTED_SYMBOLS = ["TiltChrome.BrowserOverlay"];
 
 /*global Cc, Ci, Cu, Services, Tilt, InspectorUI, gBrowser */
 
-
-var INSPECTOR_OPENED = InspectorUI.INSPECTOR_NOTIFICATIONS.OPENED;
-var INSPECTOR_CLOSED = InspectorUI.INSPECTOR_NOTIFICATIONS.CLOSED;
-
 /**
  * Controls the browser overlay for the Tilt extension.
  */
@@ -82,44 +78,15 @@ TiltChrome.BrowserOverlay = {
     // reload the necessary configuration keys and values
     TiltChrome.Config.Visualization.reload();
 
-    // sync with the inspector open/close notifications
-    if (!this.prepare) {
-      this.prepare = true;
-
-      Services.obs.addObserver(function onInspectorOpen() {
-        if (this.visualization !== null && this.visualization !== Tilt) {
-          this.destroy(true);
-        }
-      }.bind(this), INSPECTOR_OPENED, false);
-
-      Services.obs.addObserver(function onInspectorClose() {
-        if (this.visualization !== null) {
-          this.visualization = null;
-        }
-      }.bind(this), INSPECTOR_CLOSED, false);
-    }
-
     // open the native tilt implementation if available (Firefox >= 11)
-    if (this.visualization === null &&
-        (TiltChrome.Config.Visualization.nativeTiltEnabled ||
-         TiltChrome.Config.Visualization.nativeTiltHello)) {
-
-      this.visualization = Tilt;
-      this.nativeImpl();
-      return;
-    }
-    else if (this.visualization === Tilt) {
-      this.visualization = null;
+    if (TiltChrome.Config.Visualization.nativeTiltEnabled) {
+      return this.nativeImpl();
+    } else {
       InspectorUI.closeInspectorUI();
-
-      if (!this.revertToOldVersion) {
-        return;
-      }
     }
 
     // first, close the visualization and clean up any mess if there was any
     this.destroy(true);
-    this.revertToOldVersion = false;
 
     // if the page was just visualized, leave the visualization destroyed
     // this happens if Tilt is opened and closed in the same tab
@@ -241,41 +208,48 @@ TiltChrome.BrowserOverlay = {
    * Opens the native Tilt implementation instead of the extension.
    */
   nativeImpl: function() {
-    Services.obs.addObserver(function onInspectorOpen() {
-      Services.obs.removeObserver(onInspectorOpen, INSPECTOR_OPENED);
+    var INSPECTOR_OPENED = InspectorUI.INSPECTOR_NOTIFICATIONS.OPENED;
 
-      InspectorUI.stopInspecting();
-      document.getElementById("highlighter-container").style.display = "none";
-      document.getElementById("inspector-inspect-toolbutton").disabled = true;
-      document.getElementById("inspector-3D-button").checked = true;
-      window.setTimeout(function() { Tilt.initialize(); }, 100);
+    if (!this.visualization) {
+      this.visualization = Tilt;
 
-      if (TiltChrome.Config.Visualization.nativeTiltHello) {
-        window.setTimeout(function() {
-          if (Tilt.visualizers[Tilt.currentWindowId] &&
-              Tilt.visualizers[Tilt.currentWindowId].isInitialized()) {
+      Services.obs.addObserver(function onInspectorOpen() {
+        Services.obs.removeObserver(onInspectorOpen, INSPECTOR_OPENED);
 
-            var showAgain = { value: true };
-            var useNewVersion = Tilt.Console.confirmCheck(
-              Tilt.StringBundle.get("tilt.native.title"),
-              Tilt.StringBundle.get("tilt.native.text"),
-              Tilt.StringBundle.get("tilt.native.check"), showAgain);
+        InspectorUI.stopInspecting();
+        document.getElementById("highlighter-container").style.display="none";
+        document.getElementById("inspector-inspect-toolbutton").disabled=true;
+        document.getElementById("inspector-3D-button").checked=true;
+        window.setTimeout(function() { Tilt.initialize(); }.bind(this), 100);
 
-            TiltChrome.Config.Visualization.Set.nativeTiltHello(
-              showAgain.value);
+        if (TiltChrome.Config.Visualization.nativeTiltHello) {
+          window.setTimeout(function() {
+            if (Tilt.visualizers[Tilt.currentWindowId] &&
+                Tilt.visualizers[Tilt.currentWindowId].isInitialized()) {
 
-            TiltChrome.Config.Visualization.Set.nativeTiltEnabled(
-              useNewVersion);
+              var showAgain = { value: true };
+              var useNewVersion = Tilt.Console.confirmCheck(
+                Tilt.StringBundle.get("tilt.native.title"),
+                Tilt.StringBundle.get("tilt.native.text"),
+                Tilt.StringBundle.get("tilt.native.check"), showAgain);
 
-            if (!useNewVersion) {
-              TiltChrome.BrowserOverlay.revertToOldVersion = true;
-              TiltChrome.BrowserOverlay.initialize();
-              InspectorUI.closeInspectorUI();
+              TiltChrome.Config.Visualization.Set.nativeTiltHello(
+                showAgain.value);
+
+              TiltChrome.Config.Visualization.Set.nativeTiltEnabled(
+                useNewVersion);
+
+              if (!useNewVersion) {
+                TiltChrome.BrowserOverlay.initialize();
+              }
             }
-          }
-        }, 1500);
-      }
-    }, INSPECTOR_OPENED, false);
+          }.bind(this), 1500);
+        }
+      }, INSPECTOR_OPENED, false);
+    }
+    else {
+      this.visualization = null;
+    }
 
     InspectorUI.toggleInspectorUI();
   },
