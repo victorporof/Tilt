@@ -40,10 +40,6 @@ var EXPORTED_SYMBOLS = ["TiltChrome.BrowserOverlay"];
 
 /*global Cc, Ci, Cu, Services, Tilt, InspectorUI, gBrowser */
 
-
-var INSPECTOR_OPENED = InspectorUI.INSPECTOR_NOTIFICATIONS.OPENED;
-var INSPECTOR_CLOSED = InspectorUI.INSPECTOR_NOTIFICATIONS.CLOSED;
-
 /**
  * Controls the browser overlay for the Tilt extension.
  */
@@ -82,44 +78,35 @@ TiltChrome.BrowserOverlay = {
     // reload the necessary configuration keys and values
     TiltChrome.Config.Visualization.reload();
 
-    // sync with the inspector open/close notifications
-    if (!this.prepare) {
-      this.prepare = true;
 
-      Services.obs.addObserver(function onInspectorOpen() {
-        if (this.visualization !== null && this.visualization !== Tilt) {
-          this.destroy(true);
-        }
-      }.bind(this), INSPECTOR_OPENED, false);
+    // if we're in Firefox 11, we have some new cool stuff to use!
+    if (autoUpgrade &&
+        // the necessary prefs should explicitly exist!
+        TiltChrome.Config.Visualization.nativeTiltEnabled !== null &&
+        TiltChrome.Config.Visualization.nativeTiltHello !== null) {
 
-      Services.obs.addObserver(function onInspectorClose() {
-        if (this.visualization !== null) {
-          this.visualization = null;
-        }
-      }.bind(this), INSPECTOR_CLOSED, false);
-    }
+      // open the native implementation if available or requested
+      if (this.visualization === null &&
+          (TiltChrome.Config.Visualization.nativeTiltEnabled === true ||
+           TiltChrome.Config.Visualization.nativeTiltHello === true)) {
 
-    // open the native tilt implementation if available (Firefox >= 11)
-    if (this.visualization === null &&
-        (TiltChrome.Config.Visualization.nativeTiltEnabled ||
-         TiltChrome.Config.Visualization.nativeTiltHello)) {
-
-      this.visualization = Tilt;
-      this.nativeImpl();
-      return;
-    }
-    else if (this.visualization === Tilt) {
-      this.visualization = null;
-      InspectorUI.closeInspectorUI();
-
-      if (!this.revertToOldVersion) {
+        this.visualization = Tilt;
+        this.nativeObs();
+        this.nativeImpl();
         return;
+      }
+      else if (this.visualization === Tilt) {
+        this.visualization = null;
+        InspectorUI.closeInspectorUI();
+
+        if (!this.revertToOldVersion) {
+          return;
+        }
       }
     }
 
     // first, close the visualization and clean up any mess if there was any
     this.destroy(true);
-    this.revertToOldVersion = false;
 
     // if the page was just visualized, leave the visualization destroyed
     // this happens if Tilt is opened and closed in the same tab
@@ -186,6 +173,7 @@ TiltChrome.BrowserOverlay = {
     // the document and parent nodes won't be used anymore, so nullify them
     Tilt.Document.currentContentDocument = null;
     Tilt.Document.currentParentNode = null;
+    this.revertToOldVersion = false;
 
     // quickly remove the canvas from the selected browser parent node
     if (this.canvas !== null) {
@@ -234,6 +222,28 @@ TiltChrome.BrowserOverlay = {
     else {
       // the finish timeout wasn't explicitly requested, continue normally
       finish();
+    }
+  },
+
+  /**
+   * Adds the necessary Inspector observers.
+   */
+  nativeObs: function() {
+    // sync with the inspector open/close notifications
+    if (!this.prepare) {
+      this.prepare = true;
+
+      Services.obs.addObserver(function onInspectorOpen() {
+        if (this.visualization !== null && this.visualization !== Tilt) {
+          this.destroy(true);
+        }
+      }.bind(this), INSPECTOR_OPENED, false);
+
+      Services.obs.addObserver(function onInspectorClose() {
+        if (this.visualization !== null) {
+          this.visualization = null;
+        }
+      }.bind(this), INSPECTOR_CLOSED, false);
     }
   },
 
@@ -289,3 +299,17 @@ TiltChrome.BrowserOverlay = {
       garbageCollect();
   }
 };
+
+
+var autoUpgrade = "object" === typeof InspectorUI &&
+                  InspectorUI &&
+                  InspectorUI.INSPECTOR_NOTIFICATIONS &&
+                  InspectorUI.openInspectorUI &&
+                  InspectorUI.closeInspectorUI &&
+                  InspectorUI.toggleInspectorUI &&
+                  InspectorUI.stopInspecting;
+
+if (autoUpgrade) {
+  var INSPECTOR_OPENED = InspectorUI.INSPECTOR_NOTIFICATIONS.OPENED;
+  var INSPECTOR_CLOSED = InspectorUI.INSPECTOR_NOTIFICATIONS.CLOSED;
+}
