@@ -35,15 +35,15 @@
  ***** END LICENSE BLOCK *****/
 "use strict";
 
-/*global Cc, Ci, Cu, Tilt */
+/*global Cc, Ci, Cu, InspectorUI, Tilt, TiltChrome */
 
-var TiltChrome = TiltChrome || {};
+var TiltChromeEntryPoint = TiltChromeEntryPoint || {};
 var EXPORTED_SYMBOLS = ["TiltChrome.EntryPoint"];
 
 /**
  * Entry point for this extension, including the necessary Javascript files.
  */
-TiltChrome.EntryPoint = {
+TiltChromeEntryPoint = {
 
   /**
    * Utility for loading the extensions scripts.
@@ -56,7 +56,14 @@ TiltChrome.EntryPoint = {
     // the 'Tilt-extension.js' source file is created at build time, and it's
     // not part of the project; no other js files will be copied/archived in
     // the xpi archive
-    scriptLoader.loadSubScript("chrome://tilt/content/Tilt-extension.js");
+    var _ = {
+      InspectorUI: window.InspectorUI || null,
+      Tilt: window.Tilt || null
+    };
+
+    scriptLoader.loadSubScript("chrome://tilt/content/Tilt-extension.js", _);
+    window.TiltChrome = _.TiltChrome;
+    window.Tilt = _.Tilt;
   },
 
   /**
@@ -101,9 +108,9 @@ TiltChrome.EntryPoint = {
 
     // load everything after a while, don't slow down the browser startup
     window.setTimeout(function() {
-      TiltChrome.EntryPoint.includeScripts();
-      TiltChrome.EntryPoint.setupPreferences();
-      TiltChrome.EntryPoint.refreshKeyset();
-    }, 500);
+      TiltChromeEntryPoint.includeScripts();
+      TiltChromeEntryPoint.setupPreferences();
+      TiltChromeEntryPoint.refreshKeyset();
+    }.bind(window), 500);
   }, true);
 })();

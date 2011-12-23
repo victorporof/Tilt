@@ -221,7 +221,7 @@ TiltChrome.UI.Default = function() {
           "chrome, modal, centerscreen, width=410, height=320");
 
         TiltChrome.Config.Visualization.reload();
-        TiltChrome.EntryPoint.refreshKeyset();
+        TiltChromeEntryPoint.refreshKeyset();
       }.bind(this)
     });
 
