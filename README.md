@@ -2,6 +2,14 @@
 #### [Development Blog](http://blog.mozilla.com/tilt/)
 #### [Tilt Project Page](https://wiki.mozilla.org/Tilt_Project_Page)
 
+### Firefox integration
+Tilt is currently implemented natively in Firefox starting with version 11, part of the Developer Tools -> Inspector. You can track the development in the [mozilla-central branch](https://github.com/victorporof/Tilt/tree/mozilla-central). If you have a Bugzilla account, [here are all the known bugs and features](https://bugzilla.mozilla.org/buglist.cgi?cmdtype=runnamed&namedcmd=tilt&list_id=1947264) we're working on - you're welcome to file new requests in there or even help out if you want to!
+
+Take a look at [Firefox Aurora](http://www.mozilla.org/en-US/firefox/channel/) or [Firefox Nightly](http://nightly.mozilla.org/) to try out the new and improved Tilt!
+
+### Help
+If you have any questions, ping anyone on IRC in `#devtools` or `#tilt` on [irc.mozilla.org](irc://irc.mozilla.org).
+
 ### Installation
 In the bin folder you will find the latest [Tilt.xpi](https://github.com/victorporof/Tilt/raw/master/bin/Tilt.xpi) extension build. Download, then drag and drop it to Firefox. After the installation is complete, restart, and open the extension using `Ctrl+Shift+M` (or `Cmd+Shift+M` if you're on a mac), or find it inside the Tools menu. Close it at any time with the `Esc` key.
 
@@ -13,11 +21,8 @@ In the bin folder you will find the latest [Tilt.xpi](https://github.com/victorp
 > It is being developed by [Victor Porof](http://twitter.com/victorporof) (3D developer responsible with the Firefox extension itself), along with [Cedric Vivier](https://github.com/neonux) (creating a WebGL optimized equivalent to the privileged canvas.drawWindow, see [#653656](https://bugzilla.mozilla.org/show_bug.cgi?id=653656)) and [Rob Campbell](https://github.com/robcee) (who first thought about creating a 3D visualization of a webpage). Everything started initially as a [Google Summer of Code](http://www.google-melange.com/gsoc/proposal/review/google/gsoc2011/victorporof/1#) project, but now, with an enthusiastic team behind it and so many new features and ideas, it has become an active Developer Tools project.
 
 <center>
-![Screenshot](http://dl.dropbox.com/u/2388316/tilt/tilt01.png)
+![Screenshot](http://dl.dropbox.com/u/2388316/tilt/tilt02.png)
 </center>
-
-### Help
-If you have any questions, ping anyone on IRC in `#tilt` on [irc.mozilla.org](irc://irc.mozilla.org).
 
 ### License
 Tilt is licensed as Mozilla Public License Version 1.1, like any other Mozilla
