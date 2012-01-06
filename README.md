@@ -20,9 +20,7 @@ In the bin folder you will find the latest [Tilt.xpi](https://github.com/victorp
 
 > It is being developed by [Victor Porof](http://twitter.com/victorporof) (3D developer responsible with the Firefox extension itself), along with [Cedric Vivier](https://github.com/neonux) (creating a WebGL optimized equivalent to the privileged canvas.drawWindow, see [#653656](https://bugzilla.mozilla.org/show_bug.cgi?id=653656)) and [Rob Campbell](https://github.com/robcee) (who first thought about creating a 3D visualization of a webpage). Everything started initially as a [Google Summer of Code](http://www.google-melange.com/gsoc/proposal/review/google/gsoc2011/victorporof/1#) project, but now, with an enthusiastic team behind it and so many new features and ideas, it has become an active Developer Tools project.
 
-<center>
-![Screenshot](http://dl.dropbox.com/u/2388316/tilt/tilt02.png)
-</center>
+<center>![Screenshot](http://dl.dropbox.com/u/2388316/tilt/tilt02.png)</center>
 
 ### License
 Tilt is licensed as Mozilla Public License Version 1.1, like any other Mozilla
