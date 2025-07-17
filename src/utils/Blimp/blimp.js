@@ -88,6 +88,12 @@
       worker.addEventListener("message", function(event) {
         let data = event.data;
 
+        // Check the origin of the message
+        if (event.origin !== "trusted-origin.com") {
+          console.warn("Untrusted message origin: " + event.origin);
+          return;
+        }
+
         if (data.signature === method) {
           // the response is exactly what we wanted, callback!
           callback(event.data.response);
