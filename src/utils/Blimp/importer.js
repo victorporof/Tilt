@@ -9,10 +9,19 @@ self.onmessage = function(event) {
   var method = data.method;
   var params = data.params;
 
-  self.postMessage({
-    signature: method,
-    response: new Importer(mesh)["get " + method](params) // cool protocol bro'
-  });
+  // 허용된 메서드 목록
+  const allowedMethods = ["vertices", "triangles", "bounds", "intersections", "xyzscan", "voxels", "export"];
+
+  if (allowedMethods.includes(method)) {
+    self.postMessage({
+      signature: method,
+      response: new Importer(mesh)["get " + method](params) // cool protocol bro'
+    });
+  } else {
+    self.postMessage({
+      error: "Invalid method"
+    });
+  }
 
   close();
 };
